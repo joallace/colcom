@@ -1,8 +1,14 @@
+@import 'variables.scss';
+
+*{
+    box-sizing: border-box;
+}
+
 body{
     margin: 0
 }
 
 :root{
-    background-color: #1F0D00;
-    color: #D9D9D9;
+    background-color: $default-bg;
+    color: $default-fontcolor;
 }
