@@ -1,11 +1,25 @@
-import '../assets/sass/navbar.scss'
+import React from "react"
+
+import Icon from "./Icon"
+import { screenSm } from "../assets/scss/_export.module.scss"
 
 export default function Navbar() {
+  const smScreenSize = parseInt(screenSm)
+
+  const [isDesktop, setDesktop] = React.useState(window.innerWidth > smScreenSize)
+
+  const updateMedia = ()=>{setDesktop(window.innerWidth > smScreenSize)}
+
+  React.useEffect(() => {
+    window.addEventListener("resize", updateMedia);
+    return () => window.removeEventListener("resize", updateMedia);
+  });
+
   return (
     <nav className="nav">
-      <div style={{display:'flex'}}>
+      <div>
         <a href="/" className="nav-icon">
-          col<text style={{color: 'white'}}>.</text><text style={{color: '#BC5217'}}>com</text>
+          <Icon isDesktop={isDesktop}/>
         </a>
         <ul>
           <li>
