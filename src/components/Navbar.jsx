@@ -1,4 +1,5 @@
 import React from "react"
+import { PiMagnifyingGlassBold } from "react-icons/pi"
 
 import Icon from "./Icon"
 import { screenSm } from "../assets/scss/_export.module.scss"
@@ -8,7 +9,7 @@ export default function Navbar() {
 
   const [isDesktop, setDesktop] = React.useState(window.innerWidth > smScreenSize)
 
-  const updateMedia = ()=>{setDesktop(window.innerWidth > smScreenSize)}
+  const updateMedia = () => { setDesktop(window.innerWidth > smScreenSize) }
 
   React.useEffect(() => {
     window.addEventListener("resize", updateMedia);
@@ -19,7 +20,7 @@ export default function Navbar() {
     <nav className="nav">
       <div>
         <a href="/" className="nav-icon">
-          <Icon isDesktop={isDesktop}/>
+          <Icon isDesktop={isDesktop} />
         </a>
         <ul>
           <li>
@@ -33,11 +34,17 @@ export default function Navbar() {
           </li>
         </ul>
       </div>
-      <div style={{gap: "0.75rem"}}>
-        <input className="nav-searchbar" placeholder="pesquisar..."/>
-        <text style={{fontWeight: "bolder", fontSize: "1.5rem"}}>+</text>
+      <div className="nav-right">
+        {isDesktop ?
+          <>
+            <input className="nav-searchbar" placeholder="pesquisar..." />
+            <text style={{ fontWeight: "bolder", fontSize: "1.5rem" }}>+</text>
+          </>
+          :
+          <PiMagnifyingGlassBold style={{fontSize: 19}}/>
+        }
         $42
-        <div className="nav-user-icon"/>
+        <div className="nav-user-icon" />
       </div>
     </nav>
   )

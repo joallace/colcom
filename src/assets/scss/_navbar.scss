@@ -68,3 +68,10 @@ nav{
     background-color: white;
     border-radius: 1rem;
 }
+
+.nav-right{
+    gap: 0.5rem;
+    @media (max-width: $screen-sm) {
+        gap: 0.25rem;
+    }
+}
