@@ -11,9 +11,10 @@ function App() {
     <>
       <Navbar/>
       <Routes>
-        <Route path="/promoted" element={<Promoted/>}/>  
-        <Route path="/all" element={<All/>}/>  
-        <Route path="/meta" element={<Meta/>}/>  
+        <Route path="/" element={<>Oi</>}/>
+        <Route path="/promoted" element={<Promoted/>}/>
+        <Route path="/all" element={<All/>}/>
+        <Route path="/meta" element={<Meta/>}/>
       </Routes>      
     </>
   )
