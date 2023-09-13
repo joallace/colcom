@@ -1,4 +1,5 @@
 import React from "react"
+import { NavLink } from "react-router-dom"
 import { PiMagnifyingGlassBold } from "react-icons/pi"
 
 import Icon from "./Icon"
@@ -19,18 +20,18 @@ export default function Navbar() {
   return (
     <nav className="nav">
       <div>
-        <a href="/" className="nav-icon">
+        <NavLink to="/" className="nav-icon">
           <Icon isDesktop={isDesktop} />
-        </a>
+        </NavLink>
         <ul>
           <li>
-            <a href="/promoted">promovido</a>
+            <NavLink to="/promoted">promovido</NavLink>
           </li>
           <li>
-            <a href="/all">todos</a>
+            <NavLink to="/all">todos</NavLink>
           </li>
           <li>
-            <a href="/meta">meta</a>
+            <NavLink to="/meta">meta</NavLink>
           </li>
         </ul>
       </div>
