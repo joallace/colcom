@@ -27,7 +27,6 @@ nav{
         :first-child{
             list-style: none;
         }
-        color: white;
         padding: 0;
         margin: 0;
         display: flex;
@@ -40,6 +39,10 @@ nav{
     }
 }
 
+.active{
+    color: $default-orange;
+}
+
 .nav-icon{
     color: $default-green;
     margin: 0 2rem 0 1rem;
@@ -47,7 +50,7 @@ nav{
     font-size: 1.25rem;
 
     @media (max-width: $screen-sm) {
-        margin: 0 0.75rem 0 0;
+        margin: 0 0.75rem 0 0.25rem;
     }
 }
 
@@ -65,8 +68,11 @@ nav{
 .nav-user-icon{
     width: 2rem;
     height: 2rem;
+    justify-content: center;
+    align-items: end;
     background-color: white;
-    border-radius: 1rem;
+    border-radius: 50%;
+    overflow: hidden;
 }
 
 .nav-right{

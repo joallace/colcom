@@ -1,6 +1,6 @@
 import React from "react"
 import { NavLink } from "react-router-dom"
-import { PiMagnifyingGlassBold } from "react-icons/pi"
+import { PiMagnifyingGlassBold, PiUser } from "react-icons/pi"
 
 import Icon from "./Icon"
 import { screenSm } from "../assets/scss/_export.module.scss"
@@ -42,10 +42,13 @@ export default function Navbar() {
             <text style={{ fontWeight: "bolder", fontSize: "1.5rem" }}>+</text>
           </>
           :
-          <PiMagnifyingGlassBold style={{fontSize: 19}}/>
+          <PiMagnifyingGlassBold style={{ fontSize: "1.25rem" }} />
         }
         $42
-        <div className="nav-user-icon" />
+        <div className="nav-user-icon">
+          <PiUser style={{ fontSize: "2rem" }} />
+        </div>
+
       </div>
     </nav>
   )
