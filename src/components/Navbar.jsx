@@ -1,6 +1,6 @@
 import React from "react"
-import { NavLink } from "react-router-dom"
-import { PiMagnifyingGlassBold, PiUser } from "react-icons/pi"
+import { NavLink, Link } from "react-router-dom"
+import { PiMagnifyingGlassBold, PiUser, PiPlusBold } from "react-icons/pi"
 
 import Icon from "./Icon"
 import { screenSm } from "../assets/scss/_export.module.scss"
@@ -20,9 +20,9 @@ export default function Navbar() {
   return (
     <nav className="nav">
       <div>
-        <NavLink to="/" className="nav-icon">
+        <Link to="/" className="nav-icon">
           <Icon isDesktop={isDesktop} />
-        </NavLink>
+        </Link>
         <ul>
           <li>
             <NavLink to="/promoted">promovido</NavLink>
@@ -39,7 +39,7 @@ export default function Navbar() {
         {isDesktop ?
           <>
             <input className="nav-searchbar" placeholder="pesquisar..." />
-            <text style={{ fontWeight: "bolder", fontSize: "1.5rem" }}>+</text>
+            <Link to="/write"><PiPlusBold style={{ fontSize: "1.5rem" }}/></Link>            
           </>
           :
           <PiMagnifyingGlassBold style={{ fontSize: "1.25rem" }} />
