@@ -1,7 +1,8 @@
 import React from "react"
 import { PiCaretUpBold, PiCaretDownBold, PiBookmarkSimpleBold, PiBookmarkSimpleFill } from "react-icons/pi"
+import { Link } from "react-router-dom"
 
-export default function Topic({ title, posts = [], metrics, bookmarked = true, ...remainingProps }) {
+export default function Topic({ title, posts = [], icons = [], metrics = [], bookmarked = true, ...remainingProps }) {
   const [isBookmarked, setBookmark] = React.useState(bookmarked)
 
   const bookmarkClick = () => { setBookmark(!isBookmarked) }
@@ -33,12 +34,14 @@ export default function Topic({ title, posts = [], metrics, bookmarked = true, .
                   <span>{`${post.percentage}%`}</span>
                 </div>
                 {post.summary}
-                <span className="unselectable read-more">continuar...</span>
+                <Link className="unselectable read-more">continuar...</Link>
               </div>
             )
           })
           :
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+          <div className="no-response">
+            Ainda não há repostas, que tal contribuir?
+          </div>
         }
         <ul className="metrics">
           <li>Promovido por 40 usuários</li>
