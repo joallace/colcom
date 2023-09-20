@@ -1,9 +1,27 @@
 import React from "react"
-import { PiCaretUpBold, PiCaretDownBold, PiBookmarkSimpleBold, PiBookmarkSimpleFill } from "react-icons/pi"
+import {
+  PiCaretUpBold,
+  PiCaretDownBold,
+  PiBookmarkSimpleBold,
+  PiBookmarkSimpleFill,
+  PiArrowBendUpLeftBold,
+  PiDotsThreeVerticalBold
+} from "react-icons/pi"
 import { Link } from "react-router-dom"
+import { screenSm } from "../assets/scss/_export.module.scss"
 
-export default function Topic({ title, posts = [], icons = [], metrics = [], bookmarked = true, ...remainingProps }) {
+export default function Topic({ title, posts = [], icons = [], metrics = [], bookmarked = false, ...remainingProps }) {
+  const smScreenSize = parseInt(screenSm)
+  
   const [isBookmarked, setBookmark] = React.useState(bookmarked)
+  const [isDesktop, setDesktop] = React.useState(window.innerWidth > smScreenSize)
+
+  const updateMedia = () => { setDesktop(window.innerWidth > smScreenSize) }
+
+  React.useEffect(() => {
+    window.addEventListener("resize", updateMedia);
+    return () => window.removeEventListener("resize", updateMedia);
+  });
 
   const bookmarkClick = () => { setBookmark(!isBookmarked) }
 
@@ -17,20 +35,29 @@ export default function Topic({ title, posts = [], icons = [], metrics = [], boo
               <PiCaretUpBold title="Relevante" className="up" />
               <PiCaretDownBold title="Não relevante" className="down" />
             </div>
-            <h2 className="title">{title}</h2>
+            <h2 className="title" title="Ver todas as respostas">{title}</h2>
           </div>
-          {isBookmarked ?
-            <PiBookmarkSimpleBold title="Salvar tópico" className="icons" onClick={bookmarkClick} />
-            :
-            <PiBookmarkSimpleFill title="Remover tópico dos salvos" className="icons" onClick={bookmarkClick} />
-          }
+          <div className="right-side">
+            {isDesktop ?
+              <>
+                <PiArrowBendUpLeftBold title="Responder tópico" className="icons" />
+                {isBookmarked ?
+                  <PiBookmarkSimpleFill title="Remover tópico dos salvos" className="icons" onClick={bookmarkClick} />
+                  :
+                  <PiBookmarkSimpleBold title="Salvar tópico" className="icons" onClick={bookmarkClick} />
+                }
+              </>
+              :
+              <PiDotsThreeVerticalBold className="icons"/>
+            }
+          </div>
         </div>
         {posts.length > 0 ?
-          posts.map(post => {
+          posts.map((post, index) => {
             return (
               <div>
                 <div className="post-percentage-bar" style={{ width: `${post.percentage}%` }}>
-                  <span>{post.shortAnswer}</span>
+                  <span>{post.shortAnswer ? post.shortAnswer : `${index + 1}.`}</span>
                   <span>{`${post.percentage}%`}</span>
                 </div>
                 {post.summary}
