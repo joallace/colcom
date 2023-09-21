@@ -1,7 +1,9 @@
+import TextEditor from "../components/TextEditor";
+
 export default function Write(){
     return(
-        <>
-            Olá, mundo! Eis aqui tela de escrita!
-        </>
+        <div style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
+            <TextEditor/>
+        </div>
     )
 }
