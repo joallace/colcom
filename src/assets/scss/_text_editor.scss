@@ -1,6 +1,6 @@
 .floating-menu {
     display: flex;
-    background-color: #0D0D0D10;
+    background-color: $default-orange;
     padding: 0.2rem;
     border-radius: 0.5rem;
 
@@ -45,6 +45,7 @@
 .text-editor {
     display: flex;
     width: 60%;
+    min-height: 10rem;
 
     @media screen and (min-width: $screen-sm) and (max-width: $screen-xl) {
         width: 70%;

@@ -10,3 +10,9 @@ body{
     background-color: $default-bg;
     color: $default-font-color;
 }
+
+.content{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
