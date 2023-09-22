@@ -4,6 +4,7 @@ import {
   FloatingMenu,
   useEditor,
 } from '@tiptap/react'
+import {PiListBulletsBold} from "react-icons/pi"
 import Document from '@tiptap/extension-document'
 import Placeholder from '@tiptap/extension-placeholder'
 import StarterKit from '@tiptap/starter-kit'
@@ -49,12 +50,6 @@ export default () => {
               Itálico
             </button>
             <button
-              onClick={() => editor.chain().focus().toggleStrike().run()}
-              className={editor.isActive('strike') ? 'is-active' : ''}
-            >
-              Riscado
-            </button>
-            <button
               onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
               className={editor.isActive('heading', { level: 1 }) ? 'is-active' : ''}
             >
@@ -65,6 +60,12 @@ export default () => {
               className={editor.isActive('heading', { level: 2 }) ? 'is-active' : ''}
             >
               H2
+            </button>
+            <button
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              className={editor.isActive('bulletList') ? 'is-active' : ''}
+            >
+              Bullet List
             </button>
           </BubbleMenu>
         </div>
