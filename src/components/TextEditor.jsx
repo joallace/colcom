@@ -3,15 +3,16 @@ import {
   EditorContent,
   FloatingMenu,
   useEditor,
-} from '@tiptap/react'
-import {PiListBulletsBold} from "react-icons/pi"
-import Document from '@tiptap/extension-document'
-import Placeholder from '@tiptap/extension-placeholder'
-import StarterKit from '@tiptap/starter-kit'
-import React from 'react'
+} from "@tiptap/react"
+import { PiListBulletsBold, PiListNumbersFill, PiPresentationChartFill } from "react-icons/pi"
+import Document from "@tiptap/extension-document"
+import Heading from "@tiptap/extension-heading"
+import Placeholder from "@tiptap/extension-placeholder"
+import StarterKit from "@tiptap/starter-kit"
+import React from "react"
 
 const CustomDocument = Document.extend({
-  content: 'heading block*',
+  content: "heading block*",
 })
 
 export default () => {
@@ -21,80 +22,94 @@ export default () => {
       StarterKit.configure({
         document: false,
       }),
+      Heading.configure({
+        levels: [1, 2],
+      }),
       Placeholder.configure({
-        placeholder: 'Qual é o título?'
+        placeholder: "Qual é o título?"
       })
     ],
+    editorProps: {
+      attributes: {
+        class: "editor",
+      },
+    },
     content: ""
   })
 
   return (
     <>
-      {editor &&
+      {(editor && !editor.isActive("heading", { level: 1 })) &&
         <div>
           <BubbleMenu
-            className="bubble-menu"
+            className="menu"
             tippyOptions={{ duration: 100 }}
             editor={editor}
           >
             <button
               onClick={() => editor.chain().focus().toggleBold().run()}
-              className={editor.isActive('bold') ? 'is-active' : ''}
+              className={editor.isActive("bold") ? "bold is-active" : "bold"}
             >
               Negrito
             </button>
             <button
               onClick={() => editor.chain().focus().toggleItalic().run()}
-              className={editor.isActive('italic') ? 'is-active' : ''}
+              className={editor.isActive("italic") ? "italic is-active" : "italic"}
             >
               Itálico
             </button>
             <button
-              onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-              className={editor.isActive('heading', { level: 1 }) ? 'is-active' : ''}
-            >
-              H1
-            </button>
-            <button
               onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-              className={editor.isActive('heading', { level: 2 }) ? 'is-active' : ''}
+              className={editor.isActive("heading", { level: 2 }) ? "is-active" : ""}
             >
-              H2
+              Cabeçalho
             </button>
             <button
               onClick={() => editor.chain().focus().toggleBulletList().run()}
-              className={editor.isActive('bulletList') ? 'is-active' : ''}
+              className={editor.isActive("bulletList") ? "icon is-active" : "icon"}
             >
-              Bullet List
+              <PiListBulletsBold title="Tópicos sem ordem" />
+            </button>
+            <button
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              className={editor.isActive("orderedList") ? "icon is-active" : "icon"}
+            >
+              <PiListNumbersFill title="Tópicos ordenados" />
             </button>
           </BubbleMenu>
         </div>
       }
 
-      {(editor && !editor.isEmpty) &&
+      {(editor && !editor.isActive("heading", { level: 1 })) &&
         <div>
           <FloatingMenu
-            className="floating-menu"
+            className="menu"
             tippyOptions={{ duration: 100 }}
             editor={editor}
           >
             <button
-              onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-              className={editor.isActive('heading', { level: 1 }) ? 'is-active' : ''}
-            >
-              H1
-            </button>
-            <button
               onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-              className={editor.isActive('heading', { level: 2 }) ? 'is-active' : ''}
+              className={editor.isActive("heading", { level: 2 }) ? "is-active" : ""}
             >
-              H2
+              Cabeçalho
             </button>
             <button
               onClick={() => editor.chain().focus().toggleBulletList().run()}
-              className={editor.isActive('bulletList') ? 'is-active' : ''}
+              className={editor.isActive("bulletList") ? "icon is-active" : "icon"}
             >
-              Bullet List
+              <PiListBulletsBold title="Tópicos sem ordem" />
+            </button>
+            <button
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              className={editor.isActive("orderedList") ? "icon is-active" : "icon"}
+            >
+              <PiListNumbersFill title="Tópicos ordenados" />
+            </button>
+            <button
+              onClick={() => {}}
+              className={editor.isActive("orderedList") ? "icon is-active" : "icon"}
+            >
+              <PiPresentationChartFill title="Inserir gráfico" />
             </button>
           </FloatingMenu>
         </div>
