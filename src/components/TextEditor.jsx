@@ -1,21 +1,28 @@
+import React from "react"
+import {
+  PiListBulletsBold,
+  PiListNumbersFill,
+  PiPresentationChartFill,
+  PiTableFill
+} from "react-icons/pi"
+
 import {
   BubbleMenu,
   EditorContent,
   FloatingMenu,
   useEditor,
 } from "@tiptap/react"
-import { PiListBulletsBold, PiListNumbersFill, PiPresentationChartFill } from "react-icons/pi"
 import Document from "@tiptap/extension-document"
 import Heading from "@tiptap/extension-heading"
 import Placeholder from "@tiptap/extension-placeholder"
 import StarterKit from "@tiptap/starter-kit"
-import React from "react"
+
 
 const CustomDocument = Document.extend({
   content: "heading block*",
 })
 
-export default () => {
+export default ({setContent = ()=>{}}, ...remainingProps) => {
   const editor = useEditor({
     extensions: [
       CustomDocument,
@@ -29,12 +36,7 @@ export default () => {
         placeholder: "Qual é o título?"
       })
     ],
-    editorProps: {
-      attributes: {
-        class: "editor",
-      },
-    },
-    content: ""
+    onUpdate: ({editor})=>{setContent(editor.getHTML())}
   })
 
   return (
@@ -111,11 +113,17 @@ export default () => {
             >
               <PiPresentationChartFill title="Inserir gráfico" />
             </button>
+            <button
+              onClick={() => {}}
+              className={editor.isActive("orderedList") ? "icon is-active" : "icon"}
+            >
+              <PiTableFill title="Inserir tabela" />
+            </button>
           </FloatingMenu>
         </div>
       }
 
-      <div className="text-editor">
+      <div className="text-editor" {...remainingProps}>
         <div className="bracket" />
         <EditorContent editor={editor} style={{ width: "100%" }} />
       </div>

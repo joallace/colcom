@@ -1,4 +1,5 @@
 import React from "react"
+import { Link } from "react-router-dom"
 import {
   PiCaretUpBold,
   PiCaretDownBold,
@@ -7,8 +8,9 @@ import {
   PiArrowBendUpLeftBold,
   PiDotsThreeVerticalBold
 } from "react-icons/pi"
-import { Link } from "react-router-dom"
+
 import { screenSm } from "../assets/scss/_export.module.scss"
+
 
 export default function Topic({ title, posts = [], icons = [], metrics = [], bookmarked = false, ...remainingProps }) {
   const smScreenSize = parseInt(screenSm)
