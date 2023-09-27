@@ -2,8 +2,8 @@ import React from "react"
 import { NavLink, Link } from "react-router-dom"
 import { PiMagnifyingGlassBold, PiUser, PiPlusBold } from "react-icons/pi"
 
-import Icon from "./Icon"
-import { screenSm } from "../assets/scss/_export.module.scss"
+import Icon from "@/components/Icon"
+import { screenSm } from "@/assets/scss/_export.module.scss"
 
 export default function Navbar() {
   const smScreenSize = parseInt(screenSm)

@@ -63,6 +63,41 @@
         padding: 0 1rem;
     }
 
+    blockquote {
+        border-left: 2px solid $default-orange;
+        margin: 1.5rem 1rem;
+        padding: 0.5rem 1rem;
+
+        :last-child {
+            display: inline;
+            margin-bottom: 0;
+        }
+
+        :first-child {
+            display: inline;
+        }
+
+        &:before {
+            color: $default-orange;
+            content: open-quote;
+            font-size: 2.5rem;
+            line-height: 0.1rem;
+            margin-right: 0.25rem;
+            vertical-align: -0.5rem;
+        }
+
+        &:after {
+            color: $default-orange;
+            content: close-quote;
+            font-size: 2.5rem;
+            line-height: 0.1rem;
+            margin-left: 0.25rem;
+            vertical-align: -1.75rem;
+        }
+    }
+
+
+
     &:focus {
         outline: none;
     }

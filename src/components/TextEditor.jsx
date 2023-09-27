@@ -3,7 +3,8 @@ import {
   PiListBulletsBold,
   PiListNumbersFill,
   PiPresentationChartFill,
-  PiTableFill
+  PiTableFill,
+  PiQuotesFill
 } from "react-icons/pi"
 
 import {
@@ -52,31 +53,37 @@ export default ({setContent = ()=>{}}, ...remainingProps) => {
               onClick={() => editor.chain().focus().toggleBold().run()}
               className={editor.isActive("bold") ? "bold is-active" : "bold"}
             >
-              Negrito
+              negrito
             </button>
             <button
               onClick={() => editor.chain().focus().toggleItalic().run()}
               className={editor.isActive("italic") ? "italic is-active" : "italic"}
             >
-              Itálico
+              itálico
             </button>
             <button
               onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
               className={editor.isActive("heading", { level: 2 }) ? "is-active" : ""}
             >
-              Cabeçalho
+              cabeçalho
             </button>
             <button
               onClick={() => editor.chain().focus().toggleBulletList().run()}
               className={editor.isActive("bulletList") ? "icon is-active" : "icon"}
             >
-              <PiListBulletsBold title="Tópicos sem ordem" />
+              <PiListBulletsBold title="tópicos sem ordem" />
             </button>
             <button
               onClick={() => editor.chain().focus().toggleOrderedList().run()}
               className={editor.isActive("orderedList") ? "icon is-active" : "icon"}
             >
-              <PiListNumbersFill title="Tópicos ordenados" />
+              <PiListNumbersFill title="tópicos ordenados" />
+            </button>
+            <button
+              onClick={() => editor.chain().focus().toggleBlockquote().run()}
+              className={editor.isActive("blockquote") ? "icon is-active" : "icon"}
+            >
+              <PiQuotesFill title="citação" />
             </button>
           </BubbleMenu>
         </div>
@@ -93,31 +100,37 @@ export default ({setContent = ()=>{}}, ...remainingProps) => {
               onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
               className={editor.isActive("heading", { level: 2 }) ? "is-active" : ""}
             >
-              Cabeçalho
+              cabeçalho
             </button>
             <button
               onClick={() => editor.chain().focus().toggleBulletList().run()}
               className={editor.isActive("bulletList") ? "icon is-active" : "icon"}
             >
-              <PiListBulletsBold title="Tópicos sem ordem" />
+              <PiListBulletsBold title="tópicos sem ordem" />
             </button>
             <button
               onClick={() => editor.chain().focus().toggleOrderedList().run()}
               className={editor.isActive("orderedList") ? "icon is-active" : "icon"}
             >
-              <PiListNumbersFill title="Tópicos ordenados" />
+              <PiListNumbersFill title="tópicos ordenados" />
+            </button>
+            <button
+              onClick={() => editor.chain().focus().toggleBlockquote().run()}
+              className={editor.isActive("blockquote") ? "icon is-active" : "icon"}
+            >
+              <PiQuotesFill title="citação" />
             </button>
             <button
               onClick={() => {}}
               className={editor.isActive("orderedList") ? "icon is-active" : "icon"}
             >
-              <PiPresentationChartFill title="Inserir gráfico" />
+              <PiPresentationChartFill title="inserir gráfico" />
             </button>
             <button
               onClick={() => {}}
               className={editor.isActive("orderedList") ? "icon is-active" : "icon"}
             >
-              <PiTableFill title="Inserir tabela" />
+              <PiTableFill title="inserir tabela" />
             </button>
           </FloatingMenu>
         </div>

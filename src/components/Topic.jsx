@@ -9,7 +9,7 @@ import {
   PiDotsThreeVerticalBold
 } from "react-icons/pi"
 
-import { screenSm } from "../assets/scss/_export.module.scss"
+import { screenSm } from "@/assets/scss/_export.module.scss"
 
 
 export default function Topic({ title, posts = [], icons = [], metrics = [], bookmarked = false, ...remainingProps }) {
