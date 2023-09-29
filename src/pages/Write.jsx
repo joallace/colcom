@@ -1,5 +1,6 @@
 import React from "react";
-import TextEditor from "../components/TextEditor";
+
+import TextEditor from "@/components/TextEditor";
 
 export default function Write(){
     const [content, setContent] = React.useState("")

@@ -1,14 +1,6 @@
 .topic{
     display: flex;
-    width: 60%;
-    
-    @media screen and (min-width: $screen-sm)  and (max-width: $screen-xl) {
-        width: 70%;
-    }
-
-    @media screen and (min-width: 0px)  and (max-width: $screen-sm) {
-        width: 85%;
-    }
+    @include content-responsiveness;
 
     .title{
         text-align: left;

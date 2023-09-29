@@ -27,7 +27,7 @@ const CustomDocument = Document.extend({
   content: "heading block*",
 })
 
-export default ({ setContent = () => { } }, ...remainingProps) => {
+export default ({setContent = () => {}, tableConfig={maxRows: 100, maxColumns: 50}, ...remainingProps}) => {
   const [isMenuInput, setIsMenuInput] = React.useState(false)
   const [numberRows, setNumberRows] = React.useState(0)
   const [numberColumns, setNumberColumns] = React.useState(0)
@@ -37,6 +37,7 @@ export default ({ setContent = () => { } }, ...remainingProps) => {
       CustomDocument,
       StarterKit.configure({
         document: false,
+        heading: false
       }),
       Table,
       TableCell,
@@ -56,13 +57,19 @@ export default ({ setContent = () => { } }, ...remainingProps) => {
     },
     onUpdate: ({ editor }) => {
       setContent(editor.getHTML())
-      setNumberRows(0)
-      setNumberColumns(0)
-      setIsMenuInput(false)
-    }
+    },
+    onTransaction: () => {
+      if(isMenuInput){
+        setNumberRows(0)
+        setNumberColumns(0)
+        setIsMenuInput(false)
+      }
+    },
   })
 
-  const insertTable = () => { (numberColumns && numberRows) && editor.chain().focus().insertTable({ rows: numberRows, cols: numberColumns, withHeaderRow: true }).run() }
+  const validateTableInterval = () => (numberColumns>=1 && numberColumns <= tableConfig.maxColumns && numberRows>=2 && numberRows <= tableConfig.maxRows)
+
+  const insertTable = () => { validateTableInterval() && editor.chain().focus().insertTable({ rows: numberRows, cols: numberColumns, withHeaderRow: true }).run(); console.log(validateTableInterval()) }
 
   return (
     <>
@@ -123,13 +130,13 @@ export default ({ setContent = () => { } }, ...remainingProps) => {
             {isMenuInput ?
               <>
                 <input
-                  placeholder="colunas"
+                  placeholder="n.º de colunas"
                   value={numberColumns ? numberColumns : ""}
                   onChange={e => { e.target.value >= 0 && setNumberColumns(e.target.value.replace(/\D/, "")) }}
                   onKeyDown={e => { e.key === "Enter" && insertTable() }}
                 />
                 <input
-                  placeholder="linhas"
+                  placeholder="n.º de linhas"
                   value={numberRows ? numberRows : ""}
                   onChange={e => { e.target.value >= 0 && setNumberRows(e.target.value.replace(/\D/, "")) }}
                   onKeyDown={e => { e.key === "Enter" && insertTable() }}

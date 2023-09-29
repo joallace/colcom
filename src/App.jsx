@@ -1,11 +1,11 @@
 import { Route, Routes } from "react-router-dom"
 
-import Navbar from './components/Navbar'
+import Navbar from "@/components/Navbar"
 
-import Promoted from './pages/Promoted'
-import All from "./pages/All"
-import Meta from "./pages/Meta"
-import Write from "./pages/Write"
+import Promoted from "@/pages/Promoted"
+import All from "@/pages/All"
+import Meta from "@/pages/Meta"
+import Write from "@/pages/Write"
 
 function App() {
   return (

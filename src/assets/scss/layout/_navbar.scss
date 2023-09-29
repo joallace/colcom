@@ -1,6 +1,6 @@
 nav{
-    background-color: $navbar-bg;
     display: flex;
+    background-color: $navbar-bg;
     align-items: center;
     justify-content: space-between;
     padding: 0 1rem;
@@ -46,7 +46,7 @@ nav{
 .nav-icon{
     color: $default-green;
     margin: 0 2rem 0 1rem;
-    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
     font-size: 1.25rem;
 
     @media screen and (max-width: $screen-sm) {
@@ -56,16 +56,13 @@ nav{
 
 .nav-searchbar{
     color: white;
-    background-color: darken($navbar-bg, 5%);
+    background-color: $default-input-bg;
     height: 1.75rem;
-    border: none;
-    border-width: 1px;
-    border-style: solid;
-    border-color: darken($default-font-color, 40%);
-    // border
+    border: 1px solid darken($default-font-color, 40%);
     border-radius: 0.25rem;
+
     &:focus{
-        border-color: darken($default-font-color, 20%);
+        border-color: darken($default-font-color, 30%);
         outline: none !important;
     }
 }

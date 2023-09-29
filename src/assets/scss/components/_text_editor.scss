@@ -35,10 +35,12 @@
     }
 
     input {
-        color: $default-font-color;
-        background-color: $default-orange;
-        border: none;
         width: 5rem;
+        font-size: 0.75rem;
+        color: $default-font-color;
+        background-color: $default-input-bg;
+        border: none;
+        border-radius: 0.4rem;
 
         &:focus {
             outline: none !important;
@@ -48,19 +50,12 @@
 
 .text-editor {
     display: flex;
-    width: 60%;
-    min-height: 10rem;
-
-    @media screen and (min-width: $screen-sm) and (max-width: $screen-xl) {
-        width: 70%;
-    }
-
-    @media screen and (min-width: 0px) and (max-width: $screen-sm) {
-        width: 85%;
-    }
+    @include content-responsiveness
 }
 
 .tiptap {
+    min-height: 10rem;
+
     >*+* {
         margin-top: 0.75em;
     }
