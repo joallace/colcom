@@ -21,6 +21,9 @@ import Document from "@tiptap/extension-document"
 import Heading from "@tiptap/extension-heading"
 import Placeholder from "@tiptap/extension-placeholder"
 import StarterKit from "@tiptap/starter-kit"
+import Chart from "@/components/Chart"
+
+import { chartData } from "@/assets/mock_data"
 
 
 const CustomDocument = Document.extend({
@@ -39,6 +42,7 @@ export default ({setContent = () => {}, tableConfig={maxRows: 100, maxColumns: 5
         document: false,
         heading: false
       }),
+      Chart,
       Table,
       TableCell,
       TableHeader,
@@ -58,22 +62,31 @@ export default ({setContent = () => {}, tableConfig={maxRows: 100, maxColumns: 5
     onUpdate: ({ editor }) => {
       setContent(editor.getHTML())
     },
-    onTransaction: () => {
+    onTransaction: ({editor}) => {
       if(isMenuInput){
         setNumberRows(0)
         setNumberColumns(0)
         setIsMenuInput(false)
       }
     },
+    content:`
+    <p>
+      This is still the text editor you’re used to, but enriched with node views.
+    </p>
+    <chart data="${JSON.stringify(chartData).replace(/\"/g, "'")}"></chart>
+    <p>
+      Did you see that? That’s a React component. We are really living in the future.
+    </p>
+    `
   })
 
   const validateTableInterval = () => (numberColumns>=1 && numberColumns <= tableConfig.maxColumns && numberRows>=2 && numberRows <= tableConfig.maxRows)
 
-  const insertTable = () => { validateTableInterval() && editor.chain().focus().insertTable({ rows: numberRows, cols: numberColumns, withHeaderRow: true }).run(); console.log(validateTableInterval()) }
-
+  const insertTable = () => { validateTableInterval() && editor.chain().focus().insertTable({ rows: numberRows, cols: numberColumns, withHeaderRow: true }).run() }
+  console.log(JSON.stringify(chartData).replace("\"", "'"))
   return (
     <>
-      {(editor && !editor.isActive("heading", { level: 1 }) && !editor.isActive("table")) &&
+      {(editor && !editor.isActive("heading", { level: 1 }) && !editor.isActive("table") && !editor.isActive("reactComponent")) &&
         <div>
           <BubbleMenu
             className="menu"
@@ -148,7 +161,7 @@ export default ({setContent = () => {}, tableConfig={maxRows: 100, maxColumns: 5
                   onClick={() => editor.chain().focus().setHeading({ level: 2 }).run()}
                   className={editor.isActive("heading", { level: 2 }) ? "is-active" : ""}
                 >
-                  cabeçalho
+                  cabeçalho 1
                 </button>
                 <button
                   onClick={() => editor.chain().focus().setBulletList().run()}
@@ -169,7 +182,7 @@ export default ({setContent = () => {}, tableConfig={maxRows: 100, maxColumns: 5
                   <PiQuotesFill title="inserir citação" />
                 </button>
                 <button
-                  onClick={() => { }}
+                  onClick={() => editor.chain().focus().insertContent("<chart/>").run()}
                   className="icon"
                 >
                   <PiPresentationChartFill title="inserir gráfico" />
@@ -190,6 +203,7 @@ export default ({setContent = () => {}, tableConfig={maxRows: 100, maxColumns: 5
         <div className="bracket" />
         <EditorContent editor={editor} style={{ width: "100%" }} />
       </div>
+
     </>
   )
 }

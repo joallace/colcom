@@ -3,19 +3,10 @@ import { NavLink, Link } from "react-router-dom"
 import { PiMagnifyingGlassBold, PiUser, PiPlusBold } from "react-icons/pi"
 
 import Icon from "@/components/Icon"
-import { screenSm } from "@/assets/scss/_export.module.scss"
+import useScreenSize from "@/hooks/useScreenSize"
 
 export default function Navbar() {
-  const smScreenSize = parseInt(screenSm)
-
-  const [isDesktop, setDesktop] = React.useState(window.innerWidth > smScreenSize)
-
-  const updateMedia = () => { setDesktop(window.innerWidth > smScreenSize) }
-
-  React.useEffect(() => {
-    window.addEventListener("resize", updateMedia);
-    return () => window.removeEventListener("resize", updateMedia);
-  });
+  let isDesktop = useScreenSize()
 
   return (
     <nav className="nav">
