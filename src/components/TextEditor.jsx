@@ -83,10 +83,9 @@ export default ({setContent = () => {}, tableConfig={maxRows: 100, maxColumns: 5
   const validateTableInterval = () => (numberColumns>=1 && numberColumns <= tableConfig.maxColumns && numberRows>=2 && numberRows <= tableConfig.maxRows)
 
   const insertTable = () => { validateTableInterval() && editor.chain().focus().insertTable({ rows: numberRows, cols: numberColumns, withHeaderRow: true }).run() }
-  console.log(JSON.stringify(chartData).replace("\"", "'"))
   return (
     <>
-      {(editor && !editor.isActive("heading", { level: 1 }) && !editor.isActive("table") && !editor.isActive("reactComponent")) &&
+      {(editor && !editor.isActive("heading", { level: 1 }) && !editor.isActive("table")) &&
         <div>
           <BubbleMenu
             className="menu"
@@ -182,7 +181,7 @@ export default ({setContent = () => {}, tableConfig={maxRows: 100, maxColumns: 5
                   <PiQuotesFill title="inserir citação" />
                 </button>
                 <button
-                  onClick={() => editor.chain().focus().insertContent("<chart/>").run()}
+                  onClick={() => editor.chain().focus().insertContent(`<chart data="${JSON.stringify(chartData).replace(/\"/g, "'")}"/>`).run()}
                   className="icon"
                 >
                   <PiPresentationChartFill title="inserir gráfico" />

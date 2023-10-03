@@ -3,7 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'r
 import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
 import { mergeAttributes, Node } from '@tiptap/core'
 
-import { defaultOrange, defaultGreen, defaultYellow } from "@/assets/scss/_export.module.scss"
+import { defaultOrange, defaultGreen, defaultYellow, defaultInputBg } from "@/assets/scss/_export.module.scss"
 import useScreenSize from '@/hooks/useScreenSize';
 
 
@@ -12,8 +12,6 @@ export const TipTapLineChart = props => {
   let isDesktop = useScreenSize()
 
   const defaultColors = [defaultOrange, defaultGreen, defaultYellow]
-
-  console.log(props.node.attrs)
 
   if(data)
     return (
@@ -32,11 +30,11 @@ export const TipTapLineChart = props => {
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" fontSize={isDesktop ? null : 10} foc/>
           <YAxis fontSize={isDesktop ? null : 10} />
-          <Tooltip />
+          <Tooltip contentStyle={{"backgroundColor": defaultInputBg, borderRadius:"0.25rem", border: "1px solid #737373"}}/>
           <Legend />
           {Object.keys(data[0]).map((row, index) => {
               if (row !== "name")
-                return <Line type="monotone" dataKey={row} stroke={defaultColors[index-1]} activeDot={{ r: 8 }} />
+                return <Line dataKey={row} stroke={defaultColors[index-1]} />
           })}
 
         </LineChart>
