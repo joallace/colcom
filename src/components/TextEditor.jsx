@@ -30,7 +30,7 @@ const CustomDocument = Document.extend({
   content: "heading block*",
 })
 
-export default ({setContent = () => {}, tableConfig={maxRows: 100, maxColumns: 50}, ...remainingProps}) => {
+export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColumns: 50 }, ...remainingProps }) => {
   const [isMenuInput, setIsMenuInput] = React.useState(false)
   const [numberRows, setNumberRows] = React.useState(0)
   const [numberColumns, setNumberColumns] = React.useState(0)
@@ -48,7 +48,7 @@ export default ({setContent = () => {}, tableConfig={maxRows: 100, maxColumns: 5
       TableHeader,
       TableRow,
       Heading.configure({
-        levels: [1, 2],
+        levels: [1, 2, 3],
       }),
       Placeholder.configure({
         placeholder: "Qual é o título?"
@@ -62,14 +62,14 @@ export default ({setContent = () => {}, tableConfig={maxRows: 100, maxColumns: 5
     onUpdate: ({ editor }) => {
       setContent(editor.getHTML())
     },
-    onTransaction: ({editor}) => {
-      if(isMenuInput){
+    onTransaction: () => {
+      if (isMenuInput) {
         setNumberRows(0)
         setNumberColumns(0)
         setIsMenuInput(false)
       }
     },
-    content:`
+    content: `
     <p>
       This is still the text editor you’re used to, but enriched with node views.
     </p>
@@ -80,7 +80,7 @@ export default ({setContent = () => {}, tableConfig={maxRows: 100, maxColumns: 5
     `
   })
 
-  const validateTableInterval = () => (numberColumns>=1 && numberColumns <= tableConfig.maxColumns && numberRows>=2 && numberRows <= tableConfig.maxRows)
+  const validateTableInterval = () => (numberColumns >= 1 && numberColumns <= tableConfig.maxColumns && numberRows >= 2 && numberRows <= tableConfig.maxRows)
 
   const insertTable = () => { validateTableInterval() && editor.chain().focus().insertTable({ rows: numberRows, cols: numberColumns, withHeaderRow: true }).run() }
   return (
@@ -88,7 +88,7 @@ export default ({setContent = () => {}, tableConfig={maxRows: 100, maxColumns: 5
       {(editor && !editor.isActive("heading", { level: 1 }) && !editor.isActive("table")) &&
         <div>
           <BubbleMenu
-            className="menu"
+            className={`menu ${editor.isActive("chart")? "hidden":"bubble"}`}
             tippyOptions={{ duration: 100 }}
             editor={editor}
           >
@@ -106,24 +106,40 @@ export default ({setContent = () => {}, tableConfig={maxRows: 100, maxColumns: 5
             </button>
             <button
               onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-              className={editor.isActive("heading", { level: 2 }) ? "is-active" : ""}
+              className={editor.isActive("heading", { level: 2 }) ? "h1 is-active" : "h1"}
             >
-              cabeçalho
+              cabeçalho 1
             </button>
             <button
-              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+              className={editor.isActive("heading", { level: 3 }) ? "h2 is-active" : "h2"}
+            >
+              cabeçalho 2
+            </button>
+            <button
+              onClick={() => {
+                editor.isActive("blockquote") && editor.chain().focus().toggleBlockquote().run()
+                editor.chain().focus().toggleBulletList().run()
+              }}
               className={editor.isActive("bulletList") ? "icon is-active" : "icon"}
             >
               <PiListBulletsBold title="tópicos sem ordem" />
             </button>
             <button
-              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              onClick={() => {
+                editor.isActive("blockquote") && editor.chain().focus().toggleBlockquote().run()
+                editor.chain().focus().toggleOrderedList().run()
+              }}
               className={editor.isActive("orderedList") ? "icon is-active" : "icon"}
             >
               <PiListNumbersFill title="tópicos ordenados" />
             </button>
             <button
-              onClick={() => editor.chain().focus().toggleBlockquote().run()}
+              onClick={() => {
+                editor.isActive("bulletList") && editor.chain().focus().toggleBulletList().run()
+                editor.isActive("orderedList") && editor.chain().focus().toggleOrderedList().run()
+                editor.chain().focus().toggleBlockquote().run()
+              }}
               className={editor.isActive("blockquote") ? "icon is-active" : "icon"}
             >
               <PiQuotesFill title="citação" />
@@ -157,25 +173,31 @@ export default ({setContent = () => {}, tableConfig={maxRows: 100, maxColumns: 5
               :
               <>
                 <button
-                  onClick={() => editor.chain().focus().setHeading({ level: 2 }).run()}
-                  className={editor.isActive("heading", { level: 2 }) ? "is-active" : ""}
+                  onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                  className={editor.isActive("heading", { level: 2 }) ? "h1 is-active" : "h1"}
                 >
                   cabeçalho 1
                 </button>
                 <button
-                  onClick={() => editor.chain().focus().setBulletList().run()}
+                  onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                  className={editor.isActive("heading", { level: 3 }) ? "h2 is-active" : "h2"}
+                >
+                  cabeçalho 2
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().toggleBulletList().run()}
                   className={editor.isActive("bulletList") ? "icon is-active" : "icon"}
                 >
                   <PiListBulletsBold title="inserir tópicos sem ordem" />
                 </button>
                 <button
-                  onClick={() => editor.chain().focus().setOrderedList().run()}
+                  onClick={() => editor.chain().focus().toggleOrderedList().run()}
                   className={editor.isActive("orderedList") ? "icon is-active" : "icon"}
                 >
                   <PiListNumbersFill title="inserir tópicos ordenados" />
                 </button>
                 <button
-                  onClick={() => editor.chain().focus().setBlockquote().run()}
+                  onClick={() => editor.chain().focus().toggleBlockquote().run()}
                   className={editor.isActive("blockquote") ? "icon is-active" : "icon"}
                 >
                   <PiQuotesFill title="inserir citação" />
