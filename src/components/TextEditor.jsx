@@ -24,6 +24,7 @@ import StarterKit from "@tiptap/starter-kit"
 import Chart from "@/components/Chart"
 
 import { chartData } from "@/assets/mock_data"
+import Modal from "./Modal"
 
 
 const CustomDocument = Document.extend({
@@ -32,6 +33,7 @@ const CustomDocument = Document.extend({
 
 export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColumns: 50 }, ...remainingProps }) => {
   const [isMenuInput, setIsMenuInput] = React.useState(false)
+  const [modal, setModal] = React.useState(false)
   const [numberRows, setNumberRows] = React.useState(0)
   const [numberColumns, setNumberColumns] = React.useState(0)
 
@@ -82,7 +84,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
 
   const validateTableInterval = () => (numberColumns >= 1 && numberColumns <= tableConfig.maxColumns && numberRows >= 2 && numberRows <= tableConfig.maxRows)
 
-  const insertTable = () => { validateTableInterval() && editor.chain().focus().insertTable({ rows: numberRows, cols: numberColumns, withHeaderRow: true }).run() }
+  const insertTable = () => { validateTableInterval() && editor.chain().focus().insertTable({ rows: +numberRows+1, cols: numberColumns, withHeaderRow: true }).run() }
   return (
     <>
       {(editor && !editor.isActive("heading", { level: 1 }) && !editor.isActive("table")) &&
@@ -151,7 +153,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
       {(editor && !editor.isActive("heading", { level: 1 })) &&
         <div>
           <FloatingMenu
-            className="menu"
+            className={`menu ${modal && "hidden"}`}
             tippyOptions={{ duration: 100 }}
             editor={editor}
           >
@@ -203,7 +205,8 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
                   <PiQuotesFill title="inserir citação" />
                 </button>
                 <button
-                  onClick={() => editor.chain().focus().insertContent(`<chart data="${JSON.stringify(chartData).replace(/\"/g, "'")}"/>`).run()}
+                  // onClick={() => editor.chain().focus().insertContent(`<chart data="${JSON.stringify(chartData).replace(/\"/g, "'")}"/>`).run()}
+                  onClick={() => setModal(true)}
                   className="icon"
                 >
                   <PiPresentationChartFill title="inserir gráfico" />
@@ -220,11 +223,19 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
         </div>
       }
 
+      <Modal
+        isOpen={modal}
+        setIsOpen={setModal}
+        title={"Insira um gráfico"}
+        footer={[<button>Salvar</button>]}
+      >
+        Porra parceira, tomar no cu
+      </Modal>
+
       <div className="text-editor" {...remainingProps}>
         <div className="bracket" />
         <EditorContent editor={editor} style={{ width: "100%" }} />
       </div>
-
     </>
   )
 }
