@@ -1,21 +1,43 @@
-import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
-import { mergeAttributes, Node } from '@tiptap/core'
+import {
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  RadarChart,
+  Radar,
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
+  ScatterChart,
+  Scatter,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Tooltip,
+  Legend
+} from "recharts"
 
 import { defaultOrange, defaultGreen, defaultYellow, defaultInputBg } from "@/assets/scss/_export.module.scss"
-import useScreenSize from '@/hooks/useScreenSize';
+import useScreenSize from "@/hooks/useScreenSize"
 
-
-export const TipTapLineChart = props => {
-  const data = JSON.parse(props.node.attrs.data.replace(/'/g, "\""))
+export default ({ type, data = [{}] }) => {
+  const COLORS = [defaultOrange, defaultGreen, defaultYellow]
   let isDesktop = useScreenSize()
 
-  const defaultColors = [defaultOrange, defaultGreen, defaultYellow]
+  const tooltipStyle = {
+    "backgroundColor": defaultInputBg,
+    borderRadius: "0.25rem",
+    border: "1px solid #737373"
+  }
 
-  if(data)
-    return (
-      <NodeViewWrapper className="chart">
+  switch (type) {
+    case "line":
+      return (
         <LineChart
           width={500 * (isDesktop ? 1 : 0.7)}
           height={300 * (isDesktop ? 1 : 0.7)}
@@ -28,46 +50,124 @@ export const TipTapLineChart = props => {
           }}
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" fontSize={isDesktop ? null : 10} foc/>
+          <XAxis dataKey="name" fontSize={isDesktop ? null : 10} foc />
           <YAxis fontSize={isDesktop ? null : 10} />
-          <Tooltip contentStyle={{"backgroundColor": defaultInputBg, borderRadius:"0.25rem", border: "1px solid #737373"}}/>
+          <Tooltip contentStyle={tooltipStyle} />
           <Legend />
-          {Object.keys(data[0]).map((row, index) => {
+          {
+            Object.keys(data[0]).map((row, index) => {
               if (row !== "name")
-                return <Line dataKey={row} stroke={defaultColors[index-1]} />
-          })}
+                return <Line dataKey={row} stroke={COLORS[index % COLORS.length]} />
+            })
+          }
 
         </LineChart>
-      </NodeViewWrapper>
-    );
+      )
+    case "area":
+      return (
+        <AreaChart
+          width={500}
+          height={400}
+          data={data}
+          margin={{
+            top: 10,
+            right: 30,
+            left: 0,
+            bottom: 0,
+          }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" fontSize={isDesktop ? null : 10} foc />
+          <YAxis fontSize={isDesktop ? null : 10} />
+          <Tooltip contentStyle={tooltipStyle} />
+          {
+            Object.keys(data[0]).map((row, index) => {
+              if (row !== "name")
+                return <Area type="monotone" dataKey={row} stroke={COLORS[index % COLORS.length]} />
+            })
+          }
+        </AreaChart>
+      )
+    case "bar":
+      return (
+        <BarChart
+          width={500}
+          height={300}
+          data={data}
+          margin={{
+            top: 5,
+            right: 30,
+            left: 20,
+            bottom: 5,
+          }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip  contentStyle={tooltipStyle} />
+          <Legend />
+          {/* <Bar dataKey="pv" fill="#8884d8" activeBar={<Rectangle fill="pink" stroke="blue" />} />
+          <Bar dataKey="uv" fill="#82ca9d" activeBar={<Rectangle fill="gold" stroke="purple" />} /> */}
+          {
+            Object.keys(data[0]).map((row, index) => {
+              if (row !== "name")
+                return <Bar dataKey={row} fill={COLORS[index % COLORS.length]} />
+            })
+          }
+        </BarChart>
+      )
+    case "pie":
+      return (
+        <PieChart width={400} height={400}>
+          <Pie
+            dataKey="value"
+            isAnimationActive={false}
+            data={data}
+            cx="50%"
+            cy="50%"
+            outerRadius={80}
+            fill="#8884d8"
+            label
+          >
+            {
+              Object.keys(data[0]).map((row, index) => {
+                if (row !== "name")
+                  return <Cell  key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              })
+            }
+          </Pie>
+        </PieChart>
+      )
+    case "scatter":
+      return (
+        <ScatterChart
+          margin={{
+            top: 20,
+            right: 20,
+            bottom: 20,
+            left: 20,
+          }}
+        >
+          <CartesianGrid />
+          <XAxis type="number" dataKey="x" name="stature" unit="cm" />
+          <YAxis type="number" dataKey="y" name="weight" unit="kg" />
+          <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={tooltipStyle} />
+          <Scatter name="A school" data={data} fill={defaultOrange} />
+        </ScatterChart>
+      )
+    case "radar":
+      return (
+        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
+          <PolarGrid />
+          <PolarAngleAxis dataKey="name" />
+          <PolarRadiusAxis />
+          {
+            Object.keys(data[0]).map((row, index) => {
+              if (row !== "name")
+                return <Radar  dataKey={row} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} fillOpacity={0.6}/>
+            })
+          }
+        </RadarChart>
+      )
+  }
 }
-
-export default Node.create({
-  name: 'chart',
-  group: 'block',
-  atom: true,
-
-  addAttributes() {
-    return {
-      "data": {
-        default: [],
-      },
-    }
-  },
-
-  parseHTML() {
-    return [
-      {
-        tag: 'chart',
-      },
-    ]
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return ['chart', mergeAttributes(HTMLAttributes)]
-  },
-
-  addNodeView() {
-    return ReactNodeViewRenderer(TipTapLineChart)
-  },
-})

@@ -1,0 +1,44 @@
+.custom-input {
+    position: relative;
+
+    input,
+    select {
+        width: 60%;
+        padding: 0.5rem 0.5rem;
+        color: $default-font-color;
+        background: transparent;
+        outline: none;
+        border: 2px solid $default-green;
+        border-radius: 0.25rem;
+
+        &::placeholder {
+            opacity: 0;
+        }
+
+        &:focus {
+            border: 2px solid $default-orange;
+        }
+    }
+
+    label {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: darken($default-font-color, 40%);
+        letter-spacing: 1px;
+        transition: .3s;
+        font-weight: bold;
+    }
+
+    select:focus+label,
+    select:not(:placeholder-shown)+label,
+    input:focus+label,
+    input:not(:placeholder-shown)+label {
+        top: 0;
+        font-size: .8rem;
+        color: $default-green;
+        background: $navbar-bg;
+        padding: 0.2rem;
+    }
+}

@@ -21,7 +21,8 @@ import Document from "@tiptap/extension-document"
 import Heading from "@tiptap/extension-heading"
 import Placeholder from "@tiptap/extension-placeholder"
 import StarterKit from "@tiptap/starter-kit"
-import Chart from "@/components/Chart"
+import Chart from "@/components/TipTapChart"
+import ModalChart from "@/components/Chart"
 
 import { chartData } from "@/assets/mock_data"
 import Modal from "./Modal"
@@ -36,6 +37,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
   const [modal, setModal] = React.useState(false)
   const [numberRows, setNumberRows] = React.useState(0)
   const [numberColumns, setNumberColumns] = React.useState(0)
+  const [chartType, setChartType] = React.useState("line")
 
   const editor = useEditor({
     extensions: [
@@ -84,13 +86,13 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
 
   const validateTableInterval = () => (numberColumns >= 1 && numberColumns <= tableConfig.maxColumns && numberRows >= 2 && numberRows <= tableConfig.maxRows)
 
-  const insertTable = () => { validateTableInterval() && editor.chain().focus().insertTable({ rows: +numberRows+1, cols: numberColumns, withHeaderRow: true }).run() }
+  const insertTable = () => { validateTableInterval() && editor.chain().focus().insertTable({ rows: +numberRows + 1, cols: numberColumns, withHeaderRow: true }).run() }
   return (
     <>
       {(editor && !editor.isActive("heading", { level: 1 }) && !editor.isActive("table")) &&
         <div>
           <BubbleMenu
-            className={`menu ${editor.isActive("chart")? "hidden":"bubble"}`}
+            className={`menu ${editor.isActive("chart") ? "hidden" : "bubble"}`}
             tippyOptions={{ duration: 100 }}
             editor={editor}
           >
@@ -226,11 +228,47 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
       <Modal
         isOpen={modal}
         setIsOpen={setModal}
-        title={"Insira um gráfico"}
+        title="Insira um gráfico"
         footer={[<button>Salvar</button>]}
       >
-        Porra parceira, tomar no cu
-      </Modal>
+        <div className="body">
+
+          <div className="custom-input">
+            <select name="chartType" id="type" onChange={e => { setChartType(e.target.value); console.log(e.target.value) }}>
+              <option value="line">Linha</option>
+              <option value="area">Área</option>
+              <option value="bar">Barra</option>
+              <option value="pie">Pizza</option>
+              <option value="scatter">Pontos</option>
+              <option value="radar">Radar</option>
+            </select>
+            <label for="type">Tipo de gráfico</label>
+          </div>
+
+          <div className="custom-input">
+            <input
+              id="columns"
+              placeholder="n.º de colunas"
+              value={numberColumns ? numberColumns : ""}
+              onChange={e => { e.target.value >= 0 && setNumberColumns(e.target.value.replace(/\D/, "")) }}
+            />
+            <label for="columns">Colunas</label>
+          </div>
+          <div className="custom-input">
+            <input
+              id="rows"
+              placeholder="n.º de linhas"
+              value={numberRows ? numberRows : ""}
+              onChange={e => { e.target.value >= 0 && setNumberRows(e.target.value.replace(/\D/, "")) }}
+            />
+            <label for="rows">Linhas</label>
+          </div>
+
+
+          {/* <ModalChart type={chartType}/> */}
+        </div>
+
+      </Modal >
 
       <div className="text-editor" {...remainingProps}>
         <div className="bracket" />
