@@ -41,41 +41,6 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
   const [numberColumns, setNumberColumns] = React.useState(0)
   const [chartType, setChartType] = React.useState("line")
 
-  const chartInputStr = {
-    "line": ["linhas", "pontos"],
-    "area": ["linhas", "pontos"],
-    "bar": ["barras", "pontos"],
-    "pie": ["seções"],
-    "scatter": ["pontos"],
-    "radar": ["seções", "variáveis"]
-  }
-
-
-  const generateChartData = (type, n_samples=5) => {
-    switch (type) {
-      case "line":
-      case "area":
-      case "bar":
-        return Array.from({ length: n_samples }, (_, i) => ({
-          name: String.fromCharCode('A'.charCodeAt()+i + Math.floor(i/26)*6),
-          x1: Math.random().toFixed(2),
-          x2: Math.random().toFixed(2),
-        }))
-      case "radar":
-      case "pie":
-        return Array.from({ length: n_samples }, (_, i) => ({
-          name: String.fromCharCode('A'.charCodeAt()+i + Math.floor(i/26)*6),
-          value: parseFloat(Math.random().toFixed(2)),
-          x2: Math.random().toFixed(2),
-        }))
-      case "scatter":
-        return Array.from({ length: n_samples }, () => ({
-          x: Math.random().toFixed(2),
-          y: Math.random().toFixed(2),
-        }))
-    }
-  }
-
   const editor = useEditor({
     extensions: [
       CustomDocument,
@@ -121,9 +86,81 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
     `
   })
 
+
+  const chartInputStr = {
+    "line": ["linhas", "pontos"],
+    "area": ["linhas", "pontos"],
+    "bar": ["barras", "pontos"],
+    "pie": ["seções"],
+    "scatter": ["pontos"],
+    "radar": ["seções", "variáveis"]
+  }
+
+  const generateData = (index, n_samples) => {
+    const obj = { name: String.fromCharCode('A'.charCodeAt() + index + Math.floor(index / 26) * 6) }
+    for (let i = 1; i <= n_samples; i++) {
+      obj['x' + i] = Math.random().toFixed(2)
+    }
+    return obj
+  }
+
+  const generateChartData = (type, numberColumns, numberRows) => {
+    if (!numberColumns || !numberRows)
+      return [{}]
+
+    switch (type) {
+      case "line":
+      case "area":
+      case "radar":
+      case "bar":
+        return Array.from({ length: numberRows }, (_, i) => (generateData(i, numberColumns)))
+      case "pie":
+        return Array.from({ length: numberColumns }, (_, i) => ({
+          name: String.fromCharCode('A'.charCodeAt() + i + Math.floor(i / 26) * 6),
+          value: parseFloat(Math.random().toFixed(2)),
+        }))
+      case "scatter":
+        return Array.from({ length: numberColumns }, () => ({
+          x: Math.random().toFixed(2),
+          y: Math.random().toFixed(2),
+        }))
+    }
+  }
+
+  const setChartPreset = () => {
+    switch (chartType) {
+      case "line":
+      case "area":
+      case "radar":
+      case "bar":
+        setNumberColumns(2)
+        setNumberRows(5)
+        break
+      case "pie":
+        setNumberColumns(5)
+        break
+      case "scatter":
+        setNumberColumns(5)
+        break
+    }
+    return true
+  }
+
   const validateTableInterval = () => (numberColumns >= 1 && numberColumns <= tableConfig.maxColumns && numberRows >= 2 && numberRows <= tableConfig.maxRows)
 
   const insertTable = () => { validateTableInterval() && editor.chain().focus().insertTable({ rows: +numberRows + 1, cols: numberColumns, withHeaderRow: true }).run() }
+
+
+  React.useEffect(() => {
+    if (modal)
+      setChartPreset()
+    else {
+      setNumberColumns(0)
+      setNumberRows(0)
+    }
+  }, [modal, chartType])
+
+
   return (
     <>
       {(editor && !editor.isActive("heading", { level: 1 }) && !editor.isActive("table")) &&
@@ -245,7 +282,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
                 </button>
                 <button
                   // onClick={() => editor.chain().focus().insertContent(`<chart data="${JSON.stringify(chartData).replace(/\"/g, "'")}"/>`).run()}
-                  onClick={() => setModal(true)}
+                  onClick={() => { setChartPreset(); setModal(true) }}
                   className="icon"
                 >
                   <PiPresentationChartFill title="inserir gráfico" />
@@ -263,10 +300,10 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
       }
 
       <Modal
-        isOpen={true}
+        isOpen={modal}
         setIsOpen={setModal}
         title="insira um gráfico"
-        footer={[<button>salvar</button>]}
+        footer={[<button>continuar</button>]}
       >
         <div className="body">
           <div className="left">
@@ -291,7 +328,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
                 value={numberColumns ? numberColumns : ""}
                 onChange={e => { e.target.value >= 0 && setNumberColumns(e.target.value.replace(/\D/, "")) }}
               />
-              { (chartType !== "pie" && chartType !== "scatter") &&
+              {(chartType !== "pie" && chartType !== "scatter") &&
                 <Input
                   label={`n.º de ${chartInputStr[chartType][1]}`}
                   value={numberRows ? numberRows : ""}
@@ -300,7 +337,8 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
               }
             </div>
           </div>
-          <ModalChart className="right" type={chartType} data={generateChartData(chartType)} width={400} height={200} />
+          {console.log(numberColumns, numberRows)}
+          <ModalChart className="right" type={chartType} data={generateChartData(chartType, numberColumns, numberRows)} width={400} height={200} />
         </div>
 
       </Modal >

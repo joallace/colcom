@@ -13,7 +13,7 @@ export default function Modal({ isOpen = false, setIsOpen = () => { }, children,
     return
 
   return (
-    <div className="backdrop" onClick={handleClickOutside}>
+    <div className="backdrop">
       <div className="modal">
         <div className="header" style={{ justifyContent: !title && "right" }}>
           {title}

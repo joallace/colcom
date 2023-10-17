@@ -11,6 +11,7 @@
         border: 2px solid $default-green;
         border-radius: 0.25rem;
         outline: none;
+        transition: .3s;
 
         &::placeholder {
             opacity: 0;

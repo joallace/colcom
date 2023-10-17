@@ -22,14 +22,14 @@ import {
   Legend
 } from "recharts"
 
-import { defaultOrange, defaultGreen, defaultYellow, defaultInputBg, defaultFontColor } from "@/assets/scss/_export.module.scss"
+import { defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultInputBg, defaultFontColor } from "@/assets/scss/_export.module.scss"
 import useScreenSize from "@/hooks/useScreenSize"
 
 
 export default ({ type, data = [{}], width, height, ...remainingProps }) => {
   const isDesktop = useScreenSize()
 
-  const COLORS = [defaultOrange, defaultGreen, defaultYellow, defaultInputBg, defaultFontColor]
+  const COLORS = [defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultFontColor]
   const RADIAN = Math.PI / 180
   const tooltipStyle = {
     backgroundColor: defaultInputBg,
