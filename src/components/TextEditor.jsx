@@ -23,9 +23,7 @@ import Placeholder from "@tiptap/extension-placeholder"
 import StarterKit from "@tiptap/starter-kit"
 
 import Chart from "@/components/TipTapChart"
-import ModalChart from "@/components/Chart"
-import Modal from "@/components/Modal"
-import Input from "@/components/Input"
+import ChartModal from "@/components/ChartModal"
 
 import { chartData } from "@/assets/mock_data"
 
@@ -39,7 +37,6 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
   const [modal, setModal] = React.useState(false)
   const [numberRows, setNumberRows] = React.useState(0)
   const [numberColumns, setNumberColumns] = React.useState(0)
-  const [chartType, setChartType] = React.useState("line")
 
   const editor = useEditor({
     extensions: [
@@ -86,79 +83,9 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
     `
   })
 
-
-  const chartInputStr = {
-    "line": ["linhas", "pontos"],
-    "area": ["linhas", "pontos"],
-    "bar": ["barras", "pontos"],
-    "pie": ["seções"],
-    "scatter": ["pontos"],
-    "radar": ["seções", "variáveis"]
-  }
-
-  const generateData = (index, n_samples) => {
-    const obj = { name: String.fromCharCode('A'.charCodeAt() + index + Math.floor(index / 26) * 6) }
-    for (let i = 1; i <= n_samples; i++) {
-      obj['x' + i] = Math.random().toFixed(2)
-    }
-    return obj
-  }
-
-  const generateChartData = (type, numberColumns, numberRows) => {
-    if (!numberColumns || !numberRows)
-      return [{}]
-
-    switch (type) {
-      case "line":
-      case "area":
-      case "radar":
-      case "bar":
-        return Array.from({ length: numberRows }, (_, i) => (generateData(i, numberColumns)))
-      case "pie":
-        return Array.from({ length: numberColumns }, (_, i) => ({
-          name: String.fromCharCode('A'.charCodeAt() + i + Math.floor(i / 26) * 6),
-          value: parseFloat(Math.random().toFixed(2)),
-        }))
-      case "scatter":
-        return Array.from({ length: numberColumns }, () => ({
-          x: Math.random().toFixed(2),
-          y: Math.random().toFixed(2),
-        }))
-    }
-  }
-
-  const setChartPreset = () => {
-    switch (chartType) {
-      case "line":
-      case "area":
-      case "radar":
-      case "bar":
-        setNumberColumns(2)
-        setNumberRows(5)
-        break
-      case "pie":
-        setNumberColumns(5)
-        break
-      case "scatter":
-        setNumberColumns(5)
-        break
-    }
-    return true
-  }
-
   const validateTableInterval = () => (numberColumns >= 1 && numberColumns <= tableConfig.maxColumns && numberRows >= 2 && numberRows <= tableConfig.maxRows)
 
   const insertTable = () => { validateTableInterval() && editor.chain().focus().insertTable({ rows: +numberRows + 1, cols: numberColumns, withHeaderRow: true }).run() }
-
-
-  React.useEffect(() => {
-    if (modal)
-      setChartPreset()
-    else {
-      setNumberColumns(0)
-      setNumberRows(0)
-    }
-  }, [modal, chartType])
 
 
   return (
@@ -282,7 +209,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
                 </button>
                 <button
                   // onClick={() => editor.chain().focus().insertContent(`<chart data="${JSON.stringify(chartData).replace(/\"/g, "'")}"/>`).run()}
-                  onClick={() => { setChartPreset(); setModal(true) }}
+                  onClick={() => setModal(true)}
                   className="icon"
                 >
                   <PiPresentationChartFill title="inserir gráfico" />
@@ -299,49 +226,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
         </div>
       }
 
-      <Modal
-        isOpen={modal}
-        setIsOpen={setModal}
-        title="insira um gráfico"
-        footer={[<button>continuar</button>]}
-      >
-        <div className="body">
-          <div className="left">
-            <Input
-              label="tipo de gráfico"
-              type="select"
-              options={{
-                "linha": "line",
-                "área": "area",
-                "barra": "bar",
-                "pizza": "pie",
-                "pontos": "scatter",
-                "radar": "radar"
-              }}
-              onChange={e => { setChartType(e.target.value) }}
-              value={chartType}
-            />
-
-            <div className="bottom">
-              <Input
-                label={`n.º de ${chartInputStr[chartType][0]}`}
-                value={numberColumns ? numberColumns : ""}
-                onChange={e => { e.target.value >= 0 && setNumberColumns(e.target.value.replace(/\D/, "")) }}
-              />
-              {(chartType !== "pie" && chartType !== "scatter") &&
-                <Input
-                  label={`n.º de ${chartInputStr[chartType][1]}`}
-                  value={numberRows ? numberRows : ""}
-                  onChange={e => { e.target.value >= 0 && setNumberRows(e.target.value.replace(/\D/, "")) }}
-                />
-              }
-            </div>
-          </div>
-          {console.log(numberColumns, numberRows)}
-          <ModalChart className="right" type={chartType} data={generateChartData(chartType, numberColumns, numberRows)} width={400} height={200} />
-        </div>
-
-      </Modal >
+      <ChartModal isOpen={modal} setIsOpen={setModal}/>
 
       <div className="text-editor" {...remainingProps}>
         <div className="bracket" />
