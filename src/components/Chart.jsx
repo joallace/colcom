@@ -27,11 +27,25 @@ import useScreenSize from "@/hooks/useScreenSize"
 
 
 export default ({ type, data = [{}], width, height, ...remainingProps }) => {
+  const isDesktop = useScreenSize()
+
   const COLORS = [defaultOrange, defaultGreen, defaultYellow, defaultInputBg, defaultFontColor]
-  let isDesktop = useScreenSize()
+  const RADIAN = Math.PI / 180
+
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+    const x = cx + radius * Math.cos(-midAngle * RADIAN)
+    const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+    return (
+      <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central">
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    )
+  }
 
   const tooltipStyle = {
-    "backgroundColor": defaultInputBg,
+    backgroundColor: defaultInputBg,
     borderRadius: "0.25rem",
     border: "1px solid #737373"
   }
@@ -86,7 +100,7 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
           {
             Object.keys(data[0]).map((row, index) => {
               if (row !== "name")
-                return <Area type="monotone" dataKey={row} stroke={COLORS[index % COLORS.length]} />
+                return <Area dataKey={row} stroke={COLORS[index % COLORS.length]} />
             })
           }
         </AreaChart>
@@ -127,15 +141,16 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
           height={height * (isDesktop ? 1 : 0.7)}
           {...remainingProps}
         >
+          <Tooltip contentStyle={tooltipStyle} itemStyle={{color: defaultFontColor}}/>
           <Pie
             dataKey="value"
-            isAnimationActive={false}
             data={data}
+            animationDuration={500}
             cx="50%"
             cy="50%"
-            outerRadius={80}
-            fill="#8884d8"
-            label
+            label={renderCustomizedLabel}
+            labelLine={false}
+            outerRadius={width * (isDesktop ? 1 : 0.7)/5}
           >
             {
               Object.keys(data).map((row, index) => {
@@ -162,7 +177,7 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
           <CartesianGrid />
           <XAxis type="number" dataKey="x" name="stature" unit="cm" />
           <YAxis type="number" dataKey="y" name="weight" unit="kg" />
-          <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={tooltipStyle} />
+          <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={tooltipStyle} itemStyle={{color: defaultFontColor}}/>
           <Scatter name="A school" data={data} fill={defaultOrange} />
         </ScatterChart>
       )
@@ -180,6 +195,7 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
           <PolarGrid />
           <PolarAngleAxis dataKey="name" />
           <PolarRadiusAxis />
+          <Tooltip contentStyle={tooltipStyle} itemStyle={{color: defaultFontColor}}/>
           {
             Object.keys(data[0]).map((row, index) => {
               if (row !== "name")

@@ -1,14 +1,26 @@
 .modal > .body{
     display: flex;
     width: 100%;
+
+    @media screen and (min-width: 0px)  and (max-width: $screen-sm) {
+        flex-direction: column;
+        place-items: center;
+    }
+
     .left{
         width: 40%;
+        display: flex;
+        flex-direction: column;
+        place-content: center;
         div{
             width: 100%;
             margin-bottom: 1rem;
         }
         select{
             margin-bottom: 0.5rem;
+        }
+        @media screen and (min-width: 0px)  and (max-width: $screen-sm) {
+            width: 80%;
         }
         
     }
