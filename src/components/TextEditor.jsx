@@ -49,20 +49,20 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
       case "bar":
         return Array.from({ length: n_samples }, (_, i) => ({
           name: String.fromCharCode('A'.charCodeAt()+i + Math.floor(i/26)*6),
-          x1: Math.random(),
-          x2: Math.random(),
+          x1: Math.random().toFixed(2),
+          x2: Math.random().toFixed(2),
         }))
       case "radar":
       case "pie":
         return Array.from({ length: n_samples }, (_, i) => ({
           name: String.fromCharCode('A'.charCodeAt()+i + Math.floor(i/26)*6),
-          value: Math.random(),
-          x2: Math.random(),
+          value: parseFloat(Math.random().toFixed(2)),
+          x2: Math.random().toFixed(2),
         }))
       case "scatter":
         return Array.from({ length: n_samples }, () => ({
-          x: Math.random(),
-          y: Math.random(),
+          x: Math.random().toFixed(2),
+          y: Math.random().toFixed(2),
         }))
     }
   }
@@ -294,7 +294,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
               />
             </div>
           </div>
-          <ModalChart className="right" type={chartType} data={generateChartData(chartType)} width={200} height={200} />
+          <ModalChart className="right" type={chartType} data={generateChartData(chartType)} width={400} height={200} />
         </div>
 
       </Modal >

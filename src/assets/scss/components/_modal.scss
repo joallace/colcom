@@ -14,15 +14,15 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    max-width: 40%;
-    max-height: 50%;
+    min-height: min-content;
+    min-width: min-content;
     padding: 1.25rem;
     border-radius: 0.75rem;
 
     .header{
         font-size: 1.5rem;
         font-weight: bold;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
         display: flex;
         color: $default-green;
         align-content: center;
