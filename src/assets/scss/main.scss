@@ -1,7 +1,7 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-@import "components/custom_input";
+@import "components/input";
 @import "components/topic";
 @import "components/text_editor";
 @import "components/modal";
@@ -10,3 +10,5 @@
 
 @import "layout/index";
 @import "layout/navbar";
+
+@import "pages/write";

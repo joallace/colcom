@@ -1,0 +1,18 @@
+.modal > .body{
+    display: flex;
+    width: 100%;
+    .left{
+        width: 40%;
+        div{
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        select{
+            margin-bottom: 2rem;
+        }
+        
+    }
+    .right{
+        width: 60%;
+    }
+}

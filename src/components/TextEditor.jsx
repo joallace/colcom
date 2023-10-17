@@ -21,11 +21,13 @@ import Document from "@tiptap/extension-document"
 import Heading from "@tiptap/extension-heading"
 import Placeholder from "@tiptap/extension-placeholder"
 import StarterKit from "@tiptap/starter-kit"
+
 import Chart from "@/components/TipTapChart"
 import ModalChart from "@/components/Chart"
+import Modal from "@/components/Modal"
+import Input from "@/components/Input"
 
 import { chartData } from "@/assets/mock_data"
-import Modal from "./Modal"
 
 
 const CustomDocument = Document.extend({
@@ -226,46 +228,47 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
       }
 
       <Modal
-        isOpen={modal}
+        isOpen={true}
         setIsOpen={setModal}
-        title="Insira um gráfico"
-        footer={[<button>Salvar</button>]}
+        title="insira um gráfico"
+        footer={[<button>salvar</button>]}
       >
         <div className="body">
-
-          <div className="custom-input">
-            <select name="chartType" id="type" onChange={e => { setChartType(e.target.value); console.log(e.target.value) }}>
-              <option value="line">Linha</option>
-              <option value="area">Área</option>
-              <option value="bar">Barra</option>
-              <option value="pie">Pizza</option>
-              <option value="scatter">Pontos</option>
-              <option value="radar">Radar</option>
-            </select>
-            <label for="type">Tipo de gráfico</label>
-          </div>
-
-          <div className="custom-input">
-            <input
-              id="columns"
-              placeholder="n.º de colunas"
-              value={numberColumns ? numberColumns : ""}
-              onChange={e => { e.target.value >= 0 && setNumberColumns(e.target.value.replace(/\D/, "")) }}
+          <div className="left">
+            <Input
+              label="tipo de gráfico"
+              id="typeInput"
+              type="select"
+              options={{
+                "linha": "line",
+                "área": "area",
+                "barra": "bar",
+                "pizza": "pie",
+                "pontos": "scatter",
+                "radar": "radar"
+              }}
+              onChange={e => { setChartType(e.target.value) }}
+              value={chartType}
             />
-            <label for="columns">Colunas</label>
-          </div>
-          <div className="custom-input">
-            <input
-              id="rows"
-              placeholder="n.º de linhas"
-              value={numberRows ? numberRows : ""}
-              onChange={e => { e.target.value >= 0 && setNumberRows(e.target.value.replace(/\D/, "")) }}
-            />
-            <label for="rows">Linhas</label>
-          </div>
 
-
-          {/* <ModalChart type={chartType}/> */}
+            <div className="bottom">
+              <Input
+                id="colInput"
+                label="n.º de colunas"
+                placeholder="n.º de colunas"
+                value={numberColumns ? numberColumns : ""}
+                onChange={e => { e.target.value >= 0 && setNumberColumns(e.target.value.replace(/\D/, "")) }}
+              />
+              <Input
+                id="rowInput"
+                label="n.º de linhas"
+                placeholder="n.º de linhas"
+                value={numberRows ? numberRows : ""}
+                  onChange={e => { e.target.value >= 0 && setNumberRows(e.target.value.replace(/\D/, "")) }}
+              />
+            </div>
+          </div>
+          <ModalChart className="right" type={chartType} width={200} height={200} />
         </div>
 
       </Modal >

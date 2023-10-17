@@ -25,7 +25,7 @@ import {
 import { defaultOrange, defaultGreen, defaultYellow, defaultInputBg } from "@/assets/scss/_export.module.scss"
 import useScreenSize from "@/hooks/useScreenSize"
 
-export default ({ type, data = [{}] }) => {
+export default ({ type, data = [{}], width, height, ...remainingProps }) => {
   const COLORS = [defaultOrange, defaultGreen, defaultYellow]
   let isDesktop = useScreenSize()
 
@@ -39,8 +39,8 @@ export default ({ type, data = [{}] }) => {
     case "line":
       return (
         <LineChart
-          width={500 * (isDesktop ? 1 : 0.7)}
-          height={300 * (isDesktop ? 1 : 0.7)}
+          width={width * (isDesktop ? 1 : 0.7)}
+          height={height * (isDesktop ? 1 : 0.7)}
           data={data}
           margin={{
             top: 5,
@@ -48,6 +48,7 @@ export default ({ type, data = [{}] }) => {
             left: 20,
             bottom: 5,
           }}
+          {...remainingProps}
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" fontSize={isDesktop ? null : 10} foc />
@@ -66,8 +67,8 @@ export default ({ type, data = [{}] }) => {
     case "area":
       return (
         <AreaChart
-          width={500}
-          height={400}
+          width={width * (isDesktop ? 1 : 0.7)}
+          height={height * (isDesktop ? 1 : 0.7)}
           data={data}
           margin={{
             top: 10,
@@ -75,6 +76,7 @@ export default ({ type, data = [{}] }) => {
             left: 0,
             bottom: 0,
           }}
+          {...remainingProps}
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" fontSize={isDesktop ? null : 10} foc />
@@ -91,8 +93,8 @@ export default ({ type, data = [{}] }) => {
     case "bar":
       return (
         <BarChart
-          width={500}
-          height={300}
+          width={width * (isDesktop ? 1 : 0.7)}
+          height={height * (isDesktop ? 1 : 0.7)}
           data={data}
           margin={{
             top: 5,
@@ -100,11 +102,12 @@ export default ({ type, data = [{}] }) => {
             left: 20,
             bottom: 5,
           }}
+          {...remainingProps}
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
           <YAxis />
-          <Tooltip  contentStyle={tooltipStyle} />
+          <Tooltip contentStyle={tooltipStyle} />
           <Legend />
           {/* <Bar dataKey="pv" fill="#8884d8" activeBar={<Rectangle fill="pink" stroke="blue" />} />
           <Bar dataKey="uv" fill="#82ca9d" activeBar={<Rectangle fill="gold" stroke="purple" />} /> */}
@@ -118,7 +121,11 @@ export default ({ type, data = [{}] }) => {
       )
     case "pie":
       return (
-        <PieChart width={400} height={400}>
+        <PieChart
+          width={width * (isDesktop ? 1 : 0.7)}
+          height={height * (isDesktop ? 1 : 0.7)}
+          {...remainingProps}
+        >
           <Pie
             dataKey="value"
             isAnimationActive={false}
@@ -132,7 +139,7 @@ export default ({ type, data = [{}] }) => {
             {
               Object.keys(data[0]).map((row, index) => {
                 if (row !== "name")
-                  return <Cell  key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               })
             }
           </Pie>
@@ -147,6 +154,9 @@ export default ({ type, data = [{}] }) => {
             bottom: 20,
             left: 20,
           }}
+          width={width * (isDesktop ? 1 : 0.7)}
+          height={height * (isDesktop ? 1 : 0.7)}
+          {...remainingProps}
         >
           <CartesianGrid />
           <XAxis type="number" dataKey="x" name="stature" unit="cm" />
@@ -157,14 +167,22 @@ export default ({ type, data = [{}] }) => {
       )
     case "radar":
       return (
-        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
+        <RadarChart
+          cx="50%"
+          cy="50%"
+          outerRadius="80%"
+          width={width * (isDesktop ? 1 : 0.7)}
+          height={height * (isDesktop ? 1 : 0.7)}
+          data={data}
+          {...remainingProps}
+        >
           <PolarGrid />
           <PolarAngleAxis dataKey="name" />
           <PolarRadiusAxis />
           {
             Object.keys(data[0]).map((row, index) => {
               if (row !== "name")
-                return <Radar  dataKey={row} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} fillOpacity={0.6}/>
+                return <Radar dataKey={row} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} fillOpacity={0.6} />
             })
           }
         </RadarChart>
