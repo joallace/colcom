@@ -41,6 +41,32 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
   const [numberColumns, setNumberColumns] = React.useState(0)
   const [chartType, setChartType] = React.useState("line")
 
+
+  const generateChartData = (type, n_samples=5) => {
+    switch (type) {
+      case "line":
+      case "area":
+      case "bar":
+        return Array.from({ length: n_samples }, (_, i) => ({
+          name: String.fromCharCode('A'.charCodeAt()+i + Math.floor(i/26)*6),
+          x1: Math.random(),
+          x2: Math.random(),
+        }))
+      case "radar":
+      case "pie":
+        return Array.from({ length: n_samples }, (_, i) => ({
+          name: String.fromCharCode('A'.charCodeAt()+i + Math.floor(i/26)*6),
+          value: Math.random(),
+          x2: Math.random(),
+        }))
+      case "scatter":
+        return Array.from({ length: n_samples }, () => ({
+          x: Math.random(),
+          y: Math.random(),
+        }))
+    }
+  }
+
   const editor = useEditor({
     extensions: [
       CustomDocument,
@@ -264,11 +290,11 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
                 label="n.º de linhas"
                 placeholder="n.º de linhas"
                 value={numberRows ? numberRows : ""}
-                  onChange={e => { e.target.value >= 0 && setNumberRows(e.target.value.replace(/\D/, "")) }}
+                onChange={e => { e.target.value >= 0 && setNumberRows(e.target.value.replace(/\D/, "")) }}
               />
             </div>
           </div>
-          <ModalChart className="right" type={chartType} width={200} height={200} />
+          <ModalChart className="right" type={chartType} data={generateChartData(chartType)} width={200} height={200} />
         </div>
 
       </Modal >

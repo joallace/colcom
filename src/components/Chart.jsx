@@ -22,11 +22,12 @@ import {
   Legend
 } from "recharts"
 
-import { defaultOrange, defaultGreen, defaultYellow, defaultInputBg } from "@/assets/scss/_export.module.scss"
+import { defaultOrange, defaultGreen, defaultYellow, defaultInputBg, defaultFontColor } from "@/assets/scss/_export.module.scss"
 import useScreenSize from "@/hooks/useScreenSize"
 
+
 export default ({ type, data = [{}], width, height, ...remainingProps }) => {
-  const COLORS = [defaultOrange, defaultGreen, defaultYellow]
+  const COLORS = [defaultOrange, defaultGreen, defaultYellow, defaultInputBg, defaultFontColor]
   let isDesktop = useScreenSize()
 
   const tooltipStyle = {
@@ -137,9 +138,9 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
             label
           >
             {
-              Object.keys(data[0]).map((row, index) => {
-                if (row !== "name")
-                  return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              Object.keys(data).map((row, index) => {
+                // if (row !== "name")
+                return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               })
             }
           </Pie>
