@@ -16,8 +16,21 @@
             opacity: 0;
         }
 
+        &:not(:placeholder-shown)+label,
+        &:focus+label {
+            top: 0;
+            font-size: .75rem;
+            color: $default-green;
+            background: $navbar-bg;
+            padding: 0.2rem;
+        }
+
         &:focus {
             border: 2px solid $default-orange;
+        }
+
+        &:focus+label {
+            color: $default-orange;
         }
     }
 
@@ -31,16 +44,5 @@
         transition: .3s;
         font-weight: bold;
         white-space: nowrap;
-    }
-
-    select:focus+label,
-    select:not(:placeholder-shown)+label,
-    input:focus+label,
-    input:not(:placeholder-shown)+label {
-        top: 0;
-        font-size: .75rem;
-        color: $default-green;
-        background: $navbar-bg;
-        padding: 0.2rem;
     }
 }

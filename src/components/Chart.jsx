@@ -31,6 +31,11 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
 
   const COLORS = [defaultOrange, defaultGreen, defaultYellow, defaultInputBg, defaultFontColor]
   const RADIAN = Math.PI / 180
+  const tooltipStyle = {
+    backgroundColor: defaultInputBg,
+    borderRadius: "0.25rem",
+    border: "1px solid #737373"
+  }
 
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5
@@ -43,12 +48,7 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
       </text>
     )
   }
-
-  const tooltipStyle = {
-    backgroundColor: defaultInputBg,
-    borderRadius: "0.25rem",
-    border: "1px solid #737373"
-  }
+  
 
   switch (type) {
     case "line":
@@ -73,7 +73,7 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
           {
             Object.keys(data[0]).map((row, index) => {
               if (row !== "name")
-                return <Line dataKey={row} stroke={COLORS[index % COLORS.length]} />
+                return <Line animationDuration={500} dataKey={row} stroke={COLORS[index % COLORS.length]} />
             })
           }
 
@@ -100,7 +100,7 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
           {
             Object.keys(data[0]).map((row, index) => {
               if (row !== "name")
-                return <Area dataKey={row} stroke={COLORS[index % COLORS.length]} />
+                return <Area animationDuration={500} dataKey={row} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} />
             })
           }
         </AreaChart>
@@ -124,8 +124,6 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
           <YAxis />
           <Tooltip contentStyle={tooltipStyle} />
           <Legend />
-          {/* <Bar dataKey="pv" fill="#8884d8" activeBar={<Rectangle fill="pink" stroke="blue" />} />
-          <Bar dataKey="uv" fill="#82ca9d" activeBar={<Rectangle fill="gold" stroke="purple" />} /> */}
           {
             Object.keys(data[0]).map((row, index) => {
               if (row !== "name")
@@ -141,7 +139,7 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
           height={height * (isDesktop ? 1 : 0.7)}
           {...remainingProps}
         >
-          <Tooltip contentStyle={tooltipStyle} itemStyle={{color: defaultFontColor}}/>
+          <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: defaultFontColor }} />
           <Pie
             dataKey="value"
             data={data}
@@ -150,11 +148,10 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
             cy="50%"
             label={renderCustomizedLabel}
             labelLine={false}
-            outerRadius={width * (isDesktop ? 1 : 0.7)/5}
+            outerRadius={width * (isDesktop ? 1 : 0.7) / 5}
           >
             {
               Object.keys(data).map((row, index) => {
-                // if (row !== "name")
                 return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               })
             }
@@ -177,8 +174,8 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
           <CartesianGrid />
           <XAxis type="number" dataKey="x" name="stature" unit="cm" />
           <YAxis type="number" dataKey="y" name="weight" unit="kg" />
-          <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={tooltipStyle} itemStyle={{color: defaultFontColor}}/>
-          <Scatter name="A school" data={data} fill={defaultOrange} />
+          <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={tooltipStyle} itemStyle={{ color: defaultFontColor }} />
+          <Scatter data={data} fill={defaultOrange} />
         </ScatterChart>
       )
     case "radar":
@@ -195,11 +192,11 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
           <PolarGrid />
           <PolarAngleAxis dataKey="name" />
           <PolarRadiusAxis />
-          <Tooltip contentStyle={tooltipStyle} itemStyle={{color: defaultFontColor}}/>
+          <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: defaultFontColor }} />
           {
             Object.keys(data[0]).map((row, index) => {
               if (row !== "name")
-                return <Radar dataKey={row} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} fillOpacity={0.6} />
+                return <Radar animationDuration={500} dataKey={row} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} fillOpacity={0.6} />
             })
           }
         </RadarChart>

@@ -41,6 +41,15 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
   const [numberColumns, setNumberColumns] = React.useState(0)
   const [chartType, setChartType] = React.useState("line")
 
+  const chartInputStr = {
+    "line": ["linhas", "pontos"],
+    "area": ["linhas", "pontos"],
+    "bar": ["barras", "pontos"],
+    "pie": ["seções"],
+    "scatter": ["pontos"],
+    "radar": ["seções", "variáveis"]
+  }
+
 
   const generateChartData = (type, n_samples=5) => {
     switch (type) {
@@ -263,7 +272,6 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
           <div className="left">
             <Input
               label="tipo de gráfico"
-              id="typeInput"
               type="select"
               options={{
                 "linha": "line",
@@ -279,19 +287,17 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
 
             <div className="bottom">
               <Input
-                id="colInput"
-                label="n.º de colunas"
-                placeholder="n.º de colunas"
+                label={`n.º de ${chartInputStr[chartType][0]}`}
                 value={numberColumns ? numberColumns : ""}
                 onChange={e => { e.target.value >= 0 && setNumberColumns(e.target.value.replace(/\D/, "")) }}
               />
-              <Input
-                id="rowInput"
-                label="n.º de linhas"
-                placeholder="n.º de linhas"
-                value={numberRows ? numberRows : ""}
-                onChange={e => { e.target.value >= 0 && setNumberRows(e.target.value.replace(/\D/, "")) }}
-              />
+              { (chartType !== "pie" && chartType !== "scatter") &&
+                <Input
+                  label={`n.º de ${chartInputStr[chartType][1]}`}
+                  value={numberRows ? numberRows : ""}
+                  onChange={e => { e.target.value >= 0 && setNumberRows(e.target.value.replace(/\D/, "")) }}
+                />
+              }
             </div>
           </div>
           <ModalChart className="right" type={chartType} data={generateChartData(chartType)} width={400} height={200} />
