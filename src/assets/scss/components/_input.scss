@@ -47,3 +47,12 @@
         white-space: nowrap;
     }
 }
+
+.checkBox {
+    display: flex;
+    align-items: center;
+    label {
+        // color: $default-green;
+        margin-left: 0.25rem;
+    }
+}

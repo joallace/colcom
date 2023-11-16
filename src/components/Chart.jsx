@@ -26,7 +26,7 @@ import { defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultInputBg
 import useScreenSize from "@/hooks/useScreenSize"
 
 
-export default ({ type, data = [{}], width, height, ...remainingProps }) => {
+export default ({ type, data = [{}], width, height, isLegendOn = true, ...remainingProps }) => {
   const isDesktop = useScreenSize()
 
   const COLORS = [defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultFontColor]
@@ -69,7 +69,7 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
           <XAxis dataKey="name" fontSize={isDesktop ? null : 10} foc />
           <YAxis fontSize={isDesktop ? null : 10} />
           <Tooltip contentStyle={tooltipStyle} />
-          <Legend />
+          {isLegendOn && <Legend />}
           {
             Object.keys(data[0]).map((row, index) => {
               if (row !== "name")
@@ -97,6 +97,7 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
           <XAxis dataKey="name" fontSize={isDesktop ? null : 10} foc />
           <YAxis fontSize={isDesktop ? null : 10} />
           <Tooltip contentStyle={tooltipStyle} />
+          {isLegendOn && <Legend />}
           {
             Object.keys(data[0]).map((row, index) => {
               if (row !== "name")
@@ -123,7 +124,7 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
           <XAxis dataKey="name" />
           <YAxis />
           <Tooltip contentStyle={tooltipStyle} />
-          <Legend />
+          {isLegendOn && <Legend />}
           {
             Object.keys(data[0]).map((row, index) => {
               if (row !== "name")
@@ -140,6 +141,7 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
           {...remainingProps}
         >
           <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: defaultFontColor }} />
+          {isLegendOn && <Legend />}
           <Pie
             dataKey="value"
             data={data}
@@ -193,6 +195,7 @@ export default ({ type, data = [{}], width, height, ...remainingProps }) => {
           <PolarAngleAxis dataKey="name" />
           <PolarRadiusAxis />
           <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: defaultFontColor }} />
+          {isLegendOn && <Legend />}
           {
             Object.keys(data[0]).map((row, index) => {
               if (row !== "name")

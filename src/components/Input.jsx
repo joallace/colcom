@@ -2,7 +2,7 @@ import React from "react"
 
 export default ({ id, type, label, options = {}, ...remainingProps }) => {
   return (
-    <div className="inputBox">
+    <div className={type==="checkbox"? "checkBox" : "inputBox"}>
       {type === "select" ?
         <select
           id={id}

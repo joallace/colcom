@@ -68,6 +68,7 @@ const generateChartData = (type, numberColumns, numberRows) => {
 
 export default ({ isOpen, setIsOpen, ...remainingProps }) => {
   const [chartType, setChartType] = React.useState("line")
+  const [legend, setLegend] = React.useState(true)
   const [input1, setInput1] = React.useState(chartDefaults[chartType].values[0])
   const [input2, setInput2] = React.useState(chartDefaults[chartType].values[1])
   const [chartData, setChartData] = React.useState(generateChartData(chartType, input1, input2))
@@ -86,6 +87,10 @@ export default ({ isOpen, setIsOpen, ...remainingProps }) => {
     return e.target.value === "" || (e.target.value >= 0 && e.target.value <= chartDefaults[chartType].bounds[inputId][1])
   }
 
+  React.useEffect(() => {
+    setChartData(generateChartData(chartType, input1, input2))
+  }, [chartType, input1, input2])
+
   return (
     <Modal
       isOpen={isOpen}
@@ -93,7 +98,7 @@ export default ({ isOpen, setIsOpen, ...remainingProps }) => {
       title="insira um gráfico"
       footer={dataInputStage ?
         [<button style={{ marginRight: "0.5rem" }} onClick={() => { setDataInputStage(false) }}>voltar</button>,
-         <button onClick={() => { setDataInputStage(false) }}>inserir</button>]
+        <button onClick={() => { setDataInputStage(false) }}>inserir</button>]
         :
         [<button onClick={() => { setDataInputStage(true) }}>continuar</button>]
       }
@@ -138,7 +143,7 @@ export default ({ isOpen, setIsOpen, ...remainingProps }) => {
                   "pontos": "scatter",
                   "radar": "radar"
                 }}
-                onChange={e => { setChartType(e.target.value); setChartData(generateChartData(e.target.value, input1, input2)) }}
+                onChange={e => { setChartType(e.target.value) }}
                 value={chartType}
               />
 
@@ -155,8 +160,17 @@ export default ({ isOpen, setIsOpen, ...remainingProps }) => {
                   onChange={e => { validateInput(e, 1) && setInput2(e.target.value.replace(/\D/, "")) }}
                 />
               }
+
+              {chartType !== "scatter" &&
+                <Input
+                  label="Legenda"
+                  type="checkbox"
+                  id="legend"
+                  checked={legend}
+                  onChange={()=>{setLegend(!legend)}}/>
+              }
             </div>
-            <Chart className="right" type={chartType} data={generateChartData(chartType, input1, input2)} width={400} height={200} />
+            <Chart className="right" type={chartType} data={chartData} width={400} height={200} isLegendOn={legend} />
           </>
         }
       </div>
