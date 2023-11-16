@@ -72,6 +72,7 @@ export default ({ isOpen, setIsOpen, ...remainingProps }) => {
   const [input1, setInput1] = React.useState(chartDefaults[chartType].values[0])
   const [input2, setInput2] = React.useState(chartDefaults[chartType].values[1])
   const [chartData, setChartData] = React.useState(generateChartData(chartType, input1, input2))
+  const [chartKeys, setChartKeys] = React.useState([])
   const [dataInputStage, setDataInputStage] = React.useState(false)
 
   const updateChartValue = (i, j, value) => {
@@ -83,6 +84,31 @@ export default ({ isOpen, setIsOpen, ...remainingProps }) => {
     }))
   }
 
+  const updateKey = (i, value) => {
+    setChartKeys(chartKeys.map((v, idx) => {
+      if (i === idx)
+        return value
+      else
+        return v
+    }))
+  }
+
+  const updateChartKeys = () => {
+    const oldKeys = Object.keys(chartData[0])
+    console.log("old", oldKeys)
+    setChartData(chartData.map(v => {
+      chartKeys.forEach((key, i) => {
+        if (oldKeys[i] === key)
+          return
+        Object.defineProperty(v, key, Object.getOwnPropertyDescriptor(v, oldKeys[i]))
+        delete v[oldKeys[i]]
+      })
+      return v
+    }))
+  }
+
+  const validateKeys = () => chartKeys.every(v => v !== "") && (new Set(chartKeys)).size === chartKeys.length
+
   const validateInput = (e, inputId) => {
     return e.target.value === "" || (e.target.value >= 0 && e.target.value <= chartDefaults[chartType].bounds[inputId][1])
   }
@@ -91,16 +117,22 @@ export default ({ isOpen, setIsOpen, ...remainingProps }) => {
     setChartData(generateChartData(chartType, input1, input2))
   }, [chartType, input1, input2])
 
+  React.useEffect(() => {
+    console.log(chartKeys)
+    if (validateKeys())
+      updateChartKeys()
+  }, [chartKeys])
+
   return (
     <Modal
       isOpen={isOpen}
       setIsOpen={setIsOpen}
       title="insira um gráfico"
       footer={dataInputStage ?
-        [<button style={{ marginRight: "0.5rem" }} onClick={() => { setDataInputStage(false) }}>voltar</button>,
-        <button onClick={() => { setDataInputStage(false) }}>inserir</button>]
+        [<button style={{ marginRight: "0.5rem" }} onClick={() => { if (validateKeys()) { setDataInputStage(false); updateChartKeys() } }}>voltar</button>,
+        <button onClick={() => { if (validateKeys()) { setDataInputStage(false); updateChartKeys() } }}>inserir</button>]
         :
-        [<button onClick={() => { setDataInputStage(true) }}>continuar</button>]
+        [<button onClick={() => { setDataInputStage(true); setChartKeys(Object.keys(chartData[0])) }}>continuar</button>]
       }
     >
       <div className="body">
@@ -109,9 +141,9 @@ export default ({ isOpen, setIsOpen, ...remainingProps }) => {
             <table>
               <thead>
                 <tr>
-                  {[...Array(Object.keys(chartData[0]).length)].map((_, i) =>
+                  {chartKeys.map((_, i) =>
                     <th>
-                      <input value={Object.keys(chartData[0])[i]} onChange={e => updateChartValue(0, i, e.target.value)} />
+                      <input value={chartKeys[i]} onChange={e => updateKey(i, e.target.value)} />
                     </th>
                   )}
                 </tr>
@@ -119,7 +151,7 @@ export default ({ isOpen, setIsOpen, ...remainingProps }) => {
               <tbody>
                 {chartData.map((_, i) =>
                   <tr>
-                    {[...Array(Object.keys(chartData[0]).length)].map((_, j) =>
+                    {chartKeys.map((_, j) =>
                       <td>
                         <input value={Object.values(chartData[i])[j]} onChange={e => updateChartValue(i, j, e.target.value)} />
                       </td>
@@ -167,12 +199,12 @@ export default ({ isOpen, setIsOpen, ...remainingProps }) => {
                   type="checkbox"
                   id="legend"
                   checked={legend}
-                  onChange={()=>{setLegend(!legend)}}/>
+                  onChange={() => { setLegend(!legend) }} />
               }
             </div>
-            <Chart className="right" type={chartType} data={chartData} width={400} height={200} isLegendOn={legend} />
           </>
         }
+        <Chart className="right" type={chartType} data={chartData} width={400} height={200} isLegendOn={legend} />
       </div>
     </Modal >
   )
