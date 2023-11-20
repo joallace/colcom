@@ -26,6 +26,20 @@ import { defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultInputBg
 import useScreenSize from "@/hooks/useScreenSize"
 
 
+const desktopMargin = {
+  top: 5,
+  right: 10,
+  left: 10,
+  bottom: 5
+}
+
+const mobileMargin = {
+  top: 10,
+  right: 5,
+  left: -45,
+  bottom: 5
+}
+
 export default ({ type, data = [{}], width, height, isLegendOn = true, ...remainingProps }) => {
   const isDesktop = useScreenSize()
 
@@ -48,7 +62,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
       </text>
     )
   }
-  
+
 
   switch (type) {
     case "line":
@@ -57,12 +71,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           width={width * (isDesktop ? 1 : 0.7)}
           height={height * (isDesktop ? 1 : 0.7)}
           data={data}
-          margin={{
-            top: 5,
-            right: 30,
-            left: 20,
-            bottom: 5,
-          }}
+          margin={isDesktop? desktopMargin : mobileMargin}
           {...remainingProps}
         >
           <CartesianGrid strokeDasharray="3 3" />
@@ -85,12 +94,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           width={width * (isDesktop ? 1 : 0.7)}
           height={height * (isDesktop ? 1 : 0.7)}
           data={data}
-          margin={{
-            top: 10,
-            right: 30,
-            left: 0,
-            bottom: 0,
-          }}
+          margin={isDesktop? desktopMargin : mobileMargin}
           {...remainingProps}
         >
           <CartesianGrid strokeDasharray="3 3" />
@@ -112,12 +116,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           width={width * (isDesktop ? 1 : 0.7)}
           height={height * (isDesktop ? 1 : 0.7)}
           data={data}
-          margin={{
-            top: 5,
-            right: 30,
-            left: 20,
-            bottom: 5,
-          }}
+          margin={isDesktop? desktopMargin : mobileMargin}
           {...remainingProps}
         >
           <CartesianGrid strokeDasharray="3 3" />
@@ -138,13 +137,14 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
         <PieChart
           width={width * (isDesktop ? 1 : 0.7)}
           height={height * (isDesktop ? 1 : 0.7)}
+          // margin={isDesktop? desktopMargin : mobileMargin}
           {...remainingProps}
         >
           <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: defaultFontColor }} />
           {isLegendOn && <Legend />}
           <Pie
             dataKey="value"
-            data={data}
+            data={data.map(o=>{return {name: o["name"], value: parseFloat(o["value"])}})}
             animationDuration={500}
             cx="50%"
             cy="50%"
@@ -163,14 +163,9 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
     case "scatter":
       return (
         <ScatterChart
-          margin={{
-            top: 20,
-            right: 20,
-            bottom: 20,
-            left: 20,
-          }}
           width={width * (isDesktop ? 1 : 0.7)}
           height={height * (isDesktop ? 1 : 0.7)}
+          margin={isDesktop? desktopMargin : mobileMargin}
           {...remainingProps}
         >
           <CartesianGrid />
@@ -189,6 +184,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           width={width * (isDesktop ? 1 : 0.7)}
           height={height * (isDesktop ? 1 : 0.7)}
           data={data}
+          // margin={isDesktop? desktopMargin : mobileMargin}
           {...remainingProps}
         >
           <PolarGrid />
