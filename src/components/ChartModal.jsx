@@ -66,7 +66,7 @@ const generateChartData = (type, numberColumns, numberRows) => {
   }
 }
 
-export default ({ isOpen, setIsOpen, ...remainingProps }) => {
+export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
   const [chartType, setChartType] = React.useState("line")
   const [legend, setLegend] = React.useState(true)
   const [input1, setInput1] = React.useState(chartDefaults[chartType].values[0])
@@ -140,12 +140,16 @@ export default ({ isOpen, setIsOpen, ...remainingProps }) => {
         [
           <button
             style={{ marginRight: "0.5rem" }}
-            onClick={() => { if (validateKeys()) { setDataInputStage(false); updateChartKeys() } }}
+            onClick={() => { setDataInputStage(false) } }
           >
             voltar
           </button>,
           <button
-            onClick={() => { if (validateKeys()) { setDataInputStage(false); updateChartKeys() } }}
+            onClick={() => {
+              setDataInputStage(false)
+              setChartStr(`<chart type="${chartType}" isLegendOn="${legend}" data="${JSON.stringify(chartData).replace(/\"/g, "'")}"></chart>`)
+              setIsOpen(false)
+            }}
           >
             inserir
           </button>

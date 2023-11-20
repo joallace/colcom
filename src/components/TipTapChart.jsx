@@ -1,45 +1,25 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
 import { mergeAttributes, Node } from '@tiptap/core'
 
-import { defaultOrange, defaultGreen, defaultYellow, defaultInputBg } from "@/assets/scss/_export.module.scss"
-import useScreenSize from '@/hooks/useScreenSize';
+import Chart from "@/components/Chart"
 
-
-export const TipTapLineChart = props => {
+export const TipTapChart = props => {
   const data = JSON.parse(props.node.attrs.data.replace(/'/g, "\""))
-  let isDesktop = useScreenSize()
+  const type = props.node.attrs.type
+  const isLegendOn = props.node.attrs.isLegendOn
 
-  const defaultColors = [defaultOrange, defaultGreen, defaultYellow]
-
-  if(data)
-    return (
-      <NodeViewWrapper className="chart">
-        <LineChart
-          width={500 * (isDesktop ? 1 : 0.7)}
-          height={300 * (isDesktop ? 1 : 0.7)}
-          data={data}
-          margin={{
-            top: 5,
-            right: 30,
-            left: 20,
-            bottom: 5,
-          }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" fontSize={isDesktop ? null : 10} foc/>
-          <YAxis fontSize={isDesktop ? null : 10} />
-          <Tooltip contentStyle={{"backgroundColor": defaultInputBg, borderRadius:"0.25rem", border: "1px solid #737373"}}/>
-          <Legend />
-          {Object.keys(data[0]).map((row, index) => {
-              if (row !== "name")
-                return <Line dataKey={row} stroke={defaultColors[index-1]} />
-          })}
-
-        </LineChart>
-      </NodeViewWrapper>
-    );
+  return (
+    <NodeViewWrapper className="chart">
+      <Chart
+        type={type}
+        data={data}
+        width={500}
+        height={300}
+        isLegendOn={isLegendOn}
+      />
+    </NodeViewWrapper>
+  );
 }
 
 export default Node.create({
@@ -52,6 +32,12 @@ export default Node.create({
       "data": {
         default: [],
       },
+      "type": {
+        default: "line"
+      },
+      "isLegendOn": {
+        default: true
+      }
     }
   },
 
@@ -68,6 +54,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(TipTapLineChart)
+    return ReactNodeViewRenderer(TipTapChart)
   },
 })

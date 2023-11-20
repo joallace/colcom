@@ -25,7 +25,7 @@ import StarterKit from "@tiptap/starter-kit"
 import Chart from "@/components/TipTapChart"
 import ChartModal from "@/components/ChartModal"
 
-import { chartData } from "@/assets/mock_data"
+import mockChartData from "@/assets/mock_data"
 
 
 const CustomDocument = Document.extend({
@@ -37,6 +37,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
   const [modal, setModal] = React.useState(false)
   const [numberRows, setNumberRows] = React.useState(0)
   const [numberColumns, setNumberColumns] = React.useState(0)
+  const [chartData, setChartData] = React.useState([])
 
   const editor = useEditor({
     extensions: [
@@ -76,7 +77,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
     <p>
       This is still the text editor you’re used to, but enriched with node views.
     </p>
-    <chart data="${JSON.stringify(chartData).replace(/\"/g, "'")}"></chart>
+    <chart type="line" isLegendOn="true" data="${JSON.stringify(mockChartData).replace(/\"/g, "'")}"></chart>
     <p>
       Did you see that? That’s a React component. We are really living in the future.
     </p>
@@ -87,6 +88,10 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
 
   const insertTable = () => { validateTableInterval() && editor.chain().focus().insertTable({ rows: +numberRows + 1, cols: numberColumns, withHeaderRow: true }).run() }
 
+  React.useEffect(()=>{
+    if(chartData.length !== 0)
+      editor.chain().focus().insertContent(chartData).run()
+  }, [chartData])
 
   return (
     <>
@@ -208,7 +213,6 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
                   <PiQuotesFill title="inserir citação" />
                 </button>
                 <button
-                  // onClick={() => editor.chain().focus().insertContent(`<chart data="${JSON.stringify(chartData).replace(/\"/g, "'")}"/>`).run()}
                   onClick={() => setModal(true)}
                   className="icon"
                 >
@@ -226,7 +230,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
         </div>
       }
 
-      <ChartModal isOpen={modal} setIsOpen={setModal}/>
+      <ChartModal isOpen={modal} setIsOpen={setModal} setChartStr={setChartData}/>
 
       <div className="text-editor" {...remainingProps}>
         <div className="bracket" />
