@@ -98,9 +98,6 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
 
   const updateChartKeys = () => {
     const oldKeys = Object.keys(chartData[0])
-    console.log("Old Keys:", oldKeys)
-    console.log("New Keys:", chartKeys)
-    console.log("Old:", chartData)
 
     setChartData(chartData.map(v => {
       chartKeys.forEach((key, i) => {
@@ -109,10 +106,6 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
         Object.defineProperty(v, key, Object.getOwnPropertyDescriptor(v, oldKeys[i]))
         delete v[oldKeys[i]]
       })
-      console.log("New:", chartKeys.reduce((obj, k) => {
-        obj[k] = v[k];
-        return obj;
-      }, {}))
 
       return chartKeys.reduce((obj, k) => {
         obj[k] = v[k];
