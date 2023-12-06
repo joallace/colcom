@@ -85,6 +85,7 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
   }
 
   const updateKey = (i, value) => {
+    // Testing if the key does not begin with a number (which breaks the obj key order)
     if(value !== "" && isFinite(value))
       return
 
@@ -100,6 +101,7 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
     const oldKeys = Object.keys(chartData[0])
 
     setChartData(chartData.map(v => {
+      // Searches for the different key and creates a new key then deletes the old one
       chartKeys.forEach((key, i) => {
         if (oldKeys[i] === key)
           return
@@ -107,6 +109,7 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
         delete v[oldKeys[i]]
       })
 
+      // Returning the new object with the intended order
       return chartKeys.reduce((obj, k) => {
         obj[k] = v[k];
         return obj;
@@ -114,6 +117,7 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
     }))
   }
 
+  // Checks if there is no empty keys and every key is different from each other
   const validateKeys = () => chartKeys.every(v => v !== "") && (new Set(chartKeys)).size === chartKeys.length
 
   const validateInput = (e, inputId) => {
@@ -157,7 +161,7 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
         ]
       }
     >
-      <div className="body">
+      <div className={`body${dataInputStage ? " table" : ""}`}>
         {dataInputStage ?
           <div className="left">
             <table>
@@ -170,6 +174,7 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
                         onChange={e => { updateKey(i, e.target.value) }}
                         onKeyUp={e => e.key === "Enter" && (validateKeys() && updateChartKeys())}
                         onBlur={() => { validateKeys() && updateChartKeys() }}
+                        style={{minWidth: `${chartKeys[i].length+2}ch`}}
                       />
                     </th>
                   )}

@@ -15,9 +15,16 @@
     left: 50%;
     transform: translate(-50%, -50%);
     min-height: min-content;
-    min-width: min-content;
+    min-width: min-content;  
     padding: 1.25rem;
     border-radius: 0.75rem;
+
+    @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+        max-height: 80%;
+        min-width: 0;
+        max-width: 90%;
+        overflow: scroll;
+    }
 
     .header{
         font-size: 1.5rem;
