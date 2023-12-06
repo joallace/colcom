@@ -63,6 +63,10 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
     )
   }
 
+  const transformedData = () => data.map(o=>{
+    let values = Object.entries(o).slice(1).map(([key, value])=>[key, parseFloat(value)])
+    return {name: o["name"], ...Object.fromEntries(values)}
+  })
 
   switch (type) {
     case "line":
@@ -70,7 +74,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
         <LineChart
           width={width * (isDesktop ? 1 : 0.7)}
           height={height * (isDesktop ? 1 : 0.7)}
-          data={data}
+          data={transformedData()}
           margin={isDesktop? desktopMargin : mobileMargin}
           {...remainingProps}
         >
@@ -93,7 +97,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
         <AreaChart
           width={width * (isDesktop ? 1 : 0.7)}
           height={height * (isDesktop ? 1 : 0.7)}
-          data={data}
+          data={transformedData()}
           margin={isDesktop? desktopMargin : mobileMargin}
           {...remainingProps}
         >
@@ -115,7 +119,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
         <BarChart
           width={width * (isDesktop ? 1 : 0.7)}
           height={height * (isDesktop ? 1 : 0.7)}
-          data={data}
+          data={transformedData()}
           margin={isDesktop? desktopMargin : mobileMargin}
           {...remainingProps}
         >
@@ -144,7 +148,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           {isLegendOn && <Legend />}
           <Pie
             dataKey="value"
-            data={data.map(o=>{return {name: o["name"], value: parseFloat(o["value"])}})}
+            data={transformedData()}
             animationDuration={500}
             cx="50%"
             cy="50%"
@@ -183,7 +187,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           outerRadius="80%"
           width={width * (isDesktop ? 1 : 0.7)}
           height={height * (isDesktop ? 1 : 0.7)}
-          data={data}
+          data={transformedData()}
           // margin={isDesktop? desktopMargin : mobileMargin}
           {...remainingProps}
         >

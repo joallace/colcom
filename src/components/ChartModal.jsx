@@ -7,32 +7,26 @@ import Chart from "@/components/Chart"
 const chartDefaults = {
   "line": {
     inputs: ["linhas", "pontos"],
-    values: [2, 5],
     bounds: [[1, 10], [2, 20]]
   },
   "area": {
     inputs: ["linhas", "pontos"],
-    values: [2, 5],
     bounds: [[1, 10], [2, 20]]
   },
   "bar": {
     inputs: ["barras", "pontos"],
-    values: [2, 5],
     bounds: [[1, 10], [2, 20]]
   },
   "pie": {
     inputs: ["seções"],
-    values: [5],
     bounds: [[2, 10]]
   },
   "scatter": {
     inputs: ["pontos"],
-    values: [8],
-    bounds: [[3, 100]]
+    bounds: [[3, 20]]
   },
   "radar": {
     inputs: ["seções", "variáveis"],
-    values: [2, 5],
     bounds: [[1, 3], [3, 10]]
   }
 }
@@ -69,8 +63,8 @@ const generateChartData = (type, numberColumns, numberRows) => {
 export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
   const [chartType, setChartType] = React.useState("line")
   const [legend, setLegend] = React.useState(true)
-  const [input1, setInput1] = React.useState(chartDefaults[chartType].values[0])
-  const [input2, setInput2] = React.useState(chartDefaults[chartType].values[1])
+  const [input1, setInput1] = React.useState(2)
+  const [input2, setInput2] = React.useState(5)
   const [chartData, setChartData] = React.useState(generateChartData(chartType, input1, input2))
   const [chartKeys, setChartKeys] = React.useState(Object.keys(chartData[0]))
   const [dataInputStage, setDataInputStage] = React.useState(false)
@@ -161,9 +155,9 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
         ]
       }
     >
-      <div className={`body${dataInputStage ? " table" : ""}`}>
+      <div className="body">
         {dataInputStage ?
-          <div className="left">
+          <div className="inputs">
             <table>
               <thead>
                 <tr>
@@ -197,7 +191,7 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
             </table>
           </div>
           :
-          <div className="left">
+          <div className="inputs">
             <Input
               label="tipo de gráfico"
               type="select"
@@ -238,7 +232,6 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
           </div>
         }
         <Chart
-          className="right"
           type={chartType}
           data={chartData}
           width={400}
