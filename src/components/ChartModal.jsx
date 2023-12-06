@@ -67,14 +67,14 @@ const generateChartData = (type, numberColumns, numberRows) => {
   }
 }
 
-export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
+export default ({ isOpen, setIsOpen, setChartOutput = () => { }, currentData, editionMode = false, ...remainingProps }) => {
   const [chartType, setChartType] = React.useState("line")
   const [legend, setLegend] = React.useState(true)
   const [input1, setInput1] = React.useState(2)
   const [input2, setInput2] = React.useState(5)
-  const [chartData, setChartData] = React.useState(generateChartData(chartType, input1, input2))
+  const [chartData, setChartData] = React.useState(editionMode ? currentData : generateChartData(chartType, input1, input2))
   const [chartKeys, setChartKeys] = React.useState(Object.keys(chartData[0]))
-  const [dataInputStage, setDataInputStage] = React.useState(false)
+  const [dataInputStage, setDataInputStage] = React.useState(editionMode)
 
   const updateChartValue = (i, j, value) => {
     setChartData(chartData.map((c, idx) => {
@@ -121,46 +121,25 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
   // Checks if there is no empty keys and every key is different from each other
   const validateKeys = () => chartKeys.every(v => v !== "") && (new Set(chartKeys)).size === chartKeys.length
 
-  const validateInput = (e, inputId) => {
-    return e.target.value === "" || (e.target.value > 0 && e.target.value <= chartDefaults[chartType].bounds[inputId][1])
+  const validateInput = (value, inputId) => {
+    return value === "" || (value > 0 && value <= chartDefaults[chartType].bounds[inputId][1])
   }
 
-  React.useEffect(() => {
-    setChartData(generateChartData(chartType, input1, input2))
-  }, [chartType, input1, input2])
+  const validateAndUpdate = (inputId, setter) => {
+    return e => {
+      const value = e.target.value
+      if (validateInput(value, inputId)) {
+        setter(parseInt(value.replace(/\D/, "")))
+        setChartData(generateChartData(chartType, inputId === 0 ? value : input1, inputId === 1 ? value : input2))
+      }
+    }
+  }
 
   return (
     <Modal
       isOpen={isOpen}
       setIsOpen={setIsOpen}
-      title="insira um gráfico"
-      footer={dataInputStage ?
-        [
-          <button
-            style={{ marginRight: "0.5rem" }}
-            onClick={() => { setDataInputStage(false) }}
-          >
-            voltar
-          </button>,
-          <button
-            onClick={() => {
-              setDataInputStage(false)
-              setChartStr(`<chart type="${chartType}" isLegendOn="${legend}" data="${JSON.stringify(chartData).replace(/\"/g, "'")}"></chart>`)
-              setIsOpen(false)
-            }}
-          >
-            inserir
-          </button>
-        ]
-        :
-        [
-          <button
-            onClick={() => { setDataInputStage(true); setChartKeys(Object.keys(chartData[0])) }}
-          >
-            continuar
-          </button>
-        ]
-      }
+      title={`${editionMode ? "edite o" : "insira um"} gráfico`}
     >
       <div className="body">
         {dataInputStage ?
@@ -211,21 +190,21 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
                 "pontos": "scatter",
                 "radar": "radar"
               }}
-              onChange={e => { setChartType(e.target.value) }}
+              onChange={e => { setChartType(e.target.value); setChartData(generateChartData(e.target.value, input1, input2)) }}
               value={chartType}
             />
 
             <Input
               label={`n.º de ${chartDefaults[chartType].inputs[0]}`}
               value={input1 ? input1 : ""}
-              onChange={e => { validateInput(e, 0) && parseInt(setInput1(e.target.value.replace(/\D/, ""))) }}
+              onChange={validateAndUpdate(0, setInput1)}
             />
 
             {(chartType !== "pie" && chartType !== "scatter") &&
               <Input
                 label={`n.º de ${chartDefaults[chartType].inputs[1]}`}
                 value={input2 ? input2 : ""}
-                onChange={e => { validateInput(e, 1) && parseInt(setInput2(e.target.value.replace(/\D/, ""))) }}
+                onChange={validateAndUpdate(1, setInput2)}
               />
             }
 
@@ -246,6 +225,40 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
           height={200}
           isLegendOn={legend}
         />
+      </div>
+      <div className="footer">
+        {dataInputStage ?
+          <>
+            {
+              !editionMode &&
+              <button
+                style={{ marginRight: "0.5rem" }}
+                onClick={() => { setDataInputStage(false) }}
+              >
+                voltar
+              </button>
+            }
+            <button
+              onClick={() => {
+                if (editionMode)
+                  setChartOutput(chartData)
+                else {
+                  setChartOutput(`<chart type="${chartType}" isLegendOn="${legend}" data="${JSON.stringify(chartData).replace(/\"/g, "'")}"></chart>`)
+                  setDataInputStage(false)
+                }
+                setIsOpen(false)
+              }}
+            >
+              {editionMode ? "atualizar" : "inserir"}
+            </button>
+          </>
+          :
+          <button
+            onClick={() => { setDataInputStage(true); setChartKeys(Object.keys(chartData[0])) }}
+          >
+            continuar
+          </button>
+        }
       </div>
     </Modal >
   )

@@ -19,14 +19,7 @@ export default function Modal({ isOpen = false, setIsOpen = () => { }, children,
           {title}
           <PiXBold className="icon" onClick={() => { setIsOpen(false) }} />
         </div>
-        {/* <hr/> */}
         {children}
-        {/* <hr /> */}
-        {footer &&
-          <div className="footer">
-            {...footer}
-          </div>
-        }
       </div>
     </div>
   )

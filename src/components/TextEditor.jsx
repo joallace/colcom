@@ -25,9 +25,6 @@ import StarterKit from "@tiptap/starter-kit"
 import Chart from "@/components/TipTapChart"
 import ChartModal from "@/components/ChartModal"
 
-import mockChartData from "@/assets/mock_data"
-
-
 const CustomDocument = Document.extend({
   content: "heading block*",
 })
@@ -72,16 +69,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
         setNumberColumns(0)
         setIsMenuInput(false)
       }
-    },
-    content: `
-    <p>
-      This is still the text editor you’re used to, but enriched with node views.
-    </p>
-    <chart type="line" isLegendOn="true" data="${JSON.stringify(mockChartData).replace(/\"/g, "'")}"></chart>
-    <p>
-      Did you see that? That’s a React component. We are really living in the future.
-    </p>
-    `
+    }
   })
 
   const validateTableInterval = () => (numberColumns >= 1 && numberColumns <= tableConfig.maxColumns && numberRows >= 2 && numberRows <= tableConfig.maxRows)
@@ -230,7 +218,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
         </div>
       }
 
-      <ChartModal isOpen={modal} setIsOpen={setModal} setChartStr={setChartData}/>
+      <ChartModal isOpen={modal} setIsOpen={setModal} setChartOutput={setChartData}/>
 
       <div className="text-editor" {...remainingProps}>
         <div className="bracket" />
