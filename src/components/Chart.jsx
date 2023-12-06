@@ -63,9 +63,9 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
     )
   }
 
-  const transformedData = () => data.map(o=>{
+  const transformedData = (nameKey = "0name") => data.map(o=>{
     let values = Object.entries(o).slice(1).map(([key, value])=>[key, parseFloat(value)])
-    return {"0name": o["0name"], ...Object.fromEntries(values)}
+    return {[nameKey]: o["0name"], ...Object.fromEntries(values)}
   })
 
   switch (type) {
@@ -148,7 +148,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           {isLegendOn && <Legend />}
           <Pie
             dataKey="0value"
-            data={transformedData()}
+            data={transformedData("name")}
             animationDuration={500}
             cx="50%"
             cy="50%"
