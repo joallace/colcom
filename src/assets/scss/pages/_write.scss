@@ -36,6 +36,9 @@
 
             &>input {
                 max-width: 8rem;
+                &:read-only:focus{
+                    outline: none;
+                }
             }
         }
     }

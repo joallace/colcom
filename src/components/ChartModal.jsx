@@ -31,6 +31,13 @@ const chartDefaults = {
   }
 }
 
+const reservedWords = {
+  "0name": "nome",
+  "0value": "valor",
+  "0x": "x",
+  "0y": "y"
+}
+
 const generateChartData = (type, numberColumns, numberRows) => {
   if (!numberColumns || !numberRows)
     return [{}]
@@ -41,7 +48,7 @@ const generateChartData = (type, numberColumns, numberRows) => {
     case "radar":
     case "bar":
       return Array.from({ length: numberRows }, (_, index) => {
-        const obj = { name: String.fromCharCode('A'.charCodeAt() + index + Math.floor(index / 26) * 6) }
+        const obj = { "0name": String.fromCharCode('A'.charCodeAt() + index + Math.floor(index / 26) * 6) }
         for (let i = 1; i <= numberColumns; i++) {
           obj['x' + i] = Math.random().toFixed(2)
         }
@@ -49,13 +56,13 @@ const generateChartData = (type, numberColumns, numberRows) => {
       })
     case "pie":
       return Array.from({ length: numberColumns }, (_, i) => ({
-        name: String.fromCharCode('A'.charCodeAt() + i + Math.floor(i / 26) * 6),
-        value: parseFloat(Math.random().toFixed(2)),
+        "0name": String.fromCharCode('A'.charCodeAt() + i + Math.floor(i / 26) * 6),
+        "0value": parseFloat(Math.random().toFixed(2)),
       }))
     case "scatter":
       return Array.from({ length: numberColumns }, () => ({
-        x: Math.random().toFixed(2),
-        y: Math.random().toFixed(2),
+        "0x": Math.random().toFixed(2),
+        "0y": Math.random().toFixed(2),
       }))
   }
 }
@@ -72,15 +79,15 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
   const updateChartValue = (i, j, value) => {
     setChartData(chartData.map((c, idx) => {
       if (i === idx)
-        return { ...c, [Object.keys(chartData[0])[j]]: value }
+        return { ...c, [chartKeys[j]]: value }
       else
         return c
     }))
   }
 
   const updateKey = (i, value) => {
-    // Testing if the key does not begin with a number (which breaks the obj key order)
-    if(value !== "" && isFinite(value))
+    // Escaping if the key begins with a number (which breaks the obj key order)
+    if (/^\d$/.test(value))
       return
 
     setChartKeys(chartKeys.map((v, idx) => {
@@ -131,7 +138,7 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
         [
           <button
             style={{ marginRight: "0.5rem" }}
-            onClick={() => { setDataInputStage(false) } }
+            onClick={() => { setDataInputStage(false) }}
           >
             voltar
           </button>,
@@ -161,26 +168,27 @@ export default ({ isOpen, setIsOpen, setChartStr, ...remainingProps }) => {
             <table>
               <thead>
                 <tr>
-                  {chartKeys.map((_, i) =>
+                  {chartKeys.map((key, i) =>
                     <th>
                       <input
-                        value={chartKeys[i]}
+                        value={key[0] === "0" ? reservedWords[key] : key}
                         onChange={e => { updateKey(i, e.target.value) }}
                         onKeyUp={e => e.key === "Enter" && (validateKeys() && updateChartKeys())}
                         onBlur={() => { validateKeys() && updateChartKeys() }}
-                        style={{minWidth: `${chartKeys[i].length+2}ch`}}
+                        style={{ minWidth: `${key.length + 2}ch` }}
+                        readOnly={key[0] === "0"}
                       />
                     </th>
                   )}
                 </tr>
               </thead>
               <tbody>
-                {chartData.map((_, i) =>
+                {chartData.map((data, i) =>
                   <tr>
                     {chartKeys.map((_, j) =>
                       <td>
                         <input
-                          value={Object.values(chartData[i])[j]}
+                          value={Object.values(data)[j]}
                           onChange={e => updateChartValue(i, j, e.target.value)}
                         />
                       </td>

@@ -65,7 +65,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
 
   const transformedData = () => data.map(o=>{
     let values = Object.entries(o).slice(1).map(([key, value])=>[key, parseFloat(value)])
-    return {name: o["name"], ...Object.fromEntries(values)}
+    return {"0name": o["0name"], ...Object.fromEntries(values)}
   })
 
   switch (type) {
@@ -79,13 +79,13 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           {...remainingProps}
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" fontSize={isDesktop ? null : 10} foc />
+          <XAxis dataKey="0name" fontSize={isDesktop ? null : 10} foc />
           <YAxis fontSize={isDesktop ? null : 10} />
           <Tooltip contentStyle={tooltipStyle} />
           {isLegendOn && <Legend />}
           {
             Object.keys(data[0]).map((row, index) => {
-              if (row !== "name")
+              if (row !== "0name")
                 return <Line animationDuration={500} dataKey={row} stroke={COLORS[index % COLORS.length]} />
             })
           }
@@ -102,13 +102,13 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           {...remainingProps}
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" fontSize={isDesktop ? null : 10} foc />
+          <XAxis dataKey="0name" fontSize={isDesktop ? null : 10} foc />
           <YAxis fontSize={isDesktop ? null : 10} />
           <Tooltip contentStyle={tooltipStyle} />
           {isLegendOn && <Legend />}
           {
             Object.keys(data[0]).map((row, index) => {
-              if (row !== "name")
+              if (row !== "0name")
                 return <Area animationDuration={500} dataKey={row} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} />
             })
           }
@@ -124,13 +124,13 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           {...remainingProps}
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
+          <XAxis dataKey="0name" />
           <YAxis />
           <Tooltip contentStyle={tooltipStyle} />
           {isLegendOn && <Legend />}
           {
             Object.keys(data[0]).map((row, index) => {
-              if (row !== "name")
+              if (row !== "0name")
                 return <Bar dataKey={row} fill={COLORS[index % COLORS.length]} />
             })
           }
@@ -147,7 +147,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: defaultFontColor }} />
           {isLegendOn && <Legend />}
           <Pie
-            dataKey="value"
+            dataKey="0value"
             data={transformedData()}
             animationDuration={500}
             cx="50%"
@@ -173,8 +173,8 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           {...remainingProps}
         >
           <CartesianGrid />
-          <XAxis type="number" dataKey="x" name="stature" unit="cm" />
-          <YAxis type="number" dataKey="y" name="weight" unit="kg" />
+          <XAxis type="number" dataKey="0x" name="stature" unit="cm" />
+          <YAxis type="number" dataKey="0y" name="weight" unit="kg" />
           <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={tooltipStyle} itemStyle={{ color: defaultFontColor }} />
           <Scatter data={data} fill={defaultOrange} />
         </ScatterChart>
@@ -192,13 +192,13 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           {...remainingProps}
         >
           <PolarGrid />
-          <PolarAngleAxis dataKey="name" />
+          <PolarAngleAxis dataKey="0name" />
           <PolarRadiusAxis />
           <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: defaultFontColor }} />
           {isLegendOn && <Legend />}
           {
             Object.keys(data[0]).map((row, index) => {
-              if (row !== "name")
+              if (row !== "0name")
                 return <Radar animationDuration={500} dataKey={row} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} fillOpacity={0.6} />
             })
           }
