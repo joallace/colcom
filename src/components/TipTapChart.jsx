@@ -8,8 +8,8 @@ import ChartModal from './ChartModal';
 export const TipTapChart = props => {
   const [data, setData] = React.useState(JSON.parse(props.node.attrs.data.replace(/'/g, "\"")))
   const [modal, setModal] = React.useState(false)
+  const [isLegendOn, setIsLegendOn] = React.useState(props.node.attrs.isLegendOn)
   const type = props.node.attrs.type
-  const isLegendOn = props.node.attrs.isLegendOn
 
   return (
     <>
@@ -29,7 +29,9 @@ export const TipTapChart = props => {
         isOpen={modal}
         setIsOpen={setModal}
         currentData={data}
+        currentType={type}
         setChartOutput={setData}
+        setIsLegendOn={setIsLegendOn}
       />
     </>
   );

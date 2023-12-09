@@ -67,8 +67,8 @@ const generateChartData = (type, numberColumns, numberRows) => {
   }
 }
 
-export default ({ isOpen, setIsOpen, setChartOutput = () => { }, currentData, editionMode = false, ...remainingProps }) => {
-  const [chartType, setChartType] = React.useState("line")
+export default ({ isOpen, setIsOpen, setChartOutput, editionMode = false, currentData, currentType = "line", setIsLegendOn, ...remainingProps }) => {
+  const [chartType, setChartType] = React.useState(currentType)
   const [legend, setLegend] = React.useState(true)
   const [input1, setInput1] = React.useState(2)
   const [input2, setInput2] = React.useState(5)
@@ -142,8 +142,8 @@ export default ({ isOpen, setIsOpen, setChartOutput = () => { }, currentData, ed
       title={`${editionMode ? "edite o" : "insira um"} gráfico`}
     >
       <div className="body">
-        {dataInputStage ?
-          <div className="inputs">
+        <div className="inputs">
+          {dataInputStage ?
             <table>
               <thead>
                 <tr>
@@ -154,7 +154,7 @@ export default ({ isOpen, setIsOpen, setChartOutput = () => { }, currentData, ed
                         onChange={e => { updateKey(i, e.target.value) }}
                         onKeyUp={e => e.key === "Enter" && (validateKeys() && updateChartKeys())}
                         onBlur={() => { validateKeys() && updateChartKeys() }}
-                        style={{ minWidth: `${key.length + 2}ch` }}
+                        style={{ minWidth: `${Math.min(key.length + 2, 32)}ch` }}
                         readOnly={key[0] === "0"}
                       />
                     </th>
@@ -176,48 +176,49 @@ export default ({ isOpen, setIsOpen, setChartOutput = () => { }, currentData, ed
                 )}
               </tbody>
             </table>
-          </div>
-          :
-          <div className="inputs">
-            <Input
-              label="tipo de gráfico"
-              type="select"
-              options={{
-                "linha": "line",
-                "área": "area",
-                "barra": "bar",
-                "pizza": "pie",
-                "pontos": "scatter",
-                "radar": "radar"
-              }}
-              onChange={e => { setChartType(e.target.value); setChartData(generateChartData(e.target.value, input1, input2)) }}
-              value={chartType}
-            />
-
-            <Input
-              label={`n.º de ${chartDefaults[chartType].inputs[0]}`}
-              value={input1 ? input1 : ""}
-              onChange={validateAndUpdate(0, setInput1)}
-            />
-
-            {(chartType !== "pie" && chartType !== "scatter") &&
+            :
+            <>
               <Input
-                label={`n.º de ${chartDefaults[chartType].inputs[1]}`}
-                value={input2 ? input2 : ""}
-                onChange={validateAndUpdate(1, setInput2)}
+                label="tipo de gráfico"
+                type="select"
+                options={{
+                  "linha": "line",
+                  "área": "area",
+                  "barra": "bar",
+                  "pizza": "pie",
+                  "pontos": "scatter",
+                  "radar": "radar"
+                }}
+                onChange={e => { setChartType(e.target.value); setChartData(generateChartData(e.target.value, input1, input2)) }}
+                value={chartType}
               />
-            }
 
-            {chartType !== "scatter" &&
               <Input
-                label="Legenda"
-                type="checkbox"
-                id="legend"
-                checked={legend}
-                onChange={() => { setLegend(!legend) }} />
-            }
-          </div>
-        }
+                label={`n.º de ${chartDefaults[chartType].inputs[0]}`}
+                value={input1 ? input1 : ""}
+                onChange={validateAndUpdate(0, setInput1)}
+              />
+
+              {(chartType !== "pie" && chartType !== "scatter") &&
+                <Input
+                  label={`n.º de ${chartDefaults[chartType].inputs[1]}`}
+                  value={input2 ? input2 : ""}
+                  onChange={validateAndUpdate(1, setInput2)}
+                />
+              }
+            </>
+          }
+          {chartType !== "scatter" && (!dataInputStage || (dataInputStage && editionMode)) &&
+            <Input
+              label="Legenda"
+              type="checkbox"
+              id="legend"
+              checked={legend}
+              onChange={() => { setLegend(!legend) }}
+              style={editionMode ? { marginTop: "1rem" } : {}}
+            />
+          }
+        </div>
         <Chart
           type={chartType}
           data={chartData}
@@ -240,8 +241,10 @@ export default ({ isOpen, setIsOpen, setChartOutput = () => { }, currentData, ed
             }
             <button
               onClick={() => {
-                if (editionMode)
+                if (editionMode) {
                   setChartOutput(chartData)
+                  setIsLegendOn(legend)
+                }
                 else {
                   setChartOutput(`<chart type="${chartType}" isLegendOn="${legend}" data="${JSON.stringify(chartData).replace(/\"/g, "'")}"></chart>`)
                   setDataInputStage(false)

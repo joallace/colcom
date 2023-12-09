@@ -1,8 +1,8 @@
 import React from "react"
 
-export default ({ id, type, label, options = {}, ...remainingProps }) => {
+export default ({ id, type, label, options = {}, style = {}, ...remainingProps }) => {
   return (
-    <div className={type==="checkbox"? "checkBox" : "inputBox"}>
+    <div className={type === "checkbox" ? "checkBox" : "inputBox"} style={style}>
       {type === "select" ?
         <select
           id={id}
