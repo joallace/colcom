@@ -25,9 +25,6 @@ import StarterKit from "@tiptap/starter-kit"
 import Chart from "@/components/TipTapChart"
 import ChartModal from "@/components/ChartModal"
 
-const CustomDocument = Document.extend({
-  content: "heading block*",
-})
 
 export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColumns: 50 }, ...remainingProps }) => {
   const [isMenuInput, setIsMenuInput] = React.useState(false)
@@ -35,10 +32,12 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
   const [numberRows, setNumberRows] = React.useState(0)
   const [numberColumns, setNumberColumns] = React.useState(0)
   const [chartData, setChartData] = React.useState([])
+  const [title, setTitle] = React.useState("")
+  const editorRef = React.useRef()
 
   const editor = useEditor({
     extensions: [
-      CustomDocument,
+      Document,
       StarterKit.configure({
         document: false,
         heading: false
@@ -49,10 +48,10 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
       TableHeader,
       TableRow,
       Heading.configure({
-        levels: [1, 2, 3],
+        levels: [2, 3],
       }),
       Placeholder.configure({
-        placeholder: "Qual é o título?"
+        placeholder: "O que tens a dizer?"
       })
     ],
     editorProps: {
@@ -76,14 +75,14 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
 
   const insertTable = () => { validateTableInterval() && editor.chain().focus().insertTable({ rows: +numberRows + 1, cols: numberColumns, withHeaderRow: true }).run() }
 
-  React.useEffect(()=>{
-    if(chartData.length !== 0)
+  React.useEffect(() => {
+    if (chartData.length !== 0)
       editor.chain().focus().insertContent(chartData).run()
   }, [chartData])
 
   return (
     <>
-      {(editor && !editor.isActive("heading", { level: 1 }) && !editor.isActive("table")) &&
+      {(editor && !editor.isEmpty && !editor.isActive("table")) &&
         <div>
           <BubbleMenu
             className={`menu ${editor.isActive("chart") ? "hidden" : "bubble"}`}
@@ -146,7 +145,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
         </div>
       }
 
-      {(editor && !editor.isActive("heading", { level: 1 })) &&
+      {(editor && !editor.isEmpty) &&
         <div>
           <FloatingMenu
             className={`menu ${modal && "hidden"}`}
@@ -218,11 +217,23 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
         </div>
       }
 
-      <ChartModal isOpen={modal} setIsOpen={setModal} setChartOutput={setChartData}/>
+      {modal &&
+        <ChartModal isOpen={modal} setIsOpen={setModal} setChartOutput={setChartData} />
+      }
 
       <div className="text-editor" {...remainingProps}>
         <div className="bracket" />
-        <EditorContent editor={editor} style={{ width: "100%" }} />
+        <div className="text">
+          <h1 className="title">
+            <input
+              placeholder="Qual é o título?"
+              value={title}
+              onChange={e => { setTitle(e.target.value) }}
+              onKeyUp={e => e.key === "Enter" && editor.chain().focus().run()}
+            />
+          </h1>
+          <EditorContent editor={editor} style={{ width: "100%" }} ref={editorRef}/>
+        </div>
       </div>
     </>
   )

@@ -13,7 +13,7 @@
         }
     }
 
-    &.hidden{
+    &.hidden {
         display: none;
     }
 
@@ -71,7 +71,22 @@
 
 .text-editor {
     display: flex;
-    @include content-responsiveness
+    @include content-responsiveness;
+
+    .text{
+        width: 100%;
+    .title {
+        input {
+            width: 100%;
+            background-color: $default-bg;
+            outline: none;
+            border: none;
+            color: $default-green;
+            font-size: 2rem;
+            font-weight: bolder;
+        }
+    }
+}
 }
 
 .tiptap {
