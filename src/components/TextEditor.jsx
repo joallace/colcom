@@ -32,8 +32,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
   const [numberRows, setNumberRows] = React.useState(0)
   const [numberColumns, setNumberColumns] = React.useState(0)
   const [chartData, setChartData] = React.useState([])
-  const [title, setTitle] = React.useState("")
-  const editorRef = React.useRef()
+  const [title, setTitle] = React.useState(localStorage.getItem("postTitle") || "")
 
   const editor = useEditor({
     extensions: [
@@ -75,24 +74,25 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
 
   const insertTable = () => { validateTableInterval() && editor.chain().focus().insertTable({ rows: +numberRows + 1, cols: numberColumns, withHeaderRow: true }).run() }
 
+  // If there is a change in the chartData string, it is an insertion of a chart
   React.useEffect(() => {
     if (chartData.length !== 0)
       editor.chain().focus().insertContent(chartData).run()
   }, [chartData])
 
-  React.useEffect(()=>{
-    if(editor)
+  // Saving the editor content in localStorage
+  React.useEffect(() => {
+    if (editor)
       editor.commands.setContent(localStorage.getItem("editorContent"))
 
-    const handleBeforeUnload = (event) => {
-      localStorage.setItem("editorContent", editor.getHTML())
-    };    
+    const handleBeforeUnload = (_) => {
+      if (editor)
+        localStorage.setItem("editorContent", editor.getHTML())
+    }
     window.addEventListener('beforeunload', handleBeforeUnload)
 
     return () => {
-      if(editor)
-        localStorage.setItem("editorContent", editor.getHTML())
-
+      handleBeforeUnload()
       window.removeEventListener('beforeunload', handleBeforeUnload)
     }
   }, [editor])
@@ -247,9 +247,10 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
               value={title}
               onChange={e => { setTitle(e.target.value) }}
               onKeyUp={e => e.key === "Enter" && editor.chain().focus().run()}
+              onBlur={_ => localStorage.setItem("postTitle", title)}
             />
           </h1>
-          <EditorContent editor={editor} style={{ width: "100%" }} ref={editorRef}/>
+          <EditorContent editor={editor} style={{ width: "100%" }} />
         </div>
       </div>
     </>
