@@ -80,6 +80,23 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
       editor.chain().focus().insertContent(chartData).run()
   }, [chartData])
 
+  React.useEffect(()=>{
+    if(editor)
+      editor.commands.setContent(localStorage.getItem("editorContent"))
+
+    const handleBeforeUnload = (event) => {
+      localStorage.setItem("editorContent", editor.getHTML())
+    };    
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    return () => {
+      if(editor)
+        localStorage.setItem("editorContent", editor.getHTML())
+
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [editor])
+
   return (
     <>
       {(editor && !editor.isEmpty && !editor.isActive("table")) &&
