@@ -26,7 +26,7 @@ import Chart from "@/components/TipTapChart"
 import ChartModal from "@/components/ChartModal"
 
 
-export default ({ title, setTitle, content, setContent = () => { }, tableConfig = { maxRows: 20, maxColumns: 10 }, ...remainingProps }) => {
+export default ({ title, setTitle, content, setContent = () => { }, tableConfig = { maxRows: 20, maxColumns: 10 }, readOnly = false, ...remainingProps }) => {
   const [isMenuInput, setIsMenuInput] = React.useState(false)
   const [modal, setModal] = React.useState(false)
   const [numberRows, setNumberRows] = React.useState(0)
@@ -70,7 +70,8 @@ export default ({ title, setTitle, content, setContent = () => { }, tableConfig 
         setIsMenuInput(false)
       }
     },
-    content
+    editable: !readOnly,
+    content: readOnly? content.replace(/<chart readonly="false"/g, '<chart readonly="true"') : content,
   })
 
   const validateTableInterval = () => (numberColumns >= 1 && numberColumns <= tableConfig.maxColumns && numberRows >= 2 && numberRows <= tableConfig.maxRows)
@@ -93,11 +94,12 @@ export default ({ title, setTitle, content, setContent = () => { }, tableConfig 
 
   return (
     <>
+      {/* {console.log(editor)} */}
       {(editor && !editor.isEmpty && !editor.isActive("table")) &&
         <div>
           <BubbleMenu
             className={`menu ${editor.isActive("chart") ? "hidden" : "bubble"}`}
-            tippyOptions={{ duration: 100 }}
+            tippyOptions={{ duration: 10 }}
             editor={editor}
           >
             <button
@@ -236,14 +238,18 @@ export default ({ title, setTitle, content, setContent = () => { }, tableConfig 
         <div className="bracket" />
         <div className="text">
           <h1 className="title">
-            <textarea
-              placeholder="Qual é o título?"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              onKeyDown={e => {if(e.key === "Enter"){editor.chain().focus().run(); e.preventDefault()}}}
-              onBlur={_ => localStorage.setItem("postTitle", title)}
-              ref={titleRef}
-            />
+            { readOnly?
+              title
+              :
+              <textarea
+                placeholder="Qual é o título?"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") { editor.chain().focus().run(); e.preventDefault() } }}
+                onBlur={_ => localStorage.setItem("postTitle", title)}
+                ref={titleRef}
+              />
+            }
           </h1>
           <EditorContent editor={editor} style={{ width: "100%" }} />
         </div>

@@ -73,23 +73,26 @@
     display: flex;
     @include content-responsiveness;
 
-    .text{
+    .text {
         width: 100%;
-    .title {
-        textarea {
-            line-height: 1;
-            resize: none;
-            overflow-y: hidden;
-            width: 100%;
-            background-color: $default-bg;
-            outline: none;
-            border: none;
+
+        .title {
             color: $default-green;
-            font-size: 2rem;
-            font-weight: bolder;
+
+            textarea {
+                line-height: 1;
+                resize: none;
+                overflow-y: hidden;
+                width: 100%;
+                background-color: $default-bg;
+                outline: none;
+                border: none;
+                color: $default-green;
+                font-size: 2rem;
+                font-weight: bolder;
+            }
         }
     }
-}
 }
 
 .tiptap {

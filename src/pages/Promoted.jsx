@@ -13,7 +13,7 @@ export default function Promoted() {
             <Modal isOpen={modalOpen} toggle={toggleModal}/>
             <Topic
                 title={"Socialismo ou Capitalismo?"}
-                posts={[{ percentage: 54.5, shortAnswer: "Socialismo", summary: lorem }, { percentage: 45.5, shortAnswer: "Capitalismo", summary: lorem }]}
+                posts={[{ id: 1, percentage: 54.5, shortAnswer: "Socialismo", summary: lorem }, { id: 2, percentage: 45.5, shortAnswer: "Capitalismo", summary: lorem }]}
                 style={{ paddingTop: "0.75rem" }}
             />
             <Topic title={"Como reduzir a probreza na cidade?"} style={{ padding: "2rem 0" }} />

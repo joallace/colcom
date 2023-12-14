@@ -9,21 +9,12 @@ import {
   PiDotsThreeVerticalBold
 } from "react-icons/pi"
 
-import { screenSm } from "@/assets/scss/_export.module.scss"
+import useScreenSize from "@/hooks/useScreenSize"
 
 
 export default function Topic({ title, posts = [], icons = [], metrics = [], bookmarked = false, ...remainingProps }) {
-  const smScreenSize = parseInt(screenSm)
-  
   const [isBookmarked, setBookmark] = React.useState(bookmarked)
-  const [isDesktop, setDesktop] = React.useState(window.innerWidth > smScreenSize)
-
-  const updateMedia = () => { setDesktop(window.innerWidth > smScreenSize) }
-
-  React.useEffect(() => {
-    window.addEventListener("resize", updateMedia);
-    return () => window.removeEventListener("resize", updateMedia);
-  });
+  const isDesktop = useScreenSize()
 
   const bookmarkClick = () => { setBookmark(!isBookmarked) }
 
@@ -63,7 +54,7 @@ export default function Topic({ title, posts = [], icons = [], metrics = [], boo
                   <span>{`${post.percentage}%`}</span>
                 </div>
                 {post.summary}
-                <Link className="unselectable read-more">continuar...</Link>
+                <Link className="unselectable read-more" to={`/post/${post.id}`}>continuar...</Link>
               </div>
             )
           })
