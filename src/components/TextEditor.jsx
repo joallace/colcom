@@ -33,6 +33,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
   const [numberColumns, setNumberColumns] = React.useState(0)
   const [chartData, setChartData] = React.useState([])
   const [title, setTitle] = React.useState(localStorage.getItem("postTitle") || "")
+  const titleRef = React.useRef()
 
   const editor = useEditor({
     extensions: [
@@ -58,7 +59,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
         drop: (_, e) => { e.preventDefault(); },
       }
     },
-    onUpdate: ({ editor }) => {
+    onBlur: ({ editor }) => {
       setContent(editor.getHTML())
     },
     onTransaction: () => {
@@ -67,7 +68,8 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
         setNumberColumns(0)
         setIsMenuInput(false)
       }
-    }
+    },
+    content: localStorage.getItem("editorContent") || ""
   })
 
   const validateTableInterval = () => (numberColumns >= 1 && numberColumns <= tableConfig.maxColumns && numberRows >= 2 && numberRows <= tableConfig.maxRows)
@@ -80,11 +82,16 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
       editor.chain().focus().insertContent(chartData).run()
   }, [chartData])
 
+  // Updating the title input height accordingly with the title
+  React.useEffect(() => {
+    if (titleRef.current) {
+      titleRef.current.style.height = '32px';
+      titleRef.current.style.height = `${titleRef.current.scrollHeight + 2}px`;
+    }
+  }, [title]);
+
   // Saving the editor content in localStorage
   React.useEffect(() => {
-    if (editor)
-      editor.commands.setContent(localStorage.getItem("editorContent"))
-
     const handleBeforeUnload = (_) => {
       if (editor)
         localStorage.setItem("editorContent", editor.getHTML())
@@ -95,7 +102,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
       handleBeforeUnload()
       window.removeEventListener('beforeunload', handleBeforeUnload)
     }
-  }, [editor])
+  }, [])
 
   return (
     <>
@@ -242,12 +249,13 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
         <div className="bracket" />
         <div className="text">
           <h1 className="title">
-            <input
+            <textarea
               placeholder="Qual é o título?"
               value={title}
-              onChange={e => { setTitle(e.target.value) }}
-              onKeyUp={e => e.key === "Enter" && editor.chain().focus().run()}
+              onChange={e => setTitle(e.target.value)}
+              onKeyDown={e => {if(e.key === "Enter"){editor.chain().focus().run(); e.preventDefault()}}}
               onBlur={_ => localStorage.setItem("postTitle", title)}
+              ref={titleRef}
             />
           </h1>
           <EditorContent editor={editor} style={{ width: "100%" }} />

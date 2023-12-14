@@ -76,7 +76,10 @@
     .text{
         width: 100%;
     .title {
-        input {
+        textarea {
+            line-height: 1;
+            resize: none;
+            overflow-y: hidden;
             width: 100%;
             background-color: $default-bg;
             outline: none;
