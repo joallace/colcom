@@ -1,0 +1,54 @@
+.content>.buttons{
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0 2rem 0;
+}
+
+.modal>.body {
+    display: flex;
+    place-content: space-around;
+    place-items: center;
+    width: 100%;
+
+    @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+        flex-direction: column;
+    }
+
+    .inputs {
+        display: flex;
+        flex-direction: column;
+        place-items: center;
+
+        div {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+            width: 90%;
+        }
+
+        
+    }
+
+    table {
+        margin: 0;
+        table-layout: auto;
+
+        th,
+        td {
+            max-width: fit-content;
+            white-space: nowrap;
+
+            &>input {
+                &:read-only:focus{
+                    outline: none;
+                }
+            }
+        }
+
+        th>input {
+           margin: 0 0.25rem;
+        }
+    }
+}

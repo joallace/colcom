@@ -1,9 +1,14 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
-@import "layout/index";
-@import "layout/navbar";
-
+@import "components/input";
 @import "components/topic";
 @import "components/text_editor";
 @import "components/modal";
+
+@import "core/tags";
+
+@import "layout/index";
+@import "layout/navbar";
+
+@import "pages/write";

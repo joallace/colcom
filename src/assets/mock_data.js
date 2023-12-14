@@ -1,4 +1,4 @@
-export const chartData = [
+export default [
     {
       name: 'Page A',
       uv: 4000,

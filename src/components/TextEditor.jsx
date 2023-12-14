@@ -21,23 +21,22 @@ import Document from "@tiptap/extension-document"
 import Heading from "@tiptap/extension-heading"
 import Placeholder from "@tiptap/extension-placeholder"
 import StarterKit from "@tiptap/starter-kit"
-import Chart from "@/components/Chart"
 
-import { chartData } from "@/assets/mock_data"
+import Chart from "@/components/TipTapChart"
+import ChartModal from "@/components/ChartModal"
 
 
-const CustomDocument = Document.extend({
-  content: "heading block*",
-})
-
-export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColumns: 50 }, ...remainingProps }) => {
+export default ({ title, setTitle, content, setContent = () => { }, tableConfig = { maxRows: 20, maxColumns: 10 }, ...remainingProps }) => {
   const [isMenuInput, setIsMenuInput] = React.useState(false)
+  const [modal, setModal] = React.useState(false)
   const [numberRows, setNumberRows] = React.useState(0)
   const [numberColumns, setNumberColumns] = React.useState(0)
+  const [chartData, setChartData] = React.useState([])
+  const titleRef = React.useRef()
 
   const editor = useEditor({
     extensions: [
-      CustomDocument,
+      Document,
       StarterKit.configure({
         document: false,
         heading: false
@@ -48,10 +47,10 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
       TableHeader,
       TableRow,
       Heading.configure({
-        levels: [1, 2, 3],
+        levels: [2, 3],
       }),
       Placeholder.configure({
-        placeholder: "Qual é o título?"
+        placeholder: "O que tens a dizer?"
       })
     ],
     editorProps: {
@@ -59,8 +58,10 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
         drop: (_, e) => { e.preventDefault(); },
       }
     },
-    onUpdate: ({ editor }) => {
-      setContent(editor.getHTML())
+    onBlur: ({ editor }) => {
+      const editorContent = editor.getHTML()
+      setContent(editorContent)
+      localStorage.setItem("editorContent", editorContent)
     },
     onTransaction: () => {
       if (isMenuInput) {
@@ -69,26 +70,33 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
         setIsMenuInput(false)
       }
     },
-    content: `
-    <p>
-      This is still the text editor you’re used to, but enriched with node views.
-    </p>
-    <chart data="${JSON.stringify(chartData).replace(/\"/g, "'")}"></chart>
-    <p>
-      Did you see that? That’s a React component. We are really living in the future.
-    </p>
-    `
+    content
   })
 
   const validateTableInterval = () => (numberColumns >= 1 && numberColumns <= tableConfig.maxColumns && numberRows >= 2 && numberRows <= tableConfig.maxRows)
 
-  const insertTable = () => { validateTableInterval() && editor.chain().focus().insertTable({ rows: numberRows, cols: numberColumns, withHeaderRow: true }).run() }
+  const insertTable = () => { validateTableInterval() && editor.chain().focus().insertTable({ rows: +numberRows + 1, cols: numberColumns, withHeaderRow: true }).run() }
+
+  // If there is a change in the chartData string, it is an insertion of a chart
+  React.useEffect(() => {
+    if (chartData.length !== 0)
+      editor.chain().focus().insertContent(chartData).run()
+  }, [chartData])
+
+  // Updating the title input height accordingly with the title
+  React.useEffect(() => {
+    if (titleRef.current) {
+      titleRef.current.style.height = '32px';
+      titleRef.current.style.height = `${titleRef.current.scrollHeight + 2}px`;
+    }
+  }, [title]);
+
   return (
     <>
-      {(editor && !editor.isActive("heading", { level: 1 }) && !editor.isActive("table")) &&
+      {(editor && !editor.isEmpty && !editor.isActive("table")) &&
         <div>
           <BubbleMenu
-            className={`menu ${editor.isActive("chart")? "hidden":"bubble"}`}
+            className={`menu ${editor.isActive("chart") ? "hidden" : "bubble"}`}
             tippyOptions={{ duration: 100 }}
             editor={editor}
           >
@@ -148,10 +156,10 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
         </div>
       }
 
-      {(editor && !editor.isActive("heading", { level: 1 })) &&
+      {(editor && !editor.isEmpty) &&
         <div>
           <FloatingMenu
-            className="menu"
+            className={`menu ${modal && "hidden"}`}
             tippyOptions={{ duration: 100 }}
             editor={editor}
           >
@@ -203,7 +211,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
                   <PiQuotesFill title="inserir citação" />
                 </button>
                 <button
-                  onClick={() => editor.chain().focus().insertContent(`<chart data="${JSON.stringify(chartData).replace(/\"/g, "'")}"/>`).run()}
+                  onClick={() => setModal(true)}
                   className="icon"
                 >
                   <PiPresentationChartFill title="inserir gráfico" />
@@ -220,11 +228,26 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
         </div>
       }
 
+      {modal &&
+        <ChartModal isOpen={modal} setIsOpen={setModal} setChartOutput={setChartData} />
+      }
+
       <div className="text-editor" {...remainingProps}>
         <div className="bracket" />
-        <EditorContent editor={editor} style={{ width: "100%" }} />
+        <div className="text">
+          <h1 className="title">
+            <textarea
+              placeholder="Qual é o título?"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              onKeyDown={e => {if(e.key === "Enter"){editor.chain().focus().run(); e.preventDefault()}}}
+              onBlur={_ => localStorage.setItem("postTitle", title)}
+              ref={titleRef}
+            />
+          </h1>
+          <EditorContent editor={editor} style={{ width: "100%" }} />
+        </div>
       </div>
-
     </>
   )
 }

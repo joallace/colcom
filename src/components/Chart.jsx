@@ -1,73 +1,208 @@
-import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
-import { mergeAttributes, Node } from '@tiptap/core'
+import {
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  RadarChart,
+  Radar,
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
+  ScatterChart,
+  Scatter,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Tooltip,
+  Legend
+} from "recharts"
 
-import { defaultOrange, defaultGreen, defaultYellow, defaultInputBg } from "@/assets/scss/_export.module.scss"
-import useScreenSize from '@/hooks/useScreenSize';
+import { defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultInputBg, defaultFontColor } from "@/assets/scss/_export.module.scss"
+import useScreenSize from "@/hooks/useScreenSize"
 
 
-export const TipTapLineChart = props => {
-  const data = JSON.parse(props.node.attrs.data.replace(/'/g, "\""))
-  let isDesktop = useScreenSize()
-
-  const defaultColors = [defaultOrange, defaultGreen, defaultYellow]
-
-  if(data)
-    return (
-      <NodeViewWrapper className="chart">
-        <LineChart
-          width={500 * (isDesktop ? 1 : 0.7)}
-          height={300 * (isDesktop ? 1 : 0.7)}
-          data={data}
-          margin={{
-            top: 5,
-            right: 30,
-            left: 20,
-            bottom: 5,
-          }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" fontSize={isDesktop ? null : 10} foc/>
-          <YAxis fontSize={isDesktop ? null : 10} />
-          <Tooltip contentStyle={{"backgroundColor": defaultInputBg, borderRadius:"0.25rem", border: "1px solid #737373"}}/>
-          <Legend />
-          {Object.keys(data[0]).map((row, index) => {
-              if (row !== "name")
-                return <Line dataKey={row} stroke={defaultColors[index-1]} />
-          })}
-
-        </LineChart>
-      </NodeViewWrapper>
-    );
+const desktopMargin = {
+  top: 5,
+  right: 10,
+  left: 10,
+  bottom: 5
 }
 
-export default Node.create({
-  name: 'chart',
-  group: 'block',
-  atom: true,
+const mobileMargin = {
+  top: 10,
+  right: 5,
+  left: -45,
+  bottom: 5
+}
 
-  addAttributes() {
-    return {
-      "data": {
-        default: [],
-      },
-    }
-  },
+export default ({ type, data = [{}], width, height, isLegendOn = true, ...remainingProps }) => {
+  const isDesktop = useScreenSize()
 
-  parseHTML() {
-    return [
-      {
-        tag: 'chart',
-      },
-    ]
-  },
+  const COLORS = [defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultFontColor]
+  const RADIAN = Math.PI / 180
+  const tooltipStyle = {
+    backgroundColor: defaultInputBg,
+    borderRadius: "0.25rem",
+    border: "1px solid #737373"
+  }
 
-  renderHTML({ HTMLAttributes }) {
-    return ['chart', mergeAttributes(HTMLAttributes)]
-  },
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+    const x = cx + radius * Math.cos(-midAngle * RADIAN)
+    const y = cy + radius * Math.sin(-midAngle * RADIAN)
 
-  addNodeView() {
-    return ReactNodeViewRenderer(TipTapLineChart)
-  },
-})
+    return (
+      <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central">
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    )
+  }
+
+  const transformedData = (nameKey = "0name") => data.map(o=>{
+    let values = Object.entries(o).slice(1).map(([key, value])=>[key, parseFloat(value)])
+    return {[nameKey]: o["0name"], ...Object.fromEntries(values)}
+  })
+
+  switch (type) {
+    case "line":
+      return (
+        <LineChart
+          width={width * (isDesktop ? 1 : 0.7)}
+          height={height * (isDesktop ? 1 : 0.7)}
+          data={transformedData()}
+          margin={isDesktop? desktopMargin : mobileMargin}
+          {...remainingProps}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="0name" fontSize={isDesktop ? null : 10} foc />
+          <YAxis fontSize={isDesktop ? null : 10} />
+          <Tooltip contentStyle={tooltipStyle} />
+          {isLegendOn && <Legend />}
+          {
+            Object.keys(data[0]).map((row, index) => {
+              if (row !== "0name")
+                return <Line animationDuration={500} dataKey={row} stroke={COLORS[index % COLORS.length]} />
+            })
+          }
+
+        </LineChart>
+      )
+    case "area":
+      return (
+        <AreaChart
+          width={width * (isDesktop ? 1 : 0.7)}
+          height={height * (isDesktop ? 1 : 0.7)}
+          data={transformedData()}
+          margin={isDesktop? desktopMargin : mobileMargin}
+          {...remainingProps}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="0name" fontSize={isDesktop ? null : 10} foc />
+          <YAxis fontSize={isDesktop ? null : 10} />
+          <Tooltip contentStyle={tooltipStyle} />
+          {isLegendOn && <Legend />}
+          {
+            Object.keys(data[0]).map((row, index) => {
+              if (row !== "0name")
+                return <Area animationDuration={500} dataKey={row} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} />
+            })
+          }
+        </AreaChart>
+      )
+    case "bar":
+      return (
+        <BarChart
+          width={width * (isDesktop ? 1 : 0.7)}
+          height={height * (isDesktop ? 1 : 0.7)}
+          data={transformedData()}
+          margin={isDesktop? desktopMargin : mobileMargin}
+          {...remainingProps}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="0name" />
+          <YAxis />
+          <Tooltip contentStyle={tooltipStyle} />
+          {isLegendOn && <Legend />}
+          {
+            Object.keys(data[0]).map((row, index) => {
+              if (row !== "0name")
+                return <Bar dataKey={row} fill={COLORS[index % COLORS.length]} />
+            })
+          }
+        </BarChart>
+      )
+    case "pie":
+      return (
+        <PieChart
+          width={width * (isDesktop ? 1 : 0.7)}
+          height={height * (isDesktop ? 1 : 0.7)}
+          // margin={isDesktop? desktopMargin : mobileMargin}
+          {...remainingProps}
+        >
+          <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: defaultFontColor }} />
+          {isLegendOn && <Legend />}
+          <Pie
+            dataKey="0value"
+            data={transformedData("name")}
+            animationDuration={500}
+            cx="50%"
+            cy="50%"
+            label={renderCustomizedLabel}
+            labelLine={false}
+            outerRadius={width * (isDesktop ? 1 : 0.7) / 5}
+          >
+            {
+              Object.keys(data).map((row, index) => {
+                return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              })
+            }
+          </Pie>
+        </PieChart>
+      )
+    case "scatter":
+      return (
+        <ScatterChart
+          width={width * (isDesktop ? 1 : 0.7)}
+          height={height * (isDesktop ? 1 : 0.7)}
+          margin={isDesktop? desktopMargin : mobileMargin}
+          {...remainingProps}
+        >
+          <CartesianGrid />
+          <XAxis type="number" dataKey="0x" name="stature" unit="cm" />
+          <YAxis type="number" dataKey="0y" name="weight" unit="kg" />
+          <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={tooltipStyle} itemStyle={{ color: defaultFontColor }} />
+          <Scatter data={data} fill={defaultOrange} />
+        </ScatterChart>
+      )
+    case "radar":
+      return (
+        <RadarChart
+          cx="50%"
+          cy="50%"
+          outerRadius="80%"
+          width={width * (isDesktop ? 1 : 0.7)}
+          height={height * (isDesktop ? 1 : 0.7)}
+          data={transformedData()}
+          // margin={isDesktop? desktopMargin : mobileMargin}
+          {...remainingProps}
+        >
+          <PolarGrid />
+          <PolarAngleAxis dataKey="0name" />
+          <PolarRadiusAxis />
+          <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: defaultFontColor }} />
+          {isLegendOn && <Legend />}
+          {
+            Object.keys(data[0]).map((row, index) => {
+              if (row !== "0name")
+                return <Radar animationDuration={500} dataKey={row} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} fillOpacity={0.6} />
+            })
+          }
+        </RadarChart>
+      )
+  }
+}
