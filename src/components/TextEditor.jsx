@@ -26,13 +26,12 @@ import Chart from "@/components/TipTapChart"
 import ChartModal from "@/components/ChartModal"
 
 
-export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColumns: 50 }, ...remainingProps }) => {
+export default ({ title, setTitle, content, setContent = () => { }, tableConfig = { maxRows: 20, maxColumns: 10 }, ...remainingProps }) => {
   const [isMenuInput, setIsMenuInput] = React.useState(false)
   const [modal, setModal] = React.useState(false)
   const [numberRows, setNumberRows] = React.useState(0)
   const [numberColumns, setNumberColumns] = React.useState(0)
   const [chartData, setChartData] = React.useState([])
-  const [title, setTitle] = React.useState(localStorage.getItem("postTitle") || "")
   const titleRef = React.useRef()
 
   const editor = useEditor({
@@ -60,7 +59,9 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
       }
     },
     onBlur: ({ editor }) => {
-      setContent(editor.getHTML())
+      const editorContent = editor.getHTML()
+      setContent(editorContent)
+      localStorage.setItem("editorContent", editorContent)
     },
     onTransaction: () => {
       if (isMenuInput) {
@@ -69,7 +70,7 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
         setIsMenuInput(false)
       }
     },
-    content: localStorage.getItem("editorContent") || ""
+    content
   })
 
   const validateTableInterval = () => (numberColumns >= 1 && numberColumns <= tableConfig.maxColumns && numberRows >= 2 && numberRows <= tableConfig.maxRows)
@@ -89,20 +90,6 @@ export default ({ setContent = () => { }, tableConfig = { maxRows: 100, maxColum
       titleRef.current.style.height = `${titleRef.current.scrollHeight + 2}px`;
     }
   }, [title]);
-
-  // Saving the editor content in localStorage
-  React.useEffect(() => {
-    const handleBeforeUnload = (_) => {
-      if (editor)
-        localStorage.setItem("editorContent", editor.getHTML())
-    }
-    window.addEventListener('beforeunload', handleBeforeUnload)
-
-    return () => {
-      handleBeforeUnload()
-      window.removeEventListener('beforeunload', handleBeforeUnload)
-    }
-  }, [])
 
   return (
     <>
