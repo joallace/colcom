@@ -3,6 +3,7 @@ import React from "react"
 import Modal from "@/components/Modal"
 import Input from "@/components/Input"
 import Chart from "@/components/Chart"
+import { ChartContext } from "@/context/ChartContext"
 
 const chartDefaults = {
   "line": {
@@ -67,7 +68,7 @@ const generateChartData = (type, numberColumns, numberRows) => {
   }
 }
 
-export default ({ isOpen, setIsOpen, setChartOutput, editionMode = false, currentData, currentType = "line", setIsLegendOn, ...remainingProps }) => {
+export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false, currentData, currentType = "line", setIsLegendOn, ...remainingProps }) => {
   const [chartType, setChartType] = React.useState(currentType)
   const [legend, setLegend] = React.useState(true)
   const [input1, setInput1] = React.useState(2)
@@ -75,6 +76,7 @@ export default ({ isOpen, setIsOpen, setChartOutput, editionMode = false, curren
   const [chartData, setChartData] = React.useState(editionMode ? currentData : generateChartData(chartType, input1, input2))
   const [chartKeys, setChartKeys] = React.useState(Object.keys(chartData[0]))
   const [dataInputStage, setDataInputStage] = React.useState(editionMode)
+  const { setChartString } = React.useContext(ChartContext)
 
   const updateChartValue = (i, j, value) => {
     setChartData(chartData.map((c, idx) => {
@@ -85,6 +87,7 @@ export default ({ isOpen, setIsOpen, setChartOutput, editionMode = false, curren
     }))
   }
 
+  // Updates the chartKeys buffer
   const updateKey = (i, value) => {
     // Escaping if the key begins with a number (which breaks the obj key order)
     if (/^\d$/.test(value))
@@ -98,6 +101,7 @@ export default ({ isOpen, setIsOpen, setChartOutput, editionMode = false, curren
     }))
   }
 
+  // Updates the chartData objects keys
   const updateChartKeys = () => {
     const oldKeys = Object.keys(chartData[0])
 
@@ -244,9 +248,11 @@ export default ({ isOpen, setIsOpen, setChartOutput, editionMode = false, curren
                 if (editionMode) {
                   setChartOutput(chartData)
                   setIsLegendOn(legend)
+                  setChartString({ type: chartType, legend, data: chartData })
                 }
                 else {
-                  setChartOutput(`<chart type="${chartType}" isLegendOn="${legend}" data="${JSON.stringify(chartData).replace(/\"/g, "'")}"></chart>`)
+                  const chartStr = `<chart type="${chartType}" isLegendOn="${legend}" data="${JSON.stringify(chartData).replace(/\"/g, "'")}"></chart>`
+                  editor.chain().focus().insertContent(chartStr).run()
                   setDataInputStage(false)
                 }
                 setIsOpen(false)

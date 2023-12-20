@@ -17,11 +17,12 @@ import Chart from "@/components/TipTapChart"
 import ChartModal from "@/components/ChartModal"
 import BubbleMenu from "@/components/BubbleMenu"
 import FloatingMenu from "@/components/FloatingMenu"
+import { ChartContext } from "@/context/ChartContext"
 
 
 export default ({ title, setTitle, content, setContent = () => { }, tableConfig = { maxRows: 20, maxColumns: 10 }, readOnly = false, ...remainingProps }) => {
   const [modal, setModal] = React.useState(false)
-  const [chartData, setChartData] = React.useState([])
+  const { chartString, resetChartStr } = React.useContext(ChartContext)
   const titleRef = React.useRef()
   const editor = useEditor({
     extensions: [
@@ -58,9 +59,12 @@ export default ({ title, setTitle, content, setContent = () => { }, tableConfig 
 
   // If there is a change in the chartData string, it is an insertion of a chart
   React.useEffect(() => {
-    if (chartData.length !== 0)
-      editor.chain().focus().insertContent(chartData).run()
-  }, [chartData])
+    if (chartString.length !== 0){
+      editor.commands.deleteNode('chart')
+      editor.chain().focus().insertContent(chartString).run()
+      resetChartStr()
+    }
+  }, [chartString])
 
   // Updating the title input height accordingly with the title
   React.useEffect(() => {
@@ -81,7 +85,7 @@ export default ({ title, setTitle, content, setContent = () => { }, tableConfig 
         setModal={setModal}
       />
 
-      <ChartModal isOpen={modal} setIsOpen={setModal} setChartOutput={setChartData} />
+      <ChartModal isOpen={modal} setIsOpen={setModal} editor={editor} />
 
       <div className="text-editor" {...remainingProps}>
         <div className="bracket" />
