@@ -13,6 +13,14 @@ import Heading from "@tiptap/extension-heading"
 import Placeholder from "@tiptap/extension-placeholder"
 import StarterKit from "@tiptap/starter-kit"
 
+import {
+  PiBookmarkSimpleBold,
+  PiBookmarkSimpleFill,
+  PiArrowBendUpLeftBold,
+  PiDotsThreeVerticalBold
+} from "react-icons/pi"
+
+import useScreenSize from "@/hooks/useScreenSize"
 import Chart from "@/components/TipTapChart"
 import ChartModal from "@/components/ChartModal"
 import BubbleMenu from "@/components/BubbleMenu"
@@ -22,8 +30,10 @@ import { ChartContext } from "@/context/ChartContext"
 
 export default ({ title, setTitle, content, setContent = () => { }, tableConfig = { maxRows: 20, maxColumns: 10 }, readOnly = false, ...remainingProps }) => {
   const [modal, setModal] = React.useState(false)
+  const [isBookmarked, setBookmark] = React.useState(false)
   const { chartString, resetChartStr } = React.useContext(ChartContext)
   const titleRef = React.useRef()
+  const isDesktop = useScreenSize()
   const editor = useEditor({
     extensions: [
       Document,
@@ -57,9 +67,12 @@ export default ({ title, setTitle, content, setContent = () => { }, tableConfig 
     content: readOnly ? content.replace(/<chart readonly="false"/g, '<chart readonly="true"') : content,
   })
 
-  // If there is a change in the chartData string, it is an insertion of a chart
+  const bookmarkClick = () => { setBookmark(!isBookmarked) }
+
+  // If there is a change in the chartData string, it is an edition of a chart by the modal.
+  // So we need to delete the old chart and insert the new string
   React.useEffect(() => {
-    if (chartString.length !== 0){
+    if (chartString.length !== 0) {
       editor.commands.deleteNode('chart')
       editor.chain().focus().insertContent(chartString).run()
       resetChartStr()
@@ -76,7 +89,7 @@ export default ({ title, setTitle, content, setContent = () => { }, tableConfig 
 
   return (
     <>
-      <BubbleMenu editor={editor} readOnly={readOnly}/>
+      <BubbleMenu editor={editor} readOnly={readOnly} />
 
       <FloatingMenu
         editor={editor}
@@ -87,23 +100,41 @@ export default ({ title, setTitle, content, setContent = () => { }, tableConfig 
 
       <ChartModal isOpen={modal} setIsOpen={setModal} editor={editor} />
 
-      <div className="text-editor" {...remainingProps}>
+      <div className={`text-editor${readOnly? " topic" : ""}`} {...remainingProps}>
         <div className="bracket" />
         <div className="text">
-          <h1 className="title">
-            {readOnly ?
-              title
-              :
-              <textarea
-                placeholder="Qual é o título?"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter") { editor.chain().focus().run(); e.preventDefault() } }}
-                onBlur={_ => localStorage.setItem("postTitle", title)}
-                ref={titleRef}
-              />
+          <div className="header">
+            <h1 className="title">
+              {readOnly ?
+                title
+                :
+                <textarea
+                  placeholder="Qual é o título?"
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") { editor.chain().focus().run(); e.preventDefault() } }}
+                  onBlur={_ => localStorage.setItem("postTitle", title)}
+                  ref={titleRef}
+                />
+              }
+            </h1>
+            { readOnly && 
+              <div className="right-side">
+                {isDesktop ?
+                  <>
+                    <PiArrowBendUpLeftBold title="Responder tópico" className="icons" />
+                    {isBookmarked ?
+                      <PiBookmarkSimpleFill title="Remover tópico dos salvos" className="icons" onClick={bookmarkClick} />
+                      :
+                      <PiBookmarkSimpleBold title="Salvar tópico" className="icons" onClick={bookmarkClick} />
+                    }
+                  </>
+                  :
+                  <PiDotsThreeVerticalBold className="icons" />
+                }
+              </div>
             }
-          </h1>
+          </div>
           <EditorContent editor={editor} style={{ width: "100%" }} />
         </div>
       </div>
