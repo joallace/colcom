@@ -78,6 +78,7 @@
 
         .title {
             color: $default-green;
+            word-wrap: anywhere;
             cursor: text;
 
             textarea {
