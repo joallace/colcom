@@ -10,6 +10,11 @@ button {
         border-color: $default-orange;
         background-color: $default-orange;
     }
+
+    &:active{
+        border-color: darken($default-orange, 10%);
+        background-color: darken($default-orange, 10%);
+    }
 }
 
 table {
