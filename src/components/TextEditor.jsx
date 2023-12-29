@@ -14,10 +14,11 @@ import Placeholder from "@tiptap/extension-placeholder"
 import StarterKit from "@tiptap/starter-kit"
 
 import {
-  PiBookmarkSimpleBold,
+  PiBookmarkSimple,
   PiBookmarkSimpleFill,
-  PiArrowBendUpLeftBold,
-  PiDotsThreeVerticalBold
+  PiDotsThreeVerticalBold,
+  PiPencilSimpleFill,
+  PiPencilSimple
 } from "react-icons/pi"
 
 import useScreenSize from "@/hooks/useScreenSize"
@@ -31,6 +32,7 @@ import { ChartContext } from "@/context/ChartContext"
 export default ({ title, setTitle, content, setContent = () => { }, tableConfig = { maxRows: 20, maxColumns: 10 }, readOnly = false, ...remainingProps }) => {
   const [modal, setModal] = React.useState(false)
   const [isBookmarked, setBookmark] = React.useState(false)
+  const [isEditable, setEditable] = React.useState(!readOnly)
   const { chartString, resetChartStr } = React.useContext(ChartContext)
   const titleRef = React.useRef()
   const isDesktop = useScreenSize()
@@ -63,11 +65,11 @@ export default ({ title, setTitle, content, setContent = () => { }, tableConfig 
       setContent(editorContent)
       localStorage.setItem("editorContent", editorContent)
     },
-    editable: !readOnly,
-    content: readOnly ? content.replace(/<chart readonly="false"/g, '<chart readonly="true"') : content,
+    editable: isEditable,
+    content: isEditable ? content : content.replace(/<chart readonly="false"/g, '<chart readonly="true"'),
   })
 
-  const bookmarkClick = () => { setBookmark(!isBookmarked) }
+  const toggle = (setter) => _ => { setter(prev => !prev) }
 
   // If there is a change in the chartData string, it is an edition of a chart by the modal.
   // So we need to delete the old chart and insert the new string
@@ -87,9 +89,20 @@ export default ({ title, setTitle, content, setContent = () => { }, tableConfig 
     }
   }, [title]);
 
+  React.useEffect(() => {
+    if (editor) {
+      editor.setEditable(isEditable)
+
+      if (isEditable)
+        editor.commands.setContent(editor.getHTML().replace(/<chart readonly="true"/g, '<chart readonly="false"'))
+      else
+        editor.commands.setContent(editor.getHTML().replace(/<chart readonly="false"/g, '<chart readonly="true"'))
+    }
+  }, [isEditable]);
+
   return (
     <>
-      <BubbleMenu editor={editor} readOnly={readOnly} />
+      <BubbleMenu editor={editor} readOnly={!isEditable} />
 
       <FloatingMenu
         editor={editor}
@@ -100,7 +113,7 @@ export default ({ title, setTitle, content, setContent = () => { }, tableConfig 
 
       <ChartModal isOpen={modal} setIsOpen={setModal} editor={editor} />
 
-      <div className={`text-editor${readOnly? " topic" : ""}`} {...remainingProps}>
+      <div className={`text-editor${readOnly ? " topic" : ""}`} {...remainingProps}>
         <div className="bracket" />
         <div className="text">
           <div className="header">
@@ -118,15 +131,19 @@ export default ({ title, setTitle, content, setContent = () => { }, tableConfig 
                 />
               }
             </h1>
-            { readOnly && 
+            {readOnly &&
               <div className="right-side">
                 {isDesktop ?
                   <>
-                    <PiArrowBendUpLeftBold title="Responder tópico" className="icons" />
-                    {isBookmarked ?
-                      <PiBookmarkSimpleFill title="Remover tópico dos salvos" className="icons" onClick={bookmarkClick} />
+                    {isEditable ?
+                      <PiPencilSimpleFill title="editar tópico" className="icons" onClick={toggle(setEditable)} />
                       :
-                      <PiBookmarkSimpleBold title="Salvar tópico" className="icons" onClick={bookmarkClick} />
+                      <PiPencilSimple title="editar tópico" className="icons" onClick={toggle(setEditable)} />
+                    }
+                    {isBookmarked ?
+                      <PiBookmarkSimpleFill title="remover tópico dos salvos" className="icons" onClick={toggle(setBookmark)} />
+                      :
+                      <PiBookmarkSimple title="salvar tópico" className="icons" onClick={toggle(setBookmark)} />
                     }
                   </>
                   :

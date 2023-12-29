@@ -3,9 +3,9 @@ import { Link } from "react-router-dom"
 import {
   PiCaretUpBold,
   PiCaretDownBold,
-  PiBookmarkSimpleBold,
+  PiBookmarkSimple,
   PiBookmarkSimpleFill,
-  PiArrowBendUpLeftBold,
+  PiArrowBendUpLeft,
   PiDotsThreeVerticalBold
 } from "react-icons/pi"
 
@@ -25,19 +25,19 @@ export default function Topic({ title, posts = [], icons = [], metrics = [], boo
         <div className="header">
           <div className="left-side">
             <div className="vote-buttons">
-              <PiCaretUpBold title="Relevante" className="up" />
-              <PiCaretDownBold title="Não relevante" className="down" />
+              <PiCaretUpBold title="relevante" className="up" />
+              <PiCaretDownBold title="não relevante" className="down" />
             </div>
-            <h2 className="title" title="Ver todas as respostas">{title}</h2>
+            <h2 className="title" title="ver todas as respostas">{title}</h2>
           </div>
           <div className="right-side">
             {isDesktop ?
               <>
-                <PiArrowBendUpLeftBold title="Responder tópico" className="icons" />
+                <PiArrowBendUpLeft title="responder tópico" className="icons" />
                 {isBookmarked ?
-                  <PiBookmarkSimpleFill title="Remover tópico dos salvos" className="icons" onClick={bookmarkClick} />
+                  <PiBookmarkSimpleFill title="remover tópico dos salvos" className="icons" onClick={bookmarkClick} />
                   :
-                  <PiBookmarkSimpleBold title="Salvar tópico" className="icons" onClick={bookmarkClick} />
+                  <PiBookmarkSimple title="salvar tópico" className="icons" onClick={bookmarkClick} />
                 }
               </>
               :
