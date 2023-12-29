@@ -18,7 +18,8 @@ import {
   PiBookmarkSimpleFill,
   PiDotsThreeVerticalBold,
   PiPencilSimpleFill,
-  PiPencilSimple
+  PiPencilSimple,
+  PiGitBranch
 } from "react-icons/pi"
 
 import useScreenSize from "@/hooks/useScreenSize"
@@ -61,9 +62,11 @@ export default ({ title, setTitle, content, setContent = () => { }, tableConfig 
       }
     },
     onBlur: ({ editor }) => {
-      const editorContent = editor.getHTML()
-      setContent(editorContent)
-      localStorage.setItem("editorContent", editorContent)
+      if (!readOnly) {
+        const editorContent = editor.getHTML()
+        setContent(editorContent)
+        localStorage.setItem("editorContent", editorContent)
+      }
     },
     editable: isEditable,
     content: isEditable ? content : content.replace(/<chart readonly="false"/g, '<chart readonly="true"'),
@@ -135,6 +138,7 @@ export default ({ title, setTitle, content, setContent = () => { }, tableConfig 
               <div className="right-side">
                 {isDesktop ?
                   <>
+                    <PiGitBranch title="clonar tópico" className="icons" />
                     {isEditable ?
                       <PiPencilSimpleFill title="editar tópico" className="icons" onClick={toggle(setEditable)} />
                       :
