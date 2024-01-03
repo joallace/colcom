@@ -20,7 +20,7 @@ import FloatingMenu from "@/components/FloatingMenu"
 import { ChartContext } from "@/context/ChartContext"
 
 
-export default ({ content, setContent = () => { }, isEditable = false, readOnly = true, tableConfig = { maxRows: 20, maxColumns: 10 }, ...remainingProps }) => {
+export default ({ content, setContent = () => { }, readOnly = true, edit : isEditable = !readOnly, tableConfig = { maxRows: 20, maxColumns: 10 }, ...remainingProps }) => {
   const [modal, setModal] = React.useState(false)
   const { chartString, resetChartStr } = React.useContext(ChartContext)
   const editor = useEditor({
@@ -82,6 +82,7 @@ export default ({ content, setContent = () => { }, isEditable = false, readOnly 
 
   return (
     <>
+      {console.log({isEditable, readOnly})}
       <BubbleMenu editor={editor} readOnly={!isEditable} />
 
       <FloatingMenu

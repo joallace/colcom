@@ -1,7 +1,7 @@
-import React from "react";
+import React from "react"
 
-import TextEditor from "@/components/TextEditor";
-import Topic from "@/components/Topic";
+import TextEditor from "@/components/TextEditor"
+import Topic from "@/components/Topic"
 
 export default function Write() {
   const [title, setTitle] = React.useState(localStorage.getItem("postTitle") || "")
@@ -23,7 +23,7 @@ export default function Write() {
   return (
     <div className="content">
       <Topic title={title} setTitle={setTitle} hideVoteButtons readOnly={false}>
-        <TextEditor content={content} setContent={setContent} />
+        <TextEditor content={content} setContent={setContent} readOnly={false} />
       </Topic>
       <div className="buttons">
         <button onClick={download}>Salvar</button>
