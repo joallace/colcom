@@ -1,0 +1,30 @@
+.post {
+    display: flex;
+    justify-content: space-around;
+
+    .topic {
+        &.original {
+            width: 50%;
+
+            @media screen and (min-width: $screen-sm) and (max-width: $screen-xl) {
+                width: 60%;
+            }
+
+            @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+                width: 75%;
+            }
+        }
+        
+        &.critique {
+            width: 40%;
+
+            @media screen and (min-width: $screen-sm) and (max-width: $screen-xl) {
+                width: 35%;
+            }
+
+            @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+                width: 20%;
+            }
+        }
+    }
+}

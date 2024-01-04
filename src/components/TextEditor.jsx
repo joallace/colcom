@@ -10,6 +10,7 @@ import TableHeader from "@tiptap/extension-table-header"
 import TableRow from "@tiptap/extension-table-row"
 import Document from "@tiptap/extension-document"
 import Heading from "@tiptap/extension-heading"
+import Highlight from "@tiptap/extension-highlight"
 import Placeholder from "@tiptap/extension-placeholder"
 import StarterKit from "@tiptap/starter-kit"
 
@@ -20,7 +21,9 @@ import FloatingMenu from "@/components/FloatingMenu"
 import { ChartContext } from "@/context/ChartContext"
 
 
-export default ({ content, setContent = () => { }, readOnly = true, edit : isEditable = !readOnly, tableConfig = { maxRows: 20, maxColumns: 10 }, ...remainingProps }) => {
+export default ({ content, setContent = () => { }, saveInLocalStorage = false, readOnly = true,
+                  edit : isEditable = !readOnly, alongsideCritique, setShowCritique,
+                  tableConfig = { maxRows: 20, maxColumns: 10 }, ...remainingProps }) => {
   const [modal, setModal] = React.useState(false)
   const { chartString, resetChartStr } = React.useContext(ChartContext)
   const editor = useEditor({
@@ -38,6 +41,9 @@ export default ({ content, setContent = () => { }, readOnly = true, edit : isEdi
       Heading.configure({
         levels: [2, 3],
       }),
+      Highlight.configure({
+        multicolor: true
+      }),
       Placeholder.configure({
         placeholder: "O que tens a dizer?"
       })
@@ -48,7 +54,7 @@ export default ({ content, setContent = () => { }, readOnly = true, edit : isEdi
       }
     },
     onBlur: ({ editor }) => {
-      if (!readOnly) {
+      if (saveInLocalStorage) {
         const editorContent = editor.getHTML()
         setContent(editorContent)
         localStorage.setItem("editorContent", editorContent)
@@ -82,8 +88,9 @@ export default ({ content, setContent = () => { }, readOnly = true, edit : isEdi
 
   return (
     <>
-      {console.log({isEditable, readOnly})}
-      <BubbleMenu editor={editor} readOnly={!isEditable} />
+      {!alongsideCritique &&
+        <BubbleMenu editor={editor} readOnly={!isEditable} setShowCritique={setShowCritique}/>
+      }
 
       <FloatingMenu
         editor={editor}

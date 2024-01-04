@@ -1,5 +1,6 @@
 .topic {
     display: flex;
+    height: min-content;
     @include content-responsiveness;
 
     .title {
@@ -24,6 +25,7 @@
     .body {
         text-align: justify;
         width: 100%;
+        height: min-content;
     }
 
     .header {

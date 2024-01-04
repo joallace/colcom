@@ -7,7 +7,10 @@ import {
 
 import useScreenSize from "@/hooks/useScreenSize"
 
-export default function Topic({ title, setTitle, readOnly = true, hideVoteButtons = false, headerConfig = {}, metrics, children, ...remainingProps }) {
+
+export default function Topic({ title, setTitle, saveInLocalStorage = false, readOnly = true,
+                                hideVoteButtons = false, headerConfig = {}, alongsideCritique,
+                                isCritique, metrics, children, ...remainingProps }) {
   const [headerStatus, setHeaderStatus] = React.useState(
     Object.fromEntries(
       Object.entries(headerConfig)
@@ -28,7 +31,7 @@ export default function Topic({ title, setTitle, readOnly = true, hideVoteButton
   }, [title]);
 
   return (
-    <div className="topic" {...remainingProps}>
+    <div className={`topic${alongsideCritique? " original" : ""}${isCritique? " critique": ""}`} {...remainingProps}>
       <div className="bracket" />
       <div className="body">
         <div className="header">
@@ -48,7 +51,7 @@ export default function Topic({ title, setTitle, readOnly = true, hideVoteButton
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter") { editor.chain().focus().run(); e.preventDefault() } }}
-                  onBlur={_ => localStorage.setItem("postTitle", title)}
+                  onBlur={_ => saveInLocalStorage && localStorage.setItem("postTitle", title)}
                   ref={titleRef}
                 />
               }
@@ -76,7 +79,7 @@ export default function Topic({ title, setTitle, readOnly = true, hideVoteButton
                         return buttonConfig.icons({
                           className: "icons",
                           title: buttonConfig.description,
-                          onClick: buttonConfig.onClick()
+                          onClick: () => buttonConfig.onClick()
                         })
                     }
                   }))}
@@ -90,7 +93,7 @@ export default function Topic({ title, setTitle, readOnly = true, hideVoteButton
         { children.constructor === Array?
           children
           :
-          React.cloneElement(children, headerStatus)
+          React.cloneElement(children, {...headerStatus, readOnly, saveInLocalStorage, alongsideCritique})
         }
         {metrics &&
           <ul className="metrics">

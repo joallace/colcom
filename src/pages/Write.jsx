@@ -22,8 +22,14 @@ export default function Write() {
 
   return (
     <div className="content">
-      <Topic title={title} setTitle={setTitle} hideVoteButtons readOnly={false}>
-        <TextEditor content={content} setContent={setContent} readOnly={false} />
+      <Topic
+        title={title}
+        setTitle={setTitle}
+        readOnly={false} 
+        hideVoteButtons
+        saveInLocalStorage
+      >
+        <TextEditor content={content} setContent={setContent}/>
       </Topic>
       <div className="buttons">
         <button onClick={download}>Salvar</button>

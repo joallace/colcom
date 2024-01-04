@@ -63,44 +63,44 @@ export default ({ editor, tableConfig, modal, setModal }) => {
           :
           <>
             <button
-              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
               className={editor.isActive("heading", { level: 2 }) ? "h1 is-active" : "h1"}
+              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             >
               cabeçalho 1
             </button>
             <button
-              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
               className={editor.isActive("heading", { level: 3 }) ? "h2 is-active" : "h2"}
+              onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             >
               cabeçalho 2
             </button>
             <button
-              onClick={() => editor.chain().focus().toggleBulletList().run()}
               className={editor.isActive("bulletList") ? "icon is-active" : "icon"}
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
             >
               <PiListBulletsBold title="inserir tópicos sem ordem" />
             </button>
             <button
-              onClick={() => editor.chain().focus().toggleOrderedList().run()}
               className={editor.isActive("orderedList") ? "icon is-active" : "icon"}
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
             >
               <PiListNumbersFill title="inserir tópicos ordenados" />
             </button>
             <button
-              onClick={() => editor.chain().focus().toggleBlockquote().run()}
               className={editor.isActive("blockquote") ? "icon is-active" : "icon"}
+              onClick={() => editor.chain().focus().toggleBlockquote().run()}
             >
               <PiQuotesFill title="inserir citação" />
             </button>
             <button
-              onClick={() => setModal(true)}
               className="icon"
+              onClick={() => setModal(true)}
             >
               <PiPresentationChartFill title="inserir gráfico" />
             </button>
             <button
-              onClick={() => setIsTableInput(true)}
               className="icon"
+              onClick={() => setIsTableInput(true)}
             >
               <PiTableFill title="inserir tabela" />
             </button>
