@@ -61,10 +61,8 @@ export default function Post() {
   const [critiqueTitle, setCritiqueTitle] = React.useState("")
   const [critiqueContent, setCritiqueContent] = React.useState("")
   const [critiqueHeight, setCritiqueHeight] = React.useState()
-  const [selectionHeight, setSelectionHeight] = React.useState(0)
-  const [scrollHeight, setScrollHeight] = React.useState(0)
+  const [critiqueYCoord, setCritiqueYCoord] = React.useState(0)
   const { id } = useParams()
-
 
   const critiqueHeaderConfig = {
     "close": {
@@ -75,22 +73,11 @@ export default function Post() {
   }
 
   React.useEffect(() => {
-    const handleScroll = () => {
-      setScrollHeight(window.scrollY)
-    }
+    if (critiqueHeight && showCritique){
+      const y = getSelectionHeight() + window.scrollY - critiqueHeight
 
-    window.addEventListener('scroll', handleScroll, { passive: true })
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-    }
-  }, [])
-
-  React.useEffect(() => {
-    if (critiqueHeight){
-      const height = getSelectionHeight() + scrollHeight - critiqueHeight
-      setSelectionHeight(height)
-      window.scrollTo({top: height, behavior:"smooth"})
+      setCritiqueYCoord(y)
+      window.scrollTo({top: y, behavior:"smooth"})
     }
   }, [critiqueHeight, showCritique])
 
@@ -116,7 +103,7 @@ export default function Post() {
           readOnly={false}
           isCritique
           metrics
-          style={{ transform: `translate(0,${selectionHeight}px)` }}
+          style={{ transform: `translate(0,${critiqueYCoord}px)` }}
           setHeight={setCritiqueHeight}
         >
           <TextEditor content={critiqueContent} setContent={setCritiqueContent} />
