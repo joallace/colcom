@@ -10,7 +10,7 @@ import useScreenSize from "@/hooks/useScreenSize"
 
 export default function Topic({ title, setTitle, saveInLocalStorage = false, readOnly = true,
                                 hideVoteButtons = false, headerConfig = {}, alongsideCritique,
-                                isCritique, metrics, children, ...remainingProps }) {
+                                isCritique, metrics, children, setHeight=()=>{}, ...remainingProps }) {
   const [headerStatus, setHeaderStatus] = React.useState(
     Object.fromEntries(
       Object.entries(headerConfig)
@@ -18,6 +18,7 @@ export default function Topic({ title, setTitle, saveInLocalStorage = false, rea
         .filter((value) => value !== undefined)
     )
   )
+  const topicRef = React.useRef()
   const titleRef = React.useRef()
   const isDesktop = useScreenSize()
 
@@ -30,8 +31,12 @@ export default function Topic({ title, setTitle, saveInLocalStorage = false, rea
     }
   }, [title]);
 
+  React.useEffect(()=>{
+    setHeight(topicRef.current.clientHeight || 0)
+  }, [])
+
   return (
-    <div className={`topic${alongsideCritique? " original" : ""}${isCritique? " critique": ""}`} {...remainingProps}>
+    <div className={`topic${alongsideCritique? " original" : ""}${isCritique? " critique": ""}`} ref={topicRef} {...remainingProps}>
       <div className="bracket" />
       <div className="body">
         <div className="header">

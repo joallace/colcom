@@ -38,13 +38,30 @@ const headerConfig = {
   }
 }
 
+function getSelectionHeight() {
+  if (window.getSelection) {
+    const selection = window.getSelection();
+    if (selection.rangeCount) {
+      const range = selection.getRangeAt(0).cloneRange();
+      if (range.getBoundingClientRect) {
+        return (range.getBoundingClientRect().top + range.getBoundingClientRect().bottom)/2
+      }
+    }
+  }
+}
+
+
 export default function Post() {
   const title = localStorage.getItem("postTitle") || ""
   const [content, setContent] = React.useState(localStorage.getItem("editorContent") || "")
   const [showCritique, setShowCritique] = React.useState(false)
   const [critiqueTitle, setCritiqueTitle] = React.useState("")
   const [critiqueContent, setCritiqueContent] = React.useState("")
+  const [critiqueHeight, setCritiqueHeight] = React.useState()
+  const [selectionHeight, setSelectionHeight] = React.useState(0)
+  const [scrollHeight, setScrollHeight] = React.useState(0)
   const { id } = useParams()
+
 
   const critiqueHeaderConfig = {
     "close": {
@@ -53,7 +70,23 @@ export default function Post() {
       onClick: () => setShowCritique(false)
     },
   }
-  
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setScrollHeight(window.scrollY)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
+  React.useEffect(() => {
+    if (critiqueHeight)
+      setSelectionHeight(getSelectionHeight() + scrollHeight - critiqueHeight)
+  }, [critiqueHeight, showCritique])
 
   return (
     <div className="post">
@@ -77,6 +110,8 @@ export default function Post() {
           readOnly={false}
           isCritique
           metrics
+          style={{ transform: `translate(0,${selectionHeight}px)` }}
+          setHeight={setCritiqueHeight}
         >
           <TextEditor content={critiqueContent} setContent={setCritiqueContent} />
         </Topic>
