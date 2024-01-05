@@ -100,6 +100,10 @@
 .tiptap {
     min-height: 10rem;
 
+    &:focus {
+        outline: none;
+    }
+
     >*+* {
         margin-top: 0.75em;
     }
@@ -150,10 +154,6 @@
         display: flex;
         place-content: center;
         margin: 1rem 0;
-    }
-
-    &:focus {
-        outline: none;
     }
 
     .is-editor-empty:first-child::before {

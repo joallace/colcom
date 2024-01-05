@@ -2,6 +2,7 @@
     display: flex;
     height: min-content;
     @include content-responsiveness;
+    transition: all 0.5s ease;
 
     .title {
         width: 100%;
@@ -26,6 +27,36 @@
         text-align: justify;
         width: 100%;
         height: min-content;
+    }
+
+    .bracket {
+        width: 1rem;
+        flex-shrink: 0;
+        margin: 2.15rem 0.75rem 0.4rem 0;
+
+        border-style: solid;
+        border-width: 2px 0 2px 2px;
+        border-color: $default-green;
+        border-radius: 0.75rem 0 0 0;
+
+        @media screen and (max-width: $screen-sm) {
+            margin-top: 2.4rem;
+        }
+    }
+
+    // Maybe the critique color will be accordingly to the user's vote.
+    &.critique {
+        .title {
+            color: $default-orange;
+
+            textarea {
+                color: $default-orange;
+            }
+        }
+
+        .bracket {
+            border-color: $default-orange;
+        }
     }
 
     .header {
@@ -61,7 +92,7 @@
             }
 
             .down {
-                color: #BC5217;
+                color: #e65000;
                 cursor: pointer;
             }
         }
@@ -140,19 +171,4 @@
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-}
-
-.bracket {
-    width: 1rem;
-    flex-shrink: 0;
-    margin: 2.15rem 0.75rem 0.4rem 0;
-
-    border-style: solid;
-    border-width: 2px 0 2px 2px;
-    border-color: $default-green;
-    border-radius: 0.75rem 0 0 0;
-
-    @media screen and (max-width: $screen-sm) {
-        margin-top: 2.4rem;
-    }
 }
