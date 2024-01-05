@@ -44,7 +44,10 @@ function getSelectionHeight() {
     if (selection.rangeCount) {
       const range = selection.getRangeAt(0).cloneRange();
       if (range.getBoundingClientRect) {
-        return (range.getBoundingClientRect().top + range.getBoundingClientRect().bottom)/2
+        // Sometimes, when selecting a whole paragraph, we can't get the selection rect
+        // so we can just pick it from the starting container
+        const rect = range.getBoundingClientRect().top? range.getBoundingClientRect() : range.startContainer.getBoundingClientRect()
+        return (rect.top + rect.bottom)/2
       }
     }
   }
@@ -84,8 +87,11 @@ export default function Post() {
   }, [])
 
   React.useEffect(() => {
-    if (critiqueHeight)
-      setSelectionHeight(getSelectionHeight() + scrollHeight - critiqueHeight)
+    if (critiqueHeight){
+      const height = getSelectionHeight() + scrollHeight - critiqueHeight
+      setSelectionHeight(height)
+      window.scrollTo({top: height, behavior:"smooth"})
+    }
   }, [critiqueHeight, showCritique])
 
   return (
