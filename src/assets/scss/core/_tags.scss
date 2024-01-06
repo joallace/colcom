@@ -23,6 +23,7 @@ table {
     width: 100%;
     margin: 1rem;
     overflow: hidden;
+    text-align: center;
 
     td,
     th {
@@ -40,7 +41,6 @@ table {
 
     th {
         font-weight: bold;
-        text-align: left;
         background-color: $default-orange;
     }
 
