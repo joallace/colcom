@@ -10,9 +10,9 @@ import TableHeader from "@tiptap/extension-table-header"
 import TableRow from "@tiptap/extension-table-row"
 import Document from "@tiptap/extension-document"
 import Heading from "@tiptap/extension-heading"
-import Highlight from "@tiptap/extension-highlight"
 import Placeholder from "@tiptap/extension-placeholder"
 import StarterKit from "@tiptap/starter-kit"
+import CustomHighlight from "@/assets/highlight"
 
 import Chart from "@/components/TipTapChart"
 import ChartModal from "@/components/ChartModal"
@@ -41,7 +41,7 @@ export default ({ content, setContent = () => { }, saveInLocalStorage = false, r
       Heading.configure({
         levels: [2, 3],
       }),
-      Highlight.configure({
+      CustomHighlight.configure({
         multicolor: true
       }),
       Placeholder.configure({
