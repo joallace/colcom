@@ -25,7 +25,7 @@ const headerConfig = {
     onClick: () => { }
   },
   "edit": {
-    description: ["editar tópico", "finalizar edição"],
+    description: ["sugerir edição no post", "finalizar edição"],
     icons: [PiPencilSimple, PiPencilSimpleFill],
     onStart: () => false,
     onClick: () => { }

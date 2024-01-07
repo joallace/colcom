@@ -22,8 +22,8 @@ import { ChartContext } from "@/context/ChartContext"
 
 
 export default ({ content, setContent = () => { }, saveInLocalStorage = false, readOnly = true,
-                  edit : isEditable = !readOnly, alongsideCritique, setShowCritique,
-                  tableConfig = { maxRows: 20, maxColumns: 10 }, ...remainingProps }) => {
+  edit: isEditable = !readOnly, alongsideCritique, setShowCritique,
+  tableConfig = { maxRows: 20, maxColumns: 10 }, ...remainingProps }) => {
   const [modal, setModal] = React.useState(false)
   const { chartString, resetChartStr } = React.useContext(ChartContext)
   const editor = useEditor({
@@ -64,6 +64,18 @@ export default ({ content, setContent = () => { }, saveInLocalStorage = false, r
     content: isEditable ? content : content.replace(/<chart readonly="false"/g, '<chart readonly="true"'),
   })
 
+  const removeTempHighlight = obj => {
+    if(obj.marks)
+      for (let i = 0; i < obj.marks.length; i++)
+        if (obj.marks[i].type === "highlight" && obj.marks[i].attrs.type === "temporary")
+          obj.marks.splice(i, 1)
+
+    if(obj.content)
+      for(let i = 0; i < obj.content.length; i++)
+        obj.content[i] = removeTempHighlight(obj.content[i])
+
+    return obj
+  }
 
   // If there is a change in the chartData string, it is an edition of a chart by the modal.
   // So we need to delete the old chart and insert the new string
@@ -86,10 +98,21 @@ export default ({ content, setContent = () => { }, saveInLocalStorage = false, r
     }
   }, [isEditable]);
 
+  React.useEffect(() => {
+    if (editor && !alongsideCritique) {
+      let newContent = editor.getJSON()
+
+      for(let i = 0; i < newContent.content.length; i++)
+        newContent.content[i] = removeTempHighlight(newContent.content[i])
+     
+      editor.commands.setContent(newContent)
+    }
+  }, [alongsideCritique])
+
   return (
     <>
       {!alongsideCritique &&
-        <BubbleMenu editor={editor} readOnly={!isEditable} setShowCritique={setShowCritique}/>
+        <BubbleMenu editor={editor} readOnly={!isEditable} setShowCritique={setShowCritique} />
       }
 
       <FloatingMenu

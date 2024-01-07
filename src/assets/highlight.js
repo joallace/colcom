@@ -13,6 +13,18 @@ export default Mark.create({
             return {};
         }
         return {
+            type: {
+                default: "definitive",
+                parseHTML: element => element.getAttribute('data-type'),
+                renderHTML: attributes => {
+                    if (!attributes.type) {
+                        return {};
+                    }
+                    return {
+                        'data-type': attributes.type
+                    };
+                },
+            },
             color: {
                 default: null,
                 parseHTML: element => element.getAttribute('data-color') || element.style.backgroundColor,
@@ -25,7 +37,7 @@ export default Mark.create({
                         style: `background-color: ${attributes.color}; color: inherit`,
                     };
                 },
-            },
+            }
         };
     },
     parseHTML() {
