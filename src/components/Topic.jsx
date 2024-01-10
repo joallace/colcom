@@ -1,82 +1,112 @@
 import React from "react"
-import { Link } from "react-router-dom"
 import {
   PiCaretUpBold,
   PiCaretDownBold,
-  PiBookmarkSimpleBold,
-  PiBookmarkSimpleFill,
-  PiArrowBendUpLeftBold,
-  PiDotsThreeVerticalBold
+  PiDotsThreeVerticalBold,
 } from "react-icons/pi"
 
-import { screenSm } from "@/assets/scss/_export.module.scss"
+import useScreenSize from "@/hooks/useScreenSize"
 
 
-export default function Topic({ title, posts = [], icons = [], metrics = [], bookmarked = false, ...remainingProps }) {
-  const smScreenSize = parseInt(screenSm)
-  
-  const [isBookmarked, setBookmark] = React.useState(bookmarked)
-  const [isDesktop, setDesktop] = React.useState(window.innerWidth > smScreenSize)
+export default function Topic({ title, setTitle, saveInLocalStorage = false, readOnly = true,
+                                hideVoteButtons = false, headerConfig = {}, alongsideCritique,
+                                isCritique, metrics, children, setHeight=()=>{}, ...remainingProps }) {
+  const [headerStatus, setHeaderStatus] = React.useState(
+    Object.fromEntries(
+      Object.entries(headerConfig)
+        .map(([k, v]) => v.onStart && [k, v.onStart()])
+        .filter((value) => value !== undefined)
+    )
+  )
+  const topicRef = React.useRef()
+  const titleRef = React.useRef()
+  const isDesktop = useScreenSize()
 
-  const updateMedia = () => { setDesktop(window.innerWidth > smScreenSize) }
+  const toggle = (str) => { setHeaderStatus({ ...headerStatus, [str]: !headerStatus[str] }) }
 
   React.useEffect(() => {
-    window.addEventListener("resize", updateMedia);
-    return () => window.removeEventListener("resize", updateMedia);
-  });
+    if (titleRef.current) {
+      titleRef.current.style.height = '32px';
+      titleRef.current.style.height = `${titleRef.current.scrollHeight + 2}px`;
+    }
+  }, [title]);
 
-  const bookmarkClick = () => { setBookmark(!isBookmarked) }
+  React.useEffect(()=>{
+    setHeight(topicRef.current.clientHeight || 0)
+  }, [])
 
   return (
-    <div className="topic" {...remainingProps}>
+    <div className={`topic${alongsideCritique? " original" : ""}${isCritique? " critique": ""}`} ref={topicRef} {...remainingProps}>
       <div className="bracket" />
       <div className="body">
         <div className="header">
           <div className="left-side">
-            <div className="vote-buttons">
-              <PiCaretUpBold title="Relevante" className="up" />
-              <PiCaretDownBold title="Não relevante" className="down" />
-            </div>
-            <h2 className="title" title="Ver todas as respostas">{title}</h2>
-          </div>
-          <div className="right-side">
-            {isDesktop ?
-              <>
-                <PiArrowBendUpLeftBold title="Responder tópico" className="icons" />
-                {isBookmarked ?
-                  <PiBookmarkSimpleFill title="Remover tópico dos salvos" className="icons" onClick={bookmarkClick} />
-                  :
-                  <PiBookmarkSimpleBold title="Salvar tópico" className="icons" onClick={bookmarkClick} />
-                }
-              </>
-              :
-              <PiDotsThreeVerticalBold className="icons"/>
-            }
-          </div>
-        </div>
-        {posts.length > 0 ?
-          posts.map((post, index) => {
-            return (
-              <div>
-                <div className="post-percentage-bar" style={{ width: `${post.percentage}%` }}>
-                  <span>{post.shortAnswer ? post.shortAnswer : `${index + 1}.`}</span>
-                  <span>{`${post.percentage}%`}</span>
-                </div>
-                {post.summary}
-                <Link className="unselectable read-more">continuar...</Link>
+            {!hideVoteButtons &&
+              <div className="vote-buttons">
+                <PiCaretUpBold title="relevante" className="up" />
+                <PiCaretDownBold title="não relevante" className="down" />
               </div>
-            )
-          })
-          :
-          <div className="no-response">
-            Ainda não há repostas, que tal contribuir?
+            }
+            <h1 className="title">
+              {readOnly ?
+                title
+                :
+                <textarea
+                  placeholder="Qual é o título?"
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") { editor.chain().focus().run(); e.preventDefault() } }}
+                  onBlur={_ => saveInLocalStorage && localStorage.setItem("postTitle", title)}
+                  ref={titleRef}
+                />
+              }
+            </h1>
           </div>
+          { headerConfig &&
+            <div className="right-side">
+              {isDesktop ?
+                <>
+                  {Object.entries(headerConfig).map((([buttonName, buttonConfig]) => {
+                    switch (headerStatus[buttonName]) {
+                      case false:
+                        return buttonConfig.icons[0]({
+                          className: "icons",
+                          title: buttonConfig.description[0],
+                          onClick: () => { buttonConfig.onClick(); toggle(buttonName) }
+                        })
+                      case true:
+                        return buttonConfig.icons[1]({
+                          className: "icons",
+                          title: buttonConfig.description[1],
+                          onClick: () => { buttonConfig.onClick(); toggle(buttonName) }
+                        })
+                      case undefined:
+                        return buttonConfig.icons({
+                          className: "icons",
+                          title: buttonConfig.description,
+                          onClick: () => buttonConfig.onClick()
+                        })
+                    }
+                  }))}
+                </>
+                :
+                <PiDotsThreeVerticalBold className="icons" />
+              }
+            </div>
+          }
+        </div>
+        { children.constructor === Array?
+          children
+          :
+          React.cloneElement(children, {...headerStatus, readOnly, saveInLocalStorage, alongsideCritique})
         }
-        <ul className="metrics">
-          <li>Promovido por 40 usuários</li>
-          <li>80% dos 135 votantes achou relevante</li>
-          <li>4200 interações</li>
-        </ul>
+        {metrics &&
+          <ul className="metrics">
+            <li>Promovido por 40 usuários</li>
+            <li>80% dos 135 votantes achou relevante</li>
+            <li>4200 interações</li>
+          </ul>
+        }
       </div>
     </div>
   )

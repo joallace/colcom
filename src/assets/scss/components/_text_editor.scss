@@ -73,27 +73,36 @@
     display: flex;
     @include content-responsiveness;
 
-    .text{
+    .text {
         width: 100%;
-    .title {
-        textarea {
-            line-height: 1;
-            resize: none;
-            overflow-y: hidden;
-            width: 100%;
-            background-color: $default-bg;
-            outline: none;
-            border: none;
+
+        .title {
             color: $default-green;
-            font-size: 2rem;
-            font-weight: bolder;
+            word-wrap: anywhere;
+            cursor: text;
+
+            textarea {
+                line-height: 1;
+                resize: none;
+                overflow-y: hidden;
+                width: 100%;
+                background-color: $default-bg;
+                outline: none;
+                border: none;
+                color: $default-green;
+                font-size: 2rem;
+                font-weight: bolder;
+            }
         }
     }
-}
 }
 
 .tiptap {
     min-height: 10rem;
+
+    &:focus {
+        outline: none;
+    }
 
     >*+* {
         margin-top: 0.75em;
@@ -145,10 +154,6 @@
         display: flex;
         place-content: center;
         margin: 1rem 0;
-    }
-
-    &:focus {
-        outline: none;
     }
 
     .is-editor-empty:first-child::before {

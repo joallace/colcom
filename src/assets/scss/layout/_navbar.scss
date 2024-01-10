@@ -21,6 +21,10 @@ nav{
         &:hover{
             color: $default-orange;
         }
+        &:active{
+            color: darken($default-orange, 10%);
+        }
+    
     }
 
     ul{

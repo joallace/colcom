@@ -1,29 +1,77 @@
-.topic{
+.topic {
     display: flex;
+    line-height: 1.5;
+    height: min-content;
     @include content-responsiveness;
+    transition: all 0.5s ease;
 
-    .title{
-        text-align: left;
+    .title {
+        width: 100%;
         color: $default-green;
-        cursor: pointer;
+        word-wrap: anywhere;
+
+        textarea {
+            line-height: 1;
+            resize: none;
+            overflow-y: hidden;
+            width: 100%;
+            background-color: $default-bg;
+            outline: none;
+            border: none;
+            color: $default-green;
+            font-size: 2rem;
+            font-weight: bolder;
+        }
     }
 
-    .body{
+    .body {
         text-align: justify;
         width: 100%;
+        height: min-content;
     }
 
-    .header{
+    .bracket {
+        width: 1rem;
+        flex-shrink: 0;
+        margin: 2.15rem 0.75rem 0.4rem 0;
+
+        border-style: solid;
+        border-width: 2px 0 2px 2px;
+        border-color: $default-green;
+        border-radius: 0.75rem 0 0 0;
+
+        @media screen and (max-width: $screen-sm) {
+            margin-top: 2.4rem;
+        }
+    }
+
+    // Maybe the critique color will be accordingly to the user's vote.
+    &.critique {
+        .title {
+            color: $default-orange;
+
+            textarea {
+                color: $default-orange;
+            }
+        }
+
+        .bracket {
+            border-color: $default-orange;
+        }
+    }
+
+    .header {
         display: flex;
         align-content: center;
         justify-content: space-between;
 
-        .left-side{
+        .left-side {
+            width: 100%;
             display: flex;
             align-content: center;
         }
 
-        .right-side{
+        .right-side {
             display: flex;
             font-size: 2rem;
             gap: 0.25rem;
@@ -31,7 +79,7 @@
             align-items: center;
         }
 
-        .vote-buttons{
+        .vote-buttons {
             display: flex;
             flex-direction: column;
             font-size: 1.5rem;
@@ -39,25 +87,27 @@
             margin-right: 0.5rem;
             justify-content: center;
 
-            .up{
+            .up {
                 color: #479024;
                 cursor: pointer;
             }
-            .down{
-                color: #BC5217;
+
+            .down {
+                color: #e65000;
                 cursor: pointer;
             }
         }
     }
 
-    .icons{
+    .icons {
         cursor: pointer;
     }
 
-    .metrics{
-        :first-child{
+    .metrics {
+        :first-child {
             list-style: none;
         }
+
         font-size: 0.75rem;
         text-align: center;
         padding: 1rem 0 0 0;
@@ -71,7 +121,7 @@
         }
     }
 
-    .post-percentage-bar{
+    .post-percentage-bar {
         display: flex;
         min-width: min-content;
         height: 2.5rem;
@@ -83,16 +133,17 @@
         align-content: center;
         border-radius: 0 0.75rem 0.75rem 0;
 
-        span{
-            &:first-child{
+        span {
+            &:first-child {
                 margin-right: 0.5rem;
             }
+
             display: flex;
             align-self: center;
         }
     }
 
-    .read-more{
+    .read-more {
         display: flex;
         width: min-content;
         text-decoration: none;
@@ -100,13 +151,17 @@
         margin-left: auto;
         font-weight: bold;
         margin-bottom: 1rem;
+
+        &:hover {
+            text-decoration: underline;
+        }
     }
 
-    .no-response{
+    .no-response {
         height: 5rem;
         display: flex;
-        justify-content:center;
-        align-items:center;
+        justify-content: center;
+        align-items: center;
         font-size: 1.25rem
     }
 }
@@ -117,19 +172,4 @@
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-}
-
-.bracket{
-    width: 1rem;
-    flex-shrink: 0;
-    margin: 2.15rem 0.75rem 0.4rem 0;
-
-    border-style: solid;
-    border-width: 2px 0 2px 2px;
-    border-color: $default-green;
-    border-radius: 0.75rem 0 0 0;
-
-    @media screen and (max-width: $screen-sm) {
-        margin-top: 2.4rem;
-    }
 }

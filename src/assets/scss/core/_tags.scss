@@ -10,6 +10,11 @@ button {
         border-color: $default-orange;
         background-color: $default-orange;
     }
+
+    &:active{
+        border-color: darken($default-orange, 10%);
+        background-color: darken($default-orange, 10%);
+    }
 }
 
 table {
@@ -18,6 +23,7 @@ table {
     width: 100%;
     margin: 1rem;
     overflow: hidden;
+    text-align: center;
 
     td,
     th {
@@ -35,7 +41,6 @@ table {
 
     th {
         font-weight: bold;
-        text-align: left;
         background-color: $default-orange;
     }
 

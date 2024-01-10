@@ -10,10 +10,11 @@ export const TipTapChart = props => {
   const [modal, setModal] = React.useState(false)
   const [isLegendOn, setIsLegendOn] = React.useState(props.node.attrs.isLegendOn)
   const type = props.node.attrs.type
+  const readOnly = props.node.attrs.readOnly
 
   return (
     <>
-      <NodeViewWrapper className="chart" onDoubleClick={() => setModal(true)}>
+      <NodeViewWrapper className="chart" onDoubleClick={() => !readOnly && setModal(true)}>
         <Chart
           type={type}
           data={data}
@@ -44,6 +45,9 @@ export default Node.create({
 
   addAttributes() {
     return {
+      "readOnly":{
+        default: false
+      },
       "data": {
         default: [],
       },

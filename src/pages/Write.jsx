@@ -1,6 +1,7 @@
-import React from "react";
+import React from "react"
 
-import TextEditor from "@/components/TextEditor";
+import TextEditor from "@/components/TextEditor"
+import Topic from "@/components/Topic"
 
 export default function Write() {
   const [title, setTitle] = React.useState(localStorage.getItem("postTitle") || "")
@@ -10,18 +11,26 @@ export default function Write() {
     let element = document.createElement('a');
     element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
     element.setAttribute('download', `${title}.html`);
-  
+
     element.style.display = 'none';
     document.body.appendChild(element);
-  
+
     element.click();
-  
+
     document.body.removeChild(element);
   }
 
   return (
     <div className="content">
-      <TextEditor title={title} setTitle={setTitle} content={content} setContent={setContent}/>
+      <Topic
+        title={title}
+        setTitle={setTitle}
+        readOnly={false} 
+        hideVoteButtons
+        saveInLocalStorage
+      >
+        <TextEditor content={content} setContent={setContent}/>
+      </Topic>
       <div className="buttons">
         <button onClick={download}>Salvar</button>
         <button>Publicar</button>

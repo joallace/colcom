@@ -6,6 +6,7 @@ import Promoted from "@/pages/Promoted"
 import All from "@/pages/All"
 import Meta from "@/pages/Meta"
 import Write from "@/pages/Write"
+import Post from "@/pages/Post"
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/all" element={<All/>}/>
         <Route path="/meta" element={<Meta/>}/>
         <Route path="/write" element={<Write/>}/>
+        <Route path="/post/:id" element={<Post/>}/>
       </Routes>      
     </>
   )
