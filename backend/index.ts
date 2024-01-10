@@ -16,29 +16,34 @@ app.get("/", (req, res) => {
 })
 
 app.get("/topics", (req, res) => {
-  const page = req.query.page || 0
-  const pageSize = req.query.pageSize || 10
+  const page = Number(req.query.page) || 0
+  const pageSize = Number(req.query.pageSize) || 10
   let result: any = {}
 
-  const topicsIds = fs.readdirSync(dbPath)
-  const metaData = JSON.parse(fs.readFileSync(`${dbPath}/[]/meta.json`,  { encoding: "utf-8"}))
-
+  const topicsIds = fs.readdirSync(dbPath).slice(page, (page+1)*pageSize)
+  console.log(topicsIds)
   topicsIds.forEach(id => {
-    result[id] = {
-    }
+    result[id] = JSON.parse(fs.readFileSync(`${dbPath}/${id}/meta.json`,  { encoding: "utf-8"}))
   })
   
-  res.sendStatus(200)
+  res.status(200).json(result)
 })
 
 app.use("/topics", express.static(dbPath))
 
 app.post("/topics", (req, res) => {
   const { title } = req.body
-  const path = `${dbPath}/${title}/`
+  const path = `${dbPath}/${title}`
 
   const result = execSync(`mkdir "${path}" && git -C "${path}" init && echo $?`, { encoding: "utf-8"})
   const status = result.slice(-2, -1) === "0" ? 201 : 500
+
+  const metaData = {
+    title,
+    up: 0,
+    down: 0,
+  }
+  fs.writeFileSync(`${path}/meta.json`, JSON.stringify(metaData))
 
   res.sendStatus(status)
 })
@@ -59,6 +64,7 @@ app.post("/topics/:tid/posts", (req, res) => {
 
 
 app.listen(port, () => {
+  console.log(`Loaded DB on folder "${dbPath}"`)
   console.log(`Listening on port ${port}`)
 })
 
