@@ -7,6 +7,7 @@ import {
   PiPencilSimple,
   PiGitBranch,
   PiHighlighterCircle,
+  PiCheck,
   PiX
 } from "react-icons/pi"
 
@@ -65,6 +66,10 @@ export default function Post() {
   const { id } = useParams()
 
   const critiqueHeaderConfig = {
+    "save": {
+      description: "confirmar crítica",
+      icons: PiCheck
+    },
     "close": {
       description: "fechar crítica",
       icons: PiX,
