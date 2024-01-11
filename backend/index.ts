@@ -1,72 +1,85 @@
 import express from "express"
-import fs from "fs"
-import { execSync } from "child_process"
+import { promisify } from "util"
+import { readFile, readdir, exists, writeFile, mkdir } from "fs/promises"
+import { execFile } from "child_process"
 import { v5 as uuid } from "uuid"
 
 const app = express()
-const port = 3000
+const port = process.env.PORT || 3000
 const dbPath = process.env.DB_PATH || "/db"
 const namespace = process.env.UUID_NAMESPACE || ""
 
-const gitLogParameters = `--pretty=format:'{^^^^commit^^^^:^^^^%h^^^^,^^^^subject^^^^:^^^^%s^^^^,^^^^date^^^^:^^^^%aD^^^^,^^^^author^^^^:^^^^%aN^^^^},' | sed 's/"/\\\\"/g' | sed 's/\\^^^^/"/g' | sed "$ s/,$//" | sed -e ':a' -e 'N' -e '$!ba' -e 's/\\n/ /g'  | awk 'BEGIN { print("[") } { print($0) } END { print("]") }'`
+const exec = promisify(execFile)
+
+const logFormattingParam = "--pretty=format:{^^^^commit^^^^:^^^^%h^^^^,^^^^subject^^^^:^^^^%s^^^^,^^^^date^^^^:^^^^%aD^^^^,^^^^author^^^^:^^^^%aN^^^^},"
 
 app.use(express.json())
 
 app.get("/", (req, res) => {
-  res.send("Hello World!")
+  res.send("I'm alive!")
 })
 
-app.get("/topics", (req, res) => {
+// app.use("/topics", express.static(dbPath))
+
+app.get("/topics", async (req, res) => {
   const page = Number(req.query.page) || 0
   const pageSize = Number(req.query.pageSize) || 10
   let result: any = []
 
-  const topicsIds = fs.readdirSync(dbPath).slice(page, (page + 1) * pageSize)
-  topicsIds.forEach(id => {
-    result.push(JSON.parse(fs.readFileSync(`${dbPath}/${id}/meta.json`, { encoding: "utf-8" })))
-  })
+  const topicsIds = await readdir(dbPath)
+  for (const id of topicsIds.slice(page, (page + 1) * pageSize))
+    result.push(JSON.parse(await readFile(`${dbPath}/${id}/meta.json`, { encoding: "utf-8" })))
 
   res.status(200).json(result)
 })
 
-app.use("/topics", express.static(dbPath))
-
-app.post("/topics", (req, res) => {
-  const { title } = req.body
+app.post("/topics", async (req, res) => {
+  const { title, tags, synonyms } = req.body
   const id = uuid(title, namespace)
   const path = `${dbPath}/${id}`
 
-  if (fs.existsSync(path))
-    res.status(409).send("Topic already exists")
-
-  const result = execSync(`mkdir "${path}" && git -C "${path}" init && echo $?`, { encoding: "utf-8" })
-  const status = result.slice(-2, -1) === "0" ? 201 : 500
+  if (await exists(path))
+    return res.status(409).send("Topic already exists")
 
   const metaData = {
     id,
     title,
+    tags: tags || [],
+    synonyms: synonyms || [],
     up: 0,
     down: 0,
   }
-  fs.writeFileSync(`${path}/meta.json`, JSON.stringify(metaData))
 
-  res.sendStatus(status)
+  await mkdir(path)
+  await writeFile(`${path}/meta.json`, JSON.stringify(metaData))
+  await exec("git", ["-C", path, "init", "-b", "main"])
+  await exec("git", ["-C", path, "add", "meta.json"])
+  await exec("git", ["-C", path, "commit", "-m", "init topic"])
+
+  res.sendStatus(201)
 })
 
-app.get("/topics/:tid/posts/:pid/history", (req, res) => {
+app.get("/topics/:tid/posts/:pid", async (req, res) => {
   const path = `${dbPath}/${req.params.tid}/`
-  const result = JSON.parse(execSync(`git -C ${path} log ${gitLogParameters}`, { encoding: "utf-8" }))
+  const result = await exec("git", ["-C", path, "show", String(req.query.version) || req.params.pid, "./main.html"], { encoding: "utf-8" })
 
   res.status(200).json(result)
 })
 
-app.post("/topics/:tid/posts", (req, res) => {
+app.get("/topics/:tid/posts/:pid/history", async (req, res) => {
+  const path = `${dbPath}/${req.params.tid}/`
+  const log: any = await exec("git", ["-C", path, "log", logFormattingParam], { encoding: "utf-8" })
+  const result = JSON.parse("[" + log.replaceAll('"', '\\"').replaceAll("^^^^", '"').slice(0, -1) + "]")
+
+  res.status(200).send(result)
+})
+
+app.post("/topics/:tid/posts", async (req, res) => {
   const { content } = req.body
   const path = `${dbPath}/${req.params.tid}/main.html`
 
-  fs.writeFileSync(path, content)
+  await writeFile(path, content)
 })
-
 
 app.listen(port, () => {
   console.log(`Loaded DB on folder "${dbPath}"`)
