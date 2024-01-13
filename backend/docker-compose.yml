@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 5f9a7e4
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+  backend:
+    image: colcom
+volumes:
+  postgres_data:
