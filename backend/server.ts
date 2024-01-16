@@ -3,10 +3,11 @@ import { promisify } from "util"
 import { readFile, readdir, exists, writeFile, mkdir } from "fs/promises"
 import { execFile } from "child_process"
 import { v5 as uuid } from "uuid"
+import logger from "@/logger"
 
 const app = express()
 const port = process.env.PORT || 3000
-const dbPath = process.env.DB_PATH || "/db"
+const dbPath = process.env.DB_PATH || "./db"
 const namespace = process.env.UUID_NAMESPACE || ""
 
 const exec = promisify(execFile)
@@ -18,8 +19,6 @@ app.use(express.json())
 app.get("/", (req, res) => {
   res.send("I'm alive!")
 })
-
-// app.use("/topics", express.static(dbPath))
 
 app.get("/topics", async (req, res) => {
   const page = Number(req.query.page) || 0
@@ -82,7 +81,7 @@ app.post("/topics/:tid/posts", async (req, res) => {
 })
 
 app.listen(port, () => {
-  console.log(`Loaded DB on folder "${dbPath}"`)
-  console.log(`Listening on port ${port}`)
+  logger.info(`server.ts: Loaded git DB on folder "${dbPath}"`)
+  logger.info(`server.ts: Listening on port ${port}`)
 })
 

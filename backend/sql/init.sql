@@ -17,11 +17,11 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS contents (
     id SERIAL PRIMARY KEY,
-    pid uuid DEFAULT gen_random_uuid() UNIQUE,
     title TEXT UNIQUE NOT NULL,
     author_id SERIAL NOT NULL,
     parent_id SERIAL,
     body TEXT,
+    status TEXT NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (now() AT TIME ZONE 'utc'),
     FOREIGN KEY (author_id) REFERENCES users(id),
     FOREIGN KEY (parent_id) REFERENCES contents(id)
@@ -29,11 +29,11 @@ CREATE TABLE IF NOT EXISTS contents (
 
 CREATE TABLE IF NOT EXISTS critiques (
     id SERIAL PRIMARY KEY,
-    pid uuid DEFAULT gen_random_uuid() UNIQUE,
     title TEXT UNIQUE NOT NULL,
     author_id SERIAL NOT NULL,
     parent_id SERIAL NOT NULL,
     body TEXT NOT NULL,
+    status TEXT NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (now() AT TIME ZONE 'utc'),
     commit TEXT NOT NULL,
     from INT NOT NULL,
@@ -44,7 +44,6 @@ CREATE TABLE IF NOT EXISTS critiques (
 
 CREATE TABLE IF NOT EXISTS tags (
     id SERIAL PRIMARY KEY,
-    pid uuid DEFAULT gen_random_uuid() UNIQUE NOT NULL,
     title TEXT UNIQUE NOT NULL,
     style JSON
 );
@@ -59,8 +58,9 @@ CREATE TABLE IF NOT EXISTS contents_tags (
 CREATE TABLE IF NOT EXISTS interactions (
     id SERIAL PRIMARY KEY,
     user_id SERIAL NOT NULL,
-    content_id SERIAL,
-    type TEXT NOT NULL, -- ('up', 'down', 'favorite', 'bookmark')
+    content_id SERIAL NOT NULL,
+    type TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (now() AT TIME ZONE 'utc'),
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (content_id) REFERENCES contents(id)
 );

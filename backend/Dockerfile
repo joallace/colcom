@@ -8,4 +8,4 @@ RUN npm ci
 
 RUN npm install -g forever
 
-CMD ["forever", "-f", "index.js"]
+CMD ["forever", "-f", "server.ts"]
