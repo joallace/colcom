@@ -1,6 +1,6 @@
 import express from "express"
 import { promisify } from "util"
-import { readFile, readdir, exists, writeFile, mkdir } from "fs/promises"
+import { readFile, readdir, stat, writeFile, mkdir } from "fs/promises"
 import { execFile } from "child_process"
 import { v5 as uuid } from "uuid"
 import logger from "@/logger"
@@ -37,7 +37,7 @@ app.post("/topics", async (req, res) => {
   const id = uuid(title, namespace)
   const path = `${dbPath}/${id}`
 
-  if (await exists(path))
+  if ((await stat(path)).isDirectory())
     return res.status(409).send("Topic already exists")
 
   const metaData = {

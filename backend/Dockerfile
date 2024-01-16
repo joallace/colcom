@@ -6,6 +6,8 @@ COPY . .
 
 RUN npm ci
 
-RUN npm install -g forever
+RUN npm install -g typescript forever
 
-CMD ["forever", "-f", "server.ts"]
+RUN tsc
+
+CMD ["forever", "-f", "./build/src/server.js"]
