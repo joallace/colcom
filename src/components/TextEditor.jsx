@@ -29,7 +29,7 @@ export default function TextEditor({
   edit: isEditable = !readOnly,
   alongsideCritique,
   setShowCritique,
-  ableConfig = { maxRows: 20, maxColumns: 10 },
+  tableConfig = { maxRows: 20, maxColumns: 10 },
   ...remainingProps
 }) {
   const [modal, setModal] = React.useState(false)
