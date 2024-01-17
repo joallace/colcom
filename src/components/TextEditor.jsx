@@ -21,9 +21,17 @@ import FloatingMenu from "@/components/FloatingMenu"
 import { ChartContext } from "@/context/ChartContext"
 
 
-export default ({ content, setContent = () => { }, saveInLocalStorage = false, readOnly = true,
-                  edit: isEditable = !readOnly, alongsideCritique, setShowCritique,
-                  tableConfig = { maxRows: 20, maxColumns: 10 }, ...remainingProps }) => {
+export default function TextEditor({
+  content,
+  setContent = () => { },
+  saveInLocalStorage = false,
+  readOnly = true,
+  edit: isEditable = !readOnly,
+  alongsideCritique,
+  setShowCritique,
+  ableConfig = { maxRows: 20, maxColumns: 10 },
+  ...remainingProps
+}) {
   const [modal, setModal] = React.useState(false)
   const { chartString, resetChartStr } = React.useContext(ChartContext)
   const editor = useEditor({

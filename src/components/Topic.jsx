@@ -8,9 +8,20 @@ import {
 import useScreenSize from "@/hooks/useScreenSize"
 
 
-export default function Topic({ title, setTitle, saveInLocalStorage = false, readOnly = true,
-                                hideVoteButtons = false, headerConfig = {}, alongsideCritique,
-                                isCritique, metrics, children, setHeight=()=>{}, ...remainingProps }) {
+export default function Topic({
+  title,
+  setTitle,
+  saveInLocalStorage = false,
+  readOnly = true,
+  hideVoteButtons = false,
+  headerConfig = {},
+  alongsideCritique,
+  isCritique,
+  metrics,
+  children,
+  setHeight = () => { },
+  ...remainingProps
+}) {
   const [headerStatus, setHeaderStatus] = React.useState(
     Object.fromEntries(
       Object.entries(headerConfig)
@@ -18,9 +29,12 @@ export default function Topic({ title, setTitle, saveInLocalStorage = false, rea
         .filter((value) => value !== undefined)
     )
   )
-  const topicRef = React.useRef()
-  const titleRef = React.useRef()
+  const [bracketMargin, setBracketMargin] = React.useState(0)
   const isDesktop = useScreenSize()
+
+  const topicRef = React.useRef()
+  const headerRef = React.useRef()
+  const titleRef = React.useRef()
 
   const toggle = (str) => { setHeaderStatus({ ...headerStatus, [str]: !headerStatus[str] }) }
 
@@ -29,17 +43,26 @@ export default function Topic({ title, setTitle, saveInLocalStorage = false, rea
       titleRef.current.style.height = '32px';
       titleRef.current.style.height = `${titleRef.current.scrollHeight + 2}px`;
     }
+
+    if (headerRef.current) {
+      setBracketMargin(headerRef.current?.clientHeight / 2)
+    }
   }, [title]);
 
-  React.useEffect(()=>{
+  React.useEffect(() => {
+    const updateBracketMargin = () => setBracketMargin(headerRef.current?.clientHeight / 2)
+
     setHeight(topicRef.current.clientHeight || 0)
+
+    window.addEventListener("resize", updateBracketMargin)
+    return () => window.removeEventListener("resize", updateBracketMargin)
   }, [])
 
   return (
-    <div className={`topic${alongsideCritique? " original" : ""}${isCritique? " critique": ""}`} ref={topicRef} {...remainingProps}>
-      <div className="bracket" />
+    <div className={`topic${alongsideCritique ? " original" : ""}${isCritique ? " critique" : ""}`} ref={topicRef} {...remainingProps}>
+      <div className="bracket" style={{ marginTop: bracketMargin }} />
       <div className="body">
-        <div className="header">
+        <div className="header" ref={headerRef}>
           <div className="left-side">
             {!hideVoteButtons &&
               <div className="vote-buttons">
@@ -62,7 +85,7 @@ export default function Topic({ title, setTitle, saveInLocalStorage = false, rea
               }
             </h1>
           </div>
-          { headerConfig &&
+          {headerConfig &&
             <div className="right-side">
               {isDesktop ?
                 <>
@@ -95,10 +118,10 @@ export default function Topic({ title, setTitle, saveInLocalStorage = false, rea
             </div>
           }
         </div>
-        { children.constructor === Array?
+        {children.constructor === Array ?
           children
           :
-          React.cloneElement(children, {...headerStatus, readOnly, saveInLocalStorage, alongsideCritique})
+          React.cloneElement(children, { ...headerStatus, readOnly, saveInLocalStorage, alongsideCritique })
         }
         {metrics &&
           <ul className="metrics">
