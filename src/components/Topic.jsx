@@ -38,20 +38,19 @@ export default function Topic({
 
   const toggle = (str) => { setHeaderStatus({ ...headerStatus, [str]: !headerStatus[str] }) }
 
+  const updateBracketMargin = () => { setBracketMargin(headerRef.current?.clientHeight / 2 || 0) }
+
   React.useEffect(() => {
     if (titleRef.current) {
       titleRef.current.style.height = '32px';
       titleRef.current.style.height = `${titleRef.current.scrollHeight + 2}px`;
     }
 
-    if (headerRef.current) {
-      setBracketMargin(headerRef.current?.clientHeight / 2)
-    }
+    if (headerRef.current)
+      updateBracketMargin()
   }, [title]);
 
   React.useEffect(() => {
-    const updateBracketMargin = () => setBracketMargin(headerRef.current?.clientHeight / 2)
-
     setHeight(topicRef.current.clientHeight || 0)
 
     window.addEventListener("resize", updateBracketMargin)

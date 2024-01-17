@@ -1,16 +1,18 @@
 import db from "@/database"
-import { getDataByPid } from "@/models/user"
+import { getDataByPublicId } from "@/models/user"
 
-type InteractionsTypes = "up" | "down" | "favorite" | "bookmark"
+
+type InteractionType = "up" | "down" | "favorite" | "bookmark" | "promote"
 
 interface RegisteringInteraction {
   user_pid: string,
   content_id: string,
-  type: InteractionsTypes
+  type: InteractionType
 }
 
+
 export async function create({ user_pid, content_id, type }: RegisteringInteraction) {
-  const { id } = await getDataByPid(user_pid, ["id"])
+  const { id } = await getDataByPublicId(user_pid, ["id"])
   const query = {
     text: `
       INSERT INTO

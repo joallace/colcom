@@ -1,15 +1,43 @@
 import db from "@/database"
-import { getDataByPid } from "@/models/user"
+import { getDataByPublicId } from "@/models/user"
+
+
+type ContentType = "topic" | "post" | "critique"
+
+interface TopicConfig {
+  answers: string[]
+}
+
+interface CritiqueConfig {
+  commit: string,
+  from: number,
+  to: number,
+}
 
 interface RegisteringContent {
   title: string,
   author_pid: string,
-  parent_id: string | null,
-  body: string | null,
+  parent_id?: string,
+  body?: string,
+  type: ContentType,
+  config?: TopicConfig | CritiqueConfig
 }
 
-export async function create({ title, author_pid, parent_id, body }: RegisteringContent) {
-  const { id, nick } = await getDataByPid(author_pid, ["id", "nick"])
+interface Content {
+  id: number,
+  title: string,
+  author_pid: string,
+  parent_id?: string,
+  body?: string,
+  type: ContentType,
+  status: string,
+  created_at: Date,
+  config?: TopicConfig | CritiqueConfig
+}
+
+
+export async function create({ title, author_pid, parent_id, body, type, config }: RegisteringContent) {
+  const { id, nick } = await getDataByPublicId(author_pid, ["id", "name"])
 
   const query = {
     text: `
@@ -20,9 +48,11 @@ export async function create({ title, author_pid, parent_id, body }: Registering
             title,
             author_id,
             parent_id,
-            body
+            body,
+            type,
+            config
           )
-          VALUES ($1, $2, $3, $4)
+          VALUES ($1, $2, $3, $4, $5, $6)
           RETURNING *
       )
     SELECT
@@ -33,7 +63,6 @@ export async function create({ title, author_pid, parent_id, body }: Registering
       inserted_content.body,
       inserted_content.status,
       inserted_content.created_at,
-      users.nick as author
     FROM
       inserted_content
     ;`,
@@ -41,7 +70,9 @@ export async function create({ title, author_pid, parent_id, body }: Registering
       title,
       id,
       parent_id,
-      body
+      body,
+      type,
+      config
     ],
   }
   
