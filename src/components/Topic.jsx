@@ -29,106 +29,99 @@ export default function Topic({
         .filter((value) => value !== undefined)
     )
   )
-  const [bracketMargin, setBracketMargin] = React.useState(0)
   const isDesktop = useScreenSize()
 
   const topicRef = React.useRef()
-  const headerRef = React.useRef()
   const titleRef = React.useRef()
 
   const toggle = (str) => { setHeaderStatus({ ...headerStatus, [str]: !headerStatus[str] }) }
 
-  const updateBracketMargin = () => { setBracketMargin(headerRef.current?.clientHeight / 2 || 0) }
 
   React.useEffect(() => {
     if (titleRef.current) {
       titleRef.current.style.height = '32px';
       titleRef.current.style.height = `${titleRef.current.scrollHeight + 2}px`;
     }
-
-    if (headerRef.current)
-      updateBracketMargin()
   }, [title]);
 
   React.useEffect(() => {
     setHeight(topicRef.current.clientHeight || 0)
-
-    window.addEventListener("resize", updateBracketMargin)
-    return () => window.removeEventListener("resize", updateBracketMargin)
   }, [])
 
   return (
     <div className={`topic${alongsideCritique ? " original" : ""}${isCritique ? " critique" : ""}`} ref={topicRef} {...remainingProps}>
-      <div className="bracket" style={{ marginTop: bracketMargin }} />
-      <div className="body">
-        <div className="header" ref={headerRef}>
-          <div className="left-side">
-            {!hideVoteButtons &&
-              <div className="vote-buttons">
-                <PiCaretUpBold title="relevante" className="up" />
-                <PiCaretDownBold title="não relevante" className="down" />
-              </div>
-            }
-            <h1 className="title">
-              {readOnly ?
-                title
-                :
-                <textarea
-                  placeholder="Qual é o título?"
-                  value={title}
-                  onChange={e => setTitle(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter") { editor.chain().focus().run(); e.preventDefault() } }}
-                  onBlur={_ => saveInLocalStorage && localStorage.setItem("postTitle", title)}
-                  ref={titleRef}
-                />
-              }
-            </h1>
+      <div className="header">
+        <div className="top bracket" />
+        {!hideVoteButtons &&
+          <div className="vote-buttons">
+            <PiCaretUpBold title="relevante" className="up" />
+            <PiCaretDownBold title="não relevante" className="down" />
           </div>
-          {headerConfig &&
-            <div className="right-side">
-              {isDesktop ?
-                <>
-                  {Object.entries(headerConfig).map((([buttonName, buttonConfig]) => {
-                    switch (headerStatus[buttonName]) {
-                      case false:
-                        return buttonConfig.icons[0]({
-                          className: "icons",
-                          title: buttonConfig.description[0],
-                          onClick: () => { buttonConfig.onClick(); toggle(buttonName) }
-                        })
-                      case true:
-                        return buttonConfig.icons[1]({
-                          className: "icons",
-                          title: buttonConfig.description[1],
-                          onClick: () => { buttonConfig.onClick(); toggle(buttonName) }
-                        })
-                      case undefined:
-                        return buttonConfig.icons({
-                          className: "icons",
-                          title: buttonConfig.description,
-                          onClick: () => buttonConfig.onClick()
-                        })
-                    }
-                  }))}
-                </>
-                :
-                <PiDotsThreeVerticalBold className="icons" />
-              }
-            </div>
+        }
+        <h1 className="title">
+          {readOnly ?
+            title
+            :
+            <textarea
+              placeholder="Qual é o título?"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") { editor.chain().focus().run(); e.preventDefault() } }}
+              onBlur={_ => saveInLocalStorage && localStorage.setItem("postTitle", title)}
+              ref={titleRef}
+            />
+          }
+        </h1>
+        {headerConfig &&
+          <div className="buttons">
+            {isDesktop ?
+              <>
+                {Object.entries(headerConfig).map((([buttonName, buttonConfig]) => {
+                  switch (headerStatus[buttonName]) {
+                    case false:
+                      return buttonConfig.icons[0]({
+                        className: "icons",
+                        title: buttonConfig.description[0],
+                        onClick: () => { buttonConfig.onClick(); toggle(buttonName) }
+                      })
+                    case true:
+                      return buttonConfig.icons[1]({
+                        className: "icons",
+                        title: buttonConfig.description[1],
+                        onClick: () => { buttonConfig.onClick(); toggle(buttonName) }
+                      })
+                    case undefined:
+                      return buttonConfig.icons({
+                        className: "icons",
+                        title: buttonConfig.description,
+                        onClick: () => buttonConfig.onClick()
+                      })
+                  }
+                }))}
+              </>
+              :
+              <PiDotsThreeVerticalBold className="icons" />
+            }
+          </div>
+        }
+      </div>
+      <div className="container">
+        <div className="bracket" />
+        <div className="body">
+
+          {children.constructor === Array ?
+            children
+            :
+            React.cloneElement(children, { ...headerStatus, readOnly, saveInLocalStorage, alongsideCritique })
+          }
+          {metrics &&
+            <ul className="metrics">
+              <li>Promovido por 40 usuários</li>
+              <li>80% dos 135 votantes achou relevante</li>
+              <li>4200 interações</li>
+            </ul>
           }
         </div>
-        {children.constructor === Array ?
-          children
-          :
-          React.cloneElement(children, { ...headerStatus, readOnly, saveInLocalStorage, alongsideCritique })
-        }
-        {metrics &&
-          <ul className="metrics">
-            <li>Promovido por 40 usuários</li>
-            <li>80% dos 135 votantes achou relevante</li>
-            <li>4200 interações</li>
-          </ul>
-        }
       </div>
     </div>
   )
