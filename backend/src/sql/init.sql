@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS contents (
     id SERIAL PRIMARY KEY,
     title TEXT UNIQUE NOT NULL,
-    author_id SERIAL NOT NULL,
-    parent_id SERIAL,
+    author_id INT NOT NULL,
+    parent_id INT,
     body TEXT,
     type TEXT NOT NULL,
     status TEXT NOT NULL,
@@ -38,26 +38,26 @@ CREATE TABLE IF NOT EXISTS tags (
 );
 
 CREATE TABLE IF NOT EXISTS contents_tags (
-    content_id SERIAL PRIMARY KEY,
-    tag_id SERIAL PRIMARY KEY,
+    content_id INT PRIMARY KEY,
+    tag_id INT PRIMARY KEY,
     FOREIGN KEY (content_id) REFERENCES contents(id)
     FOREIGN KEY (tag_id) REFERENCES tags(id)
 );
 
 CREATE TABLE IF NOT EXISTS interactions (
     id SERIAL PRIMARY KEY,
-    user_id SERIAL NOT NULL,
-    content_id SERIAL NOT NULL,
+    author_id INT NOT NULL,
+    content_id INT NOT NULL,
     type TEXT NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (now() AT TIME ZONE 'utc'),
-    valid_until TIMESTAMP WITHOUT TIME ZONE DEFAULT,
-    FOREIGN KEY (user_id) REFERENCES users(id),
+    valid_until TIMESTAMP WITHOUT TIME ZONE,
+    FOREIGN KEY (author_id) REFERENCES users(id),
     FOREIGN KEY (content_id) REFERENCES contents(id)
 );
 
 CREATE TABLE IF NOT EXISTS synonyms (
     id SERIAL PRIMARY KEY,
     title TEXT UNIQUE NOT NULL,
-    content_id SERIAL NOT NULL,
+    content_id INT NOT NULL,
     FOREIGN KEY (content_id) REFERENCES contents(id)
 );

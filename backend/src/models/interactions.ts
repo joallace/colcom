@@ -17,7 +17,7 @@ export async function create({ user_pid, content_id, type }: RegisteringInteract
     text: `
       INSERT INTO
         interactions(
-          user_id,
+          author_id,
           content_id,
           type
         )
