@@ -1,17 +1,18 @@
-import { hash, compare } from "bcrypt"
+import { hash } from "bcryptjs"
 
 import db from "@/database"
-import { NotFoundError } from "@/errors";
+import { NotFoundError, ValidationError } from "@/errors"
 
 
 interface UserConfig {
   theme?: string
 }
 
-interface RegisteringUser {
+interface UserInsertRequest {
   name: string,
   pass: string,
   email: string
+  [key: string]: string
 }
 
 interface User {
@@ -27,9 +28,29 @@ interface User {
   created_at: Date
 }
 
+async function validateUnique(value: string, field: keyof User) {
+  const query = {
+    text: `SELECT ${field} FROM users WHERE LOWER(${field}) = LOWER($1)`,
+    values: [value],
+  }
 
-export async function create({ name, pass, email }: RegisteringUser): Promise<User | undefined> {
-  const hashedPass = await hash(pass, 8)
+  const results = await db.query(query)
+
+  if (Number(results.rowCount) > 0) {
+    throw new ValidationError({
+      message: `O "${field}" informado já está sendo usado.`,
+      stack: new Error().stack,
+      errorLocationCode: 'MODEL:USER:VALIDATE_UNIQUE:ALREADY_EXISTS',
+      key: field,
+    })
+  }
+}
+
+export async function create({ name, pass, email }: UserInsertRequest): Promise<User | undefined> {
+  await validateUnique(name, "name")
+  await validateUnique(email, "email")
+
+  const hashedPass = await hash(pass, 10)
 
   const query = {
     text: `
@@ -44,63 +65,62 @@ export async function create({ name, pass, email }: RegisteringUser): Promise<Us
       RETURNING
         *
       ;`,
-    values: [name, email, hashedPass],
+    values: [name, hashedPass, email]
   }
 
-  try {
-    const result = await db.query(query)
-    return result.rows[0]
-  } catch (err) {
-    console.error(err);
-  }
+  const result = await db.query(query)
+  return result.rows[0]
 }
 
-export async function findByLogin(login: string): Promise<User> {
-  const searchTerm = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(login) ? "email" : "name"
+export async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as any[], hideSensitiveInfo = true }): Promise<User[]> {
   const query = {
     text: `
-      WITH user_found AS (
-        SELECT
-          pid,
-          name,
-          pass,
-          email,
-          colcoins,
-          prestige,
-          permissions,
-          created_at
-        FROM
-          users
-        WHERE
-          LOWER(${searchTerm}) = LOWER($1)
-        LIMIT
-          1
-    )
-    SELECT
-      *
-    FROM
-      user_found
+      SELECT
+        pid,
+        name,
+        ${hideSensitiveInfo ? "" : "pass, email,"}
+        colcoins,
+        prestige,
+        permissions,
+        created_at
+      FROM
+        users
+      ${where ? `WHERE ${where}` : ""}
+      ORDER BY ${orderBy} DESC
+      LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}
+      ;
     ;`,
-    values: [login]
-  };
+    values
+  }
 
-  const results = await db.query(query);
+  const results = await db.query(query)
+  return results.rows
+}
 
-  if (results.rowCount === 0) {
+export async function findByLogin(login: string, options = {}): Promise<User> {
+  const searchTerm = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(login) ? "email" : "name"
+  const result = await findAll({
+    where: `LOWER(${searchTerm}) = $1`,
+    values: [login],
+    pageSize: 1,
+    ...options
+  })
+
+  if (result.length === 0) {
     throw new NotFoundError({
-      message: `O ${searchTerm} informado não foi encontrado.`,
+      message: `O "${searchTerm}" informado não foi encontrado.`,
       action: `Verifique se o "${searchTerm}" foi digitado corretamente.`,
       stack: new Error().stack,
       errorLocationCode: 'MODEL:USER:FIND_BY_LOGIN:NOT_FOUND',
-      key: 'email',
-    });
+      key: searchTerm,
+    })
   }
 
-  return results.rows[0];
+  return result[0]
 }
 
 export async function removeFeatures(userPid: string, features: string[]): Promise<User> {
-  let lastUpdatedUser;
+  let lastUpdatedUser
 
   if (features?.length > 0) {
     for (const feature of features) {
@@ -115,11 +135,11 @@ export async function removeFeatures(userPid: string, features: string[]): Promi
           RETURNING
             *
         ;`,
-        values: [feature, userPid],
-      };
+        values: [feature, userPid]
+      }
 
-      const results = await db.query(query);
-      lastUpdatedUser = results.rows[0];
+      const results = await db.query(query)
+      lastUpdatedUser = results.rows[0]
     }
   } else {
     const query = {
@@ -133,14 +153,14 @@ export async function removeFeatures(userPid: string, features: string[]): Promi
         RETURNING
           *
       ;`,
-      values: [userPid],
-    };
+      values: [userPid]
+    }
 
-    const results = await db.query(query);
-    lastUpdatedUser = results.rows[0];
+    const results = await db.query(query)
+    lastUpdatedUser = results.rows[0]
   }
 
-  return lastUpdatedUser;
+  return lastUpdatedUser
 }
 
 export async function addFeatures(userPid: string, features: string[]): Promise<User> {
@@ -157,11 +177,11 @@ export async function addFeatures(userPid: string, features: string[]): Promise<
         *
     ;`,
     values: [features, userPid],
-  };
+  }
 
-  const results = await db.query(query);
+  const results = await db.query(query)
 
-  return results.rows[0];
+  return results.rows[0]
 }
 
 
@@ -182,6 +202,17 @@ export async function getDataByPublicId(public_id: string, data: (keyof User)[])
     const result = await db.query(query)
     return result.rows[0]
   } catch (err) {
-    console.error(err);
+    console.error(err)
   }
 }
+
+export default Object.freeze({
+  create,
+  findAll,
+  findByLogin,
+  removeFeatures,
+  addFeatures,
+  getDataByPublicId
+})
+
+export { UserInsertRequest }

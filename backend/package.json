@@ -3,8 +3,9 @@
   "module": "server.ts",
   "type": "module",
   "devDependencies": {
-    "@types/bcrypt": "^5.0.2",
+    "@types/bcryptjs": "^2.4.6",
     "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.5",
     "@types/pg": "^8.10.9",
     "@types/pino": "^7.0.5",
     "@types/uuid": "^9.0.7",
@@ -14,9 +15,10 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
     "child_process": "^1.0.2",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
     "pg": "^8.11.3",
     "pino": "^8.17.2",
     "uuid": "^9.0.1"

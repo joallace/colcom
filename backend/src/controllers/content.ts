@@ -4,15 +4,14 @@ import { promisify } from "util"
 import { execFile } from "child_process"
 
 import { gitDbPath as dbPath } from "@/database"
-import Content, { IContentToInsert } from "@/models/content"
+import Content, { ContentInsertRequest } from "@/models/content"
 import { ValidationError, NotFoundError } from "@/errors"
-import logger from "@/logger"
 
 
 const exec = promisify(execFile)
 
 
-const validateContent = (content: IContentToInsert) => {
+const validateContent = (content: ContentInsertRequest) => {
   const mandatory = ["title", "author_pid", ...(content.type === "topic" ? [] : ["parent_id", "body"])]
 
   for (const field of mandatory)
@@ -27,15 +26,12 @@ export const createContent: RequestHandler = async (req, res, next) => {
   const { title, author_pid, parent_id, body, config } = req.body
 
   try {
-    console.log(parent_id)
     const { type, parent_id: grandparentId } = !parent_id ?
       { type: "topic", parent_id: null }
       :
       await Content.getDataById(parent_id, ["type", "parent_id"])
 
-    logger.info(type, grandparentId)
-
-    const content: IContentToInsert = { title, author_pid, parent_id, body, type, config }
+    const content: ContentInsertRequest = { title, author_pid, parent_id, body, type, config }
 
     validateContent(content)
 
@@ -93,47 +89,55 @@ export const getContents: RequestHandler = async (req, res, next) => {
   }
 }
 
-export const getContent: RequestHandler = async (req, res) => {
-  const content = await Content.findById(Number(req.params.id))
+export const getContent: RequestHandler = async (req, res, next) => {
+  try {
+    const content = await Content.findById(Number(req.params.id))
 
-  if (!content)
-    throw new NotFoundError({
-      message: "Conteúdo não encontrado.",
-      action: 'Verifique se o "id" fornecido está correto.',
-      stack: new Error().stack
-    })
+    if (!content)
+      throw new NotFoundError({
+        message: "Conteúdo não encontrado.",
+        action: 'Verifique se o "id" fornecido está correto.',
+        stack: new Error().stack
+      })
 
-  const path = `${dbPath}/${content.parent_id}/`
-  const body = await exec("git", ["-C", path, "show", String(req.query.version) || String(content.parent_id), "./main.html"], { encoding: "utf-8" })
+    const path = `${dbPath}/${content.parent_id}/`
+    const body = await exec("git", ["-C", path, "show", String(req.query.version) || String(content.parent_id), "./main.html"], { encoding: "utf-8" })
 
-  res.status(200).json({ ...content, body })
+    res.status(200).json({ ...content, body })
+  }
+  catch(err){
+    next(err)
+  }
 }
 
+export const getContentHistory: RequestHandler = async (req, res, next) => {
+  try {
+    const content = await Content.findById(Number(req.params.id))
 
+    if (!content)
+      throw new NotFoundError({
+        message: "Conteúdo não encontrado.",
+        action: 'Verifique se o "id" fornecido está correto.',
+        stack: new Error().stack
+      })
 
-export const getContentHistory: RequestHandler = async (req, res) => {
-  const content = await Content.findById(Number(req.params.id))
+    if (content.type !== "post")
+      throw new ValidationError({
+        message: `Conteúdos do tipo "${content.type}" não possuem histórico.`,
+        action: 'Forneça um "id" de um "post".',
+        stack: new Error().stack
+      })
 
-  if (!content)
-    throw new NotFoundError({
-      message: "Conteúdo não encontrado.",
-      action: 'Verifique se o "id" fornecido está correto.',
-      stack: new Error().stack
-    })
+    const path = `${dbPath}/${content.parent_id}/`
+    const formatFlag = "--pretty=format:{^^^^commit^^^^:^^^^%h^^^^,^^^^subject^^^^:^^^^%s^^^^,^^^^date^^^^:^^^^%aD^^^^,^^^^author^^^^:^^^^%aN^^^^},"
 
-  if (content.type !== "post")
-    throw new ValidationError({
-      message: `Conteúdos do tipo "${content.type}" não possuem histórico.`,
-      action: 'Forneça um "id" de um "post".',
-      stack: new Error().stack
-    })
+    const log: any = await exec("git", ["-C", path, "log", formatFlag], { encoding: "utf-8" })
 
-  const path = `${dbPath}/${content.parent_id}/`
-  const formatFlag = "--pretty=format:{^^^^commit^^^^:^^^^%h^^^^,^^^^subject^^^^:^^^^%s^^^^,^^^^date^^^^:^^^^%aD^^^^,^^^^author^^^^:^^^^%aN^^^^},"
+    const result = JSON.parse("[" + log.replaceAll('"', '\\"').replaceAll("^^^^", '"').slice(0, -1) + "]")
 
-  const log: any = await exec("git", ["-C", path, "log", formatFlag], { encoding: "utf-8" })
-
-  const result = JSON.parse("[" + log.replaceAll('"', '\\"').replaceAll("^^^^", '"').slice(0, -1) + "]")
-
-  res.status(200).json(result)
+    res.status(200).json(result)
+  }
+  catch (err) {
+    next(err)
+  }
 }

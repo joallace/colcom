@@ -22,7 +22,7 @@ interface CritiqueConfig {
 
 type ConfigType = TopicConfig | PostConfig | CritiqueConfig
 
-interface ContentToInsert {
+interface ContentInsertRequest {
   title: string,
   author_pid: string,
   parent_id?: number,
@@ -46,7 +46,7 @@ interface Content {
 }
 
 
-async function create({ title, author_pid, parent_id, body, type, config }: ContentToInsert): Promise<Content> {
+async function create({ title, author_pid, parent_id, body, type, config }: ContentInsertRequest): Promise<Content> {
   if (!/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/.test(author_pid))
     throw new ValidationError({
       message: 'O campo "author_pid" não é um uuid válido.'
@@ -203,7 +203,7 @@ export async function getDataById(id: number, data: (keyof Content)[]): Promise<
       message: `O usuário com "public_id" de valor "${id}" não foi encontrado no sistema.`,
       action: 'Verifique se o "public_id" do usuário está digitado corretamente.',
       stack: new Error().stack,
-    });
+    })
   }
   return result.rows[0]
 }
@@ -216,4 +216,4 @@ export default Object.freeze({
   getDataById
 })
 
-export { Content as IContent, ContentToInsert as IContentToInsert, ContentType }
+export { Content as IContent, ContentInsertRequest, ContentType }

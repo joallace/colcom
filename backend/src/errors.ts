@@ -1,4 +1,4 @@
-import { v4 as uuid } from 'uuid';
+import { v4 as uuid } from 'uuid'
 
 
 interface BaseErrorType {
@@ -57,19 +57,19 @@ class BaseError extends Error implements BaseErrorType {
     type,
     databaseErrorCode,
   }: BaseErrorType) {
-    super();
-    this.name = this.constructor.name;
-    this.message = message;
-    this.action = action;
-    this.statusCode = statusCode || 500;
-    this.errorId = errorId || uuid();
-    this.requestId = requestId;
-    this.context = context;
-    this.stack = stack;
-    this.errorLocationCode = errorLocationCode;
-    this.key = key;
-    this.type = type;
-    this.databaseErrorCode = databaseErrorCode;
+    super()
+    this.name = this.constructor.name
+    this.message = message
+    this.action = action
+    this.statusCode = statusCode || 500
+    this.errorId = errorId || uuid()
+    this.requestId = requestId
+    this.context = context
+    this.stack = stack
+    this.errorLocationCode = errorLocationCode
+    this.key = key
+    this.type = type
+    this.databaseErrorCode = databaseErrorCode
   }
 }
 
@@ -83,7 +83,7 @@ export class InternalServerError extends BaseError {
       errorId: errorId,
       stack: stack,
       errorLocationCode: errorLocationCode,
-    });
+    })
   }
 }
 
@@ -98,7 +98,7 @@ export class NotFoundError extends BaseError {
       stack: stack,
       errorLocationCode: errorLocationCode,
       key: key,
-    });
+    })
   }
 }
 
@@ -112,7 +112,7 @@ export class ServiceError extends BaseError {
       context: context,
       errorLocationCode: errorLocationCode,
       databaseErrorCode: databaseErrorCode,
-    });
+    })
   }
 }
 
@@ -127,7 +127,7 @@ export class ValidationError extends BaseError {
       errorLocationCode: errorLocationCode,
       key: key,
       type: type,
-    });
+    })
   }
 }
 
@@ -140,7 +140,7 @@ export class UnauthorizedError extends BaseError {
       requestId: requestId,
       stack: stack,
       errorLocationCode: errorLocationCode,
-    });
+    })
   }
 }
 
@@ -153,7 +153,7 @@ export class ForbiddenError extends BaseError {
       requestId: requestId,
       stack: stack,
       errorLocationCode: errorLocationCode,
-    });
+    })
   }
 }
 
@@ -166,7 +166,7 @@ export class TooManyRequestsError extends BaseError {
       context: context,
       stack: stack,
       errorLocationCode: errorLocationCode,
-    });
+    })
   }
 }
 
@@ -178,6 +178,6 @@ export class UnprocessableEntityError extends BaseError {
       statusCode: 422,
       stack: stack,
       errorLocationCode: errorLocationCode,
-    });
+    })
   }
 }
