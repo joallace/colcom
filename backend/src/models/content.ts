@@ -1,4 +1,6 @@
 import db from "@/database"
+import logger from "@/logger"
+import { NotFoundError, ValidationError } from "@/errors"
 import { getDataByPublicId } from "@/models/user"
 
 
@@ -45,6 +47,11 @@ interface Content {
 
 
 async function create({ title, author_pid, parent_id, body, type, config }: ContentToInsert): Promise<Content> {
+  if (!/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/.test(author_pid))
+    throw new ValidationError({
+      message: 'O campo "author_pid" não é um uuid válido.'
+    })
+
   const { id, name } = await getDataByPublicId(author_pid, ["id", "name"])
 
   const query = {
@@ -74,10 +81,12 @@ async function create({ title, author_pid, parent_id, body, type, config }: Cont
   }
 
   const result = await db.query(query)
+  logger.info(result)
   return { ...result.rows[0], author: name, author_id: author_pid }
 }
 
-async function findAll({ where = "", orderBy = "", page = 1, pageSize = 10, values = [] as any[] }): Promise<Content[]> {
+async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as any[] }): Promise<Content[]> {
+  logger.info(`GET with LIMIT ${pageSize} and OFFSET ${(page - 1) * pageSize}, page=${page}`)
   const query = {
     text: `
       SELECT
@@ -131,7 +140,7 @@ async function findAll({ where = "", orderBy = "", page = 1, pageSize = 10, valu
       INNER JOIN
         users ON contents.author_id = users.id
       ${where ? `WHERE ${where}` : ""}
-      ${orderBy ? `ORDER BY ${orderBy}` : ""}
+      ORDER BY ${orderBy} DESC
       LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}
       ;`,
     values
@@ -142,7 +151,7 @@ async function findAll({ where = "", orderBy = "", page = 1, pageSize = 10, valu
 }
 
 async function findById(id: number): Promise<Content> {
-  const result = await findAll({ where: "contents.id = $1", values: [id], pageSize: 1})
+  const result = await findAll({ where: "contents.id = $1", values: [id], pageSize: 1 })
   return result[0]
 }
 
@@ -174,24 +183,29 @@ async function getTopicNumberOfVotes(topic_id: number): Promise<number> {
   return result.rows[0].count
 }
 
-async function getType(parent_id: number | null) {
-  if (!parent_id)
-    return "topic"
-
+export async function getDataById(id: number, data: (keyof Content)[]): Promise<any> {
   const query = {
     text: `
-    SELECT
-        parent_id as grandparent_id
-    FROM
+      SELECT
+        ${data.join()}
+      FROM
         contents
-    WHERE
-      contents.id = $1
-    ;`,
-    values: [parent_id]
+      WHERE
+        contents.id = $1
+      ;`,
+    values: [id],
   }
 
   const result = await db.query(query)
-  return result.rows[0].grandparent_id === null ? "post" : "critique"
+
+  if (result.rowCount === 0) {
+    throw new NotFoundError({
+      message: `O usuário com "public_id" de valor "${id}" não foi encontrado no sistema.`,
+      action: 'Verifique se o "public_id" do usuário está digitado corretamente.',
+      stack: new Error().stack,
+    });
+  }
+  return result.rows[0]
 }
 
 export default Object.freeze({
@@ -199,7 +213,7 @@ export default Object.freeze({
   findAll,
   findById,
   getTopicNumberOfVotes,
-  getType
+  getDataById
 })
 
 export { Content as IContent, ContentToInsert as IContentToInsert, ContentType }

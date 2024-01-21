@@ -1,8 +1,13 @@
 CREATE EXTENSION IF NOT EXISTS citext;
 
-CREATE OR ALTER DOMAIN email_text AS citext CHECK (
-    value ~ '^[a-zA-Z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'email_text') THEN
+        CREATE DOMAIN email_text AS citext CHECK (
+            value ~ '^[a-zA-Z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$'
+        );
+    END IF;
+END$$;
 
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
@@ -24,7 +29,7 @@ CREATE TABLE IF NOT EXISTS contents (
     parent_id INT,
     body TEXT,
     type TEXT NOT NULL,
-    status TEXT NOT NULL,
+    status TEXT DEFAULT 'created',
     config JSON,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (now() AT TIME ZONE 'utc'),
     FOREIGN KEY (author_id) REFERENCES users(id),
@@ -38,10 +43,11 @@ CREATE TABLE IF NOT EXISTS tags (
 );
 
 CREATE TABLE IF NOT EXISTS contents_tags (
-    content_id INT PRIMARY KEY,
-    tag_id INT PRIMARY KEY,
-    FOREIGN KEY (content_id) REFERENCES contents(id)
-    FOREIGN KEY (tag_id) REFERENCES tags(id)
+    content_id INT,
+    tag_id INT,
+    FOREIGN KEY (content_id) REFERENCES contents(id),
+    FOREIGN KEY (tag_id) REFERENCES tags(id),
+    PRIMARY KEY (content_id, tag_id)
 );
 
 CREATE TABLE IF NOT EXISTS interactions (
