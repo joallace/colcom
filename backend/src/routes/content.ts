@@ -1,16 +1,14 @@
 import { Router } from "express"
 
-import tokenHandler from "@/middleware/tokenHandler"
+import authHandler from "@/middleware/authHandler"
 import { getContents, createContent, getContent, getContentHistory } from "@/controllers/content"
 
 
 const router = Router()
 
-router.use(tokenHandler)
-
 router.get("/contents", getContents)
 
-router.post("/contents", createContent)
+router.post("/contents", authHandler, createContent)
 
 router.get("/contents/:id", getContent)
 

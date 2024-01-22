@@ -8,8 +8,12 @@ import logger from "@/logger"
 const gitDbPath = process.env.DB_PATH || resolve(__dirname, "db/")
 
 if (!existsSync(gitDbPath)) {
+  logger.info(`[database.ts] Creating git db at "${gitDbPath}"`)
   mkdirSync(gitDbPath)
 }
+else
+  logger.info(`[database.ts] Loaded git db at "${gitDbPath}"`)
+
 
 const config = {
   user: process.env.POSTGRES_USER,

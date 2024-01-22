@@ -1,20 +1,9 @@
-CREATE EXTENSION IF NOT EXISTS citext;
-
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'email_text') THEN
-        CREATE DOMAIN email_text AS citext CHECK (
-            value ~ '^[a-zA-Z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$'
-        );
-    END IF;
-END$$;
-
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     pid uuid DEFAULT gen_random_uuid() UNIQUE,
-    name TEXT UNIQUE NOT NULL,
+    name VARCHAR(32) UNIQUE NOT NULL,
     pass TEXT NOT NULL,
-    email email_text UNIQUE NOT NULL,
+    email VARCHAR(254) UNIQUE NOT NULL,
     colcoins INT DEFAULT 0,
     prestige INT DEFAULT 0,
     permissions TEXT[] DEFAULT '{"read:activation_token"}',

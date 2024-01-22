@@ -59,6 +59,7 @@ export default ({ editor, tableConfig, modal, setModal }) => {
               onChange={e => { e.target.value >= 0 && setNumberRows(e.target.value.replace(/\D/, "")) }}
               onKeyDown={e => { e.key === "Enter" && insertTable() }}
             />
+            <span>{`(máximo: ${tableConfig.maxColumns} e ${tableConfig.maxRows})`}</span>
           </>
           :
           <>

@@ -26,15 +26,62 @@ const headerConfig = {
 }
 
 export default function Promoted() {
+  const [topics, setTopics] = React.useState([])
+  const [page, setPage] = React.useState(0)
+  const [pageSize, setPageSize] = React.useState(10)
+  const [isLoading, setIsLoading] = React.useState(false)
   const [modalOpen, setModalOpen] = React.useState(false)
   const toggleModal = () => { setModalOpen(!modalOpen) }
 
+
   const posts = [{ id: 1, percentage: 54.5, shortAnswer: "Socialismo", summary: lorem }, { id: 2, percentage: 45.5, shortAnswer: "Capitalismo", summary: lorem }]
+
+  const NoResponse = () => (
+    <div className="no-response">
+      Ainda não há repostas, que tal contribuir?
+    </div>
+  )
+
+  React.useEffect(() => {
+    const fetchPromoted = async () => {
+      try {
+        setIsLoading(true)
+        const url = `http://localhost:3000/contents?page=${page + 1}&pageSize=${pageSize}&orderBy="promotions"`
+        const res = await fetch(url, { method: "get" })
+        const data = await res.json()
+
+        if (Array.isArray(data))
+          setTopics(data)
+        else
+          setTopics([])
+      }
+      catch (err) {
+        console.error(err)
+      }
+      finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchPromoted()
+  }, [])
 
   return (
     <div className="content">
-      <Modal isOpen={modalOpen} toggle={toggleModal} />
-      <Topic
+      {
+        isLoading ?
+          <div className="spinner" />
+          :
+          topics.length > 0 ?
+            topics.map(topic => (
+              <Topic title={String(topic.title)} headerConfig={headerConfig} metrics>
+                <NoResponse />
+              </Topic>
+            ))
+            :
+            <NoResponse />
+      }
+      {/* <Topic
         title="Socialismo ou Capitalismo?"
         headerConfig={headerConfig}
         style={{ paddingTop: "0.75rem" }}
@@ -44,9 +91,7 @@ export default function Promoted() {
           posts.length > 0 ?
             posts.map(post => <PostSummary {...post} />)
             :
-            <div className="no-response">
-              Ainda não há repostas, que tal contribuir?
-            </div>
+            <NoResponse/>
         }
       </Topic>
       <Topic
@@ -58,7 +103,7 @@ export default function Promoted() {
         <div className="no-response">
           Ainda não há repostas, que tal contribuir?
         </div>
-      </Topic>
+      </Topic> */}
     </div>
   )
 }

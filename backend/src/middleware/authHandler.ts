@@ -1,15 +1,17 @@
 import { UnauthorizedError, ValidationError } from "@/errors"
-import { RequestHandler, Request, Response, NextFunction } from "express"
+import { RequestHandler } from "express"
 import jwt from "jsonwebtoken"
 
 
 const tokenHandler: RequestHandler = async (req, res, next) => {
-  const authHeader = String(req.headers.Authorization) || String(req.headers.authorization)
+  const authHeader = String(req.headers.Authorization || req.headers.authorization)
 
   try {
-    if (!authHeader?.startsWith("Bearer")){
-      next()
-      return
+    if (!authHeader?.startsWith("Bearer ")) {
+      throw new ValidationError({
+        message: "Token de autorização não fornecido.",
+        action: "Tente logar novamente ou insira um token válido."
+      })
     }
 
     const token = authHeader.split(" ")[1]
@@ -24,6 +26,8 @@ const tokenHandler: RequestHandler = async (req, res, next) => {
       if (err)
         throw new UnauthorizedError({ message: "Token inválido" })
 
+      // Since the RequestHandler type doesn't count for direct changes in the Request object
+      // we will be injecting the decoded user into the req.params
       req.params.user = (<any>decoded).user
       next()
     })

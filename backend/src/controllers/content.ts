@@ -23,7 +23,8 @@ const validateContent = (content: ContentInsertRequest) => {
 }
 
 export const createContent: RequestHandler = async (req, res, next) => {
-  const { title, author_pid, parent_id, body, config } = req.body
+  const { title, parent_id, body, config } = req.body
+  const author_pid = (<any>req.params.user).pid
 
   try {
     const { type, parent_id: grandparentId } = !parent_id ?
@@ -41,8 +42,7 @@ export const createContent: RequestHandler = async (req, res, next) => {
       case "topic": {
         const path = `${dbPath}/${result.id}`
         await mkdir(`${path}/critiques`, { recursive: true })
-        await writeFile(`${path}/critiques/.gitkeep`, "")
-        await writeFile(`${path}/main.html`, "")
+        await Promise.all([writeFile(`${path}/critiques/.gitkeep`, ""), writeFile(`${path}/main.html`, "")])
         await exec("git", ["-C", path, "init", "-b", "main"])
         await exec("git", ["-C", path, "add", "."])
         await exec("git", ["-C", path, "commit", "-m", "init topic"])

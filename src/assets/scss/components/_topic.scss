@@ -122,50 +122,6 @@
             gap: 0.75rem;
         }
     }
-
-    .post-percentage-bar {
-        display: flex;
-        min-width: min-content;
-        height: 2.5rem;
-        margin-bottom: 0.5rem;
-        justify-content: space-between;
-        background-color: $default-font-color;
-        color: $default-bg;
-        padding: 0 1rem 0 0.5rem;
-        align-content: center;
-        border-radius: 0 0.75rem 0.75rem 0;
-
-        span {
-            &:first-child {
-                margin-right: 0.5rem;
-            }
-
-            display: flex;
-            align-self: center;
-        }
-    }
-
-    .read-more {
-        display: flex;
-        width: min-content;
-        text-decoration: none;
-        color: inherit;
-        margin-left: auto;
-        font-weight: bold;
-        margin-bottom: 1rem;
-
-        &:hover {
-            text-decoration: underline;
-        }
-    }
-
-    .no-response {
-        height: 5rem;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 1.25rem
-    }
 }
 
 .unselectable {
