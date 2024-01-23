@@ -6,7 +6,7 @@ import Icon from "@/components/Icon"
 import useScreenSize from "@/hooks/useScreenSize"
 
 export default function Navbar() {
-  let isDesktop = useScreenSize()
+  const isDesktop = useScreenSize()
 
   return (
     <nav className="nav">
@@ -36,9 +36,9 @@ export default function Navbar() {
           <PiMagnifyingGlassBold style={{ fontSize: "1.25rem" }} />
         }
         $42
-        <div className="nav-user-icon">
+        <Link to="/login" className="nav-user-icon">
           <PiUser style={{ fontSize: "2rem" }} />
-        </div>
+        </Link>
 
       </div>
     </nav>

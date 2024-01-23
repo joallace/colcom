@@ -8,8 +8,7 @@ import {
 import Modal from "@/components/Modal"
 import Topic from "@/components/Topic"
 import PostSummary from "@/components/PostSummary"
-
-const lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+import env from "@/assets/enviroment"
 
 const headerConfig = {
   "answer": {
@@ -33,9 +32,6 @@ export default function Promoted() {
   const [modalOpen, setModalOpen] = React.useState(false)
   const toggleModal = () => { setModalOpen(!modalOpen) }
 
-
-  const posts = [{ id: 1, percentage: 54.5, shortAnswer: "Socialismo", summary: lorem }, { id: 2, percentage: 45.5, shortAnswer: "Capitalismo", summary: lorem }]
-
   const NoResponse = () => (
     <div className="no-response">
       Ainda não há repostas, que tal contribuir?
@@ -46,7 +42,7 @@ export default function Promoted() {
     const fetchPromoted = async () => {
       try {
         setIsLoading(true)
-        const url = `http://localhost:3000/contents?page=${page + 1}&pageSize=${pageSize}&orderBy="promotions"`
+        const url = `${env.apiAddress}/contents?page=${page + 1}&pageSize=${pageSize}&orderBy="promotions"`
         const res = await fetch(url, { method: "get" })
         const data = await res.json()
 

@@ -6,6 +6,7 @@ import {
 } from "react-icons/pi"
 
 import useScreenSize from "@/hooks/useScreenSize"
+import { isEmptyObject } from "@tiptap/react"
 
 
 export default function Topic({
@@ -72,7 +73,7 @@ export default function Topic({
             />
           }
         </h1>
-        {headerConfig &&
+        {!isEmptyObject(headerConfig) &&
           <div className="buttons">
             {isDesktop ?
               <>

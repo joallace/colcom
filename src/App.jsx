@@ -7,6 +7,7 @@ import All from "@/pages/All"
 import Meta from "@/pages/Meta"
 import Write from "@/pages/Write"
 import Post from "@/pages/Post"
+import Login from "@/pages/Login"
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/meta" element={<Meta/>}/>
         <Route path="/write" element={<Write/>}/>
         <Route path="/post/:id" element={<Post/>}/>
+        <Route path="/login" element={<Login/>}/>
       </Routes>      
     </>
   )

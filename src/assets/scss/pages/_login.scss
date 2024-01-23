@@ -1,0 +1,62 @@
+.loginContainer {
+    display: grid;
+    width: 25%;
+
+    @media screen and (min-width: $screen-sm) and (max-width: $screen-xl) {
+        width: 40%;
+    }
+
+    @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+        width: 60%;
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+
+        span {
+            color: $default-green;
+
+            &>span {
+                color: $default-orange;
+            }
+        }
+    }
+
+    .body {
+        display: flex;
+        justify-content: space-between;
+
+        .userData {
+            width: 100%;
+            display: grid;
+            margin-top: 2rem;
+            gap: 1.5rem;
+        }
+
+        .buttonRow {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+
+            button{
+                display: flex;
+                .spinner{
+                    margin: 0 10px 0 0;
+                    width: 1rem;
+                    height: 1rem;
+                }
+            }
+        }
+
+        .inputBox {
+            input {
+                height: 2.5rem;
+                &:not(:placeholder-shown)+label,
+                &:focus+label {
+                    background-color: $default-bg;
+                }
+            }
+        }
+    }
+}
