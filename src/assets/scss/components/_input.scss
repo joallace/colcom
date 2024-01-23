@@ -33,6 +33,10 @@
         &:focus+label {
             color: $default-orange;
         }
+
+        &.error{
+            border-color: $default-red;
+        }
     }
 
     label {
@@ -55,4 +59,8 @@
         cursor: pointer;
         margin-left: 0.25rem;
     }
+}
+
+span.error{
+    color: $default-red;
 }

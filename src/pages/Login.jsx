@@ -8,11 +8,14 @@ export default function Login() {
   const [login, setLogin] = React.useState("")
   const [pass, setPass] = React.useState("")
   const [isLoading, setIsLoading] = React.useState(false)
+  const [error, setError] = React.useState(false)
   const navigate = useNavigate()
 
   const send = async () => {
-    if (!login || !pass)
+    if (!login || !pass){
+      setError(true)
       return
+    }
 
     try {
       setIsLoading(true)
@@ -53,14 +56,18 @@ export default function Login() {
               label="email ou nome do usuário"
               value={login}
               disabled={isLoading}
-              onChange={e => setLogin(e.target.value)}
+              onChange={e => {setLogin(e.target.value); setError(false)}}
+              onKeyDown={e => e.key === "Enter" && send()}
+              errorMessage={(error && !login.length) && "campo obrigatório!"}
             />
             <Input
               label="senha"
               type="password"
               value={pass}
               disabled={isLoading}
-              onChange={e => setPass(e.target.value)}
+              onChange={e => {setPass(e.target.value); setError(false)}}
+              onKeyDown={e => e.key === "Enter" && send()}
+              errorMessage={(error && !pass.length) && "campo obrigatório!"}
             />
             <div className="buttonRow">
               <button disabled={isLoading} onClick={send}>
