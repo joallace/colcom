@@ -5,20 +5,26 @@ import Input from "@/components/Input"
 import env from "@/assets/enviroment"
 
 export default function Login() {
-  const [login, setLogin] = React.useState("")
-  const [pass, setPass] = React.useState("")
+  const loginRef = React.useRef()
+  const passRef = React.useRef()
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState(false)
+  const [globalError, setGlobalError] = React.useState(false)
   const navigate = useNavigate()
 
   const send = async () => {
-    if (!login || !pass){
+    const login = loginRef.current.value
+    const pass = passRef.current.value
+
+    if (!login || !pass) {
       setError(true)
       return
     }
 
     try {
       setIsLoading(true)
+      setGlobalError(false)
+
       const res = await fetch(`${env.apiAddress}/login`, {
         method: "post",
         body: JSON.stringify({ login, pass }),
@@ -26,12 +32,17 @@ export default function Login() {
       })
 
       const data = await res.json()
-      if (data.accessToken){
+
+      if(res.status >= 400)
+        setGlobalError(data.message.toLowerCase())
+
+      if (data.accessToken) {
         localStorage.setItem("accessToken", data.accessToken)
         navigate("/")
       }
     }
     catch (err) {
+      setGlobalError("Não foi possível se conectar ao colcom. Por favor, verifique sua conexão.")
       console.error(err)
     }
     finally {
@@ -52,22 +63,25 @@ export default function Login() {
         <div className="body">
           <div className="bracket" />
           <div className="userData">
+            {globalError &&
+              <div className="globalError">{globalError}</div>
+            }
             <Input
               label="email ou nome do usuário"
-              value={login}
+              inputRef={loginRef}
               disabled={isLoading}
-              onChange={e => {setLogin(e.target.value); setError(false)}}
+              onChange={e => setError(false)}
               onKeyDown={e => e.key === "Enter" && send()}
-              errorMessage={(error && !login.length) && "campo obrigatório!"}
+              errorMessage={(error && !loginRef.current.value.length) && "campo obrigatório!"}
             />
             <Input
               label="senha"
+              inputRef={passRef}
               type="password"
-              value={pass}
               disabled={isLoading}
-              onChange={e => {setPass(e.target.value); setError(false)}}
+              onChange={e => setError(false)}
               onKeyDown={e => e.key === "Enter" && send()}
-              errorMessage={(error && !pass.length) && "campo obrigatório!"}
+              errorMessage={(error && !passRef.current.value.length) && "campo obrigatório!"}
             />
             <div className="buttonRow">
               <button disabled={isLoading} onClick={send}>

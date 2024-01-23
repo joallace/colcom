@@ -1,12 +1,13 @@
 import React from "react"
 
-export default ({ id, type, label, options = {}, style = {}, errorMessage, ...remainingProps }) => {
+export default ({ id, inputRef, type, label, options = {}, style = {}, errorMessage, ...remainingProps }) => {
   return (
     <div>
       <div className={type === "checkbox" ? "checkBox" : "inputBox"} style={style}>
         {type === "select" ?
           <select
             id={id}
+            ref={inputRef}
             className={errorMessage ? " error" : ""}
             {...remainingProps}
           >
@@ -17,6 +18,7 @@ export default ({ id, type, label, options = {}, style = {}, errorMessage, ...re
           :
           <input
             id={id}
+            ref={inputRef}
             className={errorMessage ? " error" : ""}
             type={type}
             placeholder="_"
