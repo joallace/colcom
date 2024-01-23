@@ -6,17 +6,20 @@ import env from "@/assets/enviroment"
 
 export default function Login() {
   const loginRef = React.useRef()
+  const emailRef = React.useRef()
   const passRef = React.useRef()
   const [isLoading, setIsLoading] = React.useState(false)
+  const [isSignUp, setIsSignUp] = React.useState(false)
   const [error, setError] = React.useState(false)
   const [globalError, setGlobalError] = React.useState(false)
   const navigate = useNavigate()
 
   const send = async () => {
     const login = loginRef.current.value
+    const email = emailRef.current?.value
     const pass = passRef.current.value
 
-    if (!login || !pass) {
+    if (!login || !pass || (isSignUp && !email)) {
       setError(true)
       return
     }
@@ -24,22 +27,27 @@ export default function Login() {
     try {
       setIsLoading(true)
       setGlobalError(false)
+      const url = `${env.apiAddress}/${isSignUp ? "users" : "login"}`
+      const body = isSignUp ?
+        JSON.stringify({ name: login, email, pass })
+        :
+        JSON.stringify({ login, pass })
 
-      const res = await fetch(`${env.apiAddress}/login`, {
+      const res = await fetch(url, {
         method: "post",
-        body: JSON.stringify({ login, pass }),
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
+        body
       })
 
       const data = await res.json()
 
-      if(res.status >= 400)
+      if (res.status >= 400)
         setGlobalError(data.message.toLowerCase())
 
-      if (data.accessToken) {
+      if (data.accessToken)
         localStorage.setItem("accessToken", data.accessToken)
-        navigate("/")
-      }
+
+      navigate("/")
     }
     catch (err) {
       setGlobalError("Não foi possível se conectar ao colcom. Por favor, verifique sua conexão.")
@@ -56,42 +64,72 @@ export default function Login() {
         <div className="header">
           <div className="top bracket" />
           <h1>
-            <span>log<span>in</span></span>
+            {isSignUp ?
+              <span>sign<span>up</span></span>
+              :
+              <span>log<span>in</span></span>
+            }
           </h1>
           <div className="reverse top critique bracket" />
         </div>
         <div className="body">
           <div className="bracket" />
-          <div className="userData">
+          <div className="loginForm">
             {globalError &&
               <div className="globalError">{globalError}</div>
             }
-            <Input
-              label="email ou nome do usuário"
-              inputRef={loginRef}
-              disabled={isLoading}
-              onChange={e => setError(false)}
-              onKeyDown={e => e.key === "Enter" && send()}
-              errorMessage={(error && !loginRef.current.value.length) && "campo obrigatório!"}
-            />
-            <Input
-              label="senha"
-              inputRef={passRef}
-              type="password"
-              disabled={isLoading}
-              onChange={e => setError(false)}
-              onKeyDown={e => e.key === "Enter" && send()}
-              errorMessage={(error && !passRef.current.value.length) && "campo obrigatório!"}
-            />
+            <div className="userData">
+              <Input
+                label={`nome do usuário${isSignUp ? "" : " ou email"}`}
+                inputRef={loginRef}
+                disabled={isLoading}
+                onChange={() => setError(false)}
+                onKeyDown={e => e.key === "Enter" && send()}
+                errorMessage={(error && !loginRef.current.value.length) && "campo obrigatório!"}
+              />
+              {isSignUp &&
+                <Input
+                  type="email"
+                  label="email"
+                  inputRef={emailRef}
+                  disabled={isLoading}
+                  onChange={() => setError(false)}
+                  onKeyDown={e => e.key === "Enter" && send()}
+                  errorMessage={(error && !emailRef.current.value.length) && "campo obrigatório!"}
+                />
+              }
+              <Input
+                type="password"
+                label="senha"
+                inputRef={passRef}
+                disabled={isLoading}
+                onChange={() => setError(false)}
+                onKeyDown={e => e.key === "Enter" && send()}
+                errorMessage={(error && !passRef.current.value.length) && "campo obrigatório!"}
+              />
+            </div>
+            <span className="createAccount">
+              {isSignUp ? "Tem" : "Não tem"} uma conta?
+              <a onClick={() => setIsSignUp(!isSignUp)}>
+                {isSignUp ? " Entre" : " Crie uma"} agora!
+              </a>
+            </span>
             <div className="buttonRow">
               <button disabled={isLoading} onClick={send}>
                 {isLoading ?
                   <>
                     <div className="spinner" />
-                    entrando...
+                    {isSignUp ?
+                      "cadastrando..."
+                      :
+                      "entrando..."}
                   </>
                   :
-                  "entrar"}
+                  isSignUp ?
+                    "cadastrar"
+                    :
+                    "entrar"
+                }
               </button>
             </div>
           </div>

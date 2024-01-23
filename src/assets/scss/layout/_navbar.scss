@@ -15,18 +15,6 @@ nav{
         display: flex;
     }
 
-    a{
-        color: white;
-        text-decoration: none;
-        &:hover{
-            color: $default-orange;
-        }
-        &:active{
-            color: darken($default-orange, 10%);
-        }
-    
-    }
-
     ul{
         :first-child{
             list-style: none;

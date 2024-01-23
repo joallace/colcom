@@ -17,11 +17,25 @@ button {
         background-color: darken($default-orange, 10%);
     }
 
-    &:disabled{
+    &:disabled {
         border-color: darken($default-font-color, 40%);
         color: darken($default-font-color, 40%);
         cursor: default;
         background-color: transparent;
+    }
+}
+
+a {
+    cursor: pointer;
+    color: white;
+    text-decoration: none;
+
+    &:hover {
+        color: $default-orange;
+    }
+
+    &:active {
+        color: darken($default-orange, 10%);
     }
 }
 
