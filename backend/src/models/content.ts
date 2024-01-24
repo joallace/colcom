@@ -123,7 +123,7 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
             interaction.content_id = contents.id
           AND
             interaction.type = 'up'
-        ) as upvotes,
+        )::INT as upvotes,
         (
           SELECT COUNT(*) FROM
             interactions as interaction
@@ -131,7 +131,7 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
             interaction.content_id = contents.id
           AND
             interaction.type = 'down'
-        ) as downvotes,
+        )::INT as downvotes,
         (
           CASE
             WHEN
@@ -150,7 +150,7 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
             )
             ELSE NULL
           END
-        ) as promotions
+        )::INT as promotions
       FROM
         contents
       INNER JOIN

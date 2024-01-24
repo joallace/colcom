@@ -1,11 +1,14 @@
 import { Router } from "express"
 
-import { createUser, getUsers, loginUser } from "@/controllers/user"
+import authHandler from "@/middleware/authHandler"
+import { createUser, getCurrentUser, getUsers, loginUser } from "@/controllers/user"
 
 
 const router = Router()
 
 router.get("/users", getUsers)
+
+router.get("/users/self", authHandler, getCurrentUser)
 
 router.post("/users", createUser)
 

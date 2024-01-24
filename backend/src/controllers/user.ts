@@ -77,3 +77,14 @@ export const loginUser: RequestHandler = async (req, res, next) => {
     next(err)
   }
 }
+
+export const getCurrentUser: RequestHandler = async (req, res, next) => {
+  const public_id = (<any>req.params.user).pid
+  try {
+    const user = await User.findByPid(public_id)
+    res.status(200).json(user)
+  }
+  catch (err) {
+    next(err)
+  }
+}

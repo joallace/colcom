@@ -1,14 +1,20 @@
+.login.content{
+    height: calc(100vh - $navbar-height);
+    align-content: center;
+}
+
 .loginContainer {
+    position: relative;
     display: grid;
+    height: min-content;
+    min-width: 20rem;
     width: 25%;
+    bottom: $navbar-height;
 
     @media screen and (min-width: $screen-sm) and (max-width: $screen-xl) {
         width: 40%;
     }
 
-    @media screen and (min-width: 0px) and (max-width: $screen-sm) {
-        width: 60%;
-    }
 
     .header {
         display: flex;

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 
 import Input from "@/components/Input"
 import env from "@/assets/enviroment"
+import { UserContext } from "@/context/UserContext"
 
 export default function Login() {
   const loginRef = React.useRef()
@@ -12,6 +13,7 @@ export default function Login() {
   const [isSignUp, setIsSignUp] = React.useState(false)
   const [error, setError] = React.useState(false)
   const [globalError, setGlobalError] = React.useState(false)
+  const { fetchUser } = React.useContext(UserContext)
   const navigate = useNavigate()
 
   const send = async () => {
@@ -44,8 +46,10 @@ export default function Login() {
       if (res.status >= 400)
         setGlobalError(data.message.toLowerCase())
 
-      if (data.accessToken)
+      if (data.accessToken) {
         localStorage.setItem("accessToken", data.accessToken)
+        fetchUser()
+      }
 
       navigate("/")
     }
@@ -95,7 +99,7 @@ export default function Login() {
                   disabled={isLoading}
                   onChange={() => setError(false)}
                   onKeyDown={e => e.key === "Enter" && send()}
-                  errorMessage={(error && !emailRef.current.value.length) && "campo obrigatório!"}
+                  errorMessage={(error && !emailRef.current?.value.length) && "campo obrigatório!"}
                 />
               }
               <Input
@@ -109,9 +113,9 @@ export default function Login() {
               />
             </div>
             <span className="createAccount">
-              {isSignUp ? "Tem" : "Não tem"} uma conta?
+              {isSignUp ? "" : "não "}tem uma conta?
               <a onClick={() => setIsSignUp(!isSignUp)}>
-                {isSignUp ? " Entre" : " Crie uma"} agora!
+                {isSignUp ? " entre" : " crie uma"} agora!
               </a>
             </span>
             <div className="buttonRow">

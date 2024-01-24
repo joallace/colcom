@@ -119,6 +119,26 @@ export async function findByLogin(login: string, options = {}): Promise<User> {
   return result[0]
 }
 
+export async function findByPid(pid: string, options = {}): Promise<User> {
+  const result = await findAll({
+    where: `pid = $1`,
+    values: [pid],
+    pageSize: 1,
+    ...options
+  })
+
+  if (result.length === 0) {
+    throw new NotFoundError({
+      message: `O id público fornecido não está atrleado a nenhum usuário.`,
+      stack: new Error().stack,
+      errorLocationCode: 'MODEL:USER:FIND_BY_PID:NOT_FOUND',
+      key: "pid",
+    })
+  }
+
+  return result[0]
+}
+
 export async function removeFeatures(userPid: string, features: string[]): Promise<User> {
   let lastUpdatedUser
 
@@ -210,6 +230,7 @@ export default Object.freeze({
   create,
   findAll,
   findByLogin,
+  findByPid,
   removeFeatures,
   addFeatures,
   getDataByPublicId

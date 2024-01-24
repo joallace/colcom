@@ -34,7 +34,7 @@ export default function Promoted() {
 
   const NoResponse = () => (
     <div className="no-response">
-      Ainda não há repostas, que tal contribuir?
+      ainda não há repostas, que tal contribuir?
     </div>
   )
 
@@ -69,37 +69,28 @@ export default function Promoted() {
           <div className="spinner" />
           :
           topics.length > 0 ?
-            topics.map(topic => (
-              <Topic title={String(topic.title)} headerConfig={headerConfig} metrics>
-                <NoResponse />
-              </Topic>
-            ))
+            topics.map(topic => {
+              const { title, promotions, upvotes, downvotes } = topic
+              const allVotes = upvotes + downvotes
+              const metrics = [
+                `promovido por ${promotions} usuários`,
+                allVotes ? `${upvotes / allVotes}% dos ${allVotes} votantes achou relevante` : "ainda não há votos neste tópico",
+                `${promotions + allVotes} interações`
+              ]
+
+              return (
+                <Topic
+                  title={String(title)}
+                  headerConfig={headerConfig}
+                  metrics={metrics}
+                >
+                  <NoResponse />
+                </Topic>
+              )
+            })
             :
             <NoResponse />
       }
-      {/* <Topic
-        title="Socialismo ou Capitalismo?"
-        headerConfig={headerConfig}
-        style={{ paddingTop: "0.75rem" }}
-        metrics
-      >
-        {
-          posts.length > 0 ?
-            posts.map(post => <PostSummary {...post} />)
-            :
-            <NoResponse/>
-        }
-      </Topic>
-      <Topic
-        title="Como reduzir a probreza na cidade?"
-        headerConfig={headerConfig}
-        style={{ padding: "2rem 0" }}
-        metrics
-      >
-        <div className="no-response">
-          Ainda não há repostas, que tal contribuir?
-        </div>
-      </Topic> */}
     </div>
   )
 }

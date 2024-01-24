@@ -117,9 +117,9 @@ export default function Topic({
           }
           {metrics &&
             <ul className="metrics">
-              <li>Promovido por 40 usuários</li>
-              <li>80% dos 135 votantes achou relevante</li>
-              <li>4200 interações</li>
+              {metrics.map(metric => (
+                <li>{metric}</li>
+              ))}
             </ul>
           }
         </div>
