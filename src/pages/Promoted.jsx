@@ -5,7 +5,6 @@ import {
   PiArrowBendUpLeft
 } from "react-icons/pi"
 
-import Modal from "@/components/Modal"
 import Topic from "@/components/Topic"
 import PostSummary from "@/components/PostSummary"
 import env from "@/assets/enviroment"
@@ -29,8 +28,6 @@ export default function Promoted() {
   const [page, setPage] = React.useState(0)
   const [pageSize, setPageSize] = React.useState(10)
   const [isLoading, setIsLoading] = React.useState(false)
-  const [modalOpen, setModalOpen] = React.useState(false)
-  const toggleModal = () => { setModalOpen(!modalOpen) }
 
   const NoResponse = () => (
     <div className="no-response">
@@ -74,7 +71,7 @@ export default function Promoted() {
               const allVotes = upvotes + downvotes
               const metrics = [
                 `promovido por ${promotions} usuários`,
-                allVotes ? `${upvotes / allVotes}% dos ${allVotes} votantes achou relevante` : "ainda não há votos neste tópico",
+                allVotes ? `${upvotes / allVotes}% dos ${allVotes} votantes achou relevante` : "0 votos",
                 `${promotions + allVotes} interações`
               ]
 

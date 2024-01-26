@@ -2,8 +2,8 @@ import React from "react"
 import { useNavigate } from "react-router-dom"
 
 import Input from "@/components/Input"
-import env from "@/assets/enviroment"
 import { UserContext } from "@/context/UserContext"
+import env from "@/assets/enviroment"
 
 export default function Login() {
   const loginRef = React.useRef()
@@ -43,8 +43,10 @@ export default function Login() {
 
       const data = await res.json()
 
-      if (res.status >= 400)
+      if (res.status >= 400){
         setGlobalError(data.message.toLowerCase())
+        return
+      }
 
       if (data.accessToken) {
         localStorage.setItem("accessToken", data.accessToken)
@@ -122,7 +124,7 @@ export default function Login() {
               <button disabled={isLoading} onClick={send}>
                 {isLoading ?
                   <>
-                    <div className="spinner" />
+                    <div className="button spinner" />
                     {isSignUp ?
                       "cadastrando..."
                       :
