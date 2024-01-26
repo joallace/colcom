@@ -66,8 +66,7 @@ export default ({ isOpen, setIsOpen }) => {
     if (!empty)
       setAnswers([...answers, ""])
     else if (answers.length > 2 && empty >= 2 && answers[answers.length - 1] === "")
-      setAnswers(answers.filter(v => v !== ""))
-
+      setAnswers(answers.slice(0,-1))
   }, [answers])
 
   return (
