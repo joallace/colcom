@@ -4,30 +4,35 @@ import {
   PiBookmarkSimpleFill,
   PiArrowBendUpLeft
 } from "react-icons/pi"
+import { Link, useNavigate } from "react-router-dom"
 
 import Topic from "@/components/Topic"
 import PostSummary from "@/components/PostSummary"
 import env from "@/assets/enviroment"
 
-const headerConfig = {
-  "answer": {
-    description: "responder tópico",
-    icons: PiArrowBendUpLeft,
-    onClick: () => { }
-  },
-  "bookmark": {
-    description: ["salvar tópico", "remover tópico dos salvos"],
-    icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
-    onStart: () => false,
-    onClick: () => { }
-  }
-}
 
 export default function Promoted() {
   const [topics, setTopics] = React.useState([])
   const [page, setPage] = React.useState(0)
   const [pageSize, setPageSize] = React.useState(10)
   const [isLoading, setIsLoading] = React.useState(false)
+  const navigate = useNavigate()
+
+  const createHeaderConfig = (id, title, config) => {
+    return {
+      "answer": {
+        description: "responder tópico",
+        icons: PiArrowBendUpLeft,
+        onClick: () => navigate("/write", { state: { id, title, config } })
+      },
+      "bookmark": {
+        description: ["salvar tópico", "remover tópico dos salvos"],
+        icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
+        onStart: () => false,
+        onClick: () => { }
+      }
+    }
+  }
 
   const NoResponse = () => (
     <div className="no-response">
@@ -67,7 +72,7 @@ export default function Promoted() {
           :
           topics.length > 0 ?
             topics.map(topic => {
-              const { title, promotions, upvotes, downvotes } = topic
+              const { id, title, promotions, upvotes, downvotes, config } = topic
               const allVotes = upvotes + downvotes
               const metrics = [
                 `promovido por ${promotions} usuários`,
@@ -77,8 +82,8 @@ export default function Promoted() {
 
               return (
                 <Topic
-                  title={String(title)}
-                  headerConfig={headerConfig}
+                  title={<Link to={`/topics/${id}`}>{String(title)}</Link>}
+                  headerConfig={createHeaderConfig(id, title, config)}
                   metrics={metrics}
                 >
                   <NoResponse />

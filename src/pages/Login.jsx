@@ -87,7 +87,7 @@ export default function Login() {
             <div className="userData">
               <Input
                 label={`nome do usuário${isSignUp ? "" : " ou email"}`}
-                inputRef={loginRef}
+                ref={loginRef}
                 disabled={isLoading}
                 onChange={() => setError(false)}
                 onKeyDown={e => e.key === "Enter" && send()}
@@ -97,7 +97,7 @@ export default function Login() {
                 <Input
                   type="email"
                   label="email"
-                  inputRef={emailRef}
+                  ref={emailRef}
                   disabled={isLoading}
                   onChange={() => setError(false)}
                   onKeyDown={e => e.key === "Enter" && send()}
@@ -107,7 +107,7 @@ export default function Login() {
               <Input
                 type="password"
                 label="senha"
-                inputRef={passRef}
+                ref={passRef}
                 disabled={isLoading}
                 onChange={() => setError(false)}
                 onKeyDown={e => e.key === "Enter" && send()}

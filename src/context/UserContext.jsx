@@ -30,10 +30,8 @@ export function UserProvider({ children }) {
   }
 
   React.useEffect(()=>{
-    if(localStorage.getItem("accessToken")){
-      console.log("atualizei parceiro")
+    if(localStorage.getItem("accessToken"))
       fetchUser()
-    }
   }, [])
 
   return (

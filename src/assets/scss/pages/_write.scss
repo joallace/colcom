@@ -2,6 +2,17 @@
     display: flex;
     gap: 1rem;
     margin: 1rem 0 2rem 0;
+    align-items: center;
+    button{
+        height: min-content;
+    }
+}
+
+.topicName{
+    margin-top: 1rem;
+    a{
+        font-weight: bold;
+    }
 }
 
 .modal>.body {

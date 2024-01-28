@@ -1,13 +1,13 @@
 import React from "react"
 
-export default ({ id, inputRef, type, label, options = {}, style = {}, errorMessage, ...remainingProps }) => {
+export default React.forwardRef(({ id, type, label, options = {}, style = {}, errorMessage, ...remainingProps }, ref) => {
   return (
     <div>
-      <div className={type === "checkbox" ? "checkBox" : "inputBox"} style={style}>
+      <div className={type === "checkbox" || type === "radio" ? "checkBox" : "inputBox"} style={style}>
         {type === "select" ?
           <select
             id={id}
-            ref={inputRef}
+            ref={ref}
             className={errorMessage ? " error" : ""}
             {...remainingProps}
           >
@@ -18,7 +18,7 @@ export default ({ id, inputRef, type, label, options = {}, style = {}, errorMess
           :
           <input
             id={id}
-            ref={inputRef}
+            ref={ref}
             className={errorMessage ? " error" : ""}
             type={type}
             placeholder="_"
@@ -34,4 +34,4 @@ export default ({ id, inputRef, type, label, options = {}, style = {}, errorMess
       }
     </div>
   )
-}
+})

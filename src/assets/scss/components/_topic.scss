@@ -40,6 +40,10 @@
             color: $default-green;
             text-align: left;
 
+            a{
+                color: $default-green;
+            }
+
             textarea {
                 line-height: 1;
                 resize: none;

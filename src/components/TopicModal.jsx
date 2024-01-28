@@ -36,7 +36,7 @@ export default ({ isOpen, setIsOpen }) => {
       const res = await fetch(url, {
         method: "post",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ title, config: { allowMultipleAnswers, answers } })
+        body: JSON.stringify({ title, config: { allowMultipleAnswers, answers: answers.filter(v => v !== "") } })
       })
 
       const data = await res.json()
@@ -46,7 +46,6 @@ export default ({ isOpen, setIsOpen }) => {
         return
       }
 
-      console.log(data)
       setIsOpen(false)
     }
     catch (err) {
@@ -66,7 +65,7 @@ export default ({ isOpen, setIsOpen }) => {
     if (!empty)
       setAnswers([...answers, ""])
     else if (answers.length > 2 && empty >= 2 && answers[answers.length - 1] === "")
-      setAnswers(answers.slice(0,-1))
+      setAnswers(answers.slice(0, -1))
   }, [answers])
 
   return (
