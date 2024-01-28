@@ -118,4 +118,11 @@ fieldset{
     }
     border: 2px solid $default-green;
     border-radius: 0.75rem 0.25rem 0.25rem 0.25rem;
+
+    &.error{
+        legend{
+            color: $default-red;
+        }
+        border-color: $default-red;
+    }
 }

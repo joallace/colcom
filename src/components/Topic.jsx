@@ -20,6 +20,7 @@ export default function Topic({
   isCritique,
   metrics,
   children,
+  error = false,
   setHeight = () => { },
   ...remainingProps
 }) {
@@ -52,7 +53,7 @@ export default function Topic({
   return (
     <div className={`topic${alongsideCritique ? " original" : ""}${isCritique ? " critique" : ""}`} ref={topicRef} {...remainingProps}>
       <div className="header">
-        <div className="top bracket" />
+        <div className={`top bracket${error ? " error" : ""}`} />
         {!hideVoteButtons &&
           <div className="vote-buttons">
             <PiCaretUpBold title="relevante" className="up" />
@@ -107,7 +108,7 @@ export default function Topic({
         }
       </div>
       <div className="container">
-        <div className="bracket" />
+        <div className={`bracket${error ? " error" : ""}`} />
         <div className="body">
 
           {children.constructor === Array ?

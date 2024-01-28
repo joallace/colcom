@@ -19,7 +19,8 @@ function App() {
         <Route path="/all" element={<All/>}/>
         <Route path="/meta" element={<Meta/>}/>
         <Route path="/write" element={<Write/>}/>
-        <Route path="/post/:id" element={<Post/>}/>
+        <Route path="/topics/:id" element={<Post/>}/>
+        <Route path="/topics/:tid/posts/:pid" element={<Post/>}/>
         <Route path="/login" element={<Login/>}/>
       </Routes>      
     </>
