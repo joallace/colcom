@@ -1,6 +1,7 @@
 import db from "@/database"
 import { NotFoundError, ValidationError } from "@/errors"
 import { getDataByPublicId } from "@/models/user"
+import { QueryResult } from "pg"
 
 
 type ContentType = "topic" | "post" | "critique"
@@ -67,7 +68,7 @@ async function create({ title, author_pid, parent_id, body, type, config }: Cont
     throw new ValidationError({
       message: 'O campo "author_pid" não é um uuid válido.'
     })
-  
+
   await validateUnique(title, "title")
 
   const { id, name } = await getDataByPublicId(author_pid, ["id", "name"])
@@ -166,6 +167,126 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
   return result.rows
 }
 
+const rowsToTree = (rows: Array<any>) => {
+  const tree: any = {}
+
+  for (const row of rows) {
+    if (row.parent_id === null)
+      tree[row.id] = { ...row, children: tree[row.id]?.children || [] }
+    else {
+      if (tree[row.parent_id])
+        tree[row.parent_id].children.push({ ...row })
+      else
+        tree[row.parent_id] = { children: [{ ...row }] }
+    }
+  }
+
+  return Object.values(tree).reverse()
+}
+
+
+async function findTree({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as any[] }): Promise<any[]> {
+  const query = {
+    text: `
+      WITH RECURSIVE content_tree AS (
+        SELECT
+          topics.id,
+          topics.title,
+          topics.parent_id,
+          topics.type,
+          topics.status,
+          topics.created_at,
+          topics.config,
+          users.pid as author_id,
+          users.name as author,
+          (
+            SELECT COUNT(*) FROM
+              interactions as interaction
+            WHERE
+              interaction.content_id = topics.id
+            AND
+              interaction.type = 'up'
+          )::INT as upvotes,
+          (
+            SELECT COUNT(*) FROM
+              interactions as interaction
+            WHERE
+              interaction.content_id = topics.id
+            AND
+              interaction.type = 'down'
+          )::INT as downvotes,
+          (
+            SELECT
+              COUNT(*)
+            FROM
+              interactions as interaction
+            WHERE
+              interaction.content_id = topics.id
+            AND
+              interaction.type = 'promote'
+            AND
+              interaction.valid_until > NOW()
+          )::INT as promotions
+        FROM
+          contents as topics
+        INNER JOIN
+          users ON topics.author_id = users.id
+        WHERE
+          topics.type = 'topic'
+    
+        UNION ALL
+    
+        SELECT
+          posts.id,
+          posts.title,
+          posts.parent_id,
+          posts.type,
+          posts.status,
+          posts.created_at,
+          posts.config,
+          users.pid as author_id,
+          users.name as author,
+          (
+            SELECT COUNT(*) FROM
+              interactions as interaction
+            WHERE
+              interaction.content_id = posts.id
+            AND
+              interaction.type = 'up'
+          )::INT as upvotes,
+          (
+            SELECT COUNT(*) FROM
+              interactions as interaction
+            WHERE
+              interaction.content_id = posts.id
+            AND
+              interaction.type = 'down'
+          )::INT as downvotes,
+          NULL as promotions
+        FROM
+          contents as posts
+        INNER JOIN
+          content_tree ON posts.parent_id = content_tree.id
+        INNER JOIN
+          users ON posts.author_id = users.id
+        WHERE
+          posts.type = 'post'
+      )
+      SELECT
+        *
+      FROM
+        content_tree
+      ORDER BY
+        id DESC
+      LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}
+    ;`,
+    values
+  }
+
+  const result = await db.query(query)
+  return rowsToTree(result.rows)
+}
+
 async function findById(id: number): Promise<Content> {
   const result = await findAll({ where: "contents.id = $1", values: [id], pageSize: 1 })
   return result[0]
@@ -227,6 +348,7 @@ export async function getDataById(id: number, data: (keyof Content)[]): Promise<
 export default Object.freeze({
   create,
   findAll,
+  findTree,
   findById,
   getTopicNumberOfVotes,
   getDataById

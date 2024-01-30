@@ -63,7 +63,7 @@ export default function Post() {
   const [critiqueContent, setCritiqueContent] = React.useState("")
   const [critiqueHeight, setCritiqueHeight] = React.useState()
   const [critiqueYCoord, setCritiqueYCoord] = React.useState(0)
-  const { id } = useParams()
+  const { tid, pid } = useParams()
 
   const critiqueHeaderConfig = {
     "save": {
@@ -91,7 +91,7 @@ export default function Post() {
       <Topic
         title={title}
         headerConfig={headerConfig}
-        metrics
+        // metrics
         alongsideCritique={showCritique}
       >
         <TextEditor
@@ -107,7 +107,7 @@ export default function Post() {
           headerConfig={critiqueHeaderConfig}
           readOnly={false}
           isCritique
-          metrics
+          // metrics
           style={{ transform: `translate(0,${critiqueYCoord}px)` }}
           setHeight={setCritiqueHeight}
         >

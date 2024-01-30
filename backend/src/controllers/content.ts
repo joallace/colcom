@@ -27,10 +27,15 @@ export const createContent: RequestHandler = async (req, res, next) => {
   const author_pid = (<any>req.params.user).pid
 
   try {
-    const { type, parent_id: grandparentId } = !parent_id ?
-      { type: "topic", parent_id: null }
+    const { parent_id: grandparentId } = !parent_id ?
+      { parent_id: null }
       :
-      await Content.getDataById(parent_id, ["type", "parent_id"])
+      await Content.getDataById(parent_id, ["parent_id"])
+
+    const type = !parent_id ?
+      "topic"
+      :
+      grandparentId ? "critique" : "post"
 
     const content: ContentInsertRequest = { title, author_pid, parent_id, body, type, config }
 
@@ -52,7 +57,7 @@ export const createContent: RequestHandler = async (req, res, next) => {
         const path = `${dbPath}/${result.parent_id}`
         const file = `${path}/main.html`
         // Maybe a lock will be needed
-        await exec("git", ["-C", path, "checkout", "-b", result.author_pid])
+        await exec("git", ["-C", path, "checkout", "-b", author_pid])
         await writeFile(file, body)
         await exec("git", ["-C", path, "add", file])
         await exec("git", ["-C", path, "commit", "-m", `init post ${result.id}`])
@@ -60,8 +65,8 @@ export const createContent: RequestHandler = async (req, res, next) => {
       }
       case "critique": {
         const path = `${dbPath}/${grandparentId}/critiques`
-        const file = `${path}/${result}.html`
-        await exec("git", ["-C", path, "checkout", result.author_pid])
+        const file = `${path}/${result.id}.html`
+        await exec("git", ["-C", path, "checkout", author_pid])
         await writeFile(file, body)
         await exec("git", ["-C", path, "add", file])
         await exec("git", ["-C", path, "commit", "-m", `init critique ${result.id}`])
@@ -89,6 +94,20 @@ export const getContents: RequestHandler = async (req, res, next) => {
   }
 }
 
+export const getContentTree: RequestHandler = async (req, res, next) => {
+  const page = Number(req.query.page) || 1
+  const pageSize = Number(req.query.pageSize) || 10
+  const orderBy = req.query.orderBy ? String(req.query.orderBy) : "id"
+
+  try {
+    const contents = await Content.findTree({ page, pageSize, orderBy })
+    res.status(200).json(contents)
+  }
+  catch (err) {
+    next(err)
+  }
+}
+
 export const getContent: RequestHandler = async (req, res, next) => {
   try {
     const content = await Content.findById(Number(req.params.id))
@@ -105,7 +124,7 @@ export const getContent: RequestHandler = async (req, res, next) => {
 
     res.status(200).json({ ...content, body })
   }
-  catch(err){
+  catch (err) {
     next(err)
   }
 }

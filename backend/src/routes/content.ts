@@ -1,12 +1,14 @@
 import { Router } from "express"
 
 import authHandler from "@/middleware/authHandler"
-import { getContents, createContent, getContent, getContentHistory } from "@/controllers/content"
+import { getContents, createContent, getContent, getContentHistory, getContentTree } from "@/controllers/content"
 
 
 const router = Router()
 
 router.get("/contents", getContents)
+
+router.get("/topics", getContentTree)
 
 router.post("/contents", authHandler, createContent)
 

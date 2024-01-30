@@ -44,7 +44,7 @@ export default function Promoted() {
     const fetchPromoted = async () => {
       try {
         setIsLoading(true)
-        const url = `${env.apiAddress}/contents?page=${page + 1}&pageSize=${pageSize}&orderBy="promotions"`
+        const url = `${env.apiAddress}/topics?page=${page + 1}&pageSize=${pageSize}&orderBy="promotions"`
         const res = await fetch(url, { method: "get" })
         const data = await res.json()
 
@@ -86,7 +86,13 @@ export default function Promoted() {
                   headerConfig={createHeaderConfig(id, title, config)}
                   metrics={metrics}
                 >
-                  <NoResponse />
+                  {topic.children?.length > 0 ?
+                    topic.children.map(child => (
+                      <PostSummary parent_id={id} id={child.id} shortAnswer={child.title}/>
+                    ))
+                    :
+                    <NoResponse />
+                  }
                 </Topic>
               )
             })

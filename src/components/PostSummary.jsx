@@ -1,7 +1,7 @@
 import React from "react"
 import { Link } from "react-router-dom"
 
-export default ({id, summary, percentage, shortAnswer}) => {
+export default ({parent_id, id, summary, percentage, shortAnswer}) => {
     return (
         <div>
           <div className="post-percentage-bar" style={{ width: `${percentage}%` }}>
@@ -9,7 +9,7 @@ export default ({id, summary, percentage, shortAnswer}) => {
             <span>{`${percentage}%`}</span>
           </div>
           {summary}
-          <Link className="unselectable read-more" to={`/post/${id}`}>continuar...</Link>
+          <Link className="unselectable read-more" to={`/topics/${parent_id}/posts/${id}`}>continuar...</Link>
         </div>
       )
 }

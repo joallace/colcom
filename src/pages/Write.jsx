@@ -29,14 +29,13 @@ export default function Write() {
   }
 
   const submit = async () => {
-    if (!title || !body || (state.config.answers && !answer)) {
-      console.log("entrei")
+    if (!title || !body || (state.config?.answers?.length !== 0 && !answer)) {
       setError(true)
       return
     }
 
     const token = localStorage.getItem("accessToken")
-    if (!token){
+    if (!token) {
       navigate("/login")
       return
     }
@@ -55,7 +54,6 @@ export default function Write() {
 
       if (res.status >= 400) {
         setGlobalError(data.message.toLowerCase())
-        console.log(data)
         return
       }
 
@@ -84,7 +82,7 @@ export default function Write() {
         <TextEditor content={body} setContent={(text) => { setBody(text); setError(false) }} />
       </Topic>
       <div className="buttons">
-        {state.config.answers &&
+        {state.config?.answers?.length !== 0 &&
           <fieldset className={(!answer && error) ? "error" : ""}>
             <legend>sua resposta</legend>
             {state.config.answers.map(option => (
