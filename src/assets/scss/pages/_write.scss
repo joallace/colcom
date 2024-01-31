@@ -29,10 +29,10 @@
         display: flex;
         flex-direction: column;
         place-items: center;
+        gap: 1rem;
 
-        div {
+        .inputWrapper{
             width: 100%;
-            margin-bottom: 1rem;
         }
 
         @media screen and (min-width: 0px) and (max-width: $screen-sm) {

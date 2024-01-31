@@ -76,6 +76,7 @@ export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false
   const [chartData, setChartData] = React.useState(editionMode ? currentData : generateChartData(chartType, input1, input2))
   const [chartKeys, setChartKeys] = React.useState(Object.keys(chartData[0]))
   const [dataInputStage, setDataInputStage] = React.useState(editionMode)
+  const [error, setError] = React.useState(false)
   const { setChartString } = React.useContext(ChartContext)
 
   const updateChartValue = (i, j, value) => {
@@ -126,15 +127,20 @@ export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false
   const validateKeys = () => chartKeys.every(v => v !== "") && (new Set(chartKeys)).size === chartKeys.length
 
   const validateInput = (value, inputId) => {
-    return value === "" || (value > 0 && value <= chartDefaults[chartType].bounds[inputId][1])
+    const upperBound = chartDefaults[chartType].bounds[inputId][1]
+    return value === "" || (value > 0 && value <= upperBound)
   }
 
   const validateAndUpdate = (inputId, setter) => {
     return e => {
       const value = e.target.value
       if (validateInput(value, inputId)) {
+        setError(0)
         setter(parseInt(value.replace(/\D/, "")))
         setChartData(generateChartData(chartType, inputId === 0 ? value : input1, inputId === 1 ? value : input2))
+      }
+      else {
+        setError(inputId + 1)
       }
     }
   }
@@ -201,6 +207,7 @@ export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false
                 label={`n.º de ${chartDefaults[chartType].inputs[0]}`}
                 value={input1 ? input1 : ""}
                 onChange={validateAndUpdate(0, setInput1)}
+                errorMessage={error === 1 && `deve ser de 1 a ${chartDefaults[chartType].bounds[0][1]}`}
               />
 
               {(chartType !== "pie" && chartType !== "scatter") &&
@@ -208,6 +215,7 @@ export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false
                   label={`n.º de ${chartDefaults[chartType].inputs[1]}`}
                   value={input2 ? input2 : ""}
                   onChange={validateAndUpdate(1, setInput2)}
+                  errorMessage={error === 2 && `deve ser de 1 a ${chartDefaults[chartType].bounds[1][1]}`}
                 />
               }
             </>

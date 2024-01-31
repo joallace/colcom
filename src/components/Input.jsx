@@ -2,13 +2,13 @@ import React from "react"
 
 export default React.forwardRef(({ id, type, label, options = {}, style = {}, errorMessage, ...remainingProps }, ref) => {
   return (
-    <div>
+    <div className="inputWrapper">
       <div className={type === "checkbox" || type === "radio" ? "checkBox" : "inputBox"} style={style}>
         {type === "select" ?
           <select
             id={id}
             ref={ref}
-            className={errorMessage ? " error" : ""}
+            className={errorMessage ? " error" : null}
             {...remainingProps}
           >
             {Object.keys(options).map(option => {
@@ -19,7 +19,7 @@ export default React.forwardRef(({ id, type, label, options = {}, style = {}, er
           <input
             id={id}
             ref={ref}
-            className={errorMessage ? " error" : ""}
+            className={errorMessage ? " error" : null}
             type={type}
             placeholder="_"
             {...remainingProps}
