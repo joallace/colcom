@@ -207,6 +207,7 @@ export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false
                 label={`n.º de ${chartDefaults[chartType].inputs[0]}`}
                 value={input1 ? input1 : ""}
                 onChange={validateAndUpdate(0, setInput1)}
+                onBlur={()=>{setError(0)}}
                 errorMessage={error === 1 && `deve ser de 1 a ${chartDefaults[chartType].bounds[0][1]}`}
               />
 
@@ -215,6 +216,7 @@ export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false
                   label={`n.º de ${chartDefaults[chartType].inputs[1]}`}
                   value={input2 ? input2 : ""}
                   onChange={validateAndUpdate(1, setInput2)}
+                  onBlur={()=>{setError(0)}}
                   errorMessage={error === 2 && `deve ser de 1 a ${chartDefaults[chartType].bounds[1][1]}`}
                 />
               }
