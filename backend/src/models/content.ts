@@ -156,7 +156,7 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
         contents
       INNER JOIN
         users ON contents.author_id = users.id
-      ${where ? `WHERE ${where}` : ""}
+      WHERE ${where}
       ORDER BY ${orderBy} DESC
       LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}
       ;`,
@@ -185,7 +185,7 @@ const rowsToTree = (rows: Array<any>) => {
 }
 
 
-async function findTree({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as any[] }): Promise<any[]> {
+async function findTree({ where = "topics.type = 'topic'", orderBy = "id", page = 1, pageSize = 10, values = [] as any[] }): Promise<any[]> {
   const query = {
     text: `
       WITH RECURSIVE content_tree AS (
@@ -231,8 +231,7 @@ async function findTree({ where = "", orderBy = "id", page = 1, pageSize = 10, v
           contents as topics
         INNER JOIN
           users ON topics.author_id = users.id
-        WHERE
-          topics.type = 'topic'
+        WHERE ${where}
     
         UNION ALL
     
@@ -276,9 +275,6 @@ async function findTree({ where = "", orderBy = "id", page = 1, pageSize = 10, v
         *
       FROM
         content_tree
-      ORDER BY
-        id DESC
-      LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}
     ;`,
     values
   }

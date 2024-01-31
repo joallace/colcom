@@ -108,6 +108,19 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
   }
 }
 
+export const getTopicTree: RequestHandler = async (req, res, next) => {
+  const id = Number(req.params.id)
+
+  try {
+    const contents = await Content.findTree({ where: "topics.id = $1", values: [id], pageSize: 1 })
+    res.status(200).json(contents[0])
+  }
+  catch (err) {
+    next(err)
+  }
+}
+
+
 export const getContent: RequestHandler = async (req, res, next) => {
   try {
     const content = await Content.findById(Number(req.params.id))
@@ -119,10 +132,7 @@ export const getContent: RequestHandler = async (req, res, next) => {
         stack: new Error().stack
       })
 
-    const path = `${dbPath}/${content.parent_id}/`
-    const body = await exec("git", ["-C", path, "show", String(req.query.version) || String(content.parent_id), "./main.html"], { encoding: "utf-8" })
-
-    res.status(200).json({ ...content, body })
+    res.status(200).json(content)
   }
   catch (err) {
     next(err)
