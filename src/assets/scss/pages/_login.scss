@@ -1,0 +1,83 @@
+.login.content{
+    height: calc(100vh - $navbar-height);
+    align-content: center;
+}
+
+.loginContainer {
+    position: relative;
+    display: grid;
+    height: min-content;
+    min-width: 20rem;
+    width: 25%;
+    bottom: $navbar-height;
+
+    @media screen and (min-width: $screen-sm) and (max-width: $screen-xl) {
+        width: 40%;
+    }
+
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+
+        span {
+            color: $default-green;
+
+            &>span {
+                color: $default-orange;
+            }
+        }
+    }
+
+    .body {
+        display: flex;
+        justify-content: space-between;
+
+        .loginForm {
+            width: 100%;
+            display: grid;
+            margin-top: 1rem;
+            gap: 2.5rem;
+
+            .globalError {
+                background-color: $default-red;
+                text-align: center;
+                padding: 1rem 0;
+                border-radius: 0.25rem;
+            }
+
+            .userData {
+                width: 100%;
+                display: grid;
+                gap: 1.5rem;
+            }
+
+            .createAccount{
+                text-align: center;
+                a{
+                    font-weight: bold;
+                }
+            }
+
+            .buttonRow {
+                display: flex;
+                justify-content: center;
+
+                button {
+                    display: flex;
+                }
+            }
+        }
+
+        .inputBox {
+            input {
+                height: 2.5rem;
+
+                &:not(:placeholder-shown)+label,
+                &:focus+label {
+                    background-color: $default-bg;
+                }
+            }
+        }
+    }
+}

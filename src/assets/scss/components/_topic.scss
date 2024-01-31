@@ -1,48 +1,18 @@
 .topic {
-    display: flex;
+    display: grid;
     line-height: 1.5;
     height: min-content;
     @include content-responsiveness;
     transition: all 0.5s ease;
 
-    .title {
-        width: 100%;
-        color: $default-green;
-        word-wrap: anywhere;
-
-        textarea {
-            line-height: 1;
-            resize: none;
-            overflow-y: hidden;
-            width: 100%;
-            background-color: $default-bg;
-            outline: none;
-            border: none;
-            color: $default-green;
-            font-size: 2rem;
-            font-weight: bolder;
-        }
+    .container {
+        display: flex;
     }
 
     .body {
         text-align: justify;
         width: 100%;
         height: min-content;
-    }
-
-    .bracket {
-        width: 1rem;
-        flex-shrink: 0;
-        margin: 2.15rem 0.75rem 0.4rem 0;
-
-        border-style: solid;
-        border-width: 2px 0 2px 2px;
-        border-color: $default-green;
-        border-radius: 0.75rem 0 0 0;
-
-        @media screen and (max-width: $screen-sm) {
-            margin-top: 2.4rem;
-        }
     }
 
     // Maybe the critique color will be accordingly to the user's vote.
@@ -65,18 +35,36 @@
         align-content: center;
         justify-content: space-between;
 
-        .left-side {
+        .title {
             width: 100%;
-            display: flex;
-            align-content: center;
+            color: $default-green;
+            text-align: left;
+
+            a{
+                color: $default-green;
+            }
+
+            textarea {
+                line-height: 1;
+                resize: none;
+                overflow-y: hidden;
+                width: 100%;
+                background-color: $default-bg;
+                outline: none;
+                border: none;
+                color: $default-green;
+                font-size: 2rem;
+                font-weight: bolder;
+            }
         }
 
-        .right-side {
+        .buttons {
             display: flex;
             font-size: 2rem;
             gap: 0.25rem;
             flex-shrink: 0;
             align-items: center;
+            margin-left: 1rem;
         }
 
         .vote-buttons {
@@ -120,49 +108,43 @@
             gap: 0.75rem;
         }
     }
+}
 
-    .post-percentage-bar {
-        display: flex;
-        min-width: min-content;
-        height: 2.5rem;
-        margin-bottom: 0.5rem;
-        justify-content: space-between;
-        background-color: $default-font-color;
-        color: $default-bg;
-        padding: 0 1rem 0 0.5rem;
-        align-content: center;
-        border-radius: 0 0.75rem 0.75rem 0;
+.bracket {
+    width: 1rem;
+    flex-shrink: 0;
+    margin: 0 0.75rem 0.4rem 0;
+    transition: border-color 0.2s linear;
 
-        span {
-            &:first-child {
-                margin-right: 0.5rem;
-            }
+    border-style: solid;
+    border-width: 0 0 2px 2px;
+    border-color: $default-green;
 
-            display: flex;
-            align-self: center;
-        }
+    &.top {
+        position: relative;
+        height: 50%;
+        top: 50%;
+        margin-bottom: 0;
+        border-width: 2px 0 0 2px;
+        border-radius: 0.75rem 0 0 0;
     }
 
-    .read-more {
-        display: flex;
-        width: min-content;
-        text-decoration: none;
-        color: inherit;
-        margin-left: auto;
-        font-weight: bold;
-        margin-bottom: 1rem;
-
-        &:hover {
-            text-decoration: underline;
-        }
+    &.critique {
+        border-color: $default-orange;
     }
 
-    .no-response {
-        height: 5rem;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 1.25rem
+    &.error{
+        border-color: $default-red;
+    }
+
+    &.reverse{
+        -moz-transform: scaleX(-1);
+        -webkit-transform: scaleX(-1);
+        -o-transform: scaleX(-1);
+        transform: scaleX(-1);
+        -ms-filter: fliph; /*IE*/
+        filter: fliph; /*IE*/
+        margin: 0 0 0.4rem 0.75rem;
     }
 }
 
