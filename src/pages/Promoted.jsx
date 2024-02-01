@@ -76,7 +76,7 @@ export default function Promoted() {
               const allVotes = upvotes + downvotes
               const metrics = [
                 `promovido por ${promotions} usuários`,
-                allVotes ? `${upvotes / allVotes}% dos ${allVotes} votantes achou relevante` : "0 votos",
+                allVotes ? `${(upvotes / allVotes) * 100}% dos ${allVotes} votantes achou relevante` : "0 votos",
                 `${promotions + allVotes} interações`
               ]
 

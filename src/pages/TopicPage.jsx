@@ -21,7 +21,7 @@ export default function TopicPage() {
     "answer": {
       description: "responder tópico",
       icons: PiArrowBendUpLeft,
-      onClick: () => navigate("/write", { state: { id, title, config } })
+      onClick: () => navigate("/write", { state: { id, title: topicData.title, config: topicData.config } })
     },
     "bookmark": {
       description: ["salvar tópico", "remover tópico dos salvos"],
@@ -30,13 +30,13 @@ export default function TopicPage() {
       onClick: () => { }
     }
   }
-  
+
 
   const getMetrics = () => {
     const allVotes = topicData.upvotes + topicData.downvotes
     return [
       `promovido por ${topicData.promotions} usuários`,
-      allVotes ? `${topicData.upvotes / allVotes}% dos ${allVotes} votantes achou relevante` : "0 votos",
+      allVotes ? `${(topicData.upvotes / allVotes) * 100}% dos ${allVotes} votantes achou relevante` : "0 votos",
       `${topicData.promotions + allVotes} interações`
     ]
   }
@@ -55,10 +55,8 @@ export default function TopicPage() {
         const res = await fetch(url, { method: "get" })
         const data = await res.json()
 
-        if (data) {
-          console.log(data)
+        if (data)
           setTopicData(data)
-        }
       }
       catch (err) {
         console.error(err)

@@ -82,7 +82,7 @@ export default function Post() {
   const getMetrics = () => {
     const allVotes = postData.upvotes + postData.downvotes
     return [
-      allVotes ? `${postData.upvotes / allVotes}% dos ${allVotes} votantes achou relevante` : "0 votos",
+      allVotes ? `${(postData.upvotes / allVotes) * 100}% dos ${allVotes} votantes achou relevante` : "0 votos",
       `${allVotes} interações`
     ]
   }

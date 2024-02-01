@@ -10,8 +10,9 @@ export default function Write() {
   const [title, setTitle] = React.useState(localStorage.getItem("postTitle") || "")
   const [body, setBody] = React.useState(localStorage.getItem("editorContent") || "")
   const [answer, setAnswer] = React.useState("")
-  const [error, setError] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
+  const [error, setError] = React.useState(false)
+  const [globalError, setGlobalError] = React.useState(false)
   const navigate = useNavigate()
   const { state } = useLocation()
 
@@ -57,6 +58,7 @@ export default function Write() {
         return
       }
 
+      console.log(`/topics/${state.id}/posts/${data.id}`)
       navigate(`/topics/${state.id}/posts/${data.id}`)
     }
     catch (err) {
@@ -70,7 +72,7 @@ export default function Write() {
   return (
     <div className="content">
       <div className="topicName">respondendo ao tópico "<Link to={`/topics/${state.id}`}>{state.title}</Link>"</div>
-
+      
       <Topic
         title={title}
         setTitle={(text) => { setTitle(text); setError(false) }}
@@ -81,6 +83,9 @@ export default function Write() {
       >
         <TextEditor content={body} setContent={(text) => { setBody(text); setError(false) }} />
       </Topic>
+      {globalError &&
+        <div className="globalError">{globalError}</div>
+      }
       <div className="buttons">
         {state.config?.answers?.length !== 0 &&
           <fieldset className={(!answer && error) ? "error" : ""}>
