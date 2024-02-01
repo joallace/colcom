@@ -189,87 +189,95 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "id", page 
   const query = {
     text: `
       WITH RECURSIVE content_tree AS (
-        SELECT
-          topics.id,
-          topics.title,
-          topics.parent_id,
-          topics.type,
-          topics.status,
-          topics.created_at,
-          topics.config,
-          users.pid as author_id,
-          users.name as author,
-          (
-            SELECT COUNT(*) FROM
-              interactions as interaction
-            WHERE
-              interaction.content_id = topics.id
-            AND
-              interaction.type = 'up'
-          )::INT as upvotes,
-          (
-            SELECT COUNT(*) FROM
-              interactions as interaction
-            WHERE
-              interaction.content_id = topics.id
-            AND
-              interaction.type = 'down'
-          )::INT as downvotes,
-          (
-            SELECT
-              COUNT(*)
-            FROM
-              interactions as interaction
-            WHERE
-              interaction.content_id = topics.id
-            AND
-              interaction.type = 'promote'
-            AND
-              interaction.valid_until > NOW()
-          )::INT as promotions
-        FROM
-          contents as topics
-        INNER JOIN
-          users ON topics.author_id = users.id
-        WHERE ${where}
+        (
+          SELECT
+            topics.id,
+            topics.title,
+            topics.parent_id,
+            topics.type,
+            topics.status,
+            topics.created_at,
+            topics.config,
+            users.pid as author_id,
+            users.name as author,
+            (
+              SELECT COUNT(*) FROM
+                interactions as interaction
+              WHERE
+                interaction.content_id = topics.id
+              AND
+                interaction.type = 'up'
+            )::INT as upvotes,
+            (
+              SELECT COUNT(*) FROM
+                interactions as interaction
+              WHERE
+                interaction.content_id = topics.id
+              AND
+                interaction.type = 'down'
+            )::INT as downvotes,
+            (
+              SELECT
+                COUNT(*)
+              FROM
+                interactions as interaction
+              WHERE
+                interaction.content_id = topics.id
+              AND
+                interaction.type = 'promote'
+              AND
+                interaction.valid_until > NOW()
+            )::INT as promotions
+          FROM
+            contents as topics
+          INNER JOIN
+            users ON topics.author_id = users.id
+          WHERE ${where}
+          ORDER BY promotions DESC
+          LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}
+        )
     
         UNION ALL
     
-        SELECT
-          posts.id,
-          posts.title,
-          posts.parent_id,
-          posts.type,
-          posts.status,
-          posts.created_at,
-          posts.config,
-          users.pid as author_id,
-          users.name as author,
-          (
-            SELECT COUNT(*) FROM
-              interactions as interaction
-            WHERE
-              interaction.content_id = posts.id
-            AND
-              interaction.type = 'up'
-          )::INT as upvotes,
-          (
-            SELECT COUNT(*) FROM
-              interactions as interaction
-            WHERE
-              interaction.content_id = posts.id
-            AND
-              interaction.type = 'down'
-          )::INT as downvotes,
-          NULL as promotions
-        FROM
-          contents as posts
-        INNER JOIN
-          content_tree ON posts.parent_id = content_tree.id
-        INNER JOIN
-          users ON posts.author_id = users.id
-        WHERE
-          posts.type = 'post'
+        (
+          SELECT
+            posts.id,
+            posts.title,
+            posts.parent_id,
+            posts.type,
+            posts.status,
+            posts.created_at,
+            posts.config,
+            users.pid as author_id,
+            users.name as author,
+            (
+              SELECT COUNT(*) FROM
+                interactions as interaction
+              WHERE
+                interaction.content_id = posts.id
+              AND
+                interaction.type = 'up'
+            )::INT as upvotes,
+            (
+              SELECT COUNT(*) FROM
+                interactions as interaction
+              WHERE
+                interaction.content_id = posts.id
+              AND
+                interaction.type = 'down'
+            )::INT as downvotes,
+            NULL as promotions
+          FROM
+            contents as posts
+          INNER JOIN
+            content_tree ON posts.parent_id = content_tree.id
+          INNER JOIN
+            users ON posts.author_id = users.id
+          WHERE
+            posts.type = 'post'
+          ORDER BY upvotes DESC
+          ${pageSize !== 1 ? "LIMIT 3" : ""}
+        )
       )
       SELECT
         *
