@@ -72,12 +72,12 @@ export default function Promoted() {
           :
           topics.length > 0 ?
             topics.map(topic => {
-              const { id, title, promotions, upvotes, downvotes, config } = topic
+              const { id, title, promotions, upvotes, downvotes, config, children, childrenStats } = topic
               const allVotes = upvotes + downvotes
               const metrics = [
                 `promovido por ${promotions} usuários`,
                 allVotes ? `${(upvotes / allVotes) * 100}% dos ${allVotes} votantes achou relevante` : "0 votos",
-                `${promotions + allVotes} interações`
+                `${childrenStats.upvotes + childrenStats.downvotes} interações`
               ]
 
               return (
@@ -86,9 +86,14 @@ export default function Promoted() {
                   headerConfig={createHeaderConfig(id, title, config)}
                   metrics={metrics}
                 >
-                  {topic.children?.length > 0 ?
-                    topic.children.map(child => (
-                      <PostSummary parent_id={id} id={child.id} shortAnswer={child.title}/>
+                  {children?.length > 0 ?
+                    children.map(child => (
+                      <PostSummary
+                        parent_id={id}
+                        id={child.id}
+                        shortAnswer={child.title}
+                        percentage={((child.upvotes/childrenStats.upvotes) * 100) || 0}
+                      />
                     ))
                     :
                     <NoResponse />

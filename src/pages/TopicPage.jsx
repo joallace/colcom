@@ -37,7 +37,7 @@ export default function TopicPage() {
     return [
       `promovido por ${topicData.promotions} usuários`,
       allVotes ? `${(topicData.upvotes / allVotes) * 100}% dos ${allVotes} votantes achou relevante` : "0 votos",
-      `${topicData.promotions + allVotes} interações`
+      `${topicData.childrenStats?.upvotes + topicData.childrenStats?.downvotes} interações`
     ]
   }
 
@@ -81,7 +81,12 @@ export default function TopicPage() {
         >
           {topicData.children?.length > 0 ?
             topicData.children.map(child => (
-              <PostSummary parent_id={id} id={child.id} shortAnswer={child.title} />
+              <PostSummary
+                parent_id={id}
+                id={child.id}
+                shortAnswer={child.title}
+                percentage={((child.upvotes / topicData.childrenStats?.upvotes) * 100) || 0}
+              />
             ))
             :
             <NoResponse />

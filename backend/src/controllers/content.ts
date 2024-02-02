@@ -22,6 +22,18 @@ const validateContent = (content: ContentInsertRequest) => {
       })
 }
 
+const getChildrenStats = (topic: any) => {
+  let upvotes = 0
+  let downvotes = 0
+
+  for (const post of topic.children) {
+    upvotes += post.upvotes
+    downvotes += post.downvotes
+  }
+
+  return { upvotes, downvotes }
+}
+
 export const createContent: RequestHandler = async (req, res, next) => {
   const { title, parent_id, body, config } = req.body
   const author_pid = (<any>req.params.user).pid
@@ -103,16 +115,19 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
   try {
     const contents = await Content.findTree({ page, pageSize, orderBy })
 
-    // Probably doing this the dirtiest way possible, but I don't know another way
-    // to crop the number of each topic's posts to a certain limit.
+    // Probably doing this the dirtiest way possible, but right now I don't know another way
+    // to crop the number of each topic's posts to a certain limit and to count all stats.
     // Also, I still don't have found a way to preserve the sorting from the query when transforming
     // the data into a tree, so since it's just a page I'll sort it again here.
     // Should refactor in the future.
-    if(type === "topic"){
-      for(let i = 0; i < contents.length; i++)
-        contents[i].children = contents[i].children.slice(0, 3)
+    if (type === "topic") {
+      for (const topic of contents) {
+        topic.childrenStats = getChildrenStats(topic)
+        topic.children = topic.children.slice(0, 3)
+      }
+
       contents.sort((a, b) => {
-        if(a.promotions < b.promotions)
+        if (a.promotions < b.promotions)
           return 1
         else if (a.promotions > b.promotions)
           return -1
@@ -132,8 +147,11 @@ export const getTopicTree: RequestHandler = async (req, res, next) => {
   const id = Number(req.params.id)
 
   try {
-    const contents = await Content.findTree({ where: "topics.id = $1", values: [id], pageSize: 1 })
-    res.status(200).json(contents[0])
+    const topic = (await Content.findTree({ where: "topics.id = $1", values: [id], pageSize: 1 }))[0]
+
+    topic.childrenStats = getChildrenStats(topic)
+
+    res.status(200).json(topic)
   }
   catch (err) {
     next(err)
