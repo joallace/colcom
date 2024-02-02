@@ -1,17 +1,28 @@
-*{
+* {
     box-sizing: border-box;
 }
 
-body{
+body {
     margin: 0
 }
 
-:root{
+:root {
     background-color: $default-bg;
     color: $default-font-color;
 }
 
-.content{
+.content {
     display: grid;
     justify-items: center;
+
+
+    &.tree {
+        gap: 2rem;
+        padding-bottom: 2rem;
+    }
+
+    &.login {
+        height: calc(100vh - $navbar-height);
+        align-content: center;
+    }
 }

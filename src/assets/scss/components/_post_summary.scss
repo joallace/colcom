@@ -1,38 +1,52 @@
-.post-percentage-bar {
-    display: flex;
-    min-width: min-content;
-    min-height: 2.5rem;
-    height: min-content;
-    margin-bottom: 0.5rem;
-    justify-content: space-between;
-    background-color: $default-font-color;
-    color: $default-bg;
-    padding: 0 1rem 0 0.5rem;
-    align-content: center;
-    border-radius: 0 0.75rem 0.75rem 0;
-
-    span {
-        &:first-child {
-            margin-right: 0.5rem;
-        }
-
+.postSummary {
+    a {
         display: flex;
-        align-self: center;
-    }
-}
+        min-width: min-content;
 
-.read-more {
-    display: flex;
-    width: min-content;
-    text-decoration: none;
-    color: inherit;
-    margin-left: auto;
-    font-weight: bold;
-    margin-bottom: 1rem;
-
-    &:hover {
-        text-decoration: underline;
+        &:hover {
+            .percentageBar {
+                background-color: $default-orange;
+            }
+        }
     }
+
+    .percentageBar {
+        display: flex;
+        width: 100%;
+        min-height: 2.5rem;
+        height: min-content;
+        justify-content: space-between;
+        background-color: $default-font-color;
+        padding: 0 1rem 0 0.5rem;
+        align-content: center;
+        border-radius: 0 0.75rem 0.75rem 0;
+
+        span,
+        a {
+            &:first-child {
+                margin-right: 0.5rem;
+            }
+
+            color: $default-bg;
+            display: flex;
+            align-self: center;
+        }
+    }
+
+    .read-more {
+        display: flex;
+        width: min-content;
+        text-decoration: none;
+        color: inherit;
+        margin-left: auto;
+        font-weight: bold;
+        margin-bottom: 1rem;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
 }
 
 .no-response {

@@ -82,6 +82,7 @@ export default function Post() {
   const getMetrics = () => {
     const allVotes = postData.upvotes + postData.downvotes
     return [
+      `iniciado por ${postData.author}`,
       allVotes ? `${(postData.upvotes / allVotes) * 100}% dos ${allVotes} votantes achou relevante` : "0 votos",
       `${allVotes} interações`
     ]
@@ -131,6 +132,7 @@ export default function Post() {
             headerConfig={headerConfig}
             metrics={getMetrics()}
             alongsideCritique={showCritique}
+            justify
           >
             <TextEditor
               content={content}
@@ -145,6 +147,7 @@ export default function Post() {
               headerConfig={critiqueHeaderConfig}
               readOnly={false}
               isCritique
+              justify
               // metrics
               style={{ transform: `translate(0,${critiqueYCoord}px)` }}
               setHeight={setCritiqueHeight}

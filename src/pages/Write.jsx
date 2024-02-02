@@ -16,6 +16,12 @@ export default function Write() {
   const navigate = useNavigate()
   const { state } = useLocation()
 
+  // Shuffling the options
+  state.config.answers = state.config.answers
+    .map(option => ({ option, sort: Math.random() })) 
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ option }) => option)
+
   const download = _ => {
     let element = document.createElement("a")
     element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(body))
@@ -72,13 +78,14 @@ export default function Write() {
   return (
     <div className="content">
       <div className="topicName">respondendo ao tópico "<Link to={`/topics/${state.id}`}>{state.title}</Link>"</div>
-      
+
       <Topic
         title={title}
         setTitle={(text) => { setTitle(text); setError(false) }}
         readOnly={false}
         hideVoteButtons
         saveInLocalStorage
+        justify
         error={(!title || !body) && error}
       >
         <TextEditor content={body} setContent={(text) => { setBody(text); setError(false) }} />
@@ -90,16 +97,18 @@ export default function Write() {
         {state.config?.answers?.length !== 0 &&
           <fieldset className={(!answer && error) ? "error" : ""}>
             <legend>sua resposta</legend>
-            {state.config.answers.map(option => (
-              <Input
-                id={option.toLowerCase()}
-                type="radio"
-                value={option}
-                label={option}
-                checked={answer === option}
-                onChange={e => setAnswer(e.target.value)}
-              />
-            ))}
+            {
+              state.config.answers.map(option => (
+                <Input
+                  id={option.toLowerCase()}
+                  type="radio"
+                  value={option}
+                  label={option}
+                  checked={answer === option}
+                  onChange={e => setAnswer(e.target.value)}
+                />
+              ))
+            }
           </fieldset>
         }
         <button onClick={download}>salvar</button>

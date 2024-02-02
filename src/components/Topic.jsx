@@ -19,6 +19,7 @@ export default function Topic({
   alongsideCritique,
   isCritique,
   metrics,
+  justify = false,
   children,
   error = false,
   setHeight = () => { },
@@ -109,7 +110,7 @@ export default function Topic({
       </div>
       <div className="container">
         <div className={`bracket${error ? " error" : ""}`} />
-        <div className="body">
+        <div className={`body${justify ? " justify" : ""}`}>
 
           {children.constructor === Array ?
             children

@@ -31,7 +31,7 @@ const getChildrenStats = (topic: any) => {
     downvotes += post.downvotes
   }
 
-  return { upvotes, downvotes }
+  return { upvotes, downvotes, count: topic.children.length }
 }
 
 export const createContent: RequestHandler = async (req, res, next) => {

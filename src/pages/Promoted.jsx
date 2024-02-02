@@ -65,19 +65,22 @@ export default function Promoted() {
   }, [])
 
   return (
-    <div className="content">
+    <div className="content tree">
       {
         isLoading ?
           <div className="spinner" />
           :
           topics.length > 0 ?
             topics.map(topic => {
-              const { id, title, promotions, upvotes, downvotes, config, children, childrenStats } = topic
+              const { id, author, title, promotions, upvotes, downvotes, config, children, childrenStats } = topic
               const allVotes = upvotes + downvotes
+              const interactions = childrenStats.upvotes + childrenStats.downvotes
               const metrics = [
-                `promovido por ${promotions} usuários`,
+                `iniciado por ${author}`,
+                `promovido por ${promotions} usuário${promotions === 1 ? "" : "s"}`,
                 allVotes ? `${(upvotes / allVotes) * 100}% dos ${allVotes} votantes achou relevante` : "0 votos",
-                `${childrenStats.upvotes + childrenStats.downvotes} interações`
+                `${childrenStats.count} post${childrenStats.count === 1 ? "" : "s"}`,
+                `${interactions} interaç${interactions === 1 ? "ão" : "ões"}`
               ]
 
               return (
@@ -92,7 +95,7 @@ export default function Promoted() {
                         parent_id={id}
                         id={child.id}
                         shortAnswer={child.title}
-                        percentage={((child.upvotes/childrenStats.upvotes) * 100) || 0}
+                        percentage={((child.upvotes / childrenStats.upvotes) * 100) || 0}
                       />
                     ))
                     :

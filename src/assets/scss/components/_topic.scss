@@ -10,7 +10,9 @@
     }
 
     .body {
-        text-align: justify;
+        &.justify{
+            text-align: justify;
+        }
         width: 100%;
         height: min-content;
     }

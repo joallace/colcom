@@ -34,10 +34,13 @@ export default function TopicPage() {
 
   const getMetrics = () => {
     const allVotes = topicData.upvotes + topicData.downvotes
+    const interactions = topicData.childrenStats?.upvotes + topicData.childrenStats?.downvotes
     return [
-      `promovido por ${topicData.promotions} usuários`,
+      `iniciado por ${topicData.author}`,
+      `promovido por ${topicData.promotions} usuário${topicData.promotions === 1 ? "" : "s"}`,
       allVotes ? `${(topicData.upvotes / allVotes) * 100}% dos ${allVotes} votantes achou relevante` : "0 votos",
-      `${topicData.childrenStats?.upvotes + topicData.childrenStats?.downvotes} interações`
+      `${topicData.childrenStats?.count} post${topicData.childrenStats?.count === 1 ? "" : "s"}`,
+      `${interactions} interaç${interactions === 1 ? "ão" : "ões"}`
     ]
   }
 
@@ -70,7 +73,7 @@ export default function TopicPage() {
   }, [])
 
   return (
-    <div className="post">
+    <div className="content tree">
       {isLoading ?
         <div className="spinner" />
         :

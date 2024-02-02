@@ -65,7 +65,7 @@ export default function Login() {
   }
 
   return (
-    <div className="login content">
+    <div className="content login">
       <div className="loginContainer">
         <div className="header">
           <div className="top bracket" />
