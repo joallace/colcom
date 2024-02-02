@@ -98,9 +98,29 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
   const page = Number(req.query.page) || 1
   const pageSize = Number(req.query.pageSize) || 10
   const orderBy = req.query.orderBy ? String(req.query.orderBy) : "id"
+  const type = req.query.type
 
   try {
     const contents = await Content.findTree({ page, pageSize, orderBy })
+
+    // Probably doing this the dirtiest way possible, but I don't know another way
+    // to crop the number of each topic's posts to a certain limit.
+    // Also, I still don't have found a way to preserve the sorting from the query when transforming
+    // the data into a tree, so since it's just a page I'll sort it again here.
+    // Should refactor in the future.
+    if(type === "topic"){
+      for(let i = 0; i < contents.length; i++)
+        contents[i].children = contents[i].children.slice(0, 3)
+      contents.sort((a, b) => {
+        if(a.promotions < b.promotions)
+          return 1
+        else if (a.promotions > b.promotions)
+          return -1
+        else
+          return Number(a.upvotes < b.upvotes)
+      })
+    }
+
     res.status(200).json(contents)
   }
   catch (err) {
@@ -119,7 +139,6 @@ export const getTopicTree: RequestHandler = async (req, res, next) => {
     next(err)
   }
 }
-
 
 export const getContent: RequestHandler = async (req, res, next) => {
   try {

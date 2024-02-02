@@ -44,7 +44,7 @@ export default function Promoted() {
     const fetchPromoted = async () => {
       try {
         setIsLoading(true)
-        const url = `${env.apiAddress}/topics?page=${page + 1}&pageSize=${pageSize}&orderBy="promotions"`
+        const url = `${env.apiAddress}/topics?page=${page + 1}&pageSize=${pageSize}&type=topic`
         const res = await fetch(url, { method: "get" })
         const data = await res.json()
 

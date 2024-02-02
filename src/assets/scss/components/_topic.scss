@@ -15,21 +15,6 @@
         height: min-content;
     }
 
-    // Maybe the critique color will be accordingly to the user's vote.
-    &.critique {
-        .title {
-            color: $default-orange;
-
-            textarea {
-                color: $default-orange;
-            }
-        }
-
-        .bracket {
-            border-color: $default-orange;
-        }
-    }
-
     .header {
         display: flex;
         align-content: center;
@@ -87,6 +72,21 @@
         }
     }
 
+    // Maybe the critique color will be accordingly to the user's vote.
+    &.critique {
+        .title {
+            color: $default-orange;
+
+            textarea {
+                color: $default-orange;
+            }
+        }
+
+        .bracket {
+            border-color: $default-orange;
+        }
+    }
+
     .icons {
         cursor: pointer;
     }
@@ -128,11 +128,7 @@
         border-width: 2px 0 0 2px;
         border-radius: 0.75rem 0 0 0;
     }
-
-    &.critique {
-        border-color: $default-orange;
-    }
-
+    
     &.error{
         border-color: $default-red;
     }

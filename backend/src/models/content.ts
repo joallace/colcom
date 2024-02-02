@@ -276,7 +276,6 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "id", page 
           WHERE
             posts.type = 'post'
           ORDER BY upvotes DESC
-          ${pageSize !== 1 ? "LIMIT 3" : ""}
         )
       )
       SELECT

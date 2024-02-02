@@ -18,7 +18,7 @@ export default function Navbar() {
     <>
       <nav className="nav">
         <div>
-          <Link to="/" className="nav-icon">
+          <Link to="/promoted" className="nav-icon">
             <Icon isDesktop={isDesktop} />
           </Link>
           <ul>

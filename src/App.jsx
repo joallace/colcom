@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom"
+import { Route, Routes, Navigate } from "react-router-dom"
 
 import Navbar from "@/components/Navbar"
 
@@ -15,7 +15,7 @@ function App() {
     <>
       <Navbar/>
       <Routes>
-        <Route path="/" element={<>Oi</>}/>
+        <Route path="/" element={<Navigate to="/promoted"/>}/>
         <Route path="/promoted" element={<Promoted/>}/>
         <Route path="/all" element={<All/>}/>
         <Route path="/meta" element={<Meta/>}/>
