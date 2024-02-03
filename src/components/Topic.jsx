@@ -1,12 +1,15 @@
 import React from "react"
 import {
   PiCaretUpBold,
+  PiCaretUpFill,
   PiCaretDownBold,
+  PiCaretDownFill,
   PiDotsThreeVerticalBold,
 } from "react-icons/pi"
 
 import useScreenSize from "@/hooks/useScreenSize"
 import { isEmptyObject } from "@tiptap/react"
+import Input from "./Input"
 
 
 export default function Topic({
@@ -15,6 +18,7 @@ export default function Topic({
   saveInLocalStorage = false,
   readOnly = true,
   hideVoteButtons = false,
+  showDefinitiveVoteButton = false,
   headerConfig = {},
   alongsideCritique,
   isCritique,
@@ -33,6 +37,8 @@ export default function Topic({
     )
   )
   const isDesktop = useScreenSize()
+  const [vote, setVote] = React.useState(false)
+  const [relevance, setRelevance] = React.useState("")
 
   const topicRef = React.useRef()
   const titleRef = React.useRef()
@@ -56,9 +62,26 @@ export default function Topic({
       <div className="header">
         <div className={`top bracket${error ? " error" : ""}`} />
         {!hideVoteButtons &&
-          <div className="vote-buttons">
-            <PiCaretUpBold title="relevante" className="up" />
-            <PiCaretDownBold title="não relevante" className="down" />
+          <div className={`vote-buttons${showDefinitiveVoteButton ? " withDefVote" : ""}`}>
+            {relevance === "up" ?
+              <PiCaretUpFill title="remover marcação" className="up" onClick={() => setRelevance("")} />
+              :
+              <PiCaretUpBold title="marcar como relevante" className="up" onClick={() => setRelevance("up")} />
+            }
+            {showDefinitiveVoteButton &&
+              <Input
+                className="center"
+                title={vote ? "remover voto" : "votar nesta resposta"}
+                type="radio"
+                checked={vote}
+                onClick={() => { console.log(vote); setVote(!vote) }}
+              />
+            }
+            {relevance === "down" ?
+              <PiCaretDownFill title="remover marcação" className="down" onClick={() => setRelevance("")} />
+              :
+              <PiCaretDownBold title="marcar como não relevante" className="down" onClick={() => setRelevance("down")} />
+            }
           </div>
         }
         <h1 className="title">

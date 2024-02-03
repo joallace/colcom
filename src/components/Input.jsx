@@ -1,9 +1,9 @@
 import React from "react"
 
-export default React.forwardRef(({ id, type, label, options = {}, style = {}, errorMessage, ...remainingProps }, ref) => {
+export default React.forwardRef(({ id, type, label, options = {}, style = {}, errorMessage, className, ...remainingProps }, ref) => {
   return (
     <div className="inputWrapper">
-      <div className={type === "checkbox" || type === "radio" ? "checkBox" : "inputBox"} style={style}>
+      <div className={`${type === "checkbox" || type === "radio" ? "checkBox" : "inputBox"} ${className}`} style={style}>
         {type === "select" ?
           <select
             id={id}
@@ -26,7 +26,9 @@ export default React.forwardRef(({ id, type, label, options = {}, style = {}, er
           />
         }
 
-        <label htmlFor={id}>{label}</label>
+        {label &&
+          <label htmlFor={id}>{label}</label>
+        }
 
       </div>
       {errorMessage &&

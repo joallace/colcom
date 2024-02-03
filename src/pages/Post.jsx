@@ -127,11 +127,14 @@ export default function Post() {
         <div className="spinner" />
         :
         <>
+          {/* <div className="topicName">respondendo ao tópico "<Link to={`/topics/${state.id}`}>{state.title}</Link>"</div> */}
+
           <Topic
             title={postData.title}
             headerConfig={headerConfig}
             metrics={getMetrics()}
             alongsideCritique={showCritique}
+            showDefinitiveVoteButton
             justify
           >
             <TextEditor
