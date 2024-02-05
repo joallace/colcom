@@ -58,7 +58,6 @@ export default function Write() {
         return
       }
 
-      console.log(`/topics/${state.id}/posts/${data.id}`)
       navigate(`/topics/${state.id}/posts/${data.id}`)
     }
     catch (err) {

@@ -6,6 +6,7 @@ import { execFile } from "child_process"
 import { gitDbPath as dbPath } from "@/database"
 import Content, { ContentInsertRequest } from "@/models/content"
 import { ValidationError, NotFoundError } from "@/errors"
+import Interactions from "@/models/interactions"
 
 
 const exec = promisify(execFile)
@@ -33,6 +34,10 @@ const getChildrenStats = (topic: any) => {
 
   return { upvotes, downvotes, count: topic.children.length }
 }
+
+// const getUserInteractions = async (public_id: string) => {
+//   Interactions.findAll({where: "users.pid = $1 "})
+// }
 
 export const createContent: RequestHandler = async (req, res, next) => {
   const { title, parent_id, body, config } = req.body
@@ -110,6 +115,7 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
   const page = Number(req.query.page) || 1
   const pageSize = Number(req.query.pageSize) || 10
   const orderBy = req.query.orderBy ? String(req.query.orderBy) : "id"
+  const author_pid = (<any>req.params.user)?.pid
   const type = req.query.type
 
   try {
@@ -124,6 +130,8 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
       for (const topic of contents) {
         topic.childrenStats = getChildrenStats(topic)
         topic.children = topic.children.slice(0, 3)
+        if (author_pid)
+          topic.userInteractions = (await Interactions.getUserPostInteractions({ author_pid, content_id: topic.id })).map(v => v.type)
       }
 
       contents.sort((a, b) => {

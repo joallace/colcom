@@ -10,7 +10,7 @@ router.get("/contents/:id/interactions", getContentInteractions)
 
 router.get("/users/:id/interactions", getContentInteractions)
 
-router.post("/interactions", authHandler, handleInteraction)
+router.post("/interactions", authHandler(), handleInteraction)
 
 
 export default router

@@ -18,18 +18,20 @@ export default function Topic({
   id,
   title,
   setTitle,
+  metrics = [],
+  headerConfig = {},
+  initialRelevance = "",
+  initialVote,
   saveInLocalStorage = false,
   readOnly = true,
   hideVoteButtons = false,
   showDefinitiveVoteButton = false,
-  headerConfig = {},
-  alongsideCritique,
-  isCritique,
-  metrics,
+  alongsideCritique = false,
+  isCritique = false,
   justify = false,
-  children,
   error = false,
   setHeight = () => { },
+  children,
   ...remainingProps
 }) {
   const [headerStatus, setHeaderStatus] = React.useState(
@@ -41,8 +43,7 @@ export default function Topic({
   )
   const isDesktop = useScreenSize()
   const [vote, setVote] = React.useState(false)
-  const [relevance, setRelevance] = React.useState("")
-  // const [timeoutId, setTimeoutId] = React.useState()
+  const [relevance, setRelevance] = React.useState(initialRelevance)
   const topicRef = React.useRef()
   const titleRef = React.useRef()
   const navigate = useNavigate()
@@ -51,11 +52,6 @@ export default function Topic({
   const toggle = (str) => { setHeaderStatus({ ...headerStatus, [str]: !headerStatus[str] }) }
 
   const submitVote = async (type, colcoins = undefined) => {
-    // We're setting a timeout to prevent abuse
-    // if (timeoutId)
-    //   clearTimeout(timeoutId)
-
-    // setTimeoutId(setTimeout(async () => {
     const token = localStorage.getItem("accessToken")
     if (!token) {
       navigate("/login")
@@ -78,7 +74,6 @@ export default function Topic({
       console.error(res)
       return
     }
-    // }, 1000))
   }
 
 
@@ -112,7 +107,7 @@ export default function Topic({
                 title={vote ? "remover voto" : "votar nesta resposta"}
                 type="radio"
                 checked={vote}
-                onClick={() => { console.log(vote); setVote(!vote) }}
+                onClick={() => { setVote(!vote) }}
               />
             }
             {relevance === "down" ?

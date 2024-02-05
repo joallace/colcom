@@ -18,7 +18,7 @@ export default function Promoted() {
   const [isLoading, setIsLoading] = React.useState(false)
   const navigate = useNavigate()
 
-  const createHeaderConfig = (id, title, config) => {
+  const createHeaderConfig = (id, title, config, initalBookmark) => {
     return {
       "answer": {
         description: "responder tópico",
@@ -28,7 +28,7 @@ export default function Promoted() {
       "bookmark": {
         description: ["salvar tópico", "remover tópico dos salvos"],
         icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
-        onStart: () => false,
+        onStart: () => initalBookmark,
         onClick: () => { }
       }
     }
@@ -42,10 +42,12 @@ export default function Promoted() {
 
   React.useEffect(() => {
     const fetchPromoted = async () => {
+      const token = localStorage.getItem("accessToken")
+      const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
       try {
         setIsLoading(true)
         const url = `${env.apiAddress}/topics?page=${page + 1}&pageSize=${pageSize}&type=topic`
-        const res = await fetch(url, { method: "get" })
+        const res = await fetch(url, { method: "get", headers })
         const data = await res.json()
 
         if (Array.isArray(data))
@@ -72,7 +74,7 @@ export default function Promoted() {
           :
           topics.length > 0 ?
             topics.map(topic => {
-              const { id, author, title, promotions, upvotes, downvotes, config, children, childrenStats } = topic
+              const { id, author, title, promotions, upvotes, downvotes, config, children, childrenStats, userInteractions } = topic
               const allVotes = upvotes + downvotes
               const interactions = childrenStats.upvotes + childrenStats.downvotes
               const metrics = [
@@ -82,12 +84,14 @@ export default function Promoted() {
                 `${childrenStats.count} post${childrenStats.count === 1 ? "" : "s"}`,
                 `${interactions} interaç${interactions === 1 ? "ão" : "ões"}`
               ]
+              const vote = userInteractions ? userInteractions.filter(v => v === "up" || v === "down")[0] : ""
 
               return (
                 <Topic
                   id={id}
                   title={<Link to={`/topics/${id}`}>{String(title)}</Link>}
-                  headerConfig={createHeaderConfig(id, title, config)}
+                  initialRelevance={vote}
+                  headerConfig={createHeaderConfig(id, title, config, userInteractions.includes("bookmark"))}
                   metrics={metrics}
                 >
                   {children?.length > 0 ?

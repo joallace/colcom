@@ -180,6 +180,7 @@ export default Object.freeze({
   findAll,
   handleChange,
   create,
+  getUserPostInteractions,
   updateById,
   removeById
 })

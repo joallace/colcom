@@ -8,7 +8,7 @@ const router = Router()
 
 router.get("/users", getUsers)
 
-router.get("/users/self", authHandler, getCurrentUser)
+router.get("/users/self", authHandler(), getCurrentUser)
 
 router.post("/users", createUser)
 
