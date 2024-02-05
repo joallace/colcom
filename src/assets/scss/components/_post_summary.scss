@@ -31,6 +31,10 @@
             display: flex;
             align-self: center;
         }
+
+        &.chosen{
+            background-color: $default-green;
+        }
     }
 
     .read-more {

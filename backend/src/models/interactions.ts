@@ -1,13 +1,14 @@
 import db from "@/database"
 import { getDataByPublicId } from "@/models/user"
 import { NotFoundError, ValidationError } from "@/errors"
+import Content from "@/models/content"
 
 
 type InteractionType = "up" | "down" | "vote" | "bookmark" | "promote"
 
 interface InteractionInsertRequest {
   author_pid: string,
-  content_id: string,
+  content_id: number,
   type?: InteractionType,
   colcoins?: number
 }
@@ -15,7 +16,8 @@ interface InteractionInsertRequest {
 interface InteractionAlterRequest {
   id: number,
   author_pid: string,
-  type?: InteractionType
+  type?: InteractionType,
+  content_id?: number
 }
 
 const minimumPromoteValue = 10
@@ -49,7 +51,7 @@ async function findAll({ where = "", values = [] as any[] }) {
   return result.rows
 }
 
-async function getUserPostInteractions({ author_pid, content_id }: InteractionInsertRequest) {
+async function getUserContentInteractions({ author_pid, content_id }: InteractionInsertRequest) {
   const query = {
     text: `
       SELECT
@@ -72,8 +74,34 @@ async function getUserPostInteractions({ author_pid, content_id }: InteractionIn
   return results.rows
 }
 
+async function getUserTopicVote(author_pid: string, topic_id: number) {
+  const query = {
+    text: `
+    SELECT
+      i.id,
+      i.content_id
+    FROM
+      interactions i
+    INNER JOIN
+      users ON users.id = i.author_id
+    INNER JOIN
+      contents ON contents.id = i.content_id
+    WHERE
+      i.type = 'vote'
+    AND
+      users.pid = $1
+    AND
+      contents.parent_id = $2
+    ;`,
+    values: [author_pid, topic_id]
+  }
+
+  const result = await db.query(query)
+  return result.rows[0]
+}
+
 async function handleChange({ author_pid, content_id, type, colcoins }: InteractionInsertRequest) {
-  const postInteractions = await getUserPostInteractions({ author_pid, content_id, type })
+  const postInteractions = await getUserContentInteractions({ author_pid, content_id, type })
 
   switch (type) {
     case "down":
@@ -93,7 +121,16 @@ async function handleChange({ author_pid, content_id, type, colcoins }: Interact
       }
       break
     case "vote":
-      // Check if there are votes in other posts of the current topic and then insert
+      for (const interaction of postInteractions) {
+        if (interaction.type === "vote")
+          return [204, await removeById(interaction.id)]
+      }
+      const { parent_id } = await Content.getDataById(content_id, ["parent_id"])
+      const oldVoteId = (await getUserTopicVote(author_pid, parent_id))?.id
+
+      if (oldVoteId)
+        return [200, await updateById({ id: oldVoteId, author_pid, content_id })]
+
       break
     case "bookmark":
       for (const interaction of postInteractions) {
@@ -149,19 +186,19 @@ async function create({ author_pid, content_id, type, colcoins }: InteractionIns
   return { ...result.rows[0], author_id: author_pid }
 }
 
-async function updateById({ id, author_pid, type }: InteractionAlterRequest) {
+async function updateById({ id, author_pid, type, content_id = undefined }: InteractionAlterRequest) {
   const query = {
     text: `
       UPDATE
         interactions
       SET
-        type = $1
+        ${content_id ? "content_id" : "type"} = $1
       WHERE
         id = $2
       RETURNING
         *
       ;`,
-    values: [type, id]
+    values: [content_id || type, id]
   }
 
   const result = await db.query(query)
@@ -187,7 +224,8 @@ export default Object.freeze({
   findAll,
   handleChange,
   create,
-  getUserPostInteractions,
+  getUserContentInteractions,
+  getUserTopicVote,
   updateById,
   removeById
 })

@@ -30,7 +30,7 @@ export default function Promoted() {
       "promote": {
         description: "promover tópico",
         icons: PiCaretDoubleUp,
-        onClick: () => submitVote(navigate, id, "promote", )
+        onClick: () => submitVote(navigate, id, "promote",)
       },
       "bookmark": {
         description: ["salvar tópico", "remover tópico dos salvos"],
@@ -81,7 +81,7 @@ export default function Promoted() {
           :
           topics.length > 0 ?
             topics.map(topic => {
-              const { id, author, title, promotions, upvotes, downvotes, config, children, childrenStats, userInteractions } = topic
+              const { id, author, title, promotions, upvotes, downvotes, config, children, childrenStats, userInteractions, userVote } = topic
               const allVotes = upvotes + downvotes
               const interactions = childrenStats.upvotes + childrenStats.downvotes
               const metrics = [
@@ -108,6 +108,7 @@ export default function Promoted() {
                         id={child.id}
                         shortAnswer={child.title}
                         percentage={((child.upvotes / childrenStats.upvotes) * 100) || 0}
+                        chosen={userVote === child.id}
                       />
                     ))
                     :

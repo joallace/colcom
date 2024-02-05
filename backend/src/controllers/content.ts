@@ -130,8 +130,10 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
       for (const topic of contents) {
         topic.childrenStats = getChildrenStats(topic)
         topic.children = topic.children.slice(0, 3)
-        if (author_pid)
-          topic.userInteractions = (await Interactions.getUserPostInteractions({ author_pid, content_id: topic.id })).map(v => v.type)
+        if (author_pid) {
+          topic.userInteractions = (await Interactions.getUserContentInteractions({ author_pid, content_id: topic.id })).map(v => v.type)
+          topic.userVote = (await Interactions.getUserTopicVote(author_pid, topic.id))?.content_id
+        }
       }
 
       contents.sort((a, b) => {

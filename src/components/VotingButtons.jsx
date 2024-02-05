@@ -47,6 +47,13 @@ export default ({ id, initialState = { vote: false, relevance: "" }, showDefinit
     setIsLoading(false)
   }
 
+  const defVoteClick = async () => {
+    setIsLoading(true)
+    setDefinitiveVote(!definitiveVote)
+    await submitVote(navigate, id, "vote")
+    setIsLoading(false)
+  }
+
 
   return (
     <div className={`vote-buttons${showDefinitiveVoteButton ? " withDefVote" : ""}`}>
@@ -55,12 +62,14 @@ export default ({ id, initialState = { vote: false, relevance: "" }, showDefinit
           title="remover marcação"
           className="up"
           onClick={() => !isLoading && voteClick("up", true)}
+          style={{ cursor: isLoading ? "default" : "pointer" }}
         />
         :
         <PiCaretUpBold
           title="marcar como relevante"
           className="up"
           onClick={() => !isLoading && voteClick("up", false)}
+          style={{ cursor: isLoading ? "default" : "pointer" }}
         />
       }
       {showDefinitiveVoteButton &&
@@ -69,7 +78,8 @@ export default ({ id, initialState = { vote: false, relevance: "" }, showDefinit
           title={definitiveVote ? "remover voto" : "votar nesta resposta"}
           type="radio"
           checked={definitiveVote}
-          onClick={() => { setDefinitiveVote(!definitiveVote) }}
+          onClick={() => !isLoading && defVoteClick()}
+          style={{ cursor: isLoading ? "default" : "pointer" }}
         />
       }
       {relevanceVote === "down" ?
@@ -77,12 +87,14 @@ export default ({ id, initialState = { vote: false, relevance: "" }, showDefinit
           title="remover marcação"
           className="down"
           onClick={() => !isLoading && voteClick("down", true)}
+          style={{ cursor: isLoading ? "default" : "pointer" }}
         />
         :
         <PiCaretDownBold
           title="marcar como não relevante"
           className="down"
           onClick={() => !isLoading && voteClick("down", false)}
+          style={{ cursor: isLoading ? "default" : "pointer" }}
         />
       }
     </div>
