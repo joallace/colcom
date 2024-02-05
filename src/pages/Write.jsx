@@ -16,12 +16,6 @@ export default function Write() {
   const navigate = useNavigate()
   const { state } = useLocation()
 
-  // Shuffling the options
-  state.config.answers = state.config.answers
-    .map(option => ({ option, sort: Math.random() })) 
-    .sort((a, b) => a.sort - b.sort)
-    .map(({ option }) => option)
-
   const download = _ => {
     let element = document.createElement("a")
     element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(body))

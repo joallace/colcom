@@ -130,6 +130,7 @@ export default function Post() {
           {/* <div className="topicName">respondendo ao tópico "<Link to={`/topics/${state.id}`}>{state.title}</Link>"</div> */}
 
           <Topic
+            id={pid}
             title={postData.title}
             headerConfig={headerConfig}
             metrics={getMetrics()}

@@ -78,6 +78,7 @@ export default function TopicPage() {
         <div className="spinner" />
         :
         <Topic
+          id={id}
           title={topicData.title}
           headerConfig={headerConfig}
           metrics={getMetrics()}

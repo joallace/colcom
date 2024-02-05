@@ -1,4 +1,5 @@
 import React from "react"
+import { useNavigate } from "react-router-dom"
 import {
   PiCaretUpBold,
   PiCaretUpFill,
@@ -9,10 +10,12 @@ import {
 
 import useScreenSize from "@/hooks/useScreenSize"
 import { isEmptyObject } from "@tiptap/react"
-import Input from "./Input"
+import Input from "@/components/Input"
+import env from "@/assets/enviroment"
 
 
 export default function Topic({
+  id,
   title,
   setTitle,
   saveInLocalStorage = false,
@@ -39,11 +42,44 @@ export default function Topic({
   const isDesktop = useScreenSize()
   const [vote, setVote] = React.useState(false)
   const [relevance, setRelevance] = React.useState("")
-
+  // const [timeoutId, setTimeoutId] = React.useState()
   const topicRef = React.useRef()
   const titleRef = React.useRef()
+  const navigate = useNavigate()
+
 
   const toggle = (str) => { setHeaderStatus({ ...headerStatus, [str]: !headerStatus[str] }) }
+
+  const submitVote = async (type, colcoins = undefined) => {
+    // We're setting a timeout to prevent abuse
+    // if (timeoutId)
+    //   clearTimeout(timeoutId)
+
+    // setTimeoutId(setTimeout(async () => {
+    const token = localStorage.getItem("accessToken")
+    if (!token) {
+      navigate("/login")
+      return
+    }
+    const url = `${env.apiAddress}/interactions`
+    const body = JSON.stringify({
+      content_id: id,
+      type,
+      colcoins
+    })
+
+    const res = await fetch(url, {
+      method: "post",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body
+    })
+
+    if (res.status >= 400) {
+      console.error(res)
+      return
+    }
+    // }, 1000))
+  }
 
 
   React.useEffect(() => {
@@ -53,9 +89,11 @@ export default function Topic({
     }
   }, [title]);
 
+
   React.useEffect(() => {
     setHeight(topicRef.current.clientHeight || 0)
   }, [])
+
 
   return (
     <div className={`topic${alongsideCritique ? " original" : ""}${isCritique ? " critique" : ""}`} ref={topicRef} {...remainingProps}>
@@ -64,9 +102,9 @@ export default function Topic({
         {!hideVoteButtons &&
           <div className={`vote-buttons${showDefinitiveVoteButton ? " withDefVote" : ""}`}>
             {relevance === "up" ?
-              <PiCaretUpFill title="remover marcação" className="up" onClick={() => setRelevance("")} />
+              <PiCaretUpFill title="remover marcação" className="up" onClick={async () => { setRelevance(""); await submitVote(relevance) }} />
               :
-              <PiCaretUpBold title="marcar como relevante" className="up" onClick={() => setRelevance("up")} />
+              <PiCaretUpBold title="marcar como relevante" className="up" onClick={async () => { setRelevance("up"); await submitVote("up") }} />
             }
             {showDefinitiveVoteButton &&
               <Input
@@ -78,9 +116,9 @@ export default function Topic({
               />
             }
             {relevance === "down" ?
-              <PiCaretDownFill title="remover marcação" className="down" onClick={() => setRelevance("")} />
+              <PiCaretDownFill title="remover marcação" className="down" onClick={async () => { submitVote(relevance); setRelevance("") }} />
               :
-              <PiCaretDownBold title="marcar como não relevante" className="down" onClick={() => setRelevance("down")} />
+              <PiCaretDownBold title="marcar como não relevante" className="down" onClick={async () => { submitVote("down"); setRelevance("down") }} />
             }
           </div>
         }

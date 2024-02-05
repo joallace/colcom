@@ -85,6 +85,7 @@ export default function Promoted() {
 
               return (
                 <Topic
+                  id={id}
                   title={<Link to={`/topics/${id}`}>{String(title)}</Link>}
                   headerConfig={createHeaderConfig(id, title, config)}
                   metrics={metrics}
