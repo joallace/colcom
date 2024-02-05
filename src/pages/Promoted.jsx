@@ -20,7 +20,7 @@ export default function Promoted() {
   const [isLoading, setIsLoading] = React.useState(false)
   const navigate = useNavigate()
 
-  const createHeaderConfig = (id, title, config, initalBookmark) => {
+  const createHeaderConfig = (id, title, config, initalBookmark = false) => {
     return {
       "answer": {
         description: "responder tópico",
@@ -30,7 +30,7 @@ export default function Promoted() {
       "promote": {
         description: "promover tópico",
         icons: PiCaretDoubleUp,
-        onClick: () => { }
+        onClick: () => submitVote(navigate, id, "promote", )
       },
       "bookmark": {
         description: ["salvar tópico", "remover tópico dos salvos"],
@@ -91,14 +91,14 @@ export default function Promoted() {
                 `${childrenStats.count} post${childrenStats.count === 1 ? "" : "s"}`,
                 `${interactions} interaç${interactions === 1 ? "ão" : "ões"}`
               ]
-              const relevance = userInteractions ? userInteractions.filter(v => v === "up" || v === "down")[0] : ""
+              const relevance = userInteractions?.filter(v => v === "up" || v === "down")[0]
 
               return (
                 <Topic
                   id={id}
                   title={<Link to={`/topics/${id}`}>{String(title)}</Link>}
                   initialVoteState={{ relevance }}
-                  headerConfig={createHeaderConfig(id, title, config, userInteractions.includes("bookmark"))}
+                  headerConfig={createHeaderConfig(id, title, config, userInteractions?.includes("bookmark"))}
                   metrics={metrics}
                 >
                   {children?.length > 0 ?

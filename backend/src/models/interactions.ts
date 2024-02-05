@@ -103,6 +103,12 @@ async function handleChange({ author_pid, content_id, type, colcoins }: Interact
       break
     case "promote":
       break
+    default:
+      throw new ValidationError({
+        message: `O tipo de interação "${type}" não é válido.`,
+        stack: new Error().stack,
+        errorLocationCode: 'MODEL:INTERACTION:HANDLE:INVALID_TYPE'
+      })
   }
 
   return [201, await create({ author_pid, content_id, type, colcoins })]
@@ -115,7 +121,8 @@ async function create({ author_pid, content_id, type, colcoins }: InteractionIns
 
   if (type === "promote" && (!colcoins || authorAmount < colcoins || colcoins < minimumPromoteValue))
     throw new ValidationError({
-      message: `Quantidade de colcoins insuficiente para realizar a ação.`,
+      message: "Quantidade de colcoins insuficiente para realizar a ação.",
+      action: "Atue na comunidade para ganhar mais colcoins!",
       stack: new Error().stack,
       errorLocationCode: 'MODEL:INTERACTION:CREATE:INSUFFICIENT_BALANCE'
     })

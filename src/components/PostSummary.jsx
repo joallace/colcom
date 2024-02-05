@@ -9,7 +9,7 @@ export default ({ parent_id, id, summary, percentage, shortAnswer }) => {
       <Link to={path} style={{ width: `${percentage}%` }}>
         <div className="percentageBar">
           <span>{shortAnswer ? shortAnswer : `${index + 1}.`}</span>
-          <span>{`${percentage}%`}</span>
+          <span>{`${percentage.toFixed(2).replace(".00", "")}%`}</span>
         </div>
       </Link>
       {summary}

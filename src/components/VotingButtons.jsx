@@ -40,10 +40,10 @@ export default ({ id, initialState = { vote: false, relevance: "" }, showDefinit
   const [isLoading, setIsLoading] = React.useState(false)
   const navigate = useNavigate()
 
-  const voteClick = async (clear) => {
+  const voteClick = async (type, clear) => {
     setIsLoading(true)
-    setRelevance(clear ? "" : relevanceVote)
-    await submitVote(navigate, id, relevanceVote)
+    setRelevance(clear ? "" : type)
+    await submitVote(navigate, id, type)
     setIsLoading(false)
   }
 
@@ -54,13 +54,13 @@ export default ({ id, initialState = { vote: false, relevance: "" }, showDefinit
         <PiCaretUpFill
           title="remover marcação"
           className="up"
-          onClick={() => !isLoading && voteClick(true)}
+          onClick={() => !isLoading && voteClick("up", true)}
         />
         :
         <PiCaretUpBold
           title="marcar como relevante"
           className="up"
-          onClick={() => !isLoading && voteClick(false)}
+          onClick={() => !isLoading && voteClick("up", false)}
         />
       }
       {showDefinitiveVoteButton &&
@@ -76,13 +76,13 @@ export default ({ id, initialState = { vote: false, relevance: "" }, showDefinit
         <PiCaretDownFill
           title="remover marcação"
           className="down"
-          onClick={() => !isLoading && voteClick(true)}
+          onClick={() => !isLoading && voteClick("down", true)}
         />
         :
         <PiCaretDownBold
           title="marcar como não relevante"
           className="down"
-          onClick={() => !isLoading && voteClick(false)}
+          onClick={() => !isLoading && voteClick("down", false)}
         />
       }
     </div>
