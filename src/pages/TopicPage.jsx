@@ -26,7 +26,7 @@ export default function TopicPage() {
     "bookmark": {
       description: ["salvar tópico", "remover tópico dos salvos"],
       icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
-      onStart: () => false,
+      initialValue: false,
       onClick: () => { }
     }
   }

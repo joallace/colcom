@@ -1,17 +1,9 @@
 import React from "react"
-import { useNavigate } from "react-router-dom"
-import {
-  PiCaretUpBold,
-  PiCaretUpFill,
-  PiCaretDownBold,
-  PiCaretDownFill,
-  PiDotsThreeVerticalBold,
-} from "react-icons/pi"
+import { isEmptyObject } from "@tiptap/react"
+import { PiDotsThreeVerticalBold } from "react-icons/pi"
 
 import useScreenSize from "@/hooks/useScreenSize"
-import { isEmptyObject } from "@tiptap/react"
-import Input from "@/components/Input"
-import env from "@/assets/enviroment"
+import VotingButtons from "@/components/VotingButtons"
 
 
 export default function Topic({
@@ -20,12 +12,11 @@ export default function Topic({
   setTitle,
   metrics = [],
   headerConfig = {},
-  initialRelevance = "",
-  initialVote,
   saveInLocalStorage = false,
   readOnly = true,
   hideVoteButtons = false,
   showDefinitiveVoteButton = false,
+  initialVoteState = { vote: false, relevance: "" },
   alongsideCritique = false,
   isCritique = false,
   justify = false,
@@ -37,44 +28,15 @@ export default function Topic({
   const [headerStatus, setHeaderStatus] = React.useState(
     Object.fromEntries(
       Object.entries(headerConfig)
-        .map(([k, v]) => v.onStart && [k, v.onStart()])
+        .map(([k, v]) => [k, v.initialValue])
         .filter((value) => value !== undefined)
     )
   )
-  const isDesktop = useScreenSize()
-  const [vote, setVote] = React.useState(false)
-  const [relevance, setRelevance] = React.useState(initialRelevance)
   const topicRef = React.useRef()
   const titleRef = React.useRef()
-  const navigate = useNavigate()
-
+  const isDesktop = useScreenSize()
 
   const toggle = (str) => { setHeaderStatus({ ...headerStatus, [str]: !headerStatus[str] }) }
-
-  const submitVote = async (type, colcoins = undefined) => {
-    const token = localStorage.getItem("accessToken")
-    if (!token) {
-      navigate("/login")
-      return
-    }
-    const url = `${env.apiAddress}/interactions`
-    const body = JSON.stringify({
-      content_id: id,
-      type,
-      colcoins
-    })
-
-    const res = await fetch(url, {
-      method: "post",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-      body
-    })
-
-    if (res.status >= 400) {
-      console.error(res)
-      return
-    }
-  }
 
 
   React.useEffect(() => {
@@ -95,27 +57,7 @@ export default function Topic({
       <div className="header">
         <div className={`top bracket${error ? " error" : ""}`} />
         {!hideVoteButtons &&
-          <div className={`vote-buttons${showDefinitiveVoteButton ? " withDefVote" : ""}`}>
-            {relevance === "up" ?
-              <PiCaretUpFill title="remover marcação" className="up" onClick={async () => { setRelevance(""); await submitVote(relevance) }} />
-              :
-              <PiCaretUpBold title="marcar como relevante" className="up" onClick={async () => { setRelevance("up"); await submitVote("up") }} />
-            }
-            {showDefinitiveVoteButton &&
-              <Input
-                className="center"
-                title={vote ? "remover voto" : "votar nesta resposta"}
-                type="radio"
-                checked={vote}
-                onClick={() => { setVote(!vote) }}
-              />
-            }
-            {relevance === "down" ?
-              <PiCaretDownFill title="remover marcação" className="down" onClick={async () => { submitVote(relevance); setRelevance("") }} />
-              :
-              <PiCaretDownBold title="marcar como não relevante" className="down" onClick={async () => { submitVote("down"); setRelevance("down") }} />
-            }
-          </div>
+          <VotingButtons id={id} showDefinitiveVoteButton={showDefinitiveVoteButton} initialState={initialVoteState} />
         }
         <h1 className="title">
           {readOnly ?

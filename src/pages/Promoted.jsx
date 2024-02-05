@@ -2,12 +2,14 @@ import React from "react"
 import {
   PiBookmarkSimple,
   PiBookmarkSimpleFill,
-  PiArrowBendUpLeft
+  PiArrowBendUpLeft,
+  PiCaretDoubleUp
 } from "react-icons/pi"
 import { Link, useNavigate } from "react-router-dom"
 
 import Topic from "@/components/Topic"
 import PostSummary from "@/components/PostSummary"
+import { submitVote } from "@/components/VotingButtons"
 import env from "@/assets/enviroment"
 
 
@@ -25,11 +27,16 @@ export default function Promoted() {
         icons: PiArrowBendUpLeft,
         onClick: () => navigate("/write", { state: { id, title, config } })
       },
+      "promote": {
+        description: "promover tópico",
+        icons: PiCaretDoubleUp,
+        onClick: () => { }
+      },
       "bookmark": {
         description: ["salvar tópico", "remover tópico dos salvos"],
         icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
-        onStart: () => initalBookmark,
-        onClick: () => { }
+        initialValue: initalBookmark,
+        onClick: () => submitVote(navigate, id, "bookmark")
       }
     }
   }
@@ -84,13 +91,13 @@ export default function Promoted() {
                 `${childrenStats.count} post${childrenStats.count === 1 ? "" : "s"}`,
                 `${interactions} interaç${interactions === 1 ? "ão" : "ões"}`
               ]
-              const vote = userInteractions ? userInteractions.filter(v => v === "up" || v === "down")[0] : ""
+              const relevance = userInteractions ? userInteractions.filter(v => v === "up" || v === "down")[0] : ""
 
               return (
                 <Topic
                   id={id}
                   title={<Link to={`/topics/${id}`}>{String(title)}</Link>}
-                  initialRelevance={vote}
+                  initialVoteState={{ relevance }}
                   headerConfig={createHeaderConfig(id, title, config, userInteractions.includes("bookmark"))}
                   metrics={metrics}
                 >

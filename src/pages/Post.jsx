@@ -29,13 +29,13 @@ const headerConfig = {
   "edit": {
     description: ["sugerir edição no post", "finalizar edição"],
     icons: [PiPencilSimple, PiPencilSimpleFill],
-    onStart: () => false,
+    initialValue: false,
     onClick: () => { }
   },
   "bookmark": {
     description: ["salvar tópico", "remover tópico dos salvos"],
     icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
-    onStart: () => false,
+    initialValue: false,
     onClick: () => { }
   }
 }
