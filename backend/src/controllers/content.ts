@@ -170,8 +170,11 @@ export const getTopicTree: RequestHandler = async (req, res, next) => {
 }
 
 export const getContent: RequestHandler = async (req, res, next) => {
+  const author_pid = (<any>req.params.user)?.pid
+  const content_id = Number(req.params.id)
+
   try {
-    const content = await Content.findById(Number(req.params.id))
+    const content = await Content.findById(content_id)
 
     if (!content)
       throw new NotFoundError({
@@ -180,7 +183,10 @@ export const getContent: RequestHandler = async (req, res, next) => {
         stack: new Error().stack
       })
 
-    res.status(200).json(content)
+
+    const userInteractions = author_pid ? (await Interactions.getUserContentInteractions({ author_pid, content_id })).map(v => v.type) : undefined
+
+    res.status(200).json({ ...content, userInteractions })
   }
   catch (err) {
     next(err)

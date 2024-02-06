@@ -91,7 +91,8 @@ export default function Post() {
 
   const getInitalVotes = () => {
     return {
-      relevance: postData?.userInteractions?.filter(v => v === "up" || v === "down")[0]
+      relevance: postData?.userInteractions?.filter(v => v === "up" || v === "down")[0],
+      vote: postData?.userInteractions?.includes("vote")
     }
   }
 
@@ -106,10 +107,12 @@ export default function Post() {
 
   React.useEffect(() => {
     const fetchPost = async () => {
+      const token = localStorage.getItem("accessToken")
+      const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
       try {
         setIsLoading(true)
         const url = `${env.apiAddress}/contents/${pid}`
-        const res = await fetch(url, { method: "get" })
+        const res = await fetch(url, { method: "get", headers })
         const data = await res.json()
 
         if (data) {
@@ -140,7 +143,7 @@ export default function Post() {
             id={pid}
             title={postData.title}
             headerConfig={headerConfig}
-            // initialVoteState={{ relevance }}
+            initialVoteState={getInitalVotes()}
             metrics={getMetrics()}
             alongsideCritique={showCritique}
             showDefinitiveVoteButton
