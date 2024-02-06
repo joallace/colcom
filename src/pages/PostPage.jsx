@@ -1,45 +1,15 @@
 import React from "react"
 import { useParams } from 'react-router-dom'
 import {
-  PiBookmarkSimple,
-  PiBookmarkSimpleFill,
-  PiPencilSimpleFill,
-  PiPencilSimple,
-  PiGitBranch,
-  PiHighlighterCircle,
   PiCheck,
   PiX
 } from "react-icons/pi"
 
 import TextEditor from "@/components/TextEditor"
 import Frame from "@/components/Frame"
+import Post from "@/components/Post"
 import env from "@/assets/enviroment"
-import { toPercentageStr } from "@/assets/util"
 
-const headerConfig = {
-  // "critique": {
-  //   description: "criticar techos do tópico",
-  //   icons: PiHighlighterCircle,
-  //   onClick: () => { }
-  // },
-  "branch": {
-    description: "clonar tópico",
-    icons: PiGitBranch,
-    onClick: () => { }
-  },
-  "edit": {
-    description: ["sugerir edição no post", "finalizar edição"],
-    icons: [PiPencilSimple, PiPencilSimpleFill],
-    initialValue: false,
-    onClick: () => { }
-  },
-  "bookmark": {
-    description: ["salvar tópico", "remover tópico dos salvos"],
-    icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
-    initialValue: false,
-    onClick: () => { }
-  }
-}
 
 function getSelectionHeight() {
   if (window.getSelection) {
@@ -57,8 +27,7 @@ function getSelectionHeight() {
 }
 
 
-export default function Post() {
-  const [content, setContent] = React.useState("")
+export default () =>{
   const [postData, setPostData] = React.useState({})
   const [showCritique, setShowCritique] = React.useState(false)
   const [critiqueTitle, setCritiqueTitle] = React.useState("")
@@ -80,22 +49,6 @@ export default function Post() {
     },
   }
 
-  const getMetrics = () => {
-    const allVotes = postData.upvotes + postData.downvotes
-    return [
-      `iniciado por ${postData.author}`,
-      allVotes ? `${toPercentageStr(postData.upvotes / allVotes)}% dos ${allVotes} votantes achou relevante` : "0 votos",
-      `${allVotes} interações`
-    ]
-  }
-
-  const getInitalVotes = () => {
-    return {
-      relevance: postData?.userInteractions?.filter(v => v === "up" || v === "down")[0],
-      vote: postData?.userInteractions?.includes("vote")
-    }
-  }
-
   React.useEffect(() => {
     if (critiqueHeight && showCritique) {
       const y = getSelectionHeight() + window.scrollY - critiqueHeight
@@ -115,10 +68,8 @@ export default function Post() {
         const res = await fetch(url, { method: "get", headers })
         const data = await res.json()
 
-        if (data) {
-          setPostData({ ...data, body: undefined })
-          setContent(data.body)
-        }
+        if (data)
+          setPostData(data)
       }
       catch (err) {
         console.error(err)
@@ -139,22 +90,11 @@ export default function Post() {
         <>
           {/* <div className="topicName">respondendo ao tópico "<Link to={`/topics/${state.id}`}>{state.title}</Link>"</div> */}
 
-          <Frame
-            id={pid}
-            title={postData.title}
-            headerConfig={headerConfig}
-            initialVoteState={getInitalVotes()}
-            metrics={getMetrics()}
+          <Post
+            {...postData}
             alongsideCritique={showCritique}
-            showDefinitiveVoteButton
-            justify
-          >
-            <TextEditor
-              content={content}
-              setContent={setContent}
-              setShowCritique={setShowCritique}
-            />
-          </Frame>
+            setShowCritique={setShowCritique}
+          />
           {showCritique &&
             <Frame
               title={critiqueTitle}

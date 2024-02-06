@@ -10,7 +10,11 @@ export default function Frame({
   id,
   title,
   setTitle,
-  metrics = [],
+  relevanceVote,
+  setRelevanceVote,
+  definitiveVote,
+  setDefinitiveVote,
+  metrics,
   headerConfig = {},
   saveInLocalStorage = false,
   readOnly = true,
@@ -57,7 +61,14 @@ export default function Frame({
       <div className="header">
         <div className={`top bracket${error ? " error" : ""}`} />
         {!hideVoteButtons &&
-          <VotingButtons id={id} showDefinitiveVoteButton={showDefinitiveVoteButton} initialState={initialVoteState} />
+          <VotingButtons
+            id={id}
+            relevanceVote={relevanceVote}
+            setRelevanceVote={setRelevanceVote}
+            definitiveVote={definitiveVote}
+            setDefinitiveVote={setDefinitiveVote}
+            showDefinitiveVoteButton={showDefinitiveVoteButton}
+          />
         }
         <h1 className="title">
           {readOnly ?
@@ -117,7 +128,7 @@ export default function Frame({
           }
           {metrics &&
             <ul className="metrics">
-              {metrics.map(metric => (
+              {metrics().map(metric => (
                 <li>{metric}</li>
               ))}
             </ul>

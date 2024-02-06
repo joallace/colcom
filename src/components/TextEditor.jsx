@@ -69,7 +69,7 @@ export default function TextEditor({
       }
     },
     editable: isEditable,
-    content: isEditable ? content : content.replace(/<chart readonly="false"/g, '<chart readonly="true"'),
+    content: isEditable ? content : content?.replace(/<chart readonly="false"/g, '<chart readonly="true"'),
   })
 
   const removeTempHighlight = obj => {

@@ -34,15 +34,20 @@ export const submitVote = async (navigate, content_id, type, colcoins = undefine
     return
   }
 }
-export default ({ id, initialState = { vote: false, relevance: "" }, showDefinitiveVoteButton = false, }) => {
-  const [definitiveVote, setDefinitiveVote] = React.useState(initialState.vote)
-  const [relevanceVote, setRelevance] = React.useState(initialState.relevance)
+export default ({
+  id,
+  relevanceVote,
+  setRelevanceVote,
+  definitiveVote,
+  setDefinitiveVote,
+  showDefinitiveVoteButton = false
+}) => {
   const [isLoading, setIsLoading] = React.useState(false)
   const navigate = useNavigate()
 
   const voteClick = async (type, clear) => {
     setIsLoading(true)
-    setRelevance(clear ? "" : type)
+    setRelevanceVote(clear ? "" : type)
     await submitVote(navigate, id, type)
     setIsLoading(false)
   }

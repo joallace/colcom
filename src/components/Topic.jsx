@@ -27,7 +27,8 @@ export default function Topic({
   userInteractions,
   userVote
 }) {
-  const [relevanceVote, setRelevanceVote] = React.useState(userInteractions?.filter(v => v === "up" || v === "down")[0])
+  const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
+  const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
   const [definitiveVote, setDefinitiveVote] = React.useState(userVote)
   const navigate = useNavigate()
 
@@ -50,16 +51,28 @@ export default function Topic({
     }
   }
 
+  const updateVoteMetric = () => {
+    if (relevanceVote === initialVoteState)
+      return 0
+    if (relevanceVote === "up" && (initialVoteState === "down" || !initialVoteState))
+      return 1
+    if ((relevanceVote === "down" || !relevanceVote) && initialVoteState === "up")
+      return -1
+
+    return 0
+  }
+
   const getMetrics = () => {
-    const allVotes = upvotes + downvotes
+    const removeOrAddVote = initialVoteState ? -(relevanceVote === "") : +(relevanceVote === "up" || relevanceVote === "down")
+    const allVotes = upvotes + downvotes + removeOrAddVote
     const interactions = childrenStats?.upvotes + childrenStats?.downvotes
 
     return [
       `iniciado por ${author}`,
       `promovido por ${promotions} usuário${promotions === 1 ? "" : "s"}`,
-      allVotes ? `${toPercentageStr(upvotes / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos",
+      allVotes ? `${toPercentageStr((upvotes + updateVoteMetric()) / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos",
       `${childrenStats?.count} post${childrenStats?.count === 1 ? "" : "s"}`,
-      `${interactions} interaç${interactions === 1 ? "ão" : "ões"}`
+      `${interactions + !!relevanceVote} interaç${interactions === 1 ? "ão" : "ões"}`
     ]
   }
 
@@ -67,9 +80,12 @@ export default function Topic({
     <Frame
       id={id}
       title={<Link to={`/topics/${id}`}>{String(title)}</Link>}
-      initialVoteState={{ relevance: relevanceVote, vote: definitiveVote }}
+      relevanceVote={relevanceVote}
+      setRelevanceVote={setRelevanceVote}
+      definitiveVote={definitiveVote}
+      setDefinitiveVote={setDefinitiveVote}
       headerConfig={headerConfig}
-      metrics={getMetrics()}
+      metrics={getMetrics}
     >
       {children?.length > 0 ?
         children.map(child => (

@@ -6,7 +6,7 @@ import Promoted from "@/pages/Promoted"
 import All from "@/pages/All"
 import Meta from "@/pages/Meta"
 import Write from "@/pages/Write"
-import Post from "@/pages/Post"
+import PostPage from "@/pages/PostPage"
 import Login from "@/pages/Login"
 import TopicPage from "@/pages/TopicPage"
 
@@ -21,7 +21,7 @@ function App() {
         <Route path="/meta" element={<Meta/>}/>
         <Route path="/write" element={<Write/>}/>
         <Route path="/topics/:id" element={<TopicPage/>}/>
-        <Route path="/topics/:tid/posts/:pid" element={<Post/>}/>
+        <Route path="/topics/:tid/posts/:pid" element={<PostPage/>}/>
         <Route path="/login" element={<Login/>}/>
       </Routes>      
     </>
