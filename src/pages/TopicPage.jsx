@@ -13,10 +13,12 @@ export default function TopicPage() {
 
   React.useEffect(() => {
     const fetchTopic = async () => {
+      const token = localStorage.getItem("accessToken")
+      const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
       try {
         setIsLoading(true)
         const url = `${env.apiAddress}/topics/${id}`
-        const res = await fetch(url, { method: "get" })
+        const res = await fetch(url, { method: "get", headers })
         const data = await res.json()
 
         if (data)
@@ -38,7 +40,7 @@ export default function TopicPage() {
       {isLoading ?
         <div className="spinner" />
         :
-        <Topic { ...topicData} />
+        <Topic {...topicData} />
       }
     </div>
   )

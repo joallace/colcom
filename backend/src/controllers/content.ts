@@ -35,10 +35,6 @@ const getChildrenStats = (topic: any) => {
   return { upvotes, downvotes, count: topic.children.length }
 }
 
-// const getUserInteractions = async (public_id: string) => {
-//   Interactions.findAll({where: "users.pid = $1 "})
-// }
-
 export const createContent: RequestHandler = async (req, res, next) => {
   const { title, parent_id, body, config } = req.body
   const author_pid = (<any>req.params.user).pid
@@ -154,12 +150,17 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
 }
 
 export const getTopicTree: RequestHandler = async (req, res, next) => {
+  const author_pid = (<any>req.params.user)?.pid
   const id = Number(req.params.id)
 
   try {
     const topic = (await Content.findTree({ where: "topics.id = $1", values: [id], pageSize: 1 }))[0]
 
     topic.childrenStats = getChildrenStats(topic)
+    if (author_pid) {
+      topic.userInteractions = (await Interactions.getUserContentInteractions({ author_pid, content_id: id })).map(v => v.type)
+      topic.userVote = (await Interactions.getUserTopicVote(author_pid, id))?.content_id
+    }
 
     res.status(200).json(topic)
   }

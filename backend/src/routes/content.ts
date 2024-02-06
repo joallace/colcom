@@ -10,7 +10,7 @@ router.get("/contents", getContents)
 
 router.get("/topics", authHandler(true), getContentTree)
 
-router.get("/topics/:id", getTopicTree)
+router.get("/topics/:id", authHandler(true), getTopicTree)
 
 router.post("/contents", authHandler(), createContent)
 
