@@ -1,6 +1,7 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
+@import "components/frame";
 @import "components/global_error";
 @import "components/input";
 @import "components/modal";
@@ -8,7 +9,6 @@
 @import "components/spinner";
 @import "components/text_editor";
 @import "components/topic_modal";
-@import "components/topic";
 
 @import "core/tags";
 

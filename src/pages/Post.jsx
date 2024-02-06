@@ -12,8 +12,9 @@ import {
 } from "react-icons/pi"
 
 import TextEditor from "@/components/TextEditor"
-import Topic from "@/components/Topic"
+import Frame from "@/components/Frame"
 import env from "@/assets/enviroment"
+import { toPercentageStr } from "@/assets/util"
 
 const headerConfig = {
   // "critique": {
@@ -65,7 +66,7 @@ export default function Post() {
   const [critiqueHeight, setCritiqueHeight] = React.useState()
   const [critiqueYCoord, setCritiqueYCoord] = React.useState(0)
   const [isLoading, setIsLoading] = React.useState(false)
-  const { tid, pid } = useParams()
+  const { pid } = useParams()
 
   const critiqueHeaderConfig = {
     "save": {
@@ -83,9 +84,15 @@ export default function Post() {
     const allVotes = postData.upvotes + postData.downvotes
     return [
       `iniciado por ${postData.author}`,
-      allVotes ? `${(postData.upvotes / allVotes) * 100}% dos ${allVotes} votantes achou relevante` : "0 votos",
+      allVotes ? `${toPercentageStr(postData.upvotes / allVotes)}% dos ${allVotes} votantes achou relevante` : "0 votos",
       `${allVotes} interações`
     ]
+  }
+
+  const getInitalVotes = () => {
+    return {
+      relevance: postData?.userInteractions?.filter(v => v === "up" || v === "down")[0]
+    }
   }
 
   React.useEffect(() => {
@@ -129,10 +136,11 @@ export default function Post() {
         <>
           {/* <div className="topicName">respondendo ao tópico "<Link to={`/topics/${state.id}`}>{state.title}</Link>"</div> */}
 
-          <Topic
+          <Frame
             id={pid}
             title={postData.title}
             headerConfig={headerConfig}
+            // initialVoteState={{ relevance }}
             metrics={getMetrics()}
             alongsideCritique={showCritique}
             showDefinitiveVoteButton
@@ -143,9 +151,9 @@ export default function Post() {
               setContent={setContent}
               setShowCritique={setShowCritique}
             />
-          </Topic>
+          </Frame>
           {showCritique &&
-            <Topic
+            <Frame
               title={critiqueTitle}
               setTitle={setCritiqueTitle}
               headerConfig={critiqueHeaderConfig}
@@ -157,7 +165,7 @@ export default function Post() {
               setHeight={setCritiqueHeight}
             >
               <TextEditor content={critiqueContent} setContent={setCritiqueContent} />
-            </Topic>
+            </Frame>
           }
         </>
       }

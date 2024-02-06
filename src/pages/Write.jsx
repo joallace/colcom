@@ -2,7 +2,7 @@ import React from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 
 import TextEditor from "@/components/TextEditor"
-import Topic from "@/components/Topic"
+import Frame from "@/components/Frame"
 import Input from "@/components/Input"
 import env from "@/assets/enviroment"
 
@@ -72,7 +72,7 @@ export default function Write() {
     <div className="content">
       <div className="topicName">respondendo ao tópico "<Link to={`/topics/${state.id}`}>{state.title}</Link>"</div>
 
-      <Topic
+      <Frame
         title={title}
         setTitle={(text) => { setTitle(text); setError(false) }}
         readOnly={false}
@@ -82,7 +82,7 @@ export default function Write() {
         error={(!title || !body) && error}
       >
         <TextEditor content={body} setContent={(text) => { setBody(text); setError(false) }} />
-      </Topic>
+      </Frame>
       {globalError &&
         <div className="globalError">{globalError}</div>
       }

@@ -1,0 +1,1 @@
+export const toPercentageStr = (number) => ((number || 0) * 100.0).toFixed(2).replace(/\.(\d)0/, ".$1").replace(".0", "") + "%"

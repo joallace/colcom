@@ -1,16 +1,8 @@
 import React from "react"
-import {
-  PiBookmarkSimple,
-  PiBookmarkSimpleFill,
-  PiArrowBendUpLeft,
-  PiCaretDoubleUp
-} from "react-icons/pi"
-import { Link, useNavigate } from "react-router-dom"
 
-import Topic from "@/components/Topic"
-import PostSummary from "@/components/PostSummary"
-import { submitVote } from "@/components/VotingButtons"
+import NoResponse from "@/components/NoResponse"
 import env from "@/assets/enviroment"
+import Topic from "@/components/Topic"
 
 
 export default function Promoted() {
@@ -18,34 +10,6 @@ export default function Promoted() {
   const [page, setPage] = React.useState(0)
   const [pageSize, setPageSize] = React.useState(10)
   const [isLoading, setIsLoading] = React.useState(false)
-  const navigate = useNavigate()
-
-  const createHeaderConfig = (id, title, config, initalBookmark = false) => {
-    return {
-      "answer": {
-        description: "responder tópico",
-        icons: PiArrowBendUpLeft,
-        onClick: () => navigate("/write", { state: { id, title, config } })
-      },
-      "promote": {
-        description: "promover tópico",
-        icons: PiCaretDoubleUp,
-        onClick: () => submitVote(navigate, id, "promote",)
-      },
-      "bookmark": {
-        description: ["salvar tópico", "remover tópico dos salvos"],
-        icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
-        initialValue: initalBookmark,
-        onClick: () => submitVote(navigate, id, "bookmark")
-      }
-    }
-  }
-
-  const NoResponse = () => (
-    <div className="no-response">
-      ainda não há repostas, que tal contribuir?
-    </div>
-  )
 
   React.useEffect(() => {
     const fetchPromoted = async () => {
@@ -80,43 +44,9 @@ export default function Promoted() {
           <div className="spinner" />
           :
           topics.length > 0 ?
-            topics.map(topic => {
-              const { id, author, title, promotions, upvotes, downvotes, config, children, childrenStats, userInteractions, userVote } = topic
-              const allVotes = upvotes + downvotes
-              const interactions = childrenStats.upvotes + childrenStats.downvotes
-              const metrics = [
-                `iniciado por ${author}`,
-                `promovido por ${promotions} usuário${promotions === 1 ? "" : "s"}`,
-                allVotes ? `${(upvotes / allVotes) * 100}% dos ${allVotes} votantes achou relevante` : "0 votos",
-                `${childrenStats.count} post${childrenStats.count === 1 ? "" : "s"}`,
-                `${interactions} interaç${interactions === 1 ? "ão" : "ões"}`
-              ]
-              const relevance = userInteractions?.filter(v => v === "up" || v === "down")[0]
-
-              return (
-                <Topic
-                  id={id}
-                  title={<Link to={`/topics/${id}`}>{String(title)}</Link>}
-                  initialVoteState={{ relevance }}
-                  headerConfig={createHeaderConfig(id, title, config, userInteractions?.includes("bookmark"))}
-                  metrics={metrics}
-                >
-                  {children?.length > 0 ?
-                    children.map(child => (
-                      <PostSummary
-                        parent_id={id}
-                        id={child.id}
-                        shortAnswer={child.title}
-                        percentage={((child.upvotes / childrenStats.upvotes) * 100) || 0}
-                        chosen={userVote === child.id}
-                      />
-                    ))
-                    :
-                    <NoResponse />
-                  }
-                </Topic>
-              )
-            })
+            topics.map(topic => (
+              <Topic {...topic}/>
+            ))
             :
             <NoResponse />
       }
