@@ -12,8 +12,8 @@
 - Criar o topic searchable por embedding com content e tags e topic title;
 
 - Implementar tratamento de interações:
-  - Voto;
-  - Bookmark;
+  <!-- - Voto; -->
+  <!-- - Bookmark; -->
   - Edição;
   - Crítica;
 - Implementar agrupamento por resposta;
@@ -27,4 +27,5 @@
 
 # BUGS
 - repositório git não criando a devida branch para o post em um tópico CASO seja resposta múltipla;
-  - PS: trocar o nome da branch gerada para "{id}_{uuidV4}" ao invés de somente uuidV4
+  - PS: trocar o nome da branch gerada para "{id}_{uuidV4}" ao invés de somente uuidV4.
+- modal de inserção de gráfico não ocupando a tela inteira quando criado por uma crítica;
