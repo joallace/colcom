@@ -8,13 +8,13 @@ const router = Router()
 
 router.get("/contents", getContents)
 
-router.get("/topics", getContentTree)
+router.get("/topics", authHandler(true), getContentTree)
 
-router.get("/topics/:id", getTopicTree)
+router.get("/topics/:id", authHandler(true), getTopicTree)
 
-router.post("/contents", authHandler, createContent)
+router.post("/contents", authHandler(), createContent)
 
-router.get("/contents/:id", getContent)
+router.get("/contents/:id", authHandler(true), getContent)
 
 router.get("/contents/:id/history", getContentHistory)
 

@@ -1,61 +1,24 @@
 import React from "react"
-import { useParams, useNavigate } from 'react-router-dom'
-import {
-  PiBookmarkSimple,
-  PiBookmarkSimpleFill,
-  PiArrowBendUpLeft
-} from "react-icons/pi"
+import { useParams } from 'react-router-dom'
 
-import Topic from "@/components/Topic"
-import PostSummary from "@/components/PostSummary"
 import env from "@/assets/enviroment"
+import Topic from "@/components/Topic"
 
 
 export default function TopicPage() {
   const [topicData, setTopicData] = React.useState({})
   const [isLoading, setIsLoading] = React.useState(false)
-  const navigate = useNavigate()
   const { id } = useParams()
 
-  const headerConfig = {
-    "answer": {
-      description: "responder tópico",
-      icons: PiArrowBendUpLeft,
-      onClick: () => navigate("/write", { state: { id, title: topicData.title, config: topicData.config } })
-    },
-    "bookmark": {
-      description: ["salvar tópico", "remover tópico dos salvos"],
-      icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
-      onStart: () => false,
-      onClick: () => { }
-    }
-  }
-
-
-  const getMetrics = () => {
-    const allVotes = topicData.upvotes + topicData.downvotes
-    const interactions = topicData.childrenStats?.upvotes + topicData.childrenStats?.downvotes
-    return [
-      `iniciado por ${topicData.author}`,
-      `promovido por ${topicData.promotions} usuário${topicData.promotions === 1 ? "" : "s"}`,
-      allVotes ? `${(topicData.upvotes / allVotes) * 100}% dos ${allVotes} votantes achou relevante` : "0 votos",
-      `${topicData.childrenStats?.count} post${topicData.childrenStats?.count === 1 ? "" : "s"}`,
-      `${interactions} interaç${interactions === 1 ? "ão" : "ões"}`
-    ]
-  }
-
-  const NoResponse = () => (
-    <div className="no-response">
-      ainda não há repostas, que tal contribuir?
-    </div>
-  )
 
   React.useEffect(() => {
     const fetchTopic = async () => {
+      const token = localStorage.getItem("accessToken")
+      const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
       try {
         setIsLoading(true)
         const url = `${env.apiAddress}/topics/${id}`
-        const res = await fetch(url, { method: "get" })
+        const res = await fetch(url, { method: "get", headers })
         const data = await res.json()
 
         if (data)
@@ -77,24 +40,7 @@ export default function TopicPage() {
       {isLoading ?
         <div className="spinner" />
         :
-        <Topic
-          title={topicData.title}
-          headerConfig={headerConfig}
-          metrics={getMetrics()}
-        >
-          {topicData.children?.length > 0 ?
-            topicData.children.map(child => (
-              <PostSummary
-                parent_id={id}
-                id={child.id}
-                shortAnswer={child.title}
-                percentage={((child.upvotes / topicData.childrenStats?.upvotes) * 100) || 0}
-              />
-            ))
-            :
-            <NoResponse />
-          }
-        </Topic>
+        <Topic {...topicData} />
       }
     </div>
   )

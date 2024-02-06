@@ -26,10 +26,17 @@
             &:first-child {
                 margin-right: 0.5rem;
             }
+            svg{
+                margin-right: 0.5rem;
+            }
 
             color: $default-bg;
             display: flex;
-            align-self: center;
+            align-items: center;
+        }
+
+        &.chosen{
+            background-color: $default-green;
         }
     }
 

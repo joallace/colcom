@@ -6,6 +6,7 @@ import { execFile } from "child_process"
 import { gitDbPath as dbPath } from "@/database"
 import Content, { ContentInsertRequest } from "@/models/content"
 import { ValidationError, NotFoundError } from "@/errors"
+import Interactions from "@/models/interactions"
 
 
 const exec = promisify(execFile)
@@ -110,6 +111,7 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
   const page = Number(req.query.page) || 1
   const pageSize = Number(req.query.pageSize) || 10
   const orderBy = req.query.orderBy ? String(req.query.orderBy) : "id"
+  const author_pid = (<any>req.params.user)?.pid
   const type = req.query.type
 
   try {
@@ -124,6 +126,10 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
       for (const topic of contents) {
         topic.childrenStats = getChildrenStats(topic)
         topic.children = topic.children.slice(0, 3)
+        if (author_pid) {
+          topic.userInteractions = (await Interactions.getUserContentInteractions({ author_pid, content_id: topic.id })).map(v => v.type)
+          topic.userVote = (await Interactions.getUserTopicVote(author_pid, topic.id))?.content_id
+        }
       }
 
       contents.sort((a, b) => {
@@ -144,12 +150,17 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
 }
 
 export const getTopicTree: RequestHandler = async (req, res, next) => {
+  const author_pid = (<any>req.params.user)?.pid
   const id = Number(req.params.id)
 
   try {
     const topic = (await Content.findTree({ where: "topics.id = $1", values: [id], pageSize: 1 }))[0]
 
     topic.childrenStats = getChildrenStats(topic)
+    if (author_pid) {
+      topic.userInteractions = (await Interactions.getUserContentInteractions({ author_pid, content_id: id })).map(v => v.type)
+      topic.userVote = (await Interactions.getUserTopicVote(author_pid, id))?.content_id
+    }
 
     res.status(200).json(topic)
   }
@@ -159,8 +170,11 @@ export const getTopicTree: RequestHandler = async (req, res, next) => {
 }
 
 export const getContent: RequestHandler = async (req, res, next) => {
+  const author_pid = (<any>req.params.user)?.pid
+  const content_id = Number(req.params.id)
+
   try {
-    const content = await Content.findById(Number(req.params.id))
+    const content = await Content.findById(content_id)
 
     if (!content)
       throw new NotFoundError({
@@ -169,7 +183,10 @@ export const getContent: RequestHandler = async (req, res, next) => {
         stack: new Error().stack
       })
 
-    res.status(200).json(content)
+
+    const userInteractions = author_pid ? (await Interactions.getUserContentInteractions({ author_pid, content_id })).map(v => v.type) : undefined
+
+    res.status(200).json({ ...content, userInteractions })
   }
   catch (err) {
     next(err)

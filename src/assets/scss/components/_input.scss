@@ -34,7 +34,7 @@
             color: $default-orange;
         }
 
-        &.error{
+        &.error {
             border-color: $default-red;
         }
     }
@@ -55,12 +55,17 @@
 .checkBox {
     display: flex;
     align-items: center;
+
+    &.center {
+        justify-content: center;
+    }
+
     label {
         cursor: pointer;
         margin-left: 0.25rem;
     }
 }
 
-span.error{
+span.error {
     color: $default-red;
 }

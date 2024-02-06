@@ -1,4 +1,4 @@
-.topic {
+.frame {
     display: grid;
     line-height: 1.5;
     height: min-content;
@@ -61,6 +61,14 @@
             gap: 0.5rem;
             margin-right: 0.5rem;
             justify-content: center;
+
+            &.withDefVote{
+                gap: 0.1rem;
+                input{
+                    margin: 0;
+                }
+            }
+            
 
             .up {
                 color: #479024;

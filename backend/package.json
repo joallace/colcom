@@ -1,5 +1,6 @@
 {
   "name": "colcom-backend",
+  "license":"AGPL-3.0-only",
   "module": "server.ts",
   "type": "module",
   "devDependencies": {

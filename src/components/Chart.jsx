@@ -23,6 +23,7 @@ import {
 } from "recharts"
 
 import { defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultInputBg, defaultFontColor } from "@/assets/scss/_export.module.scss"
+import { toPercentageStr } from "@/assets/util"
 import useScreenSize from "@/hooks/useScreenSize"
 
 
@@ -58,7 +59,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
 
     return (
       <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central">
-        {`${(percent * 100).toFixed(0)}%`}
+        {toPercentageStr(percent)}
       </text>
     )
   }
