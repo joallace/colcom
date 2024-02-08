@@ -4,6 +4,7 @@ import { PiDotsThreeVerticalBold } from "react-icons/pi"
 
 import useScreenSize from "@/hooks/useScreenSize"
 import VotingButtons from "@/components/VotingButtons"
+import DropdownMenu from "@/components/DropdownMenu"
 
 
 export default function Frame({
@@ -38,13 +39,14 @@ export default function Frame({
     )
   )
   const topicRef = React.useRef()
+  const dotsRef = React.useRef()
   const isDesktop = useScreenSize()
 
   const toggle = (str) => { setHeaderStatus({ ...headerStatus, [str]: !headerStatus[str] }) }
 
 
   React.useEffect(() => {
-    setHeight(topicRef.current.clientHeight || 0)
+    setHeight(topicRef?.current?.clientHeight || 0)
   }, [])
 
 
@@ -100,7 +102,15 @@ export default function Frame({
                 }))}
               </>
               :
-              <PiDotsThreeVerticalBold className="icons" />
+              <DropdownMenu
+                options={headerConfig}
+                optionsStatus={[headerStatus, setHeaderStatus]}
+                top={(dotsRef?.current?.offsetTop + dotsRef?.current?.clientHeight) || 0}
+              >
+                <div ref={dotsRef}>
+                  <PiDotsThreeVerticalBold className="icons" />
+                </div>
+              </DropdownMenu>
             }
           </div>
         }

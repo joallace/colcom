@@ -29,6 +29,11 @@ export default function Write() {
     document.body.removeChild(element)
   }
 
+  const clearLocalStorage = () => {
+    localStorage.removeItem("editorContent")
+    localStorage.removeItem("postTitle")
+  }
+
   const submit = async () => {
     const title = titleRef?.current.textContent
 
@@ -60,6 +65,7 @@ export default function Write() {
         return
       }
 
+      clearLocalStorage()
       navigate(`/topics/${state.id}/posts/${data.id}`)
     }
     catch (err) {

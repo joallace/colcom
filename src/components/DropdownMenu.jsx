@@ -1,14 +1,15 @@
-import React from 'react'
+import React from "react"
 
-export default function DropdownMenu({ options = {}, children, className, ...remainingProps }) {
+export default function DropdownMenu({ options = {}, optionsStatus = [], children, className, top }) {
   const [isOpen, setIsOpen] = React.useState(false)
-  const [status, setStatus] = React.useState(
+  const [internalStatus, setInternalStatus] = React.useState(
     Object.fromEntries(
       Object.entries(options)
         .map(([k, v]) => [k, v.initialValue])
         .filter(tuple => tuple[1] !== undefined)
     )
   )
+  const [status, setStatus] = optionsStatus ? optionsStatus : [internalStatus, setInternalStatus]
   const ref = React.useRef()
 
 
@@ -19,7 +20,7 @@ export default function DropdownMenu({ options = {}, children, className, ...rem
 
   React.useEffect(() => {
     const outsideClickHandler = (e) => {
-      if (!ref.current.contains(e.target))
+      if (!ref?.current?.contains(e.target))
         setIsOpen(false)
     }
 
@@ -29,14 +30,14 @@ export default function DropdownMenu({ options = {}, children, className, ...rem
     }
   }, [])
 
-  
+
   return (
     <div className="dropdown-menu">
       <div className={`dropdown-trigger${className ? ` ${className}` : ""}`} onClick={toggleMenu}>
         {children}
       </div>
       {isOpen && (
-        <div className="dropdown-options" ref={ref}>
+        <div className="dropdown-options" style={top ? { top } : undefined} ref={ref}>
           <ul>
             {
               Object.entries(options).map((([buttonName, buttonConfig]) => {
