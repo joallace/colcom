@@ -8,7 +8,9 @@ import {
 import TextEditor from "@/components/TextEditor"
 import Frame from "@/components/Frame"
 import Post from "@/components/Post"
+import useScreenSize from "@/hooks/useScreenSize"
 import env from "@/assets/enviroment"
+import Modal from "@/components/Modal"
 
 
 function getSelectionHeight() {
@@ -27,7 +29,7 @@ function getSelectionHeight() {
 }
 
 
-export default () =>{
+export default () => {
   const [postData, setPostData] = React.useState({})
   const [showCritique, setShowCritique] = React.useState(false)
   const [critiqueTitle, setCritiqueTitle] = React.useState("")
@@ -36,6 +38,7 @@ export default () =>{
   const [critiqueYCoord, setCritiqueYCoord] = React.useState(0)
   const [isLoading, setIsLoading] = React.useState(false)
   const { pid } = useParams()
+  const isDesktop = useScreenSize()
 
   const critiqueHeaderConfig = {
     "save": {
@@ -82,6 +85,20 @@ export default () =>{
     fetchPost()
   }, [])
 
+  const Critique = () => (
+    <Frame
+      headerConfig={isDesktop ? critiqueHeaderConfig : undefined}
+      readOnly={false}
+      isCritique
+      justify
+      // metrics
+      style={{ transform: isDesktop ? `translate(0,${critiqueYCoord}px)` : undefined, width: isDesktop ? undefined : "100%" }}
+      setHeight={setCritiqueHeight}
+    >
+      <TextEditor content={critiqueContent} setContent={setCritiqueContent} />
+    </Frame>
+  )
+
   return (
     <div className="post">
       {isLoading ?
@@ -96,19 +113,21 @@ export default () =>{
             setShowCritique={setShowCritique}
           />
           {showCritique &&
-            <Frame
-              title={critiqueTitle}
-              setTitle={setCritiqueTitle}
-              headerConfig={critiqueHeaderConfig}
-              readOnly={false}
-              isCritique
-              justify
-              // metrics
-              style={{ transform: `translate(0,${critiqueYCoord}px)` }}
-              setHeight={setCritiqueHeight}
+            isDesktop ?
+            <Critique />
+            :
+            <Modal
+              isOpen={showCritique}
+              setIsOpen={setShowCritique}
+              style={{ width: "90%" }}
             >
-              <TextEditor content={critiqueContent} setContent={setCritiqueContent} />
-            </Frame>
+              <div className="body">
+                <Critique />
+              </div>
+              <div className="footer center">
+                <button>publicar</button>
+              </div>
+            </Modal>
           }
         </>
       }

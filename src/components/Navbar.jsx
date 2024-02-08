@@ -1,6 +1,6 @@
 import React from "react"
 import { NavLink, Link } from "react-router-dom"
-import { PiMagnifyingGlassBold, PiUser, PiPlusBold, PiMedalFill, PiCoinsFill } from "react-icons/pi"
+import { PiUser, PiPlusBold, PiMedalFill, PiCoinsFill } from "react-icons/pi"
 
 import Icon from "@/components/Icon"
 import TopicModal from "@/components/TopicModal"
@@ -34,11 +34,6 @@ export default function Navbar() {
           </ul>
         </div>
         <div className="nav-right">
-          {isDesktop ?
-            <input className="nav-searchbar" placeholder="pesquisar..." />
-            :
-            <PiMagnifyingGlassBold style={{ fontSize: "1.25rem" }} />
-          }
           {user &&
             <>
               <a onClick={toggleModal}><PiPlusBold style={{ fontSize: "1.5rem" }} /></a>

@@ -9,7 +9,7 @@ import VotingButtons from "@/components/VotingButtons"
 export default function Frame({
   id,
   title,
-  setTitle,
+  titleRef,
   relevanceVote,
   setRelevanceVote,
   definitiveVote,
@@ -25,6 +25,7 @@ export default function Frame({
   isCritique = false,
   justify = false,
   error = false,
+  setError = () => { },
   setHeight = () => { },
   children,
   ...remainingProps
@@ -37,18 +38,9 @@ export default function Frame({
     )
   )
   const topicRef = React.useRef()
-  const titleRef = React.useRef()
   const isDesktop = useScreenSize()
 
   const toggle = (str) => { setHeaderStatus({ ...headerStatus, [str]: !headerStatus[str] }) }
-
-
-  React.useEffect(() => {
-    if (titleRef.current) {
-      titleRef.current.style.height = '32px';
-      titleRef.current.style.height = `${titleRef.current.scrollHeight + 2}px`;
-    }
-  }, [title]);
 
 
   React.useEffect(() => {
@@ -70,19 +62,15 @@ export default function Frame({
             showDefinitiveVoteButton={showDefinitiveVoteButton}
           />
         }
-        <h1 className="title">
-          {readOnly ?
-            title
-            :
-            <textarea
-              placeholder="Qual é o título?"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") { editor.chain().focus().run(); e.preventDefault() } }}
-              onBlur={_ => saveInLocalStorage && localStorage.setItem("postTitle", title)}
-              ref={titleRef}
-            />
-          }
+        <h1
+          className={`title${isCritique ? " critique" : ""}${error && !titleRef?.current?.textContent ? " error" : ""}`}
+          contentEditable={!readOnly}
+          placeholder="Qual é o título?"
+          onKeyDown={e => { e.key === "Enter" && e.preventDefault(); setError(false) }}
+          onBlur={() => saveInLocalStorage && localStorage.setItem("postTitle", titleRef?.current?.textContent)}
+          ref={titleRef}
+        >
+          {title}
         </h1>
         {!isEmptyObject(headerConfig) &&
           <div className="buttons">
@@ -127,7 +115,7 @@ export default function Frame({
           }
         </div>
       </div>
-      <div className="footer">
+      <div className={metrics ? "footer" : undefined}>
         <div className={`bottom bracket${error ? " error" : ""}`} />
         {metrics &&
           <ul className="metrics">

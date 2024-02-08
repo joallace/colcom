@@ -30,23 +30,35 @@
         .title {
             width: 100%;
             color: $default-green;
+            align-self: center;
             text-align: left;
 
             a {
                 color: $default-green;
             }
 
-            textarea {
-                line-height: 1;
-                resize: none;
-                overflow-y: hidden;
-                width: 100%;
-                background-color: $default-bg;
+            &[contenteditable=true] {
+                cursor: text;
                 outline: none;
-                border: none;
-                color: $default-green;
-                font-size: 2rem;
-                font-weight: bolder;
+
+                &.critique {
+                    font-size: 2rem;
+
+                    &:empty:before {
+                        color: darken($default-orange, 15%);
+                    }
+                }
+
+                &.error {
+                    &:empty:before {
+                        color: darken($default-red, 15%);
+                    }
+                }
+
+                &:empty:before {
+                    content: attr(placeholder);
+                    color: darken($default-green, 15%);
+                }
             }
         }
 
