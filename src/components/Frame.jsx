@@ -120,20 +120,22 @@ export default function Frame({
       <div className="container">
         <div className={`bracket${error ? " error" : ""}`} />
         <div className={`body${justify ? " justify" : ""}`}>
-
           {children.constructor === Array ?
             children
             :
             React.cloneElement(children, { ...headerStatus, readOnly, saveInLocalStorage, alongsideCritique })
           }
-          {metrics &&
-            <ul className="metrics">
-              {metrics().map(metric => (
-                <li>{metric}</li>
-              ))}
-            </ul>
-          }
         </div>
+      </div>
+      <div className="footer">
+        <div className={`bottom bracket${error ? " error" : ""}`} />
+        {metrics &&
+          <ul className="metrics">
+            {metrics().map(metric => (
+              <li>{metric}</li>
+            ))}
+          </ul>
+        }
       </div>
     </div>
   )

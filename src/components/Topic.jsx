@@ -72,7 +72,7 @@ export default function Topic({
       `promovido por ${promotions} usuário${promotions === 1 ? "" : "s"}`,
       allVotes ? `${toPercentageStr((upvotes + updateVoteMetric()) / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos",
       `${childrenStats?.count} post${childrenStats?.count === 1 ? "" : "s"}`,
-      `${interactions + !!relevanceVote} interaç${interactions === 1 ? "ão" : "ões"}`
+      `${interactions} interaç${interactions === 1 ? "ão" : "ões"}`
     ]
   }
 

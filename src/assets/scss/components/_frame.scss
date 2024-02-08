@@ -9,10 +9,15 @@
         display: flex;
     }
 
+    .footer {
+        display: flex;
+    }
+
     .body {
-        &.justify{
+        &.justify {
             text-align: justify;
         }
+
         width: 100%;
         height: min-content;
     }
@@ -27,7 +32,7 @@
             color: $default-green;
             text-align: left;
 
-            a{
+            a {
                 color: $default-green;
             }
 
@@ -62,13 +67,14 @@
             margin-right: 0.5rem;
             justify-content: center;
 
-            &.withDefVote{
+            &.withDefVote {
                 gap: 0.1rem;
-                input{
+
+                input {
                     margin: 0;
                 }
             }
-            
+
 
             .up {
                 color: #479024;
@@ -108,8 +114,8 @@
 
         font-size: 0.75rem;
         text-align: center;
-        padding: 1rem 0 0 0;
-        margin: 0;
+        padding: 0;
+        margin-top: 1rem;
         display: flex;
         gap: 1rem;
 
@@ -123,11 +129,11 @@
 .bracket {
     width: 1rem;
     flex-shrink: 0;
-    margin: 0 0.75rem 0.4rem 0;
+    margin-right: 0.75rem;
     transition: border-color 0.2s linear;
 
     border-style: solid;
-    border-width: 0 0 2px 2px;
+    border-width: 0 0 0px 2px;
     border-color: $default-green;
 
     &.top {
@@ -139,22 +145,29 @@
         border-radius: 0.75rem 0 0 0;
     }
 
+    &.bottom {
+        position: relative;
+        height: 50%;
+        margin-bottom: 0;
+        border-width: 0 0 2px 2px;
+    }
+
     &.critique {
         border-color: $default-orange;
     }
-    
-    &.error{
+
+    &.error {
         border-color: $default-red;
     }
 
-    &.reverse{
+    &.reverse {
         -moz-transform: scaleX(-1);
         -webkit-transform: scaleX(-1);
         -o-transform: scaleX(-1);
         transform: scaleX(-1);
-        -ms-filter: fliph; /*IE*/
-        filter: fliph; /*IE*/
-        margin: 0 0 0.4rem 0.75rem;
+        -ms-filter: fliph;
+        filter: fliph;
+        margin-left: 0.75rem;
     }
 }
 
