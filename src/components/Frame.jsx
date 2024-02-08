@@ -34,7 +34,7 @@ export default function Frame({
     Object.fromEntries(
       Object.entries(headerConfig)
         .map(([k, v]) => [k, v.initialValue])
-        .filter((value) => value !== undefined)
+        .filter(tuple => tuple[1] !== undefined)
     )
   )
   const topicRef = React.useRef()

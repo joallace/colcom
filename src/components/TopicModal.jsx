@@ -1,4 +1,5 @@
 import React from "react"
+import { useNavigate } from "react-router-dom"
 
 import Modal from "@/components/Modal"
 import Input from "@/components/Input"
@@ -11,6 +12,7 @@ export default ({ isOpen, setIsOpen }) => {
   const [error, setError] = React.useState(false)
   const [globalError, setGlobalError] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
+  const navigate = useNavigate()
 
   const handleAnswerChange = (index, value) => {
     setAnswers(answers.map((answer, i) => {
@@ -45,8 +47,10 @@ export default ({ isOpen, setIsOpen }) => {
         setGlobalError(data.message.toLowerCase())
         return
       }
-
       setIsOpen(false)
+
+      if(data?.id)
+        navigate(`/topics/${data.id}`)
     }
     catch (err) {
       setGlobalError("Não foi possível se conectar ao colcom. Por favor, verifique sua conexão.")
