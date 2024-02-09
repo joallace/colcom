@@ -82,18 +82,21 @@ export default function Frame({
                   switch (headerStatus[buttonName]) {
                     case false:
                       return buttonConfig.icons[0]({
+                        key: buttonName,
                         className: "icons",
                         title: buttonConfig.description[0],
                         onClick: () => { buttonConfig.onClick(); toggle(buttonName) }
                       })
                     case true:
                       return buttonConfig.icons[1]({
+                        key: buttonName,
                         className: "icons",
                         title: buttonConfig.description[1],
                         onClick: () => { buttonConfig.onClick(); toggle(buttonName) }
                       })
                     case undefined:
                       return buttonConfig.icons({
+                        key: buttonName,
                         className: "icons",
                         title: buttonConfig.description,
                         onClick: () => buttonConfig.onClick()
@@ -129,8 +132,8 @@ export default function Frame({
         <div className={`bottom bracket${error ? " error" : ""}`} />
         {metrics &&
           <ul className="metrics">
-            {metrics().map(metric => (
-              <li>{metric}</li>
+            {metrics().map((metric, index) => (
+              <li key={`t${id}-info-${index}`}>{metric}</li>
             ))}
           </ul>
         }

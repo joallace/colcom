@@ -90,10 +90,11 @@ export default function Topic({
       {children?.length > 0 ?
         children.map(child => (
           <PostSummary
+            key={`p${id}-s${child.id}`}
             parent_id={id}
             id={child.id}
             shortAnswer={child.title}
-            percentage={child.upvotes / childrenStats?.upvotes}
+            percentage={child.votes / childrenStats?.votes}
             chosen={userVote === child.id}
           />
         ))

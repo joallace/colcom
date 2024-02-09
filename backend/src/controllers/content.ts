@@ -26,13 +26,15 @@ const validateContent = (content: ContentInsertRequest) => {
 const getChildrenStats = (topic: any) => {
   let upvotes = 0
   let downvotes = 0
+  let votes = 0
 
   for (const post of topic.children) {
     upvotes += post.upvotes
     downvotes += post.downvotes
+    votes += post.votes
   }
 
-  return { upvotes, downvotes, count: topic.children.length }
+  return { upvotes, downvotes, votes, count: topic.children.length }
 }
 
 export const createContent: RequestHandler = async (req, res, next) => {

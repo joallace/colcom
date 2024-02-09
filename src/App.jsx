@@ -2,7 +2,7 @@ import { Route, Routes, Navigate } from "react-router-dom"
 
 import Navbar from "@/components/Navbar"
 
-import Promoted from "@/pages/Promoted"
+import TopicTree from "@/pages/TopicTree"
 import All from "@/pages/All"
 import Meta from "@/pages/Meta"
 import Write from "@/pages/Write"
@@ -16,9 +16,10 @@ function App() {
       <Navbar/>
       <Routes>
         <Route path="/" element={<Navigate to="/promoted"/>}/>
-        <Route path="/promoted" element={<Promoted/>}/>
-        <Route path="/all" element={<All/>}/>
-        <Route path="/meta" element={<Meta/>}/>
+        <Route path="/promoted" element={<TopicTree orderBy="promotions"/>}/>
+        <Route path="/bookmarked" element={<TopicTree where="bookmark"/>}/>
+        <Route path="/all" element={<TopicTree orderBy="id"/>}/>
+        <Route path="/meta" element={<TopicTree where="meta"/>}/>
         <Route path="/write" element={<Write/>}/>
         <Route path="/topics/:id" element={<TopicPage/>}/>
         <Route path="/topics/:tid/posts/:pid" element={<PostPage/>}/>

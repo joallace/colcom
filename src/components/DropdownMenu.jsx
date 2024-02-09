@@ -9,7 +9,7 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
         .filter(tuple => tuple[1] !== undefined)
     )
   )
-  const [status, setStatus] = optionsStatus ? optionsStatus : [internalStatus, setInternalStatus]
+  const [status, setStatus] = optionsStatus.length ? optionsStatus : [internalStatus, setInternalStatus]
   const ref = React.useRef()
 
 
@@ -53,7 +53,7 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
                   ]
 
                 return (
-                  <li onClick={() => { buttonConfig.onClick(); toggle(buttonName); toggleMenu() }}>
+                  <li key={buttonName} onClick={() => { buttonConfig.onClick(); toggle(buttonName); toggleMenu() }}>
                     <Icon className="dropdown-icon" /> {description}
                   </li>
                 )

@@ -1,6 +1,6 @@
 import React from "react"
 import { NavLink, Link, useNavigate } from "react-router-dom"
-import { PiUser, PiPlusBold, PiMedalFill, PiCoinsFill, PiBookmarkSimple, PiSignOut } from "react-icons/pi"
+import { PiUser, PiPlusBold, PiMedalFill, PiCoinsFill, PiBookmarkSimpleFill, PiSignOutFill } from "react-icons/pi"
 
 import Icon from "@/components/Icon"
 import TopicModal from "@/components/TopicModal"
@@ -26,13 +26,13 @@ export default function Navbar() {
             <Icon isDesktop={isDesktop} />
           </Link>
           <ul className="paths">
-            <li>
+            <li key="promoted">
               <NavLink to="/promoted">promovido</NavLink>
             </li>
-            <li>
+            <li key="all">
               <NavLink to="/all">todos</NavLink>
             </li>
-            <li>
+            <li key="meta">
               <NavLink to="/meta">meta</NavLink>
             </li>
           </ul>
@@ -54,12 +54,12 @@ export default function Navbar() {
                 options={{
                   "bookmarked": {
                     description: "conteúdos salvos",
-                    icons: PiBookmarkSimple,
+                    icons: PiBookmarkSimpleFill,
                     onClick: () => { navigate("/bookmarked") }
                   },
                   "logout": {
                     description: "sair",
-                    icons: PiSignOut,
+                    icons: PiSignOutFill,
                     onClick: () => { localStorage.removeItem("accessToken"); navigate("/login") }
                   }
                 }}
