@@ -5,7 +5,7 @@ import env from "@/assets/enviroment"
 import Topic from "@/components/Topic"
 
 
-export default function Promoted() {
+export default function Promoted({ orderBy, where }) {
   const [topics, setTopics] = React.useState([])
   const [page, setPage] = React.useState(0)
   const [pageSize, setPageSize] = React.useState(10)
@@ -17,7 +17,7 @@ export default function Promoted() {
       const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
       try {
         setIsLoading(true)
-        const url = `${env.apiAddress}/topics?page=${page + 1}&pageSize=${pageSize}&type=topic`
+        const url = `${env.apiAddress}/topics?${where ? `$where=${where}&` : ""}page=${page + 1}&pageSize=${pageSize}&${orderBy ? `$orderBy=${orderBy}&` : ""}type=topic`
         const res = await fetch(url, { method: "get", headers })
         const data = await res.json()
 
@@ -45,7 +45,7 @@ export default function Promoted() {
           :
           topics.length > 0 ?
             topics.map(topic => (
-              <Topic {...topic}/>
+              <Topic {...topic} key={`t${topic.id}`} />
             ))
             :
             <NoResponse />

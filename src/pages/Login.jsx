@@ -43,7 +43,7 @@ export default function Login() {
 
       const data = await res.json()
 
-      if (res.status >= 400){
+      if (res.status >= 400) {
         setGlobalError(data.message.toLowerCase())
         return
       }
@@ -120,6 +120,13 @@ export default function Login() {
                 {isSignUp ? " entre" : " crie uma"} agora!
               </a>
             </span>
+
+          </div>
+          <div className="reverse critique bracket" />
+         
+        </div>
+        <div className="footer">
+            <div className="bottom bracket" />
             <div className="buttonRow">
               <button disabled={isLoading} onClick={send}>
                 {isLoading ?
@@ -138,9 +145,8 @@ export default function Login() {
                 }
               </button>
             </div>
+            <div className="reverse bottom critique bracket" />
           </div>
-          <div className="reverse critique bracket" />
-        </div>
       </div>
     </div>
   )

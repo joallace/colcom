@@ -51,6 +51,9 @@
     .footer{
         text-align: right;
         margin-top: 1rem;
+        &.center{
+            text-align: center;
+        }
     }
 
     hr{

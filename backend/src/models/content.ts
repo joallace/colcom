@@ -181,11 +181,16 @@ const rowsToTree = (rows: Array<any>) => {
     }
   }
 
-  return Object.values(tree).reverse()
+  const result = Object.values(tree).reverse()
+
+  for (const topic of result)
+    (<any>topic).children.reverse()
+
+  return result
 }
 
 
-async function findTree({ where = "topics.type = 'topic'", orderBy = "id", page = 1, pageSize = 10, values = [] as any[] }): Promise<any[]> {
+async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions", page = 1, pageSize = 10, values = [] as any[] }): Promise<any[]> {
   const query = {
     text: `
       WITH RECURSIVE content_tree AS (
@@ -216,6 +221,7 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "id", page 
               AND
                 interaction.type = 'down'
             )::INT as downvotes,
+            NULL::INT as votes,
             (
               SELECT
                 COUNT(*)
@@ -233,7 +239,7 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "id", page 
           INNER JOIN
             users ON topics.author_id = users.id
           WHERE ${where}
-          ORDER BY promotions DESC
+          ORDER BY ${orderBy} DESC
           LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}
         )
     
@@ -266,6 +272,14 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "id", page 
               AND
                 interaction.type = 'down'
             )::INT as downvotes,
+            (
+              SELECT COUNT(*) FROM
+                interactions as interaction
+              WHERE
+                interaction.content_id = posts.id
+              AND
+                interaction.type = 'vote'
+            )::INT as votes,
             NULL as promotions
           FROM
             contents as posts
@@ -275,7 +289,7 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "id", page 
             users ON posts.author_id = users.id
           WHERE
             posts.type = 'post'
-          ORDER BY upvotes DESC
+          ORDER BY votes, upvotes DESC
         )
       )
       SELECT

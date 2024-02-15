@@ -7,7 +7,7 @@ import Input from "@/components/Input"
 import env from "@/assets/enviroment"
 
 export default function Write() {
-  const [title, setTitle] = React.useState(localStorage.getItem("postTitle") || "")
+  const titleRef = React.useRef(localStorage.getItem("postTitle") || "")
   const [body, setBody] = React.useState(localStorage.getItem("editorContent") || "")
   const [answer, setAnswer] = React.useState("")
   const [isLoading, setIsLoading] = React.useState(false)
@@ -29,7 +29,14 @@ export default function Write() {
     document.body.removeChild(element)
   }
 
+  const clearLocalStorage = () => {
+    localStorage.removeItem("editorContent")
+    localStorage.removeItem("postTitle")
+  }
+
   const submit = async () => {
+    const title = titleRef?.current.textContent
+
     if (!title || !body || (state.config?.answers?.length !== 0 && !answer)) {
       setError(true)
       return
@@ -58,6 +65,7 @@ export default function Write() {
         return
       }
 
+      clearLocalStorage()
       navigate(`/topics/${state.id}/posts/${data.id}`)
     }
     catch (err) {
@@ -73,13 +81,13 @@ export default function Write() {
       <div className="topicName">respondendo ao tópico "<Link to={`/topics/${state.id}`}>{state.title}</Link>"</div>
 
       <Frame
-        title={title}
-        setTitle={(text) => { setTitle(text); setError(false) }}
+        titleRef={titleRef}
         readOnly={false}
         hideVoteButtons
         saveInLocalStorage
         justify
-        error={(!title || !body) && error}
+        error={error && (!titleRef?.current.textContent || !body)}
+        setError={setError}
       >
         <TextEditor content={body} setContent={(text) => { setBody(text); setError(false) }} />
       </Frame>

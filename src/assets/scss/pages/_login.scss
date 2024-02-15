@@ -42,17 +42,9 @@
 
             .createAccount{
                 text-align: center;
+                margin-bottom: 1.5rem;
                 a{
                     font-weight: bold;
-                }
-            }
-
-            .buttonRow {
-                display: flex;
-                justify-content: center;
-
-                button {
-                    display: flex;
                 }
             }
         }
@@ -67,5 +59,10 @@
                 }
             }
         }
+    }
+
+    .footer{
+        display: flex;
+        justify-content: space-between;
     }
 }

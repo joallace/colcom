@@ -1,18 +1,22 @@
 import React from "react"
-import { NavLink, Link } from "react-router-dom"
-import { PiMagnifyingGlassBold, PiUser, PiPlusBold, PiMedalFill, PiCoinsFill } from "react-icons/pi"
+import { NavLink, Link, useNavigate } from "react-router-dom"
+import { PiUser, PiPlusBold, PiMedalFill, PiCoinsFill, PiBookmarkSimpleFill, PiSignOutFill } from "react-icons/pi"
 
 import Icon from "@/components/Icon"
 import TopicModal from "@/components/TopicModal"
+import DropdownMenu from "@/components/DropdownMenu"
 import useScreenSize from "@/hooks/useScreenSize"
 import { UserContext } from "@/context/UserContext"
 
 export default function Navbar() {
   const [modalOpen, setModalOpen] = React.useState(false)
+  const { user } = React.useContext(UserContext)
+  const navigate = useNavigate()
+  const isDesktop = useScreenSize()
+  const token = localStorage.getItem("accessToken")
+
   const toggleModal = () => setModalOpen(!modalOpen)
 
-  const { user } = React.useContext(UserContext)
-  const isDesktop = useScreenSize()
 
   return (
     <>
@@ -21,25 +25,20 @@ export default function Navbar() {
           <Link to="/promoted" className="nav-icon">
             <Icon isDesktop={isDesktop} />
           </Link>
-          <ul>
-            <li>
+          <ul className="paths">
+            <li key="promoted">
               <NavLink to="/promoted">promovido</NavLink>
             </li>
-            <li>
+            <li key="all">
               <NavLink to="/all">todos</NavLink>
             </li>
-            <li>
+            <li key="meta">
               <NavLink to="/meta">meta</NavLink>
             </li>
           </ul>
         </div>
         <div className="nav-right">
-          {isDesktop ?
-            <input className="nav-searchbar" placeholder="pesquisar..." />
-            :
-            <PiMagnifyingGlassBold style={{ fontSize: "1.25rem" }} />
-          }
-          {user &&
+          {(user && token) ?
             <>
               <a onClick={toggleModal}><PiPlusBold style={{ fontSize: "1.5rem" }} /></a>
               <div className="balance">
@@ -50,11 +49,29 @@ export default function Navbar() {
                   {user.colcoins}<PiCoinsFill title="colcoins" />
                 </span>
               </div>
+              <DropdownMenu
+                className="nav-user-icon"
+                options={{
+                  "bookmarked": {
+                    description: "conteúdos salvos",
+                    icons: PiBookmarkSimpleFill,
+                    onClick: () => { navigate("/bookmarked") }
+                  },
+                  "logout": {
+                    description: "sair",
+                    icons: PiSignOutFill,
+                    onClick: () => { localStorage.removeItem("accessToken"); navigate("/login") }
+                  }
+                }}
+              >
+                <PiUser style={{ fontSize: "2rem" }} />
+              </DropdownMenu>
             </>
+            :
+            <Link to="/login" className="nav-user-icon">
+              <PiUser style={{ fontSize: "2rem" }} />
+            </Link>
           }
-          <Link to="/login" className="nav-user-icon">
-            <PiUser style={{ fontSize: "2rem" }} />
-          </Link>
         </div>
       </nav>
       <TopicModal isOpen={modalOpen} setIsOpen={setModalOpen} />

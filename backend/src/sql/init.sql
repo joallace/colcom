@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS contents (
     parent_id INT,
     body TEXT,
     type TEXT NOT NULL,
-    status TEXT DEFAULT 'created',
+    status TEXT DEFAULT 'open',
     config JSON,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (now() AT TIME ZONE 'utc'),
     FOREIGN KEY (author_id) REFERENCES users(id),

@@ -1,0 +1,36 @@
+.dropdown-menu {
+    .dropdown-options {
+        z-index: 999;
+        font-size: 1rem;
+        position: absolute;
+        top: 3.5rem;
+        right: 20px;
+        background-color: lighten($default-bg, 10%);
+        border-radius: 0.25rem;
+        padding: 0.5rem;
+
+        ul {
+            display: grid;
+            margin: 0;
+            padding: 0;
+            gap: 0.5rem;
+
+            li {
+                display: flex;
+                gap: 0.5rem;
+                align-content: center;
+                padding: 0.5rem;
+                list-style: none;
+                cursor: pointer;
+
+                .dropdown-icon{
+                    font-size: 1.25rem;
+                }
+
+                &:hover {
+                    background-color: lighten($default-bg, 5%);
+                }
+            }
+        }
+    }
+}

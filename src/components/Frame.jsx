@@ -4,13 +4,18 @@ import { PiDotsThreeVerticalBold } from "react-icons/pi"
 
 import useScreenSize from "@/hooks/useScreenSize"
 import VotingButtons from "@/components/VotingButtons"
+import DropdownMenu from "@/components/DropdownMenu"
 
 
 export default function Frame({
   id,
   title,
-  setTitle,
-  metrics = [],
+  titleRef,
+  relevanceVote,
+  setRelevanceVote,
+  definitiveVote,
+  setDefinitiveVote,
+  metrics,
   headerConfig = {},
   saveInLocalStorage = false,
   readOnly = true,
@@ -21,6 +26,7 @@ export default function Frame({
   isCritique = false,
   justify = false,
   error = false,
+  setError = () => { },
   setHeight = () => { },
   children,
   ...remainingProps
@@ -29,26 +35,18 @@ export default function Frame({
     Object.fromEntries(
       Object.entries(headerConfig)
         .map(([k, v]) => [k, v.initialValue])
-        .filter((value) => value !== undefined)
+        .filter(tuple => tuple[1] !== undefined)
     )
   )
   const topicRef = React.useRef()
-  const titleRef = React.useRef()
+  const dotsRef = React.useRef()
   const isDesktop = useScreenSize()
 
   const toggle = (str) => { setHeaderStatus({ ...headerStatus, [str]: !headerStatus[str] }) }
 
 
   React.useEffect(() => {
-    if (titleRef.current) {
-      titleRef.current.style.height = '32px';
-      titleRef.current.style.height = `${titleRef.current.scrollHeight + 2}px`;
-    }
-  }, [title]);
-
-
-  React.useEffect(() => {
-    setHeight(topicRef.current.clientHeight || 0)
+    setHeight(topicRef?.current?.clientHeight || 0)
   }, [])
 
 
@@ -57,21 +55,24 @@ export default function Frame({
       <div className="header">
         <div className={`top bracket${error ? " error" : ""}`} />
         {!hideVoteButtons &&
-          <VotingButtons id={id} showDefinitiveVoteButton={showDefinitiveVoteButton} initialState={initialVoteState} />
+          <VotingButtons
+            id={id}
+            relevanceVote={relevanceVote}
+            setRelevanceVote={setRelevanceVote}
+            definitiveVote={definitiveVote}
+            setDefinitiveVote={setDefinitiveVote}
+            showDefinitiveVoteButton={showDefinitiveVoteButton}
+          />
         }
-        <h1 className="title">
-          {readOnly ?
-            title
-            :
-            <textarea
-              placeholder="Qual é o título?"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") { editor.chain().focus().run(); e.preventDefault() } }}
-              onBlur={_ => saveInLocalStorage && localStorage.setItem("postTitle", title)}
-              ref={titleRef}
-            />
-          }
+        <h1
+          className={`title${isCritique ? " critique" : ""}${error && !titleRef?.current?.textContent ? " error" : ""}`}
+          contentEditable={!readOnly}
+          placeholder="Qual é o título?"
+          onKeyDown={e => { e.key === "Enter" && e.preventDefault(); setError(false) }}
+          onBlur={() => saveInLocalStorage && localStorage.setItem("postTitle", titleRef?.current?.textContent)}
+          ref={titleRef}
+        >
+          {title}
         </h1>
         {!isEmptyObject(headerConfig) &&
           <div className="buttons">
@@ -81,18 +82,21 @@ export default function Frame({
                   switch (headerStatus[buttonName]) {
                     case false:
                       return buttonConfig.icons[0]({
+                        key: buttonName,
                         className: "icons",
                         title: buttonConfig.description[0],
                         onClick: () => { buttonConfig.onClick(); toggle(buttonName) }
                       })
                     case true:
                       return buttonConfig.icons[1]({
+                        key: buttonName,
                         className: "icons",
                         title: buttonConfig.description[1],
                         onClick: () => { buttonConfig.onClick(); toggle(buttonName) }
                       })
                     case undefined:
                       return buttonConfig.icons({
+                        key: buttonName,
                         className: "icons",
                         title: buttonConfig.description,
                         onClick: () => buttonConfig.onClick()
@@ -101,7 +105,15 @@ export default function Frame({
                 }))}
               </>
               :
-              <PiDotsThreeVerticalBold className="icons" />
+              <DropdownMenu
+                options={headerConfig}
+                optionsStatus={[headerStatus, setHeaderStatus]}
+                top={(dotsRef?.current?.offsetTop + dotsRef?.current?.clientHeight) || 0}
+              >
+                <div ref={dotsRef}>
+                  <PiDotsThreeVerticalBold className="icons" />
+                </div>
+              </DropdownMenu>
             }
           </div>
         }
@@ -109,20 +121,22 @@ export default function Frame({
       <div className="container">
         <div className={`bracket${error ? " error" : ""}`} />
         <div className={`body${justify ? " justify" : ""}`}>
-
           {children.constructor === Array ?
             children
             :
             React.cloneElement(children, { ...headerStatus, readOnly, saveInLocalStorage, alongsideCritique })
           }
-          {metrics &&
-            <ul className="metrics">
-              {metrics.map(metric => (
-                <li>{metric}</li>
-              ))}
-            </ul>
-          }
         </div>
+      </div>
+      <div className={metrics ? "footer" : undefined}>
+        <div className={`bottom bracket${error ? " error" : ""}`} />
+        {metrics &&
+          <ul className="metrics">
+            {metrics().map((metric, index) => (
+              <li key={`t${id}-info-${index}`}>{metric}</li>
+            ))}
+          </ul>
+        }
       </div>
     </div>
   )
