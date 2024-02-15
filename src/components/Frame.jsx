@@ -42,7 +42,7 @@ export default function Frame({
   const dotsRef = React.useRef()
   const isDesktop = useScreenSize()
 
-  const toggle = (str) => { setHeaderStatus({ ...headerStatus, [str]: !headerStatus[str] }) }
+  const toggle = (str) => headerStatus[str] !== undefined && setHeaderStatus({ ...headerStatus, [str]: !headerStatus[str] })
 
 
   React.useEffect(() => {
@@ -79,29 +79,26 @@ export default function Frame({
             {isDesktop ?
               <>
                 {Object.entries(headerConfig).map((([buttonName, buttonConfig]) => {
-                  switch (headerStatus[buttonName]) {
-                    case false:
-                      return buttonConfig.icons[0]({
-                        key: buttonName,
-                        className: "icons",
-                        title: buttonConfig.description[0],
-                        onClick: () => { buttonConfig.onClick(); toggle(buttonName) }
-                      })
-                    case true:
-                      return buttonConfig.icons[1]({
-                        key: buttonName,
-                        className: "icons",
-                        title: buttonConfig.description[1],
-                        onClick: () => { buttonConfig.onClick(); toggle(buttonName) }
-                      })
-                    case undefined:
-                      return buttonConfig.icons({
-                        key: buttonName,
-                        className: "icons",
-                        title: buttonConfig.description,
-                        onClick: () => buttonConfig.onClick()
-                      })
-                  }
+                  const index = Number(headerStatus[buttonName])
+
+                  const Icon = buttonConfig.icons.constructor === Array ?
+                    buttonConfig.icons[index]
+                    :
+                    buttonConfig.icons
+
+                  const title = buttonConfig.description.constructor === Array ?
+                    buttonConfig.description[index]
+                    :
+                    buttonConfig.description
+
+                  return (
+                    <Icon
+                      key={buttonName}
+                      className="icons"
+                      title={title}
+                      onClick={() => { buttonConfig.onClick(headerStatus[buttonName]); toggle(buttonName) }}
+                    />
+                  )
                 }))}
               </>
               :

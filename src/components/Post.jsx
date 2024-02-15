@@ -1,14 +1,18 @@
 import React from "react"
+import { useNavigate } from "react-router-dom"
 import {
   PiBookmarkSimple,
   PiBookmarkSimpleFill,
   PiPencilSimpleFill,
   PiPencilSimple,
-  PiGitBranch
+  PiGitBranch,
+  PiTrashFill
 } from "react-icons/pi"
 
 import TextEditor from "@/components/TextEditor"
 import Frame from "@/components/Frame"
+import Modal from "@/components/Modal"
+import { submitVote } from "@/components/VotingButtons"
 import { toPercentageStr } from "@/assets/util"
 
 
@@ -20,8 +24,6 @@ export default function Post({
   upvotes,
   downvotes,
   config,
-  children,
-  childrenStats,
   alongsideCritique,
   setShowCritique,
   userInteractions
@@ -30,6 +32,9 @@ export default function Post({
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
   const [definitiveVote, setDefinitiveVote] = React.useState(userInteractions?.includes("vote"))
   const [content, setContent] = React.useState(body)
+  const [reset, setReset] = React.useState(false)
+  const [modal, setModal] = React.useState(false)
+  const navigate = useNavigate()
 
   const headerConfig = {
     "branch": {
@@ -41,13 +46,13 @@ export default function Post({
       description: ["sugerir edição no post", "finalizar edição"],
       icons: [PiPencilSimple, PiPencilSimpleFill],
       initialValue: false,
-      onClick: () => { }
+      onClick: submit => (submit && content !== body) && setModal(true)
     },
     "bookmark": {
       description: ["salvar tópico", "remover tópico dos salvos"],
       icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
-      initialValue: false,
-      onClick: () => { }
+      initialValue: userInteractions?.includes("bookmark") || false,
+      onClick: () => submitVote(navigate, id, "bookmark")
     }
   }
 
@@ -73,24 +78,35 @@ export default function Post({
   }
 
   return (
-    <Frame
-      id={id}
-      title={title}
-      headerConfig={headerConfig}
-      relevanceVote={relevanceVote}
-      setRelevanceVote={setRelevanceVote}
-      definitiveVote={definitiveVote}
-      setDefinitiveVote={setDefinitiveVote}
-      metrics={getMetrics}
-      alongsideCritique={alongsideCritique}
-      showDefinitiveVoteButton
-      justify
-    >
-      <TextEditor
-        content={content}
-        setContent={setContent}
-        setShowCritique={setShowCritique}
-      />
-    </Frame>
+    <>
+      <Frame
+        id={id}
+        title={title}
+        headerConfig={headerConfig}
+        relevanceVote={relevanceVote}
+        setRelevanceVote={setRelevanceVote}
+        definitiveVote={definitiveVote}
+        setDefinitiveVote={setDefinitiveVote}
+        metrics={getMetrics}
+        alongsideCritique={alongsideCritique}
+        showDefinitiveVoteButton
+        justify
+      >
+        <TextEditor
+          initialContent={body}
+          content={content}
+          setContent={setContent}
+          setShowCritique={setShowCritique}
+          reset={reset}
+        />
+      </Frame>
+
+      <Modal isOpen={modal} setIsOpen={setModal} title="o que fazer com a edição?">
+        <div className="footer center">
+          <button className="error" onClick={() => { setContent(body); setReset(!reset); setModal(false) }}>cancelar</button>
+          <button>enviar</button>
+        </div>
+      </Modal>
+    </>
   )
 }

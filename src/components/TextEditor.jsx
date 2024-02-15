@@ -24,6 +24,8 @@ import { ChartContext } from "@/context/ChartContext"
 export default function TextEditor({
   content,
   setContent = () => { },
+  reset,
+  initialContent,
   saveInLocalStorage = false,
   readOnly = true,
   edit: isEditable = !readOnly,
@@ -62,24 +64,25 @@ export default function TextEditor({
       }
     },
     onBlur: ({ editor }) => {
-      if (saveInLocalStorage) {
-        const editorContent = editor.getHTML()
-        setContent(editorContent)
+      const editorContent = editor.getHTML()
+
+      setContent(editorContent)
+
+      if (saveInLocalStorage)
         localStorage.setItem("editorContent", editorContent)
-      }
     },
     editable: isEditable,
     content: isEditable ? content : content?.replace(/<chart readonly="false"/g, '<chart readonly="true"'),
   })
 
   const removeTempHighlight = obj => {
-    if(obj.marks)
+    if (obj.marks)
       for (let i = 0; i < obj.marks.length; i++)
         if (obj.marks[i].type === "highlight" && obj.marks[i].attrs.type === "temporary")
           obj.marks.splice(i, 1)
 
-    if(obj.content)
-      for(let i = 0; i < obj.content.length; i++)
+    if (obj.content)
+      for (let i = 0; i < obj.content.length; i++)
         obj.content[i] = removeTempHighlight(obj.content[i])
 
     return obj
@@ -110,12 +113,16 @@ export default function TextEditor({
     if (editor && !alongsideCritique) {
       let newContent = editor.getJSON()
 
-      for(let i = 0; i < newContent.content.length; i++)
+      for (let i = 0; i < newContent.content.length; i++)
         newContent.content[i] = removeTempHighlight(newContent.content[i])
-     
+
       editor.commands.setContent(newContent)
     }
   }, [alongsideCritique])
+
+  React.useEffect(() => {
+    editor?.commands.setContent(initialContent)
+  }, [reset])
 
   return (
     <>

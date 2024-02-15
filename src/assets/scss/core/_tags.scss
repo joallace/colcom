@@ -23,6 +23,20 @@ button {
         cursor: default;
         background-color: transparent;
     }
+
+    &.error{
+        border-color: $default-red;
+
+        &:hover {
+            border-color: $default-red;
+            background-color: $default-red;
+        }
+    
+        &:active {
+            border-color: darken($default-red, 10%);
+            background-color: darken($default-red, 10%);
+        }
+    }
 }
 
 a {
