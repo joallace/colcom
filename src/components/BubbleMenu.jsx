@@ -35,7 +35,10 @@ export default ({ editor, readOnly, setShowCritique }) => {
         {readOnly ?
           <>
             <button
-              onClick={() => {editor.chain().focus().toggleHighlight({ color: "#8e390c", type: "temporary" }).run(); setShowCritique(true)}}
+              onClick={() => {
+                editor.chain().focus().toggleHighlight({ color: "#8e390c", type: "temporary" }).run()
+                setShowCritique([editor.view.state.selection.ranges[0]["$from"].pos, editor.view.state.selection.ranges[0]["$to"].pos])
+              }}
             >
               criticar
             </button>

@@ -112,17 +112,81 @@ input[type=radio] {
     }
 }
 
-fieldset{
-    legend{
+input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+    width: 50vw;
+
+    &:focus {
+        outline: none;
+    }
+
+    &::-webkit-slider-runnable-track,
+    &::-moz-range-track {
+        background-color: darken($default-font-color, 20%);
+        border-radius: 0.5rem;
+        height: 0.5rem;
+    }
+
+    &::-webkit-slider-thumb,
+    &::-moz-range-thumb {
+        background-color: $default-green;
+        border-radius: 50%;
+        height: 1rem;
+        width: 1rem;
+    }
+
+    &::-moz-range-thumb {
+        border: none;
+    }
+
+    &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        margin-top: -4px;
+    }
+
+    &:active::-webkit-slider-thumb,
+    &:active::-moz-range-thumb {
+        background-color: $default-orange;
+
+        outline: 3px solid $default-orange;
+        outline-offset: 0.125rem;
+    }
+
+    &:disabled {
+
+        &::-webkit-slider-thumb,
+        &::-moz-range-thumb {
+            background-color: darken($default-font-color, 50%);
+        }
+    }
+}
+
+datalist {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    writing-mode: vertical-lr;
+    width: 50vw;
+}
+
+
+fieldset {
+    legend {
         color: $default-green;
     }
+
     border: 2px solid $default-green;
     border-radius: 0.75rem 0.25rem 0.25rem 0.25rem;
 
-    &.error{
-        legend{
+    &.error {
+        legend {
             color: $default-red;
         }
+
         border-color: $default-red;
     }
 }

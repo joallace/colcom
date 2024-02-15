@@ -1,5 +1,5 @@
 import React from "react"
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
   PiCheck,
   PiX
@@ -32,18 +32,62 @@ function getSelectionHeight() {
 export default () => {
   const [postData, setPostData] = React.useState({})
   const [showCritique, setShowCritique] = React.useState(false)
-  const [critiqueTitle, setCritiqueTitle] = React.useState("")
   const [critiqueContent, setCritiqueContent] = React.useState("")
   const [critiqueHeight, setCritiqueHeight] = React.useState()
   const [critiqueYCoord, setCritiqueYCoord] = React.useState(0)
   const [isLoading, setIsLoading] = React.useState(false)
+  const critiqueTitleRef = React.useRef()
+  const navigate = useNavigate()
   const { pid } = useParams()
   const isDesktop = useScreenSize()
+
+
+  const submitCritique = async () => {
+    const title = titleRef?.current.textContent
+    const [from, to] = showCritique
+
+    if (!title || !critiqueContent || !from || !to) {
+      setError(true)
+      return
+    }
+
+    const token = localStorage.getItem("accessToken")
+    if (!token) {
+      navigate("/login")
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      const url = `${env.apiAddress}/contents`
+
+      const res = await fetch(url, {
+        method: "post",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ title, body, config: { from, to, commit }, parent_id: pid })
+      })
+
+      const data = await res.json()
+
+      if (res.status >= 400) {
+        setGlobalError(data.message.toLowerCase())
+        return
+      }
+    }
+    catch (err) {
+      console.error(err)
+    }
+    finally {
+      setIsLoading(false)
+    }
+  }
+
 
   const critiqueHeaderConfig = {
     "save": {
       description: "confirmar crítica",
-      icons: PiCheck
+      icons: PiCheck,
+      onClick: () => submitCritique()
     },
     "close": {
       description: "fechar crítica",
@@ -51,6 +95,7 @@ export default () => {
       onClick: () => setShowCritique(false)
     },
   }
+
 
   React.useEffect(() => {
     if (critiqueHeight && showCritique) {
@@ -91,6 +136,7 @@ export default () => {
       readOnly={false}
       isCritique
       justify
+      titleRef={critiqueTitleRef}
       // metrics
       style={{ transform: isDesktop ? `translate(0,${critiqueYCoord}px)` : undefined, width: isDesktop ? undefined : "100%" }}
       setHeight={setCritiqueHeight}
@@ -100,35 +146,44 @@ export default () => {
   )
 
   return (
-    <div className="post">
+    <div className="content">
       {isLoading ?
         <div className="spinner" />
         :
         <>
           {/* <div className="topicName">respondendo ao tópico "<Link to={`/topics/${state.id}`}>{state.title}</Link>"</div> */}
-
-          <Post
-            {...postData}
-            alongsideCritique={showCritique}
-            setShowCritique={setShowCritique}
-          />
-          {showCritique &&
-            isDesktop ?
-            <Critique />
-            :
-            <Modal
-              isOpen={showCritique}
-              setIsOpen={setShowCritique}
-              style={{ width: "90%" }}
-            >
-              <div className="body">
-                <Critique />
-              </div>
-              <div className="footer center">
-                <button>publicar</button>
-              </div>
-            </Modal>
-          }
+          <div className="timerSlider">
+            <input type="range" id="commit" list="commits" min={0} max={postData?.history?.length-1 || 0} disabled={showCritique}/>
+            <datalist id="commits">
+              {postData?.history?.map(commit => (
+                <option label="-" value={commit.commit} />
+              ))}
+            </datalist>
+          </div>
+          <div className="post">
+            <Post
+              {...postData}
+              alongsideCritique={showCritique}
+              setShowCritique={setShowCritique}
+            />
+            {showCritique &&
+              isDesktop ?
+              <Critique />
+              :
+              <Modal
+                isOpen={showCritique}
+                setIsOpen={setShowCritique}
+                style={{ width: "90%" }}
+              >
+                <div className="body">
+                  <Critique />
+                </div>
+                <div className="footer center">
+                  <button>publicar</button>
+                </div>
+              </Modal>
+            }
+          </div>
         </>
       }
     </div>

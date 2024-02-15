@@ -58,34 +58,23 @@ export const createContent: RequestHandler = async (req, res, next) => {
 
     const result = await Content.create(content)
 
-    switch (type) {
-      case "topic": {
-        const path = `${dbPath}/${result.id}`
-        await mkdir(`${path}/critiques`, { recursive: true })
-        await Promise.all([writeFile(`${path}/critiques/.gitkeep`, ""), writeFile(`${path}/main.html`, "")])
-        await exec("git", ["-C", path, "init", "-b", "main"])
-        await exec("git", ["-C", path, "add", "."])
-        await exec("git", ["-C", path, "commit", "-m", "init topic"])
-        break
-      }
-      case "post": {
-        const path = `${dbPath}/${result.parent_id}`
-        const file = `${path}/main.html`
-        // Maybe a lock will be needed
-        await exec("git", ["-C", path, "checkout", "-b", author_pid])
-        await writeFile(file, body)
-        await exec("git", ["-C", path, "add", file])
-        await exec("git", ["-C", path, "commit", "-m", `init post ${result.id}`])
-        break
-      }
-      case "critique": {
-        const path = `${dbPath}/${grandparentId}/critiques`
-        const file = `${path}/${result.id}.html`
-        await exec("git", ["-C", path, "checkout", author_pid])
-        await writeFile(file, body)
-        await exec("git", ["-C", path, "add", file])
-        await exec("git", ["-C", path, "commit", "-m", `init critique ${result.id}`])
-      }
+    if (type === "topic") {
+      const path = `${dbPath}/${result.id}`
+      await mkdir(path)
+      await writeFile(`${path}/main.html`, "")
+      await exec("git", ["-C", path, "init", "-b", "main"])
+      await exec("git", ["-C", path, "add", "."])
+      await exec("git", ["-C", path, "commit", "-m", "init topic"])
+    }
+
+    if (type === "post") {
+      const path = `${dbPath}/${result.parent_id}`
+      const file = `${path}/main.html`
+      // Maybe a lock will be needed
+      await exec("git", ["-C", path, "checkout", "-b", String(result.id), "main"])
+      await writeFile(file, body)
+      await exec("git", ["-C", path, "add", file])
+      await exec("git", ["-C", path, "commit", "-m", `init post ${result.id}`])
     }
 
     res.status(201).json(result)
@@ -188,11 +177,24 @@ export const getContent: RequestHandler = async (req, res, next) => {
 
     const userInteractions = author_pid ? (await Interactions.getUserContentInteractions({ author_pid, content_id })).map(v => v.type) : undefined
 
-    res.status(200).json({ ...content, userInteractions })
+    res.status(200).json({
+      ...content,
+      userInteractions,
+      history: content.type === "post" ? await getPostHistory(content.id, Number(content.parent_id)) : undefined
+    })
   }
   catch (err) {
     next(err)
   }
+}
+
+const getPostHistory = async (post_id: number, parent_id: number) => {
+  const path = `${dbPath}/${parent_id}/`
+  const formatFlag = "--pretty=format:{^^^^commit^^^^:^^^^%h^^^^,^^^^subject^^^^:^^^^%s^^^^,^^^^date^^^^:^^^^%aD^^^^,^^^^author^^^^:^^^^%aN^^^^},"
+
+  const log: any = await exec("git", ["-C", path, "log", `main..${post_id}`, formatFlag], { encoding: "utf-8" })
+
+  return JSON.parse("[" + log.replaceAll('"', '\\"').replaceAll("^^^^", '"').slice(0, -1) + "]")
 }
 
 export const getContentHistory: RequestHandler = async (req, res, next) => {
@@ -213,12 +215,7 @@ export const getContentHistory: RequestHandler = async (req, res, next) => {
         stack: new Error().stack
       })
 
-    const path = `${dbPath}/${content.parent_id}/`
-    const formatFlag = "--pretty=format:{^^^^commit^^^^:^^^^%h^^^^,^^^^subject^^^^:^^^^%s^^^^,^^^^date^^^^:^^^^%aD^^^^,^^^^author^^^^:^^^^%aN^^^^},"
-
-    const log: any = await exec("git", ["-C", path, "log", formatFlag], { encoding: "utf-8" })
-
-    const result = JSON.parse("[" + log.replaceAll('"', '\\"').replaceAll("^^^^", '"').slice(0, -1) + "]")
+    const result = getPostHistory(content.id, Number(content.parent_id))
 
     res.status(200).json(result)
   }

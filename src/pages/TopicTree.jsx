@@ -5,7 +5,7 @@ import env from "@/assets/enviroment"
 import Topic from "@/components/Topic"
 
 
-export default function Promoted({ orderBy, where }) {
+export default function TopicTree({ orderBy, where }) {
   const [topics, setTopics] = React.useState([])
   const [page, setPage] = React.useState(0)
   const [pageSize, setPageSize] = React.useState(10)

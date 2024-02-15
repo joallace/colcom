@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS contents (
     id SERIAL PRIMARY KEY,
-    title TEXT UNIQUE NOT NULL,
+    title TEXT NOT NULL,
     author_id INT NOT NULL,
     parent_id INT,
     body TEXT,
