@@ -9,8 +9,8 @@ import {
 
 import { highlightYellow } from "@/assets/scss/_export.module.scss"
 
-export default ({ editor, readOnly, setShowCritique }) => {
-  if (!editor)
+export default ({ editor, shouldShow = true, readOnly, setShowCritique }) => {
+  if (!editor || !shouldShow)
     return
 
   return (

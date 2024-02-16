@@ -32,6 +32,7 @@ export default function TextEditor({
   alongsideCritique,
   setShowCritique,
   tableConfig = { maxRows: 20, maxColumns: 10 },
+  bubbleMenuShouldShow = true,
   ...remainingProps
 }) {
   const [modal, setModal] = React.useState(false)
@@ -127,7 +128,7 @@ export default function TextEditor({
   return (
     <>
       {!alongsideCritique &&
-        <BubbleMenu editor={editor} readOnly={!isEditable} setShowCritique={setShowCritique} />
+        <BubbleMenu editor={editor} readOnly={!isEditable} setShowCritique={setShowCritique}  shouldShow={bubbleMenuShouldShow}/>
       }
 
       <FloatingMenu

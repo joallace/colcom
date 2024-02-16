@@ -28,7 +28,7 @@ export default function Post({
   alongsideCritique,
   setShowCritique,
   userInteractions,
-  isLoading
+  bubbleMenuShouldShow
 }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
@@ -133,16 +133,14 @@ export default function Post({
         showDefinitiveVoteButton
         justify
       >
-        {isLoading?
-        <div className="spinner"/>
-        :
         <TextEditor
           initialContent={body}
           content={content}
           setContent={setContent}
           setShowCritique={setShowCritique}
+          bubbleMenuShouldShow={bubbleMenuShouldShow}
           reset={reset}
-        />}
+        />
       </Frame>
 
       <Modal isOpen={modal} setIsOpen={setModal} title="o que fazer com a edição?">

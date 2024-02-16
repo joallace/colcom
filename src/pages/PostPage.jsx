@@ -45,7 +45,7 @@ export default () => {
 
 
   const submitCritique = async () => {
-    const title = titleRef?.current.textContent
+    const title = critiqueTitleRef?.current.textContent
     const commit = postData.history[currentCommit].commit
     const [from, to] = showCritique
 
@@ -61,13 +61,12 @@ export default () => {
     }
 
     try {
-      setIsLoading(true)
       const url = `${env.apiAddress}/contents`
 
       const res = await fetch(url, {
         method: "post",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ title, body, config: { from, to, commit }, parent_id: pid })
+        body: JSON.stringify({ title, body: critiqueContent, config: { from, to, commit }, parent_id: pid })
       })
 
       const data = await res.json()
@@ -80,9 +79,6 @@ export default () => {
     catch (err) {
       console.error(err)
     }
-    finally {
-      setIsLoading(false)
-    }
   }
 
   const fetchCommitBody = async () => {
@@ -92,7 +88,7 @@ export default () => {
       const res = await fetch(`${env.apiAddress}/contents/${pid}/${commit}`)
       const data = await res.text()
 
-      if (res.ok) 
+      if (res.ok)
         setPostBody(data)
     }
     catch (err) {
@@ -199,6 +195,7 @@ export default () => {
               body={postBody}
               alongsideCritique={showCritique}
               setShowCritique={setShowCritique}
+              bubbleMenuShouldShow={Number(currentCommit) === postData?.history?.length - 1}
             />
             {showCritique &&
               isDesktop ?
