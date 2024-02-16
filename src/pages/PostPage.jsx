@@ -36,6 +36,8 @@ export default () => {
   const [critiqueHeight, setCritiqueHeight] = React.useState()
   const [critiqueYCoord, setCritiqueYCoord] = React.useState(0)
   const [isLoading, setIsLoading] = React.useState(false)
+  const [currentCommit, setCurrentCommit] = React.useState()
+  const [postBody, setPostBody] = React.useState("")
   const critiqueTitleRef = React.useRef()
   const navigate = useNavigate()
   const { pid } = useParams()
@@ -44,9 +46,10 @@ export default () => {
 
   const submitCritique = async () => {
     const title = titleRef?.current.textContent
+    const commit = postData.history[currentCommit].commit
     const [from, to] = showCritique
 
-    if (!title || !critiqueContent || !from || !to) {
+    if (!title || !critiqueContent || !from || !to || !commit) {
       setError(true)
       return
     }
@@ -82,6 +85,23 @@ export default () => {
     }
   }
 
+  const fetchCommitBody = async () => {
+    const commit = postData.history[currentCommit].commit
+    try {
+      setIsLoading(true)
+      const res = await fetch(`${env.apiAddress}/contents/${pid}/${commit}`)
+      const data = await res.text()
+
+      if (res.ok) 
+        setPostBody(data)
+    }
+    catch (err) {
+      console.error(err)
+    }
+    finally {
+      setIsLoading(false)
+    }
+  }
 
   const critiqueHeaderConfig = {
     "save": {
@@ -116,8 +136,11 @@ export default () => {
         const res = await fetch(url, { method: "get", headers })
         const data = await res.json()
 
-        if (data)
-          setPostData(data)
+        if (data) {
+          setPostData({ ...data, body: undefined })
+          setPostBody(data.body)
+          setCurrentCommit(data.history.length - 1)
+        }
       }
       catch (err) {
         console.error(err)
@@ -153,16 +176,27 @@ export default () => {
         <>
           {/* <div className="topicName">respondendo ao tópico "<Link to={`/topics/${state.id}`}>{state.title}</Link>"</div> */}
           <div className="timerSlider">
-            <input type="range" id="commit" list="commits" min={0} max={postData?.history?.length-1 || 0} disabled={showCritique}/>
+            <input
+              type="range"
+              id="commit"
+              list="commits"
+              min={0}
+              max={postData?.history?.length - 1 || 0}
+              value={currentCommit}
+              disabled={showCritique}
+              onMouseUp={fetchCommitBody}
+              onChange={(e) => { setCurrentCommit(e.target.value) }}
+            />
             <datalist id="commits">
-              {postData?.history?.map(commit => (
-                <option label="-" value={commit.commit} />
+              {postData?.history?.map((commit, i) => (
+                <option label={Number(currentCommit) === i ? `— ${commit.date}` : "—"} />
               ))}
             </datalist>
           </div>
           <div className="post">
             <Post
               {...postData}
+              body={postBody}
               alongsideCritique={showCritique}
               setShowCritique={setShowCritique}
             />

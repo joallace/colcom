@@ -5,7 +5,6 @@ import { execFile } from "child_process"
 
 import { gitDbPath as dbPath } from "@/database"
 import Content, { ContentInsertRequest } from "@/models/content"
-import User from "@/models/user"
 import { ValidationError, NotFoundError } from "@/errors"
 import Interactions from "@/models/interactions"
 
@@ -189,6 +188,30 @@ export const getContent: RequestHandler = async (req, res, next) => {
   }
 }
 
+export const getVersion: RequestHandler = async (req, res, next) => {
+  const content_id = Number(req.params.id)
+  const commit = req.params.hash
+
+  try {
+    const content = await Content.findById(content_id)
+
+    if (!content)
+      throw new NotFoundError({
+        message: "Conteúdo não encontrado.",
+        action: 'Verifique se o "id" fornecido está correto.',
+        stack: new Error().stack
+      })
+
+    const path = `${dbPath}/${content.parent_id}`
+    const result = await exec("git", ["-C", path, "show", `${commit}:./main.html`])
+
+    res.status(200).send(result)
+  }
+  catch (err) {
+    next(err)
+  }
+}
+
 export const updateContent: RequestHandler = async (req, res, next) => {
   const author_pid = (<any>req.params.user).pid
   const content_id = Number(req.params.id)
@@ -239,11 +262,11 @@ export const updateContent: RequestHandler = async (req, res, next) => {
 
 const getPostHistory = async (post_id: number, parent_id: number) => {
   const path = `${dbPath}/${parent_id}/`
-  const formatFlag = "--pretty=format:{^^^^commit^^^^:^^^^%h^^^^,^^^^subject^^^^:^^^^%s^^^^,^^^^date^^^^:^^^^%aD^^^^,^^^^author^^^^:^^^^%aN^^^^},"
+  const formatFlag = "--pretty=format:{^^^^commit^^^^:^^^^%h^^^^,^^^^subject^^^^:^^^^%s^^^^,^^^^date^^^^:^^^^%ar^^^^,^^^^author^^^^:^^^^%aN^^^^},"
 
   const log: any = await exec("git", ["-C", path, "log", `main..${post_id}`, formatFlag], { encoding: "utf-8" })
 
-  return JSON.parse("[" + log.replaceAll('"', '\\"').replaceAll("^^^^", '"').slice(0, -1) + "]")
+  return (JSON.parse("[" + log.replaceAll('"', '\\"').replaceAll("^^^^", '"').slice(0, -1) + "]")).reverse()
 }
 
 export const getContentHistory: RequestHandler = async (req, res, next) => {

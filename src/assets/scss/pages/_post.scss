@@ -6,26 +6,26 @@
 
     .frame {
         &.original {
-            width: 50%;
+            width: 50vw;
 
             @media screen and (min-width: $screen-sm) and (max-width: $screen-xl) {
-                width: 60%;
+                width: 60vw;
             }
 
             @media screen and (min-width: 0px) and (max-width: $screen-sm) {
-                width: 75%;
+                width: 75vw;
             }
         }
         
         &.critique {
-            width: 40%;
+            width: 40vw;
 
             @media screen and (min-width: $screen-sm) and (max-width: $screen-xl) {
-                width: 35%;
+                width: 35vw;
             }
 
             @media screen and (min-width: 0px) and (max-width: $screen-sm) {
-                width: 20%;
+                width: 20vw;
             }
         }
     }
