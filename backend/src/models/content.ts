@@ -36,7 +36,7 @@ interface Content {
   id: number,
   title: string,
   author: string,
-  author_pid: string,
+  author_id: string,
   parent_id?: number,
   body?: string,
   type: ContentType,
@@ -309,6 +309,25 @@ async function findById(id: number): Promise<Content> {
   return result[0]
 }
 
+async function updateById(id: number, body: string, author_pid: string) {
+  const query = {
+    text: `
+      UPDATE
+        contents
+      SET
+        body = $1
+      WHERE
+        id = $2
+      RETURNING
+        *
+      ;`,
+    values: [body, id]
+  }
+
+  const result = await db.query(query)
+  return { ...result.rows[0], author_id: author_pid }
+}
+
 async function getTopicNumberOfVotes(topic_id: number): Promise<number> {
   const query = {
     text: `
@@ -367,6 +386,7 @@ export default Object.freeze({
   findAll,
   findTree,
   findById,
+  updateById,
   getTopicNumberOfVotes,
   getDataById
 })

@@ -5,15 +5,16 @@ import {
   PiBookmarkSimpleFill,
   PiPencilSimpleFill,
   PiPencilSimple,
-  PiGitBranch,
-  PiTrashFill
+  PiGitBranch
 } from "react-icons/pi"
 
 import TextEditor from "@/components/TextEditor"
 import Frame from "@/components/Frame"
 import Modal from "@/components/Modal"
+import Input from "@/components/Input"
 import { submitVote } from "@/components/VotingButtons"
 import { toPercentageStr } from "@/assets/util"
+import env from "@/assets/enviroment"
 
 
 export default function Post({
@@ -34,6 +35,7 @@ export default function Post({
   const [content, setContent] = React.useState(body)
   const [reset, setReset] = React.useState(false)
   const [modal, setModal] = React.useState(false)
+  const commitMessageRef = React.useRef()
   const navigate = useNavigate()
 
   const headerConfig = {
@@ -77,6 +79,44 @@ export default function Post({
     ]
   }
 
+  const submit = async () => {
+    const message = commitMessageRef?.current?.value
+
+    if (!message) {
+      // setError(true)
+      return
+    }
+
+    const token = localStorage.getItem("accessToken")
+    if (!token) {
+      navigate("/login")
+      return
+    }
+
+    try {
+      const url = `${env.apiAddress}/contents/${id}`
+
+      const res = await fetch(url, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ message, body: content })
+      })
+
+      const data = await res.json()
+
+      if (res.status >= 400) {
+        console.error(data)
+        return
+      }
+    }
+    catch (err) {
+      console.error(err)
+    }
+    finally{
+      setModal(false)
+    }
+  }
+
   return (
     <>
       <Frame
@@ -102,9 +142,16 @@ export default function Post({
       </Frame>
 
       <Modal isOpen={modal} setIsOpen={setModal} title="o que fazer com a edição?">
+        <div className="spaced">
+          <Input
+            ref={commitMessageRef}
+            label="resumo das alterações"
+            type="area"
+          />
+        </div>
         <div className="footer center">
           <button className="error" onClick={() => { setContent(body); setReset(!reset); setModal(false) }}>cancelar</button>
-          <button>enviar</button>
+          <button onClick={submit}>enviar</button>
         </div>
       </Modal>
     </>

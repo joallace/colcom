@@ -5,6 +5,7 @@ import { execFile } from "child_process"
 
 import { gitDbPath as dbPath } from "@/database"
 import Content, { ContentInsertRequest } from "@/models/content"
+import User from "@/models/user"
 import { ValidationError, NotFoundError } from "@/errors"
 import Interactions from "@/models/interactions"
 
@@ -182,6 +183,54 @@ export const getContent: RequestHandler = async (req, res, next) => {
       userInteractions,
       history: content.type === "post" ? await getPostHistory(content.id, Number(content.parent_id)) : undefined
     })
+  }
+  catch (err) {
+    next(err)
+  }
+}
+
+export const updateContent: RequestHandler = async (req, res, next) => {
+  const author_pid = (<any>req.params.user).pid
+  const content_id = Number(req.params.id)
+  const { message, body } = req.body
+
+  try {
+    const content = await Content.findById(content_id)
+
+    if (!content)
+      throw new NotFoundError({
+        message: "Conteúdo não encontrado.",
+        action: 'Verifique se o "id" fornecido está correto.',
+        stack: new Error().stack
+      })
+
+    if (content.type !== "post")
+      throw new ValidationError({
+        message: `Conteúdos do tipo "${content.type}" não podem ser alterados.`,
+        action: 'Forneça um "id" de um "post".',
+        stack: new Error().stack
+      })
+
+    const path = `${dbPath}/${content.parent_id}`
+    const file = `${path}/main.html`
+
+    if (content.author_id === author_pid) {
+      await exec("git", ["-C", path, "checkout", String(content.id)])
+      await writeFile(file, body)
+      await exec("git", ["-C", path, "add", file])
+      await exec("git", ["-C", path, "commit", "-m", message])
+
+      const result = await Content.updateById(content.id, body, author_pid)
+      res.status(200).json(result)
+    }
+    else {
+      await exec("git", ["-C", path, "checkout", "-b", `${content.id}/${author_pid}`, String(content.id)])
+      await writeFile(file, body)
+      await exec("git", ["-C", path, "add", file])
+      await exec("git", ["-C", path, "commit", "-m", message])
+
+      res.status(204).end()
+    }
   }
   catch (err) {
     next(err)

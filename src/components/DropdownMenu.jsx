@@ -53,7 +53,7 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
                   ]
 
                 return (
-                  <li key={buttonName} onClick={() => { buttonConfig.onClick(); toggle(buttonName); toggleMenu() }}>
+                  <li key={buttonName} onClick={() => { buttonConfig.onClick(status[buttonName]); toggle(buttonName); toggleMenu() }}>
                     <Icon className="dropdown-icon" /> {description}
                   </li>
                 )
