@@ -1,12 +1,15 @@
 import React from "react"
-import { screenSm } from "@/assets/scss/_export.module.scss"
+import { sm, md, lg, xl, xxl } from "@/assets/scss/_export.module.scss"
 
-export default () => {
-  const smScreenSize = parseInt(screenSm)
 
-  const [isDesktop, setDesktop] = React.useState(window.innerWidth > smScreenSize)
+export default (screenSize = "sm") => {
+  const sizes = Object.fromEntries(
+    Object.entries({ sm, md, lg, xl, xxl })
+      .map(([k, v]) => [k, parseInt(v)])
+  )
+  const [isDesktop, setDesktop] = React.useState(window.innerWidth > sizes[screenSize])
 
-  const updateMedia = () => { setDesktop(window.innerWidth > smScreenSize) }
+  const updateMedia = () => { setDesktop(window.innerWidth > sizes[screenSize]) }
 
   React.useEffect(() => {
     window.addEventListener("resize", updateMedia);

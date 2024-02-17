@@ -167,4 +167,20 @@
         pointer-events: none;
         height: 0;
     }
+
+    mark{
+        color: inherit;
+        &.definitive{
+            cursor: pointer;
+            background-color: darken($default-orange, 10%);
+            &:hover{
+                background-color: darken($default-orange, 15%);
+
+            }
+        }
+        &.temporary{
+            background-color: darken($default-yellow, 18%);
+
+        }
+    }
 }

@@ -117,6 +117,9 @@
 
     .icons {
         cursor: pointer;
+        &:hover{
+            color: $default-orange;
+        }
     }
 
     .metrics {

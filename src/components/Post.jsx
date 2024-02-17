@@ -21,10 +21,12 @@ export default function Post({
   id,
   author,
   title,
+  titleRef,
   body,
   upvotes,
   downvotes,
   config,
+  critiques,
   alongsideCritique,
   setShowCritique,
   userInteractions,
@@ -124,6 +126,7 @@ export default function Post({
       <Frame
         id={id}
         title={title}
+        titleRef={titleRef}
         headerConfig={headerConfig}
         relevanceVote={relevanceVote}
         setRelevanceVote={setRelevanceVote}
@@ -136,6 +139,7 @@ export default function Post({
       >
         <TextEditor
           initialContent={body}
+          critiques={critiques}
           content={content}
           setContent={setContent}
           setShowCritique={setShowCritique}

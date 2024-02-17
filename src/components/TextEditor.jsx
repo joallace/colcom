@@ -24,6 +24,7 @@ import { ChartContext } from "@/context/ChartContext"
 export default function TextEditor({
   content,
   setContent = () => { },
+  critiques = [],
   reset,
   initialContent,
   saveInLocalStorage = false,
@@ -35,6 +36,7 @@ export default function TextEditor({
   bubbleMenuShouldShow = true,
   ...remainingProps
 }) {
+  const [ready, setReady] = React.useState(false)
   const [modal, setModal] = React.useState(false)
   const { chartString, resetChartStr } = React.useContext(ChartContext)
   const editor = useEditor({
@@ -72,6 +74,19 @@ export default function TextEditor({
       if (saveInLocalStorage)
         localStorage.setItem("editorContent", editorContent)
     },
+    onCreate: ({ editor }) => {
+      for (const critique of critiques)
+        editor.chain().setTextSelection(critique.config).setHighlight("highlight", { type: "definitive" }).run()
+
+      editor.chain().setTextSelection(0).blur().run()
+
+      editor.on("transaction", ({ editor }) => {
+        if (editor.isActive("highlight", { type: "definitive" }) && !alongsideCritique) {
+          setShowCritique(true)
+        }
+      })
+    },
+
     editable: isEditable,
     content: isEditable ? content : content?.replace(/<chart readonly="false"/g, '<chart readonly="true"'),
   })
@@ -128,7 +143,7 @@ export default function TextEditor({
   return (
     <>
       {!alongsideCritique &&
-        <BubbleMenu editor={editor} readOnly={!isEditable} setShowCritique={setShowCritique}  shouldShow={bubbleMenuShouldShow}/>
+        <BubbleMenu editor={editor} readOnly={!isEditable} setShowCritique={setShowCritique} shouldShow={bubbleMenuShouldShow} />
       }
 
       <FloatingMenu

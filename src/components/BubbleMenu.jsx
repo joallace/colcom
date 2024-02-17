@@ -7,7 +7,6 @@ import {
   PiQuotesFill
 } from "react-icons/pi"
 
-import { highlightYellow } from "@/assets/scss/_export.module.scss"
 
 export default ({ editor, shouldShow = true, readOnly, setShowCritique }) => {
   if (!editor || !shouldShow)
@@ -36,7 +35,7 @@ export default ({ editor, shouldShow = true, readOnly, setShowCritique }) => {
           <>
             <button
               onClick={() => {
-                editor.chain().focus().toggleHighlight({ color: "#8e390c", type: "temporary" }).run()
+                editor.chain().focus().toggleHighlight({ type: "temporary" }).run()
                 setShowCritique([editor.view.state.selection.ranges[0]["$from"].pos, editor.view.state.selection.ranges[0]["$to"].pos])
               }}
             >

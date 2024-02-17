@@ -202,10 +202,18 @@ export const getVersion: RequestHandler = async (req, res, next) => {
         stack: new Error().stack
       })
 
-    const path = `${dbPath}/${content.parent_id}`
-    const result = await exec("git", ["-C", path, "show", `${commit}:./main.html`])
+    if (content.type !== "post")
+      throw new ValidationError({
+        message: `Conteúdos do tipo "${content.type}" não podem têm histórico.`,
+        action: 'Forneça um "id" de um "post".',
+        stack: new Error().stack
+      })
 
-    res.status(200).send(result)
+    const path = `${dbPath}/${content.parent_id}`
+    const body = await exec("git", ["-C", path, "show", `${commit}:./main.html`])
+    const children = await Content.findAll({ where: "contents.parent_id = $1 AND contents.config->>'commit' = $2", values: [content_id, commit] })
+
+    res.status(200).json({ body, children })
   }
   catch (err) {
     next(err)

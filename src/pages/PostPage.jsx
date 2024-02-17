@@ -15,9 +15,9 @@ import Modal from "@/components/Modal"
 
 function getSelectionHeight() {
   if (window.getSelection) {
-    const selection = window.getSelection();
+    const selection = window.getSelection()
     if (selection.rangeCount) {
-      const range = selection.getRangeAt(0).cloneRange();
+      const range = selection.getRangeAt(0).cloneRange()
       if (range.getBoundingClientRect) {
         // Sometimes, when selecting a whole paragraph, we can't get the selection rect
         // so we can just pick it from the starting container
@@ -39,10 +39,12 @@ export default () => {
   const [currentCommit, setCurrentCommit] = React.useState()
   const [startCommit, setStartCommit] = React.useState()
   const [postBody, setPostBody] = React.useState("")
+  const [postCritiques, setPostCritiques] = React.useState([])
+  const postTitleRef = React.useRef()
   const critiqueTitleRef = React.useRef()
   const navigate = useNavigate()
   const { pid } = useParams()
-  const isDesktop = useScreenSize()
+  const isDesktop = useScreenSize("md")
 
 
   const submitCritique = async () => {
@@ -90,10 +92,12 @@ export default () => {
     try {
       setIsLoading(true)
       const res = await fetch(`${env.apiAddress}/contents/${pid}/${commit}`)
-      const data = await res.text()
+      const data = await res.json()
 
-      if (res.ok)
-        setPostBody(data)
+      if (res.ok) {
+        setPostBody(data.body)
+        setPostCritiques(data.children)
+      }
     }
     catch (err) {
       console.error(err)
@@ -119,7 +123,7 @@ export default () => {
 
   React.useEffect(() => {
     if (critiqueHeight && showCritique) {
-      const y = getSelectionHeight() + window.scrollY - critiqueHeight
+      const y = getSelectionHeight() + window.scrollY - critiqueHeight - postTitleRef?.current.offsetTop
 
       setCritiqueYCoord(y)
       window.scrollTo({ top: y, behavior: "smooth" })
@@ -153,7 +157,7 @@ export default () => {
     fetchPost()
   }, [])
 
-  const Critique = () => (
+  const Critique = ({ data }) => (
     <Frame
       headerConfig={isDesktop ? critiqueHeaderConfig : undefined}
       readOnly={false}
@@ -184,7 +188,7 @@ export default () => {
               max={postData?.history?.length - 1 || 0}
               value={currentCommit}
               disabled={showCritique}
-              onClick={e => setStartCommit(Number(e.target.value))}
+              onMouseDown={e => setStartCommit(Number(e.target.value))}
               onMouseUp={fetchCommitBody}
               onTouchStart={e => setStartCommit(Number(e.target.value))}
               onTouchEnd={fetchCommitBody}
@@ -192,17 +196,19 @@ export default () => {
             />
             <datalist id="commits">
               {postData?.history?.map((commit, i) => (
-                <option key={commit.commit} label={Number(currentCommit) === i ? `— ${commit.date}` : "—"} />
+                <option key={commit.commit} label={currentCommit === i ? `— ${commit.date}` : "—"} />
               ))}
             </datalist>
           </div>
           <div className="post">
             <Post
               {...postData}
+              titleRef={postTitleRef}
               body={postBody}
+              critiques={postCritiques}
               alongsideCritique={showCritique}
               setShowCritique={setShowCritique}
-              bubbleMenuShouldShow={Number(currentCommit) === postData?.history?.length - 1}
+              bubbleMenuShouldShow={currentCommit === postData?.history?.length - 1}
             />
             {showCritique &&
               isDesktop ?

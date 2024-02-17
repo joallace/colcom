@@ -39,7 +39,7 @@ export default function Frame({
     )
   )
   const [dropdownHeight, setDropdownHeight] = React.useState(0)
-  const topicRef = React.useRef()
+  const ref = React.useRef()
   const dotsRef = React.useRef()
   const isDesktop = useScreenSize()
 
@@ -47,13 +47,13 @@ export default function Frame({
 
 
   React.useEffect(() => {
-    setHeight(topicRef?.current?.clientHeight || 0)
+    setHeight(ref?.current?.clientHeight || 0)
     setDropdownHeight((dotsRef?.current?.offsetTop + dotsRef?.current?.clientHeight) || 0)
   }, [])
 
 
   return (
-    <div className={`frame${alongsideCritique ? " original" : ""}${isCritique ? " critique" : ""}`} ref={topicRef} {...remainingProps}>
+    <div className={`frame${alongsideCritique ? " original" : ""}${isCritique ? " critique" : ""}`} ref={ref} {...remainingProps}>
       <div className="header">
         <div className={`top bracket${error ? " error" : ""}`} />
         {!hideVoteButtons &&
