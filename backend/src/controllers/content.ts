@@ -247,7 +247,7 @@ export const updateContent: RequestHandler = async (req, res, next) => {
       res.status(200).json(result)
     }
     else {
-      await exec("git", ["-C", path, "checkout", "-b", `${content.id}/${author_pid}`, String(content.id)])
+      await exec("git", ["-C", path, "checkout", "-b", `${content.id}_${author_pid}`, String(content.id)])
       await writeFile(file, body)
       await exec("git", ["-C", path, "add", file])
       await exec("git", ["-C", path, "commit", "-m", message])

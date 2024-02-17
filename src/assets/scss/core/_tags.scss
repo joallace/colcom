@@ -24,14 +24,14 @@ button {
         background-color: transparent;
     }
 
-    &.error{
+    &.error {
         border-color: $default-red;
 
         &:hover {
             border-color: $default-red;
             background-color: $default-red;
         }
-    
+
         &:active {
             border-color: darken($default-red, 10%);
             background-color: darken($default-red, 10%);
@@ -56,8 +56,8 @@ a {
 table {
     border-collapse: collapse;
     table-layout: fixed;
-    width: 100%;
-    margin: 1rem;
+    width: 95%;
+    margin: 1rem 2.5%;
     overflow: hidden;
     text-align: center;
 
@@ -137,32 +137,44 @@ input[type=range] {
         outline: none;
     }
 
-    &::-webkit-slider-runnable-track,
     &::-moz-range-track {
         background-color: darken($default-font-color, 20%);
         border-radius: 0.5rem;
         height: 0.5rem;
     }
 
-    &::-webkit-slider-thumb,
-    &::-moz-range-thumb {
-        background-color: $default-green;
-        border-radius: 50%;
-        height: 1rem;
-        width: 1rem;
-    }
-
-    &::-moz-range-thumb {
-        border: none;
+    &::-webkit-slider-runnable-track {
+        background-color: darken($default-font-color, 20%);
+        border-radius: 0.5rem;
+        height: 0.5rem;
     }
 
     &::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
         margin-top: -4px;
+        background-color: $default-green;
+        border-radius: 50%;
+        height: 1rem;
+        width: 1rem;
+        border: none;
     }
 
-    &:not(:disabled):active::-webkit-slider-thumb,
+    &::-moz-range-thumb {
+        background-color: $default-green;
+        border-radius: 50%;
+        height: 1rem;
+        width: 1rem;
+        border: none;
+    }
+
+    &:not(:disabled):active::-webkit-slider-thumb {
+        background-color: $default-orange;
+
+        outline: 3px solid $default-orange;
+        outline-offset: 0.125rem;
+    }
+
     &:not(:disabled):active::-moz-range-thumb {
         background-color: $default-orange;
 
@@ -172,7 +184,10 @@ input[type=range] {
 
     &:disabled {
 
-        &::-webkit-slider-thumb,
+        &::-webkit-slider-thumb {
+            background-color: darken($default-font-color, 50%);
+        }
+
         &::-moz-range-thumb {
             background-color: darken($default-font-color, 50%);
         }

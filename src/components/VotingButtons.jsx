@@ -82,7 +82,7 @@ export default ({
           className="center"
           title={definitiveVote ? "remover voto" : "votar nesta resposta"}
           type="radio"
-          checked={definitiveVote}
+          defaultChecked={definitiveVote}
           onClick={() => !isLoading && defVoteClick()}
           style={{ cursor: isLoading ? "default" : "pointer" }}
         />

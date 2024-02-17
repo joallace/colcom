@@ -7,7 +7,7 @@ import Input from "@/components/Input"
 import env from "@/assets/enviroment"
 
 export default function Write() {
-  const titleRef = React.useRef(localStorage.getItem("postTitle") || "")
+  const titleRef = React.useRef()
   const [body, setBody] = React.useState(localStorage.getItem("editorContent") || "")
   const [answer, setAnswer] = React.useState("")
   const [isLoading, setIsLoading] = React.useState(false)
@@ -82,6 +82,7 @@ export default function Write() {
 
       <Frame
         titleRef={titleRef}
+        title={localStorage.getItem("postTitle") || ""}
         readOnly={false}
         hideVoteButtons
         saveInLocalStorage
@@ -105,7 +106,7 @@ export default function Write() {
                   type="radio"
                   value={option}
                   label={option}
-                  checked={answer === option}
+                  defaultChecked={answer === option}
                   onChange={e => setAnswer(e.target.value)}
                 />
               ))

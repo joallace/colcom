@@ -37,6 +37,7 @@ export default () => {
   const [critiqueYCoord, setCritiqueYCoord] = React.useState(0)
   const [isLoading, setIsLoading] = React.useState(false)
   const [currentCommit, setCurrentCommit] = React.useState()
+  const [startCommit, setStartCommit] = React.useState()
   const [postBody, setPostBody] = React.useState("")
   const critiqueTitleRef = React.useRef()
   const navigate = useNavigate()
@@ -82,6 +83,9 @@ export default () => {
   }
 
   const fetchCommitBody = async () => {
+    if (startCommit === currentCommit)
+      return
+
     const commit = postData.history[currentCommit].commit
     try {
       setIsLoading(true)
@@ -180,12 +184,15 @@ export default () => {
               max={postData?.history?.length - 1 || 0}
               value={currentCommit}
               disabled={showCritique}
+              onClick={e => setStartCommit(Number(e.target.value))}
               onMouseUp={fetchCommitBody}
-              onChange={(e) => { setCurrentCommit(e.target.value) }}
+              onTouchStart={e => setStartCommit(Number(e.target.value))}
+              onTouchEnd={fetchCommitBody}
+              onChange={e => setCurrentCommit(Number(e.target.value))}
             />
             <datalist id="commits">
               {postData?.history?.map((commit, i) => (
-                <option label={Number(currentCommit) === i ? `— ${commit.date}` : "—"} />
+                <option key={commit.commit} label={Number(currentCommit) === i ? `— ${commit.date}` : "—"} />
               ))}
             </datalist>
           </div>

@@ -10,7 +10,8 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
     )
   )
   const [status, setStatus] = optionsStatus.length ? optionsStatus : [internalStatus, setInternalStatus]
-  const ref = React.useRef()
+  const menuRef = React.useRef()
+  const triggerRef = React.useRef()
 
 
   const toggle = (str) => { setStatus({ ...status, [str]: !status[str] }) }
@@ -20,7 +21,7 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
 
   React.useEffect(() => {
     const outsideClickHandler = (e) => {
-      if (!ref?.current?.contains(e.target))
+      if (!menuRef?.current?.contains(e.target) && !triggerRef?.current?.contains(e.target))
         setIsOpen(false)
     }
 
@@ -33,11 +34,11 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
 
   return (
     <div className="dropdown-menu">
-      <div className={`dropdown-trigger${className ? ` ${className}` : ""}`} onClick={toggleMenu}>
+      <div className={`dropdown-trigger${className ? ` ${className}` : ""}`} onClick={toggleMenu} ref={triggerRef}>
         {children}
       </div>
       {isOpen && (
-        <div className="dropdown-options" style={top ? { top } : undefined} ref={ref}>
+        <div className="dropdown-options" style={top ? { top } : undefined} ref={menuRef}>
           <ul>
             {
               Object.entries(options).map((([buttonName, buttonConfig]) => {

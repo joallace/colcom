@@ -64,9 +64,9 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
     )
   }
 
-  const transformedData = (nameKey = "0name") => data.map(o=>{
-    let values = Object.entries(o).slice(1).map(([key, value])=>[key, parseFloat(value)])
-    return {[nameKey]: o["0name"], ...Object.fromEntries(values)}
+  const transformedData = (nameKey = "0name") => data.map(o => {
+    let values = Object.entries(o).slice(1).map(([key, value]) => [key, parseFloat(value)])
+    return { [nameKey]: o["0name"], ...Object.fromEntries(values) }
   })
 
   switch (type) {
@@ -76,7 +76,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           width={width * (isDesktop ? 1 : 0.7)}
           height={height * (isDesktop ? 1 : 0.7)}
           data={transformedData()}
-          margin={isDesktop? desktopMargin : mobileMargin}
+          margin={isDesktop ? desktopMargin : mobileMargin}
           {...remainingProps}
         >
           <CartesianGrid strokeDasharray="3 3" />
@@ -87,7 +87,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           {
             Object.keys(data[0]).map((row, index) => {
               if (row !== "0name")
-                return <Line animationDuration={500} dataKey={row} stroke={COLORS[index % COLORS.length]} />
+                return <Line key={`line-${row}-${index}`} animationDuration={500} dataKey={row} stroke={COLORS[index % COLORS.length]} />
             })
           }
 
@@ -99,7 +99,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           width={width * (isDesktop ? 1 : 0.7)}
           height={height * (isDesktop ? 1 : 0.7)}
           data={transformedData()}
-          margin={isDesktop? desktopMargin : mobileMargin}
+          margin={isDesktop ? desktopMargin : mobileMargin}
           {...remainingProps}
         >
           <CartesianGrid strokeDasharray="3 3" />
@@ -110,7 +110,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           {
             Object.keys(data[0]).map((row, index) => {
               if (row !== "0name")
-                return <Area animationDuration={500} dataKey={row} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} />
+                return <Area key={`area-${row}-${index}`} animationDuration={500} dataKey={row} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} />
             })
           }
         </AreaChart>
@@ -121,7 +121,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           width={width * (isDesktop ? 1 : 0.7)}
           height={height * (isDesktop ? 1 : 0.7)}
           data={transformedData()}
-          margin={isDesktop? desktopMargin : mobileMargin}
+          margin={isDesktop ? desktopMargin : mobileMargin}
           {...remainingProps}
         >
           <CartesianGrid strokeDasharray="3 3" />
@@ -132,7 +132,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           {
             Object.keys(data[0]).map((row, index) => {
               if (row !== "0name")
-                return <Bar dataKey={row} fill={COLORS[index % COLORS.length]} />
+                return <Bar key={`bar-${row}-${index}`} dataKey={row} fill={COLORS[index % COLORS.length]} />
             })
           }
         </BarChart>
@@ -159,7 +159,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           >
             {
               Object.keys(data).map((row, index) => {
-                return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                return <Cell key={`cell-${row}-${index}`} fill={COLORS[index % COLORS.length]} />
               })
             }
           </Pie>
@@ -170,7 +170,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
         <ScatterChart
           width={width * (isDesktop ? 1 : 0.7)}
           height={height * (isDesktop ? 1 : 0.7)}
-          margin={isDesktop? desktopMargin : mobileMargin}
+          margin={isDesktop ? desktopMargin : mobileMargin}
           {...remainingProps}
         >
           <CartesianGrid />
@@ -200,7 +200,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           {
             Object.keys(data[0]).map((row, index) => {
               if (row !== "0name")
-                return <Radar animationDuration={500} dataKey={row} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} fillOpacity={0.6} />
+                return <Radar key={`radar-${row}-${index}`} animationDuration={500} dataKey={row} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} fillOpacity={0.6} />
             })
           }
         </RadarChart>

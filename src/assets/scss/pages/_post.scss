@@ -1,6 +1,6 @@
 .post {
     display: flex;
-    gap: 1.5rem;
+    // gap: 1.5rem;
     justify-content: center;
     margin-bottom: 2rem;
 
@@ -13,7 +13,7 @@
             }
 
             @media screen and (min-width: 0px) and (max-width: $screen-sm) {
-                width: 75vw;
+                width: 95vw;
             }
         }
         
@@ -25,7 +25,7 @@
             }
 
             @media screen and (min-width: 0px) and (max-width: $screen-sm) {
-                width: 20vw;
+                width: 0;
             }
         }
     }
@@ -43,7 +43,7 @@
             }
         }
         .spaced{
-            margin: 3rem 0
+            margin: 1rem 0
         }
     }
 }
