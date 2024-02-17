@@ -1,53 +1,45 @@
 .post {
     display: flex;
-    // gap: 1.5rem;
+    gap: 1.5rem;
     justify-content: center;
     margin-bottom: 2rem;
 
     .frame {
         &.original {
-            width: 50vw;
-
-            @media screen and (min-width: $screen-sm) and (max-width: $screen-xl) {
-                width: 60vw;
-            }
-
-            @media screen and (min-width: 0px) and (max-width: $screen-sm) {
-                width: 95vw;
-            }
+            @include content-responsiveness(50vw, 60vw, 95vw);
         }
-        
+
         &.critique {
-            width: 40vw;
-
-            @media screen and (min-width: $screen-sm) and (max-width: $screen-xl) {
-                width: 35vw;
-            }
-
-            @media screen and (min-width: 0px) and (max-width: $screen-sm) {
-                width: 0;
-            }
+            @include content-responsiveness(40vw, 35vw, 0);
         }
     }
 
-    .modal{
-        .header{
+    .modal {
+        .header {
             margin: 0;
-            h1{
+
+            h1 {
                 margin: 0;
                 display: flex;
                 align-items: center;
-                textarea{
+
+                textarea {
                     background-color: $navbar-bg;
                 }
             }
         }
-        .spaced{
-            margin: 1rem 0
+
+        .spaced {
+            margin: 1rem 0;
         }
     }
 }
 
-.timerSlider{
+.timerSlider {
     margin-top: 1rem;
+
+    input,
+    datalist {
+        @include content-responsiveness(50vw, 60vw, 80vw);
+    }
 }

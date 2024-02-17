@@ -49,6 +49,7 @@ export default function Post({
       description: ["sugerir edição no post", "finalizar edição"],
       icons: [PiPencilSimple, PiPencilSimpleFill],
       initialValue: false,
+      hide: !bubbleMenuShouldShow,
       onClick: submit => (submit && content !== body) && setModal(true)
     },
     "bookmark": {

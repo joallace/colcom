@@ -131,7 +131,6 @@ input[type=range] {
     appearance: none;
     background: transparent;
     cursor: pointer;
-    width: 50vw;
 
     &:focus {
         outline: none;
@@ -183,6 +182,7 @@ input[type=range] {
     }
 
     &:disabled {
+        cursor: default;
 
         &::-webkit-slider-thumb {
             background-color: darken($default-font-color, 50%);
@@ -199,7 +199,6 @@ datalist {
     flex-direction: column;
     justify-content: space-between;
     writing-mode: vertical-lr;
-    width: 50vw;
 }
 
 

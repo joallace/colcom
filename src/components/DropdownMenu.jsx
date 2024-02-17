@@ -42,6 +42,9 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
           <ul>
             {
               Object.entries(options).map((([buttonName, buttonConfig]) => {
+                if (buttonConfig.hide)
+                  return
+
                 const [Icon, description] = buttonConfig.icons.constructor === Array ?
                   [
                     buttonConfig.icons[Number(status[buttonName])],

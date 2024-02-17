@@ -38,6 +38,7 @@ export default function Frame({
         .filter(tuple => tuple[1] !== undefined)
     )
   )
+  const [dropdownHeight, setDropdownHeight] = React.useState(0)
   const topicRef = React.useRef()
   const dotsRef = React.useRef()
   const isDesktop = useScreenSize()
@@ -47,6 +48,7 @@ export default function Frame({
 
   React.useEffect(() => {
     setHeight(topicRef?.current?.clientHeight || 0)
+    setDropdownHeight((dotsRef?.current?.offsetTop + dotsRef?.current?.clientHeight) || 0)
   }, [])
 
 
@@ -79,6 +81,9 @@ export default function Frame({
             {isDesktop ?
               <>
                 {Object.entries(headerConfig).map((([buttonName, buttonConfig]) => {
+                  if (buttonConfig.hide)
+                    return
+
                   const index = Number(headerStatus[buttonName])
 
                   const Icon = buttonConfig.icons.constructor === Array ?
@@ -105,7 +110,7 @@ export default function Frame({
               <DropdownMenu
                 options={headerConfig}
                 optionsStatus={[headerStatus, setHeaderStatus]}
-                top={(dotsRef?.current?.offsetTop + dotsRef?.current?.clientHeight) || 0}
+                top={dropdownHeight}
               >
                 <div ref={dotsRef}>
                   <PiDotsThreeVerticalBold className="icons" />
