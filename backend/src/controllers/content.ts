@@ -163,9 +163,10 @@ export const getTopicTree: RequestHandler = async (req, res, next) => {
 export const getContent: RequestHandler = async (req, res, next) => {
   const author_pid = (<any>req.params.user)?.pid
   const content_id = Number(req.params.id)
+  const omitBody = "omit_body" in req.query
 
   try {
-    const content = await Content.findById(content_id)
+    const content = await Content.findById(content_id, { omitBody })
 
     if (!content)
       throw new NotFoundError({
@@ -191,25 +192,29 @@ export const getContent: RequestHandler = async (req, res, next) => {
 export const getVersion: RequestHandler = async (req, res, next) => {
   const content_id = Number(req.params.id)
   const commit = req.params.hash
+  const queryParentId = req.query.parent_id
 
   try {
-    const content = await Content.findById(content_id)
+    const content = queryParentId ? undefined : await Content.findById(content_id)
 
-    if (!content)
-      throw new NotFoundError({
-        message: "Conteúdo não encontrado.",
-        action: 'Verifique se o "id" fornecido está correto.',
-        stack: new Error().stack
-      })
+    if (!queryParentId) {
+      if (!content)
+        throw new NotFoundError({
+          message: "Conteúdo não encontrado.",
+          action: 'Verifique se o "id" fornecido está correto.',
+          stack: new Error().stack
+        })
 
-    if (content.type !== "post")
-      throw new ValidationError({
-        message: `Conteúdos do tipo "${content.type}" não podem têm histórico.`,
-        action: 'Forneça um "id" de um "post".',
-        stack: new Error().stack
-      })
+      if (content.type !== "post")
+        throw new ValidationError({
+          message: `Conteúdos do tipo "${content.type}" não podem têm histórico.`,
+          action: 'Forneça um "id" de um "post".',
+          stack: new Error().stack
+        })
+    }
 
-    const path = `${dbPath}/${content.parent_id}`
+    const parent_id = queryParentId || content?.parent_id
+    const path = `${dbPath}/${parent_id}`
     const body = await exec("git", ["-C", path, "show", `${commit}:./main.html`])
     const children = (await Content.findAll({ where: "contents.parent_id = $1 AND contents.config->>'commit' = $2", values: [content_id, commit] })).reverse()
 

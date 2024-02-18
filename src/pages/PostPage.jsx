@@ -17,21 +17,21 @@ export default () => {
   const [postBody, setPostBody] = React.useState("")
   const [postCritiques, setPostCritiques] = React.useState([])
   const postTitleRef = React.useRef()
-  const { pid } = useParams()
+  const { tid, pid } = useParams()
   const isDesktop = useBreakpoint("md")
 
 
-  const fetchCommitBody = async () => {
-    if (startCommit === currentCommit)
+  const fetchCommitBody = async (commitToFetch = undefined) => {
+    if (!commitToFetch && (startCommit === currentCommit))
       return
 
-    const commit = postData.history[currentCommit].commit
+    const commit = commitToFetch || postData.history[currentCommit].commit
     try {
       setIsLoading(true)
-      const res = await fetch(`${env.apiAddress}/contents/${pid}/${commit}`)
+      const res = await fetch(`${env.apiAddress}/contents/${pid}/${commit}?parent_id=${tid}`)
       const data = await res.json()
 
-      if (res.ok) {
+      if (res.ok && data) {
         setPostBody(data.body)
         setPostCritiques(data.children)
       }
@@ -51,14 +51,14 @@ export default () => {
       const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
       try {
         setIsLoading(true)
-        const url = `${env.apiAddress}/contents/${pid}`
+        const url = `${env.apiAddress}/contents/${pid}?omit_body`
         const res = await fetch(url, { method: "get", headers })
         const data = await res.json()
 
-        if (data) {
-          setPostData({ ...data, body: undefined })
-          setPostBody(data.body)
+        if (res.ok && data) {
+          setPostData(data)
           setCurrentCommit(data.history.length - 1)
+          await fetchCommitBody(data.history[data.history.length - 1].commit)
         }
       }
       catch (err) {
@@ -90,9 +90,9 @@ export default () => {
               value={currentCommit}
               disabled={showCritique}
               onMouseDown={e => setStartCommit(Number(e.target.value))}
-              onMouseUp={fetchCommitBody}
+              onMouseUp={() => fetchCommitBody()}
               onTouchStart={e => setStartCommit(Number(e.target.value))}
-              onTouchEnd={fetchCommitBody}
+              onTouchEnd={() => fetchCommitBody()}
               onChange={e => setCurrentCommit(Number(e.target.value))}
             />
             <datalist id="commits">

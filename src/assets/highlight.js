@@ -28,7 +28,7 @@ export default Mark.create({
       index: {
         parseHTML: element => element.getAttribute("data-commit-index"),
         renderHTML: attributes => {
-          if (!attributes.index) {
+          if (attributes.index === undefined) {
             return {}
           }
           return {

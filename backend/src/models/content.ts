@@ -103,14 +103,14 @@ async function create({ title, author_pid, parent_id, body, type, config }: Cont
   return { ...result.rows[0], author: name, author_id: author_pid }
 }
 
-async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as any[] }): Promise<Content[]> {
+async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as any[], omitBody = false }): Promise<Content[]> {
   const query = {
     text: `
       SELECT
         contents.id,
         contents.title,
         contents.parent_id,
-        contents.body,
+        ${omitBody ? "" : "contents.body,"}
         contents.type,
         contents.status,
         contents.created_at,
@@ -304,8 +304,8 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
   return rowsToTree(result.rows)
 }
 
-async function findById(id: number): Promise<Content> {
-  const result = await findAll({ where: "contents.id = $1", values: [id], pageSize: 1 })
+async function findById(id: number, options = {}): Promise<Content> {
+  const result = await findAll({ where: "contents.id = $1", values: [id], pageSize: 1, ...options })
   return result[0]
 }
 
