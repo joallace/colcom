@@ -9,7 +9,9 @@ import {
 
 import TextEditor from "@/components/TextEditor"
 import Frame from "@/components/Frame"
+import { submitVote } from "@/components/VotingButtons"
 import useBreakpoint from "@/hooks/useBreakpoint"
+import { toPercentageStr, getUserVote } from "@/assets/util"
 import env from "@/assets/enviroment"
 
 
@@ -31,6 +33,7 @@ function getSelectionHeight() {
 
 export default ({
   id,
+  commit,
   parent_id,
   author,
   title,
@@ -45,7 +48,7 @@ export default ({
 }) => {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const readOnly = !!body
-  
+
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
   const [content, setContent] = React.useState(body)
   const [frameHeight, setFrameHeight] = React.useState()
@@ -82,13 +85,12 @@ export default ({
     const allVotes = upvotes + downvotes + removeOrAddVote
     return [
       `iniciado por ${author}`,
-      allVotes ? `${toPercentageStr(upvotes + updateVoteMetric() / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos"
+      allVotes ? `${toPercentageStr((upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos"
     ]
   }
 
   const submit = async () => {
-    const title = critiqueTitleRef?.current.textContent
-    const commit = postData.history[config.commit].commit
+    const title = titleRef?.current.textContent
     const [from, to] = interval
 
     if (!title || !content || !from || !to || !commit) {
@@ -150,7 +152,7 @@ export default ({
       style={{ transform: isDesktop ? `translate(0,${offsetTop}px)` : undefined, width: isDesktop ? undefined : "100%" }}
       setHeight={setFrameHeight}
     >
-      <TextEditor initialContent={body} reset={body} content={content} setContent={setContent} />
+      <TextEditor initialContent={body} reset={body} content={content} setContent={setContent} bubbleMenuShouldShow={!readOnly} />
     </Frame>
   )
 }

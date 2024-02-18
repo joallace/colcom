@@ -13,7 +13,7 @@ import Frame from "@/components/Frame"
 import Modal from "@/components/Modal"
 import Input from "@/components/Input"
 import { submitVote } from "@/components/VotingButtons"
-import { toPercentageStr } from "@/assets/util"
+import { toPercentageStr, getUserVote } from "@/assets/util"
 import env from "@/assets/enviroment"
 
 
@@ -62,23 +62,12 @@ export default function Post({
     }
   }
 
-  const updateVoteMetric = () => {
-    if (relevanceVote === initialVoteState)
-      return 0
-    if (relevanceVote === "up" && (initialVoteState === "down" || !initialVoteState))
-      return 1
-    if ((relevanceVote === "down" || !relevanceVote) && initialVoteState === "up")
-      return -1
-
-    return 0
-  }
-
   const getMetrics = () => {
     const removeOrAddVote = initialVoteState ? -(relevanceVote === "") : +(relevanceVote === "up" || relevanceVote === "down")
     const allVotes = upvotes + downvotes + removeOrAddVote
     return [
       `iniciado por ${author}`,
-      allVotes ? `${toPercentageStr(upvotes + updateVoteMetric() / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos",
+      allVotes ? `${toPercentageStr((upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos",
       `${allVotes} interações`
     ]
   }
@@ -116,7 +105,7 @@ export default function Post({
     catch (err) {
       console.error(err)
     }
-    finally{
+    finally {
       setModal(false)
     }
   }

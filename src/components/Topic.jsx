@@ -11,7 +11,7 @@ import Frame from "@/components/Frame"
 import PostSummary from "@/components/PostSummary"
 import NoResponse from "@/components/NoResponse"
 import { submitVote } from "@/components/VotingButtons"
-import { toPercentageStr } from "@/assets/util"
+import { toPercentageStr, getUserVote } from "@/assets/util"
 
 
 export default function Topic({
@@ -51,17 +51,6 @@ export default function Topic({
     }
   }
 
-  const updateVoteMetric = () => {
-    if (relevanceVote === initialVoteState)
-      return 0
-    if (relevanceVote === "up" && (initialVoteState === "down" || !initialVoteState))
-      return 1
-    if ((relevanceVote === "down" || !relevanceVote) && initialVoteState === "up")
-      return -1
-
-    return 0
-  }
-
   const getMetrics = () => {
     const removeOrAddVote = initialVoteState ? -(relevanceVote === "") : +(relevanceVote === "up" || relevanceVote === "down")
     const allVotes = upvotes + downvotes + removeOrAddVote
@@ -70,7 +59,7 @@ export default function Topic({
     return [
       `iniciado por ${author}`,
       `promovido por ${promotions} usuário${promotions === 1 ? "" : "s"}`,
-      allVotes ? `${toPercentageStr((upvotes + updateVoteMetric()) / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos",
+      allVotes ? `${toPercentageStr((upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos",
       `${childrenStats?.count} post${childrenStats?.count === 1 ? "" : "s"}`,
       `${interactions} interaç${interactions === 1 ? "ão" : "ões"}`
     ]

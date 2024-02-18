@@ -158,7 +158,7 @@ export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false
               <thead>
                 <tr>
                   {chartKeys.map((key, i) =>
-                    <th key={key}>
+                    <th key={`chart-modal-th-${i}`}>
                       <input
                         value={key[0] === "0" ? reservedWords[key] : key}
                         onChange={e => { updateKey(i, e.target.value) }}

@@ -114,9 +114,11 @@ export default () => {
             {showCritique &&
               isDesktop ?
               <Critique
+                parent_id={pid}
                 interval={showCritique}
                 setShowCritique={setShowCritique}
                 parentRef={postTitleRef}
+                commit={postData?.history && postData?.history[currentCommit].commit}
                 {...postCritiques[showCritique]}
               />
               :
@@ -126,9 +128,11 @@ export default () => {
               >
                 <div className="body">
                   <Critique
+                    parent_id={pid}
                     interval={showCritique}
                     setShowCritique={setShowCritique}
                     parentRef={postTitleRef}
+                    commit={postData?.history && postData?.history[currentCommit].commit}
                     {...postCritiques[showCritique]}
                   />
                 </div>
