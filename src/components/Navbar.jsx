@@ -5,14 +5,14 @@ import { PiUser, PiPlusBold, PiMedalFill, PiCoinsFill, PiBookmarkSimpleFill, PiS
 import Icon from "@/components/Icon"
 import TopicModal from "@/components/TopicModal"
 import DropdownMenu from "@/components/DropdownMenu"
-import useScreenSize from "@/hooks/useScreenSize"
+import useBreakpoint from "@/hooks/useBreakpoint"
 import { UserContext } from "@/context/UserContext"
 
 export default function Navbar() {
   const [modalOpen, setModalOpen] = React.useState(false)
   const { user } = React.useContext(UserContext)
   const navigate = useNavigate()
-  const isDesktop = useScreenSize()
+  const isDesktop = useBreakpoint()
   const token = localStorage.getItem("accessToken")
 
   const toggleModal = () => setModalOpen(!modalOpen)

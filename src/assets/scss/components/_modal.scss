@@ -28,7 +28,7 @@
         overflow: scroll;
     }
 
-    .header{
+    >.header{
         font-size: 1.5rem;
         font-weight: bold;
         margin-bottom: 1.5rem;
@@ -50,7 +50,7 @@
         }
     }
 
-    .footer{
+    >.footer{
         display: flex;
         place-content: end;
         gap: 1rem;

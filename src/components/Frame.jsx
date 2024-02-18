@@ -2,7 +2,7 @@ import React from "react"
 import { isEmptyObject } from "@tiptap/react"
 import { PiDotsThreeVerticalBold } from "react-icons/pi"
 
-import useScreenSize from "@/hooks/useScreenSize"
+import useBreakpoint from "@/hooks/useBreakpoint"
 import VotingButtons from "@/components/VotingButtons"
 import DropdownMenu from "@/components/DropdownMenu"
 
@@ -41,7 +41,7 @@ export default function Frame({
   const [dropdownHeight, setDropdownHeight] = React.useState(0)
   const ref = React.useRef()
   const dotsRef = React.useRef()
-  const isDesktop = useScreenSize()
+  const isDesktop = useBreakpoint()
 
   const toggle = (str) => headerStatus[str] !== undefined && setHeaderStatus({ ...headerStatus, [str]: !headerStatus[str] })
 

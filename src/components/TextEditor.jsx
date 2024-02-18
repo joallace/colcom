@@ -75,14 +75,15 @@ export default function TextEditor({
         localStorage.setItem("editorContent", editorContent)
     },
     onCreate: ({ editor }) => {
-      for (const critique of critiques)
-        editor.chain().setTextSelection(critique.config).setHighlight("highlight", { type: "definitive" }).run()
+      critiques.forEach((critique, index) => {
+        editor.chain().setTextSelection(critique.config).setHighlight({ type: "definitive", index }).run()
+      })
 
       editor.chain().setTextSelection(0).blur().run()
 
       editor.on("transaction", ({ editor }) => {
         if (editor.isActive("highlight", { type: "definitive" }) && !alongsideCritique) {
-          setShowCritique(true)
+          setShowCritique(window?.getSelection()?.focusNode?.parentElement.getAttribute("data-commit-index"))
         }
       })
     },

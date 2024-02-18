@@ -5,24 +5,24 @@
     @include content-responsiveness;
     transition: all 0.5s ease;
 
-    .container {
+    >.container {
         display: flex;
-    }
 
-    .footer {
-        display: flex;
-    }
+        >.body {
+            &.justify {
+                text-align: justify;
+            }
 
-    .body {
-        &.justify {
-            text-align: justify;
+            width: 100%;
+            height: min-content;
         }
-
-        width: 100%;
-        height: min-content;
     }
 
-    .header {
+    >.footer {
+        display: flex;
+    }
+
+    >.header {
         display: flex;
         align-content: center;
         justify-content: space-between;
@@ -117,7 +117,8 @@
 
     .icons {
         cursor: pointer;
-        &:hover{
+
+        &:hover {
             color: $default-orange;
         }
     }
@@ -151,7 +152,7 @@
     border-width: 0 0 0px 2px;
     border-color: $default-green;
 
-    @media screen and (min-width: 0px)  and (max-width: $screen-sm) {
+    @media screen and (min-width: 0px) and (max-width: $screen-sm) {
         margin-right: 0.25rem;
     }
 

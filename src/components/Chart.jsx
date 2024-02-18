@@ -24,7 +24,7 @@ import {
 
 import { defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultInputBg, defaultFontColor } from "@/assets/scss/_export.module.scss"
 import { toPercentageStr } from "@/assets/util"
-import useScreenSize from "@/hooks/useScreenSize"
+import useBreakpoint from "@/hooks/useBreakpoint"
 
 
 const desktopMargin = {
@@ -42,7 +42,7 @@ const mobileMargin = {
 }
 
 export default ({ type, data = [{}], width, height, isLegendOn = true, ...remainingProps }) => {
-  const isDesktop = useScreenSize()
+  const isDesktop = useBreakpoint()
 
   const COLORS = [defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultFontColor]
   const RADIAN = Math.PI / 180

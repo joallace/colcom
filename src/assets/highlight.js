@@ -24,6 +24,17 @@ export default Mark.create({
             "class": attributes.type
           }
         },
+      },
+      index: {
+        parseHTML: element => element.getAttribute("data-commit-index"),
+        renderHTML: attributes => {
+          if (!attributes.index) {
+            return {}
+          }
+          return {
+            "data-commit-index": attributes.index
+          }
+        },
       }
     }
   },

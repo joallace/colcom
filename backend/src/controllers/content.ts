@@ -211,7 +211,7 @@ export const getVersion: RequestHandler = async (req, res, next) => {
 
     const path = `${dbPath}/${content.parent_id}`
     const body = await exec("git", ["-C", path, "show", `${commit}:./main.html`])
-    const children = await Content.findAll({ where: "contents.parent_id = $1 AND contents.config->>'commit' = $2", values: [content_id, commit] })
+    const children = (await Content.findAll({ where: "contents.parent_id = $1 AND contents.config->>'commit' = $2", values: [content_id, commit] })).reverse()
 
     res.status(200).json({ body, children })
   }

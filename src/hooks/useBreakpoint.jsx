@@ -7,14 +7,14 @@ export default (screenSize = "sm") => {
     Object.entries({ sm, md, lg, xl, xxl })
       .map(([k, v]) => [k, parseInt(v)])
   )
-  const [isDesktop, setDesktop] = React.useState(window.innerWidth > sizes[screenSize])
+  const [shouldBreak, setShouldBreak] = React.useState(window.innerWidth > sizes[screenSize])
 
-  const updateMedia = () => { setDesktop(window.innerWidth > sizes[screenSize]) }
+  const updateMedia = () => { setShouldBreak(window.innerWidth > sizes[screenSize]) }
 
   React.useEffect(() => {
     window.addEventListener("resize", updateMedia);
     return () => window.removeEventListener("resize", updateMedia);
   })
 
-  return isDesktop
+  return shouldBreak
 }

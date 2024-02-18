@@ -43,7 +43,7 @@ export default function Post({
 
   const headerConfig = {
     "branch": {
-      description: "clonar tópico",
+      description: "clonar post",
       icons: PiGitBranch,
       onClick: () => { }
     },
@@ -55,7 +55,7 @@ export default function Post({
       onClick: submit => (submit && content !== body) && setModal(true)
     },
     "bookmark": {
-      description: ["salvar tópico", "remover tópico dos salvos"],
+      description: ["salvar post", "remover post dos salvos"],
       icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
       initialValue: userInteractions?.includes("bookmark") || false,
       onClick: () => submitVote(navigate, id, "bookmark")
