@@ -43,8 +43,15 @@ export default function Frame({
   const dotsRef = React.useRef()
   const isDesktop = useBreakpoint()
 
-  const toggle = (str) => headerStatus[str] !== undefined && setHeaderStatus({ ...headerStatus, [str]: !headerStatus[str] })
-
+  const toggle = (str, value = undefined) => {
+    if (headerStatus[str] !== undefined || value !== undefined)
+      setHeaderStatus({
+        ...headerStatus,
+        [str]: (headerStatus[str] !== undefined) ? !headerStatus[str] : undefined,
+        ...value
+      })
+  }
+  
 
   React.useEffect(() => {
     setHeight(ref?.current?.clientHeight || 0)
@@ -81,27 +88,29 @@ export default function Frame({
             {isDesktop ?
               <>
                 {Object.entries(headerConfig).map((([buttonName, buttonConfig]) => {
-                  if (buttonConfig.hide)
+                  const { icons, description, hide, disabled, onClick } = buttonConfig
+
+                  if (hide)
                     return
 
                   const index = Number(headerStatus[buttonName])
 
-                  const Icon = buttonConfig.icons.constructor === Array ?
-                    buttonConfig.icons[index]
+                  const Icon = icons.constructor === Array ?
+                    icons[index]
                     :
-                    buttonConfig.icons
+                    icons
 
-                  const title = buttonConfig.description.constructor === Array ?
-                    buttonConfig.description[index]
+                  const title = description.constructor === Array ?
+                    description[index]
                     :
-                    buttonConfig.description
+                    description
 
                   return (
                     <Icon
-                      key={buttonName}
-                      className="icons"
+                      key={`${id}-${buttonName}`}
+                      className={`icons${disabled ? " disabled" : ""}`}
                       title={title}
-                      onClick={() => { buttonConfig.onClick(headerStatus[buttonName]); toggle(buttonName) }}
+                      onClick={() => { if (!disabled) { toggle(buttonName, onClick(headerStatus[buttonName], headerStatus)) } }}
                     />
                   )
                 }))}

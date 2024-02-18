@@ -30,6 +30,10 @@
                 &:hover {
                     background-color: lighten($default-bg, 5%);
                 }
+
+                &.disabled:hover {
+                    background-color: lighten($default-bg, 10%);
+                }
             }
         }
     }

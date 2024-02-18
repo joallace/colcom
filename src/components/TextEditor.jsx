@@ -32,11 +32,12 @@ export default function TextEditor({
   edit: isEditable = !readOnly,
   alongsideCritique,
   setShowCritique,
+  critiquesVisible,
   tableConfig = { maxRows: 20, maxColumns: 10 },
   bubbleMenuShouldShow = true,
   ...remainingProps
 }) {
-  const [ready, setReady] = React.useState(false)
+  const [markedBody, setMarkedBody] = React.useState()
   const [modal, setModal] = React.useState(false)
   const { chartString, resetChartStr } = React.useContext(ChartContext)
   const editor = useEditor({
@@ -80,6 +81,7 @@ export default function TextEditor({
       })
 
       editor.chain().setTextSelection(0).blur().run()
+      setMarkedBody(editor.getHTML())
 
       editor.on("transaction", ({ editor }) => {
         if (editor.isActive("highlight", { type: "definitive" }) && !alongsideCritique) {
@@ -89,7 +91,7 @@ export default function TextEditor({
     },
 
     editable: isEditable,
-    content: isEditable ? content : content?.replace(/<chart readonly="false"/g, '<chart readonly="true"'),
+    content: isEditable ? content : content?.replace(/<chart readonly="false"/g, '<chart readonly="true"')
   })
 
   const removeTempHighlight = obj => {
@@ -125,6 +127,15 @@ export default function TextEditor({
         editor.commands.setContent(editor.getHTML().replace(/<chart readonly="false"/g, '<chart readonly="true"'))
     }
   }, [isEditable]);
+
+  React.useEffect(() => {
+    if (editor) {
+      if (critiquesVisible)
+        editor.commands.setContent(markedBody)
+      else
+        editor.commands.setContent(initialContent)
+    }
+  }, [critiquesVisible])
 
   React.useEffect(() => {
     if (editor && !alongsideCritique) {

@@ -14,7 +14,14 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
   const triggerRef = React.useRef()
 
 
-  const toggle = (str) => { setStatus({ ...status, [str]: !status[str] }) }
+  const toggle = (str, value = undefined) => {
+    if (status[str] !== undefined || value !== undefined)
+      setStatus({
+        ...status,
+        [str]: (status[str] !== undefined) ? !status[str] : undefined,
+        ...value
+      })
+  }
 
   const toggleMenu = () => { setIsOpen(!isOpen) }
 
@@ -42,23 +49,25 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
           <ul>
             {
               Object.entries(options).map((([buttonName, buttonConfig]) => {
-                if (buttonConfig.hide)
+                const { icons, description, hide, disabled, onClick } = buttonConfig
+
+                if (hide)
                   return
 
-                const [Icon, description] = buttonConfig.icons.constructor === Array ?
+                const [Icon, text] = icons.constructor === Array ?
                   [
-                    buttonConfig.icons[Number(status[buttonName])],
-                    buttonConfig.description[Number(status[buttonName])]
+                    icons[Number(status[buttonName])],
+                    description[Number(status[buttonName])]
                   ]
                   :
                   [
-                    buttonConfig.icons,
-                    buttonConfig.description
+                    icons,
+                    description
                   ]
 
                 return (
-                  <li key={buttonName} onClick={() => { buttonConfig.onClick(status[buttonName]); toggle(buttonName); toggleMenu() }}>
-                    <Icon className="dropdown-icon" /> {description}
+                  <li className={disabled?"disabled" : ""} key={buttonName} onClick={() => { if (!disabled) { toggle(buttonName, onClick(status[buttonName], status)); toggleMenu() } }}>
+                    <Icon className={`dropdown-icon${disabled?" disabled" : ""}`} /> {text}
                   </li>
                 )
               }))

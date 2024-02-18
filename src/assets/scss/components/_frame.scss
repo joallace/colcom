@@ -198,3 +198,8 @@
     -ms-user-select: none;
     user-select: none;
 }
+
+.disabled{
+    cursor: default !important;
+    color: darken($default-font-color, 50%);
+}

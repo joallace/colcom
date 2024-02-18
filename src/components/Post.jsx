@@ -5,7 +5,9 @@ import {
   PiBookmarkSimpleFill,
   PiPencilSimpleFill,
   PiPencilSimple,
-  PiGitBranch
+  PiGitBranch,
+  PiEye,
+  PiEyeClosed
 } from "react-icons/pi"
 
 import TextEditor from "@/components/TextEditor"
@@ -47,12 +49,26 @@ export default function Post({
       icons: PiGitBranch,
       onClick: () => { }
     },
+    "critiquesVisible": {
+      description: ["exibir críticas", "omitir críticas"],
+      icons: [PiEyeClosed, PiEye],
+      initialValue: true,
+      onClick: (_, status) => {
+        if(status.edit)
+          return {"critiquesVisible": false}
+      }
+    },
     "edit": {
       description: ["sugerir edição no post", "finalizar edição"],
       icons: [PiPencilSimple, PiPencilSimpleFill],
       initialValue: false,
-      hide: !bubbleMenuShouldShow,
-      onClick: submit => (submit && content !== body) && setModal(true)
+      disabled: !bubbleMenuShouldShow,
+      onClick: (submit) => {
+        if (submit && content !== body)
+          setModal(true)
+        if (!submit)
+          return { "critiquesVisible": false }
+      }
     },
     "bookmark": {
       description: ["salvar post", "remover post dos salvos"],
@@ -131,6 +147,7 @@ export default function Post({
           critiques={critiques}
           content={content}
           setContent={setContent}
+          // showCritiques={}
           setShowCritique={setShowCritique}
           bubbleMenuShouldShow={bubbleMenuShouldShow}
           reset={reset}
