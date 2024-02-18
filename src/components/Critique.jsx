@@ -23,7 +23,8 @@ function getSelectionHeight() {
       if (range.getBoundingClientRect) {
         // Sometimes, when selecting a whole paragraph, we can't get the selection rect
         // so we can just pick it from the starting container
-        const rect = range.getBoundingClientRect().top ? range.getBoundingClientRect() : range.startContainer.getBoundingClientRect()
+        console.log(range?.startContainer)
+        const rect = range?.getBoundingClientRect()?.top ? range?.getBoundingClientRect() : range?.startContainer?.getBoundingClientRect()
         return (rect.top + rect.bottom) / 2
       }
     }
@@ -127,7 +128,7 @@ export default ({
 
 
   React.useEffect(() => {
-    if (frameHeight && interval) {
+    if (frameHeight && interval && isDesktop) {
       const y = getSelectionHeight() + window.scrollY - frameHeight - parentRef?.current.offsetTop
 
       setOffsetTop(y)
@@ -152,7 +153,14 @@ export default ({
       style={{ transform: isDesktop ? `translate(0,${offsetTop}px)` : undefined, width: isDesktop ? undefined : "100%" }}
       setHeight={setFrameHeight}
     >
-      <TextEditor initialContent={body} reset={body} content={content} setContent={setContent} bubbleMenuShouldShow={!readOnly} />
+      <TextEditor
+        initialContent={body}
+        edit={!readOnly} // Setting this so that the read only chart can't be edited 
+        reset={body}
+        content={content}
+        setContent={setContent}
+        bubbleMenuShouldShow={!readOnly}
+      />
     </Frame>
   )
 }

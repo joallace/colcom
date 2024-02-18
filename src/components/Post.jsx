@@ -53,10 +53,8 @@ export default function Post({
       description: ["exibir críticas", "omitir críticas"],
       icons: [PiEyeClosed, PiEye],
       initialValue: true,
-      onClick: (_, status) => {
-        if(status.edit)
-          return {"critiquesVisible": false}
-      }
+      disabled: status => status.edit,
+      onClick: () => { }
     },
     "edit": {
       description: ["sugerir edição no post", "finalizar edição"],

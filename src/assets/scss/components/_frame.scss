@@ -201,5 +201,5 @@
 
 .disabled{
     cursor: default !important;
-    color: darken($default-font-color, 50%);
+    color: darken($default-font-color, 50%) !important;
 }

@@ -51,7 +51,7 @@ export default function Frame({
         ...value
       })
   }
-  
+
 
   React.useEffect(() => {
     setHeight(ref?.current?.clientHeight || 0)
@@ -89,6 +89,13 @@ export default function Frame({
               <>
                 {Object.entries(headerConfig).map((([buttonName, buttonConfig]) => {
                   const { icons, description, hide, disabled, onClick } = buttonConfig
+                  const active = disabled?.constructor === Function ?
+                    !disabled(headerStatus)
+                    :
+                    disabled?.constructor === Boolean ?
+                      !disabled
+                      :
+                      true
 
                   if (hide)
                     return
@@ -108,9 +115,9 @@ export default function Frame({
                   return (
                     <Icon
                       key={`${id}-${buttonName}`}
-                      className={`icons${disabled ? " disabled" : ""}`}
+                      className={`icons${active ? "" : " disabled"}`}
                       title={title}
-                      onClick={() => { if (!disabled) { toggle(buttonName, onClick(headerStatus[buttonName], headerStatus)) } }}
+                      onClick={() => { if (active) { toggle(buttonName, onClick(headerStatus[buttonName])) } }}
                     />
                   )
                 }))}
