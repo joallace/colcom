@@ -171,6 +171,7 @@
     mark{
         color: inherit;
         &.definitive{
+            transition: all 0.15s ease;
             cursor: pointer;
             background-color: darken($default-orange, 10%);
             &:hover{

@@ -106,7 +106,7 @@ export default function Write() {
                   type="radio"
                   value={option}
                   label={option}
-                  defaultChecked={answer === option}
+                  checked={answer === option}
                   onChange={e => setAnswer(e.target.value)}
                 />
               ))
@@ -115,7 +115,10 @@ export default function Write() {
         }
         <button onClick={download}>salvar</button>
         <button disabled={isLoading} onClick={submit}>
-          {isLoading ? <><div className="button spinner"></div>publicando...</> : "publicar"}
+          {isLoading ?
+            <><div className="button spinner"></div>publicando...</>
+            :
+            "publicar"}
         </button>
       </div>
     </div>

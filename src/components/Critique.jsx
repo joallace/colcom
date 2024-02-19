@@ -23,7 +23,6 @@ function getSelectionHeight() {
       if (range.getBoundingClientRect) {
         // Sometimes, when selecting a whole paragraph, we can't get the selection rect
         // so we can just pick it from the starting container
-        console.log(range?.startContainer)
         const rect = range?.getBoundingClientRect()?.top ? range?.getBoundingClientRect() : range?.startContainer?.getBoundingClientRect()
         return (rect.top + rect.bottom) / 2
       }
@@ -45,6 +44,9 @@ export default ({
   userInteractions,
   setShowCritique,
   parentRef,
+  submitSignal = false,
+  setSubmitSignal = () => { },
+  setCritiques = () => { },
   interval = []
 }) => {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
@@ -54,6 +56,8 @@ export default ({
   const [content, setContent] = React.useState(body)
   const [frameHeight, setFrameHeight] = React.useState()
   const [offsetTop, setOffsetTop] = React.useState(0)
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [error, setError] = React.useState(false)
   const titleRef = React.useRef()
   const navigate = useNavigate()
   const isDesktop = useBreakpoint("md")
@@ -106,6 +110,7 @@ export default ({
     }
 
     try {
+      setIsLoading(true)
       const url = `${env.apiAddress}/contents`
 
       const res = await fetch(url, {
@@ -114,15 +119,21 @@ export default ({
         body: JSON.stringify({ title, body: content, config: { from, to, commit }, parent_id })
       })
 
-      const data = await res.json()
 
-      if (res.status >= 400) {
-        setGlobalError(data.message.toLowerCase())
-        return
+      if (res.ok) {
+        const data = await res.json()
+        setCritiques(prev => [...prev, data])
+        setShowCritique(false)
       }
+      else
+        setError(true)
     }
     catch (err) {
       console.error(err)
+    }
+    finally {
+      setIsLoading(false)
+      setSubmitSignal(false)
     }
   }
 
@@ -135,6 +146,11 @@ export default ({
       window.scrollTo({ top: y, behavior: "smooth" })
     }
   }, [frameHeight, interval])
+
+  React.useEffect(() => {
+    if (submitSignal)
+      submit()
+  }, [submitSignal])
 
 
   return (
@@ -152,15 +168,21 @@ export default ({
       readOnly={readOnly}
       style={{ transform: isDesktop ? `translate(0,${offsetTop}px)` : undefined, width: isDesktop ? undefined : "100%" }}
       setHeight={setFrameHeight}
+      error={error}
+      setError={setError}
     >
-      <TextEditor
-        initialContent={body}
-        edit={!readOnly} // Setting this so that the read only chart can't be edited 
-        reset={body}
-        content={content}
-        setContent={setContent}
-        bubbleMenuShouldShow={!readOnly}
-      />
+      {isLoading ?
+        <div className="spinner" />
+        :
+        <TextEditor
+          initialContent={body}
+          edit={!readOnly} // Setting this so that the read only chart can't be edited 
+          reset={body}
+          content={content}
+          setContent={(text) => { setContent(text); setError(false) }}
+          bubbleMenuShouldShow={!readOnly}
+        />
+      }
     </Frame>
   )
 }

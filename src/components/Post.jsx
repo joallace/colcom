@@ -32,14 +32,15 @@ export default function Post({
   alongsideCritique,
   setShowCritique,
   userInteractions,
-  bubbleMenuShouldShow
+  bubbleMenuShouldShow,
+  resetState
 }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
   const [definitiveVote, setDefinitiveVote] = React.useState(userInteractions?.includes("vote"))
   const [content, setContent] = React.useState(body)
-  const [reset, setReset] = React.useState(false)
   const [modal, setModal] = React.useState(false)
+  const [reset, setReset] = resetState
   const commitMessageRef = React.useRef()
   const navigate = useNavigate()
 

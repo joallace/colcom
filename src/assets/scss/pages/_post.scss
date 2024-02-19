@@ -6,11 +6,11 @@
 
     .frame {
         &.original {
-            @include content-responsiveness(50vw, 60vw, 95vw);
+            @include content-responsiveness(55vw, 60vw, 95vw);
         }
 
         &.critique {
-            @include content-responsiveness(40vw, 35vw, 0);
+            @include content-responsiveness(30vw, 30vw, 0);
         }
     }
 

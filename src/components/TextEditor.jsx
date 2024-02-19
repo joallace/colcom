@@ -40,6 +40,18 @@ export default function TextEditor({
   const [markedBody, setMarkedBody] = React.useState()
   const [modal, setModal] = React.useState(false)
   const { chartString, resetChartStr } = React.useContext(ChartContext)
+
+  const injectCritiques = ({ editor }) => {
+    critiques.forEach((critique, index) => {
+      editor.chain().setTextSelection(critique.config).setHighlight({ type: "definitive", index }).run()
+    })
+
+    editor.chain().setTextSelection(0).blur().run()
+    setMarkedBody(editor.getHTML())
+
+    editor.on("transaction", onCritiqueClick)
+  }
+
   const editor = useEditor({
     extensions: [
       Document,
@@ -75,24 +87,17 @@ export default function TextEditor({
       if (saveInLocalStorage)
         localStorage.setItem("editorContent", editorContent)
     },
-    onCreate: ({ editor }) => {
-      critiques.forEach((critique, index) => {
-        editor.chain().setTextSelection(critique.config).setHighlight({ type: "definitive", index }).run()
-      })
-
-      editor.chain().setTextSelection(0).blur().run()
-      setMarkedBody(editor.getHTML())
-
-      editor.on("transaction", ({ editor }) => {
-        if (editor.isActive("highlight", { type: "definitive" }) && !alongsideCritique) {
-          setShowCritique(window?.getSelection()?.focusNode?.parentElement.getAttribute("data-commit-index"))
-        }
-      })
-    },
-
+    onCreate: injectCritiques,
     editable: isEditable,
     content: isEditable ? content : content?.replace(/<chart readonly="false"/g, '<chart readonly="true"')
   })
+
+  
+  const onCritiqueClick = ({ editor }) => {
+    if (editor.isActive("highlight", { type: "definitive" }) && !alongsideCritique) {
+      setShowCritique(window?.getSelection()?.focusNode?.parentElement.getAttribute("data-commit-index"))
+    }
+  }
 
   const removeTempHighlight = obj => {
     if (obj.marks)
@@ -139,11 +144,13 @@ export default function TextEditor({
 
   React.useEffect(() => {
     if (editor && !alongsideCritique) {
+      injectCritiques({ editor })
       let newContent = editor.getJSON()
 
       for (let i = 0; i < newContent.content.length; i++)
         newContent.content[i] = removeTempHighlight(newContent.content[i])
 
+      setMarkedBody(newContent)
       editor.commands.setContent(newContent)
     }
   }, [alongsideCritique])

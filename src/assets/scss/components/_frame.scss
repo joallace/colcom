@@ -117,6 +117,7 @@
 
     .icons {
         cursor: pointer;
+        transition: all 0.15s ease;
 
         &:hover {
             color: $default-orange;
@@ -177,7 +178,7 @@
     }
 
     &.error {
-        border-color: $default-red;
+        border-color: $default-red !important;
     }
 
     &.reverse {
@@ -199,7 +200,7 @@
     user-select: none;
 }
 
-.disabled{
+.disabled {
     cursor: default !important;
     color: darken($default-font-color, 50%) !important;
 }

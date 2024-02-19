@@ -10,7 +10,9 @@ import Modal from "@/components/Modal"
 
 export default () => {
   const [postData, setPostData] = React.useState({})
+  const [reset, setReset] = React.useState(false)
   const [showCritique, setShowCritique] = React.useState(false)
+  const [submitCritique, setSubmitCritique] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
   const [currentCommit, setCurrentCommit] = React.useState()
   const [startCommit, setStartCommit] = React.useState()
@@ -110,6 +112,7 @@ export default () => {
               alongsideCritique={showCritique}
               setShowCritique={setShowCritique}
               bubbleMenuShouldShow={currentCommit === postData?.history?.length - 1}
+              resetState={[reset, setReset]}
             />
             {showCritique &&
               isDesktop ?
@@ -119,6 +122,9 @@ export default () => {
                 setShowCritique={setShowCritique}
                 parentRef={postTitleRef}
                 commit={postData?.history && postData?.history[currentCommit].commit}
+                submitSignal={submitCritique}
+                setSubmitSignal={setSubmitCritique}
+                setCritiques={setPostCritiques}
                 {...postCritiques[showCritique]}
               />
               :
@@ -133,12 +139,23 @@ export default () => {
                     setShowCritique={setShowCritique}
                     parentRef={postTitleRef}
                     commit={postData?.history && postData?.history[currentCommit].commit}
+                    submitSignal={submitCritique}
+                    setSubmitSignal={setSubmitCritique}
+                    setCritiques={setPostCritiques}
                     {...postCritiques[showCritique]}
                   />
                 </div>
-                <div className="footer center">
-                  <button>publicar</button>
-                </div>
+                {(showCritique && showCritique.constructor === Array) &&
+                  <div className="footer center">
+                    <button disabled={isLoading} onClick={() => setSubmitCritique(true)}>
+                      {isLoading ?
+                        <><div className="button spinner"></div>publicando...</>
+                        :
+                        "publicar"
+                      }
+                    </button>
+                  </div>
+                }
               </Modal>
             }
           </div>

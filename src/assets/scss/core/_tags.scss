@@ -5,6 +5,7 @@ button {
     border: 2px solid $default-green;
     border-radius: 0.25rem;
     padding: 0.25rem 0.5rem;
+    transition: all 0.15s ease;
     cursor: pointer;
 
     &:hover {
@@ -43,6 +44,7 @@ a {
     cursor: pointer;
     color: white;
     text-decoration: none;
+    transition: all 0.1s ease;
 
     &:hover {
         color: $default-orange;
