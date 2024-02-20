@@ -165,10 +165,9 @@ export const getContent: RequestHandler = async (req, res, next) => {
   const content_id = Number(req.params.id)
   const omitBody = "omit_body" in req.query
   const includeParentTitle = "include_parent_title" in req.query
-  console.log(includeParentTitle)
+
   try {
     const content = await Content.findById(content_id, { omitBody, includeParentTitle })
-    console.log(content)
 
     if (!content)
       throw new NotFoundError({
@@ -191,8 +190,19 @@ export const getContent: RequestHandler = async (req, res, next) => {
   }
 }
 
+
+const getPostHistory = async (post_id: number, parent_id: number) => {
+  const path = `${dbPath}/${parent_id}/`
+  const formatFlag = "--pretty=format:{^^^^commit^^^^:^^^^%h^^^^,^^^^subject^^^^:^^^^%s^^^^,^^^^date^^^^:^^^^%ar^^^^,^^^^author^^^^:^^^^%aN^^^^},"
+
+  const log: any = await exec("git", ["-C", path, "log", `main..${post_id}`, formatFlag], { encoding: "utf-8" })
+
+  return (JSON.parse("[" + log.replaceAll('"', '\\"').replaceAll("^^^^", '"').slice(0, -1) + "]")).reverse()
+}
+
 export const getVersion: RequestHandler = async (req, res, next) => {
   const content_id = Number(req.params.id)
+  const author_pid = (<any>req.params.user)?.pid
   const commit = req.params.hash
   const queryParentId = req.query.parent_id
 
@@ -219,6 +229,9 @@ export const getVersion: RequestHandler = async (req, res, next) => {
     const path = `${dbPath}/${parent_id}`
     const body = await exec("git", ["-C", path, "show", `${commit}:./main.html`])
     const children = (await Content.findAll({ where: "contents.parent_id = $1 AND contents.config->>'commit' = $2", values: [content_id, commit] })).reverse()
+
+    for (const child of children)
+      (<any>child).userInteractions = (await Interactions.getUserContentInteractions({ author_pid, content_id: child.id })).map(v => v.type)
 
     res.status(200).json({ body, children })
   }
@@ -269,42 +282,6 @@ export const updateContent: RequestHandler = async (req, res, next) => {
 
       res.status(204).end()
     }
-  }
-  catch (err) {
-    next(err)
-  }
-}
-
-const getPostHistory = async (post_id: number, parent_id: number) => {
-  const path = `${dbPath}/${parent_id}/`
-  const formatFlag = "--pretty=format:{^^^^commit^^^^:^^^^%h^^^^,^^^^subject^^^^:^^^^%s^^^^,^^^^date^^^^:^^^^%ar^^^^,^^^^author^^^^:^^^^%aN^^^^},"
-
-  const log: any = await exec("git", ["-C", path, "log", `main..${post_id}`, formatFlag], { encoding: "utf-8" })
-
-  return (JSON.parse("[" + log.replaceAll('"', '\\"').replaceAll("^^^^", '"').slice(0, -1) + "]")).reverse()
-}
-
-export const getContentHistory: RequestHandler = async (req, res, next) => {
-  try {
-    const content = await Content.findById(Number(req.params.id))
-
-    if (!content)
-      throw new NotFoundError({
-        message: "Conteúdo não encontrado.",
-        action: 'Verifique se o "id" fornecido está correto.',
-        stack: new Error().stack
-      })
-
-    if (content.type !== "post")
-      throw new ValidationError({
-        message: `Conteúdos do tipo "${content.type}" não possuem histórico.`,
-        action: 'Forneça um "id" de um "post".',
-        stack: new Error().stack
-      })
-
-    const result = getPostHistory(content.id, Number(content.parent_id))
-
-    res.status(200).json(result)
   }
   catch (err) {
     next(err)

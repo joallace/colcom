@@ -27,10 +27,12 @@ export default () => {
     if (!commitToFetch && (startCommit === currentCommit))
       return
 
+    const token = localStorage.getItem("accessToken")
+    const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
     const commit = commitToFetch || postData.history[currentCommit].commit
     try {
       setIsLoading(true)
-      const res = await fetch(`${env.apiAddress}/contents/${pid}/${commit}?parent_id=${tid}`)
+      const res = await fetch(`${env.apiAddress}/contents/${pid}/${commit}?parent_id=${tid}`, { headers })
       const data = await res.json()
 
       if (res.ok && data) {
@@ -104,7 +106,7 @@ export default () => {
               ))}
             </datalist>
           </div>
-          
+
           <div className="post">
             <Post
               {...postData}
