@@ -151,6 +151,7 @@ input[type=range] {
     }
 
     &::-webkit-slider-thumb {
+        transition: all 0.2s ease;
         -webkit-appearance: none;
         appearance: none;
         margin-top: -4px;
@@ -162,6 +163,7 @@ input[type=range] {
     }
 
     &::-moz-range-thumb {
+        transition: all 0.2s ease;
         background-color: $default-green;
         border-radius: 50%;
         height: 1rem;

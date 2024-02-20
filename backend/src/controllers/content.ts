@@ -271,8 +271,9 @@ export const updateContent: RequestHandler = async (req, res, next) => {
       await exec("git", ["-C", path, "add", file])
       await exec("git", ["-C", path, "commit", "-m", message])
 
+      const commit = (<any> await exec("git", ["-C", path, "rev-parse", "--short", "HEAD"])).trimEnd()
       const result = await Content.updateById(content.id, body, author_pid)
-      res.status(200).json(result)
+      res.status(200).json({ ...result, commit })
     }
     else {
       await exec("git", ["-C", path, "checkout", "-b", `${content.id}_${author_pid}`, String(content.id)])

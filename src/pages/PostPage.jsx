@@ -115,6 +115,11 @@ export default () => {
               critiques={postCritiques}
               alongsideCritique={showCritique}
               setShowCritique={setShowCritique}
+              setPostData={(data) => {
+                const history = [...postData.history, { commit: data.commit, date: "agora" }]
+                setPostData({ ...postData, ...data, history, commit: undefined })
+                setCurrentCommit(history.length-1)
+              }}
               bubbleMenuShouldShow={currentCommit === postData?.history?.length - 1}
               resetState={[reset, setReset]}
             />

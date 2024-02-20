@@ -15,6 +15,7 @@ import Frame from "@/components/Frame"
 import Modal from "@/components/Modal"
 import Input from "@/components/Input"
 import { submitVote } from "@/components/VotingButtons"
+import { UserContext } from "@/context/UserContext"
 import { toPercentageStr, getUserVote } from "@/assets/util"
 import env from "@/assets/enviroment"
 
@@ -22,6 +23,7 @@ import env from "@/assets/enviroment"
 export default function Post({
   id,
   author,
+  author_id,
   title,
   titleRef,
   body,
@@ -32,6 +34,7 @@ export default function Post({
   alongsideCritique,
   setShowCritique,
   userInteractions,
+  setPostData,
   bubbleMenuShouldShow,
   resetState
 }) {
@@ -40,8 +43,10 @@ export default function Post({
   const [definitiveVote, setDefinitiveVote] = React.useState(userInteractions?.includes("vote"))
   const [content, setContent] = React.useState(body)
   const [modal, setModal] = React.useState(false)
+  const [isLoading, setIsLoading] = React.useState(false)
   const [reset, setReset] = resetState
   const commitMessageRef = React.useRef()
+  const { user } = React.useContext(UserContext)
   const navigate = useNavigate()
 
   const headerConfig = {
@@ -102,8 +107,9 @@ export default function Post({
     }
 
     try {
-      const url = `${env.apiAddress}/contents/${id}`
+      setIsLoading(true)
 
+      const url = `${env.apiAddress}/contents/${id}`
       const res = await fetch(url, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
@@ -112,15 +118,14 @@ export default function Post({
 
       const data = await res.json()
 
-      if (res.status >= 400) {
-        console.error(data)
-        return
-      }
+      if (res.ok && user.pid === author_id)
+        setPostData(data)
     }
     catch (err) {
       console.error(err)
     }
     finally {
+      setIsLoading(false)
       setModal(false)
     }
   }
@@ -163,7 +168,13 @@ export default function Post({
         </div>
         <div className="footer center">
           <button className="error" onClick={() => { setContent(body); setReset(!reset); setModal(false) }}>cancelar</button>
-          <button onClick={submit}>enviar</button>
+          <button disabled={isLoading}  onClick={submit}>
+            {isLoading ?
+              <><div className="button spinner"></div>enviando...</>
+              :
+              "enviar"
+            }
+          </button>
         </div>
       </Modal>
     </>

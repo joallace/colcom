@@ -1,4 +1,5 @@
 .dropdown-menu {
+    transition: all 0.3s ease;
     .dropdown-options {
         z-index: 999;
         font-size: 1rem;
@@ -28,12 +29,16 @@
                     font-size: 1.25rem;
                 }
 
-                &:hover {
+                &:not(.unclickable):hover {
                     background-color: lighten($default-bg, 5%);
                 }
 
                 &.disabled:hover {
                     background-color: lighten($default-bg, 10%);
+                }
+
+                &.unclickable{
+                    cursor: default;
                 }
             }
         }

@@ -75,7 +75,7 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
                 return (
                   <li
                     key={buttonName}
-                    className={active ? "" : " disabled"}
+                    className={`${active ? "" : "disabled"}${onClick ? "" : " unclickable"}`}
                     onClick={() => { if (active) { toggle(buttonName, onClick(status[buttonName])); toggleMenu() } }}
                   >
                     <Icon className={`dropdown-icon${active ? "" : " disabled"}`} /> {text}

@@ -11,12 +11,14 @@ import Frame from "@/components/Frame"
 import PostSummary from "@/components/PostSummary"
 import NoResponse from "@/components/NoResponse"
 import { submitVote } from "@/components/VotingButtons"
+import { UserContext } from "@/context/UserContext"
 import { toPercentageStr, getUserVote } from "@/assets/util"
 
 
 export default function Topic({
   id,
   author,
+  author_id,
   title,
   promotions,
   upvotes,
@@ -30,6 +32,7 @@ export default function Topic({
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
   const [definitiveVote, setDefinitiveVote] = React.useState(userVote)
+  const { user } = React.useContext(UserContext)
   const navigate = useNavigate()
 
   const headerConfig = {
@@ -78,16 +81,17 @@ export default function Topic({
     >
       {children?.length > 0 ?
         <>
-          {children.map(child => (
+          {children.map(child => {console.log(user.pid , author_id);return(
             <PostSummary
               key={`p${id}-s${child.id}`}
               parent_id={id}
               id={child.id}
               shortAnswer={child.title}
               percentage={child.votes / childrenStats?.votes}
+              isAuthor={user.pid === child.author_id}
               chosen={userVote === child.id}
             />
-          ))}
+          )})}
           {childrenStats?.count > children.length &&
             <Link to={`/topics/${id}`} style={{ width: "min-content", whiteSpace: "nowrap" }}>. . .</Link>
           }
