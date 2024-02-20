@@ -54,14 +54,14 @@ export default function Post({
       description: ["exibir críticas", "omitir críticas"],
       icons: [PiEyeClosed, PiEye],
       initialValue: true,
-      disabled: status => status.edit,
+      disabled: status => (status.edit || alongsideCritique),
       onClick: () => { }
     },
     "edit": {
       description: ["sugerir edição no post", "finalizar edição"],
       icons: [PiPencilSimple, PiPencilSimpleFill],
       initialValue: false,
-      disabled: !bubbleMenuShouldShow,
+      disabled: () => (!bubbleMenuShouldShow || alongsideCritique),
       onClick: (submit) => {
         if (submit && content !== body)
           setModal(true)
