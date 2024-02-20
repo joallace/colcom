@@ -103,13 +103,14 @@ async function create({ title, author_pid, parent_id, body, type, config }: Cont
   return { ...result.rows[0], author: name, author_id: author_pid }
 }
 
-async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as any[], omitBody = false }): Promise<Content[]> {
+async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as any[], omitBody = false, includeParentTitle = false }): Promise<Content[]> {
   const query = {
     text: `
       SELECT
         contents.id,
         contents.title,
         contents.parent_id,
+        ${includeParentTitle ? "parent.title as parent_title," : ""}
         ${omitBody ? "" : "contents.body,"}
         contents.type,
         contents.status,
@@ -156,6 +157,12 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
         contents
       INNER JOIN
         users ON contents.author_id = users.id
+      ${includeParentTitle ?
+        `LEFT JOIN
+          contents as parent ON contents.parent_id = parent.id`
+        :
+        ""
+      }
       WHERE ${where}
       ORDER BY ${orderBy} DESC
       LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}
@@ -328,34 +335,6 @@ async function updateById(id: number, body: string, author_pid: string) {
   return { ...result.rows[0], author_id: author_pid }
 }
 
-async function getTopicNumberOfVotes(topic_id: number): Promise<number> {
-  const query = {
-    text: `
-      SELECT
-        COUNT(*)
-      FROM
-        interactions
-      WHERE
-        interactions.type = 'favorite'
-      AND
-        interactions.content_id
-      IN
-        (
-          SELECT
-            id
-          FROM
-            contents
-          WHERE
-            contents.parent_id = $1
-        )
-    ;`,
-    values: [topic_id]
-  }
-
-  const result = await db.query(query)
-  return result.rows[0].count
-}
-
 export async function getDataById(id: number, data: (keyof Content)[]): Promise<any> {
   const query = {
     text: `
@@ -387,7 +366,6 @@ export default Object.freeze({
   findTree,
   findById,
   updateById,
-  getTopicNumberOfVotes,
   getDataById
 })
 

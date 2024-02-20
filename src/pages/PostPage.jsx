@@ -1,5 +1,5 @@
 import React from "react"
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 
 import Post from "@/components/Post"
 import Critique from "@/components/Critique"
@@ -53,7 +53,7 @@ export default () => {
       const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
       try {
         setIsLoading(true)
-        const url = `${env.apiAddress}/contents/${pid}?omit_body`
+        const url = `${env.apiAddress}/contents/${pid}?omit_body&include_parent_title`
         const res = await fetch(url, { method: "get", headers })
         const data = await res.json()
 
@@ -81,7 +81,8 @@ export default () => {
         <div className="spinner" />
         :
         <>
-          {/* <div className="topicName">respondendo ao tópico "<Link to={`/topics/${state.id}`}>{state.title}</Link>"</div> */}
+          <div className="topicName">respondendo ao tópico "<Link to={`/topics/${postData.parent_id}`}>{postData.parent_title}</Link>"</div>
+
           <div className="timerSlider">
             <input
               type="range"
@@ -103,6 +104,7 @@ export default () => {
               ))}
             </datalist>
           </div>
+          
           <div className="post">
             <Post
               {...postData}

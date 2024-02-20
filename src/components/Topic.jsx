@@ -77,16 +77,21 @@ export default function Topic({
       metrics={getMetrics}
     >
       {children?.length > 0 ?
-        children.map(child => (
-          <PostSummary
-            key={`p${id}-s${child.id}`}
-            parent_id={id}
-            id={child.id}
-            shortAnswer={child.title}
-            percentage={child.votes / childrenStats?.votes}
-            chosen={userVote === child.id}
-          />
-        ))
+        <>
+          {children.map(child => (
+            <PostSummary
+              key={`p${id}-s${child.id}`}
+              parent_id={id}
+              id={child.id}
+              shortAnswer={child.title}
+              percentage={child.votes / childrenStats?.votes}
+              chosen={userVote === child.id}
+            />
+          ))}
+          {childrenStats?.count > children.length &&
+            <Link to={`/topics/${id}`} style={{ width: "min-content", whiteSpace: "nowrap" }}>. . .</Link>
+          }
+        </>
         :
         <NoResponse />
       }

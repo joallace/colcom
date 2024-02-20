@@ -164,9 +164,11 @@ export const getContent: RequestHandler = async (req, res, next) => {
   const author_pid = (<any>req.params.user)?.pid
   const content_id = Number(req.params.id)
   const omitBody = "omit_body" in req.query
-
+  const includeParentTitle = "include_parent_title" in req.query
+  console.log(includeParentTitle)
   try {
-    const content = await Content.findById(content_id, { omitBody })
+    const content = await Content.findById(content_id, { omitBody, includeParentTitle })
+    console.log(content)
 
     if (!content)
       throw new NotFoundError({
