@@ -83,7 +83,9 @@ export default () => {
         <div className="spinner" />
         :
         <>
-          <div className="topicName">respondendo ao tópico "<Link to={`/topics/${postData.parent_id}`}>{postData.parent_title}</Link>"</div>
+          <div className="topicName">
+            respondendo ao tópico "<Link to={`/topics/${postData.parent_id}`}>{postData.parent_title}</Link>"{postData?.config?.answer && <> com "<strong>{postData.config.answer}</strong>"</>}
+          </div>
 
           <div className="timerSlider">
             <input
@@ -118,7 +120,7 @@ export default () => {
               setPostData={(data) => {
                 const history = [...postData.history, { commit: data.commit, date: "agora" }]
                 setPostData({ ...postData, ...data, history, commit: undefined })
-                setCurrentCommit(history.length-1)
+                setCurrentCommit(history.length - 1)
               }}
               bubbleMenuShouldShow={currentCommit === postData?.history?.length - 1}
               resetState={[reset, setReset]}
