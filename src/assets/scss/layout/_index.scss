@@ -26,3 +26,26 @@ body {
         align-content: center;
     }
 }
+
+.icons {
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+        color: $default-orange;
+    }
+}
+
+.unselectable {
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.disabled {
+    cursor: default !important;
+    color: darken($default-font-color, 50%) !important;
+    pointer-events: none;
+}

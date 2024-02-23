@@ -1,13 +1,16 @@
 import React from "react"
+import { useSearchParams } from "react-router-dom"
 
 import NoResponse from "@/components/NoResponse"
 import env from "@/assets/enviroment"
 import Topic from "@/components/Topic"
+import Pagination from "@/components/Pagination"
 
 
 export default function TopicTree({ orderBy, where }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [topics, setTopics] = React.useState([])
-  const [page, setPage] = React.useState(0)
+  const [page, setPage] = React.useState(searchParams.get("p") ? searchParams.get("p") - 1 : 0)
   const [pageSize, setPageSize] = React.useState(10)
   const [isLoading, setIsLoading] = React.useState(false)
 
@@ -35,7 +38,14 @@ export default function TopicTree({ orderBy, where }) {
     }
 
     fetchPromoted()
-  }, [])
+  }, [page])
+
+  React.useEffect(() => {
+    const pageQuery = searchParams.get("p")
+    console.log(pageQuery)
+
+    setPage(pageQuery ? pageQuery - 1 : 0)
+  }, [searchParams])
 
   return (
     <div className="content tree">
@@ -50,6 +60,11 @@ export default function TopicTree({ orderBy, where }) {
             :
             <NoResponse />
       }
+      <Pagination
+        path="/promoted"
+        state={[page, setPage]}
+        isLoading={isLoading}
+      />
     </div>
   )
 }
