@@ -222,3 +222,16 @@ fieldset {
         border-color: $default-red;
     }
 }
+
+footer {
+    display: flex;
+    place-content: center;
+    padding: 1rem;
+    margin: 0 auto;
+    border-top: 2px solid darken($default-green, 10%);
+    @include content-responsiveness;
+
+    a {
+        color: darken($default-font-color, 10%);
+    }
+}

@@ -3,7 +3,7 @@
 }
 
 body {
-    margin: 0
+    margin: 0;
 }
 
 :root {
@@ -11,9 +11,17 @@ body {
     color: $default-font-color;
 }
 
+#root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
 .content {
     display: grid;
+    grid-auto-rows: min-content;
     justify-items: center;
+    flex: 1;
 
 
     &.tree {
