@@ -92,7 +92,7 @@ export default function TextEditor({
     content: isEditable ? content : content?.replace(/<chart readonly="false"/g, '<chart readonly="true"')
   })
 
-  
+
   const onCritiqueClick = ({ editor }) => {
     if (editor.isActive("highlight", { type: "definitive" }) && !alongsideCritique) {
       setShowCritique(window?.getSelection()?.focusNode?.parentElement.getAttribute("data-commit-index"))
@@ -151,7 +151,9 @@ export default function TextEditor({
         newContent.content[i] = removeTempHighlight(newContent.content[i])
 
       setMarkedBody(newContent)
-      editor.commands.setContent(newContent)
+
+      if (!critiquesVisible)
+        editor.commands.setContent(initialContent)
     }
   }, [alongsideCritique])
 

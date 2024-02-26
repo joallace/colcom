@@ -84,7 +84,9 @@ export default () => {
         :
         <>
           <div className="topicName">
-            respondendo ao tópico "<Link to={`/topics/${postData.parent_id}`}>{postData.parent_title}</Link>"{postData?.config?.answer && <> com "<strong>{postData.config.answer}</strong>"</>}
+            respondendo ao tópico 
+            "<Link to={`/topics/${postData.parent_id}`}>{postData.parent_title}</Link>"
+            {postData?.config?.answer && <> com "<strong style={{color: "white"}}>{postData.config.answer}</strong>"</>}
           </div>
 
           <div className="timerSlider">
