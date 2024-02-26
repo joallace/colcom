@@ -67,8 +67,6 @@ export default function Pagination({ path = "", state, isLoading, maxIndex = -1 
                   if (e.key === "Enter") {
                     e.preventDefault()
                     const value = +content - 1
-                    console.log(value)
-                    console.log(e)
                     if (value < 0) {
                       setIndex(0)
                       return
@@ -80,7 +78,7 @@ export default function Pagination({ path = "", state, isLoading, maxIndex = -1 
                     setIndex(value)
                   }
 
-                  if (!/^\d*$/.test(content)) {
+                  if (!(["Backspace", "Delete", "ArrowRight", "ArrowLeft"].includes(e.key)) && !/\d/.test(e.key)) {
                     e.preventDefault()
                   }
                 }}

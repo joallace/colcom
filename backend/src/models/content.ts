@@ -360,13 +360,32 @@ export async function getDataById(id: number, data: (keyof Content)[]): Promise<
   return result.rows[0]
 }
 
+export async function getCount(type: ContentType): Promise<any> {
+  const query = {
+    text: `
+      SELECT
+        COUNT(*)::int
+      FROM
+        contents
+      WHERE
+        contents.type = $1
+      ;`,
+    values: [type],
+  }
+
+  const result = await db.query(query)
+
+  return result.rows[0].count
+}
+
 export default Object.freeze({
   create,
   findAll,
   findTree,
   findById,
   updateById,
-  getDataById
+  getDataById,
+  getCount
 })
 
 export { Content as IContent, ContentInsertRequest, ContentType }

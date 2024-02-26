@@ -103,7 +103,8 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
   const pageSize = Number(req.query.pageSize) || 10
   const orderBy = req.query.orderBy ? String(req.query.orderBy) : "id"
   const author_pid = (<any>req.params.user)?.pid
-  const type = req.query.type
+  const getCount = "with_count" in req.query
+  const type = req.route.path.slice(1)
 
   try {
     const contents = await Content.findTree({ page, pageSize, orderBy })
@@ -133,7 +134,7 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
       })
     }
 
-    res.status(200).json(contents)
+    res.status(200).json({tree: contents, count: getCount? (await Content.getCount("topic")) : undefined})
   }
   catch (err) {
     next(err)
