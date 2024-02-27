@@ -25,6 +25,7 @@ export default function TextEditor({
   content,
   setContent = () => { },
   critiques = [],
+  groupedCritiques = [],
   reset,
   initialContent,
   saveInLocalStorage = false,
@@ -42,8 +43,8 @@ export default function TextEditor({
   const { chartString, resetChartStr } = React.useContext(ChartContext)
 
   const injectCritiques = ({ editor }) => {
-    critiques.forEach((critique, index) => {
-      editor.chain().setTextSelection(critique.config).setHighlight({ type: "definitive", index }).run()
+    groupedCritiques.forEach((critique) => {
+      editor.chain().setTextSelection(critique).setHighlight({ type: "definitive", index: critique.index.length > 1 ? JSON.stringify(critique.index) : critique.index }).run()
     })
 
     editor.chain().setTextSelection(0).blur().run()
@@ -154,6 +155,8 @@ export default function TextEditor({
 
       if (!critiquesVisible)
         editor.commands.setContent(initialContent)
+      else
+        editor.commands.setContent(newContent)
     }
   }, [alongsideCritique])
 

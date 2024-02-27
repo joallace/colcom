@@ -31,6 +31,7 @@ export default function Post({
   downvotes,
   config,
   critiques,
+  groupedCritiques,
   alongsideCritique,
   setShowCritique,
   userInteractions,
@@ -149,9 +150,9 @@ export default function Post({
         <TextEditor
           initialContent={body}
           critiques={critiques}
+          groupedCritiques={groupedCritiques}
           content={content}
           setContent={setContent}
-          // showCritiques={}
           setShowCritique={setShowCritique}
           bubbleMenuShouldShow={bubbleMenuShouldShow}
           reset={reset}
@@ -168,7 +169,7 @@ export default function Post({
         </div>
         <div className="footer center">
           <button className="error" onClick={() => { setContent(body); setReset(!reset); setModal(false) }}>cancelar</button>
-          <button disabled={isLoading}  onClick={submit}>
+          <button disabled={isLoading} onClick={submit}>
             {isLoading ?
               <><div className="button spinner"></div>enviando...</>
               :

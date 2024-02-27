@@ -2,7 +2,7 @@ import React from "react"
 import { Link, useParams } from 'react-router-dom'
 
 import Post from "@/components/Post"
-import Critique from "@/components/Critique"
+import CritiqueFrame from "@/components/Critique"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import env from "@/assets/enviroment"
 import Modal from "@/components/Modal"
@@ -48,6 +48,32 @@ export default () => {
     }
   }
 
+  function groupOverlappingMarks(marks) {
+    marks = marks.map((v, i) => ({ from: v.config.from, to: v.config.to, index: [i] }))
+      .sort((a, b) => a.from - b.from)
+
+    const groupedMarks = []
+
+    let currentMark = null
+    let previousMark = null
+
+    marks.forEach(mark => {
+      if (!currentMark || mark.from > previousMark.to) {
+        if (previousMark)
+          groupedMarks.push(previousMark)
+        currentMark = mark
+      } else {
+        currentMark.to = Math.max(currentMark.to, mark.to)
+        currentMark.index.push(mark.index[0])
+      }
+      previousMark = currentMark
+    })
+
+    if (currentMark)
+      groupedMarks.push(currentMark)
+
+    return groupedMarks
+  }
 
   React.useEffect(() => {
     const fetchPost = async () => {
@@ -76,6 +102,30 @@ export default () => {
     fetchPost()
   }, [])
 
+  const Critique = ({ index }) => (
+    <CritiqueFrame
+      parent_id={pid}
+      interval={index}
+      setShowCritique={setShowCritique}
+      parentRef={postTitleRef}
+      commit={postData?.history && postData?.history[currentCommit].commit}
+      submitSignal={submitCritique}
+      setSubmitSignal={setSubmitCritique}
+      setCritiques={setPostCritiques}
+      {...postCritiques[index]}
+    />
+  )
+
+  const Critiques = () => (
+    <div>
+      {showCritique[0] === "[" ?
+        JSON.parse(showCritique).map(i => <Critique index={i} />)
+        :
+        <Critique index={showCritique} />
+      }
+    </div>
+  )
+
 
   return (
     <div className="content">
@@ -84,9 +134,9 @@ export default () => {
         :
         <>
           <div className="topicName">
-            respondendo ao tópico 
+            respondendo ao tópico
             "<Link to={`/topics/${postData.parent_id}`}>{postData.parent_title}</Link>"
-            {postData?.config?.answer && <> com "<strong style={{color: "white"}}>{postData.config.answer}</strong>"</>}
+            {postData?.config?.answer && <> com "<strong style={{ color: "white" }}>{postData.config.answer}</strong>"</>}
           </div>
 
           <div className="timerSlider">
@@ -117,6 +167,7 @@ export default () => {
               titleRef={postTitleRef}
               body={postBody}
               critiques={postCritiques}
+              groupedCritiques={groupOverlappingMarks(postCritiques)}
               alongsideCritique={showCritique}
               setShowCritique={setShowCritique}
               setPostData={(data) => {
@@ -129,34 +180,14 @@ export default () => {
             />
             {showCritique &&
               isDesktop ?
-              <Critique
-                parent_id={pid}
-                interval={showCritique}
-                setShowCritique={setShowCritique}
-                parentRef={postTitleRef}
-                commit={postData?.history && postData?.history[currentCommit].commit}
-                submitSignal={submitCritique}
-                setSubmitSignal={setSubmitCritique}
-                setCritiques={setPostCritiques}
-                {...postCritiques[showCritique]}
-              />
+              <Critiques />
               :
               <Modal
                 isOpen={showCritique}
                 setIsOpen={setShowCritique}
               >
                 <div className="body">
-                  <Critique
-                    parent_id={pid}
-                    interval={showCritique}
-                    setShowCritique={setShowCritique}
-                    parentRef={postTitleRef}
-                    commit={postData?.history && postData?.history[currentCommit].commit}
-                    submitSignal={submitCritique}
-                    setSubmitSignal={setSubmitCritique}
-                    setCritiques={setPostCritiques}
-                    {...postCritiques[showCritique]}
-                  />
+                  <Critiques />
                 </div>
                 {(showCritique && showCritique.constructor === Array) &&
                   <div className="footer center">

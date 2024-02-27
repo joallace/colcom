@@ -104,7 +104,7 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
   const orderBy = req.query.orderBy ? String(req.query.orderBy) : "id"
   const author_pid = (<any>req.params.user)?.pid
   const getCount = "with_count" in req.query
-  const type = req.route.path.slice(1)
+  const type = req.route.path.slice(1,-1)
 
   try {
     const contents = await Content.findTree({ page, pageSize, orderBy })
