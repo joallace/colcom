@@ -10,11 +10,11 @@ import {
   PiEyeClosed
 } from "react-icons/pi"
 
-import TextEditor from "@/components/TextEditor"
-import Frame from "@/components/Frame"
-import Modal from "@/components/Modal"
-import Input from "@/components/Input"
-import { submitVote } from "@/components/VotingButtons"
+import { default as Editor } from "@/components/Editor"
+import Frame from "@/components/primitives/Frame"
+import Modal from "@/components/primitives/Modal"
+import Input from "@/components/primitives/Input"
+import { submitVote } from "@/components/primitives/VotingButtons"
 import { UserContext } from "@/context/UserContext"
 import { toPercentageStr, getUserVote } from "@/assets/util"
 import env from "@/assets/enviroment"
@@ -147,7 +147,7 @@ export default function Post({
         showDefinitiveVoteButton
         justify
       >
-        <TextEditor
+        <Editor
           initialContent={body}
           critiques={critiques}
           groupedCritiques={groupedCritiques}

@@ -1,7 +1,7 @@
 import React from "react"
 import { useNavigate } from "react-router-dom"
 
-import Input from "@/components/Input"
+import Input from "@/components/primitives/Input"
 import { UserContext } from "@/context/UserContext"
 import env from "@/assets/enviroment"
 

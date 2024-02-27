@@ -1,9 +1,9 @@
 import React from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 
-import TextEditor from "@/components/TextEditor"
-import Frame from "@/components/Frame"
-import Input from "@/components/Input"
+import { default as Editor } from "@/components/Editor"
+import Frame from "@/components/primitives/Frame"
+import Input from "@/components/primitives/Input"
 import env from "@/assets/enviroment"
 
 export default function Write() {
@@ -90,7 +90,7 @@ export default function Write() {
         error={error && (!titleRef?.current.textContent || !body)}
         setError={setError}
       >
-        <TextEditor content={body} setContent={(text) => { setBody(text); setError(false) }} />
+        <Editor content={body} setContent={(text) => { setBody(text); setError(false) }} />
       </Frame>
       {globalError &&
         <div className="globalError">{globalError}</div>

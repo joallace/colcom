@@ -2,8 +2,8 @@ import React from 'react';
 import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
 import { mergeAttributes, Node } from '@tiptap/core'
 
-import Chart from "@/components/Chart"
-import ChartModal from './ChartModal';
+import Chart from "@/components/primitives/Chart"
+import ChartModal from "@/components/Editor/ChartModal"
 
 export const TipTapChart = props => {
   const [data, setData] = React.useState(JSON.parse(props.node.attrs.data.replace(/'/g, "\"")))

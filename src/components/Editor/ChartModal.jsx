@@ -1,8 +1,8 @@
 import React from "react"
 
-import Modal from "@/components/Modal"
-import Input from "@/components/Input"
-import Chart from "@/components/Chart"
+import Modal from "@/components/primitives/Modal"
+import Input from "@/components/primitives/Input"
+import Chart from "@/components/primitives/Chart"
 import { ChartContext } from "@/context/ChartContext"
 
 const chartDefaults = {

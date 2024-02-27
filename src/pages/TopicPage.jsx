@@ -2,7 +2,7 @@ import React from "react"
 import { useParams } from 'react-router-dom'
 
 import env from "@/assets/enviroment"
-import Topic from "@/components/Topic"
+import { default as Topic } from "@/components/Topic"
 
 
 export default function TopicPage() {

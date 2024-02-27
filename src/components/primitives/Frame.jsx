@@ -3,8 +3,8 @@ import { isEmptyObject } from "@tiptap/react"
 import { PiDotsThreeVerticalBold } from "react-icons/pi"
 
 import useBreakpoint from "@/hooks/useBreakpoint"
-import VotingButtons from "@/components/VotingButtons"
-import DropdownMenu from "@/components/DropdownMenu"
+import VotingButtons from "@/components/primitives/VotingButtons"
+import DropdownMenu from "@/components/primitives/DropdownMenu"
 
 
 export default function Frame({

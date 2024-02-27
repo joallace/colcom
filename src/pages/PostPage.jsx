@@ -5,7 +5,7 @@ import Post from "@/components/Post"
 import CritiqueFrame from "@/components/Critique"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import env from "@/assets/enviroment"
-import Modal from "@/components/Modal"
+import Modal from "@/components/primitives/Modal"
 
 
 export default () => {

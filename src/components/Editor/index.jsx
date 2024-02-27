@@ -14,14 +14,14 @@ import Placeholder from "@tiptap/extension-placeholder"
 import StarterKit from "@tiptap/starter-kit"
 import CustomHighlight from "@/assets/highlight"
 
-import Chart from "@/components/TipTapChart"
-import ChartModal from "@/components/ChartModal"
-import BubbleMenu from "@/components/BubbleMenu"
-import FloatingMenu from "@/components/FloatingMenu"
+import Chart from "@/components/Editor/TipTapChart"
+import ChartModal from "@/components/Editor/ChartModal"
+import BubbleMenu from "@/components/Editor/BubbleMenu"
+import FloatingMenu from "@/components/Editor/FloatingMenu"
 import { ChartContext } from "@/context/ChartContext"
 
 
-export default function TextEditor({
+export default function Editor({
   content,
   setContent = () => { },
   critiques = [],

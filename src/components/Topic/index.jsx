@@ -7,10 +7,10 @@ import {
   PiCaretDoubleUp
 } from "react-icons/pi"
 
-import Frame from "@/components/Frame"
-import PostSummary from "@/components/PostSummary"
+import Frame from "@/components/primitives/Frame"
+import PostSummary from "@/components/Topic/PostSummary"
 import NoResponse from "@/components/NoResponse"
-import { submitVote } from "@/components/VotingButtons"
+import { submitVote } from "@/components/primitives/VotingButtons"
 import { UserContext } from "@/context/UserContext"
 import { toPercentageStr, getUserVote } from "@/assets/util"
 

@@ -3,8 +3,8 @@ import { useSearchParams } from "react-router-dom"
 
 import NoResponse from "@/components/NoResponse"
 import env from "@/assets/enviroment"
-import Topic from "@/components/Topic"
-import Pagination from "@/components/Pagination"
+import { default as Topic } from "@/components/Topic"
+import Pagination from "@/components/primitives/Pagination"
 
 
 export default function TopicTree({ orderBy, where }) {

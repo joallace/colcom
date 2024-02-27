@@ -20,12 +20,12 @@ export default ({ editor, shouldShow = true, readOnly, setShowCritique }) => {
         editor={editor}
         shouldShow={readOnly ?
           ({ state, from, to }) => {
-            const { doc, selection } = state;
-            const { empty } = selection;
-            const isEmptyTextBlock = !doc.textBetween(from, to).length && isTextSelection(state.selection);
+            const { doc, selection } = state
+            const { empty } = selection
+            const isEmptyTextBlock = !doc.textBetween(from, to).length && isTextSelection(state.selection)
             if (empty || isEmptyTextBlock)
-              return false;
-            return true;
+              return false
+            return true
           }
           :
           null

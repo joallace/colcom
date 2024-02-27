@@ -7,9 +7,9 @@ import {
   PiX
 } from "react-icons/pi"
 
-import TextEditor from "@/components/TextEditor"
-import Frame from "@/components/Frame"
-import { submitVote } from "@/components/VotingButtons"
+import { default as Editor } from "@/components/Editor"
+import Frame from "@/components/primitives/Frame"
+import { submitVote } from "@/components/primitives/VotingButtons"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import { toPercentageStr, getUserVote } from "@/assets/util"
 import env from "@/assets/enviroment"
@@ -179,7 +179,7 @@ export default ({
       {isLoading ?
         <div className="spinner" />
         :
-        <TextEditor
+        <Editor
           initialContent={body}
           edit={!readOnly} // Setting this so that the read only chart can't be edited 
           reset={body}

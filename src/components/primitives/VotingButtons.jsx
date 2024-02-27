@@ -7,7 +7,7 @@ import {
   PiCaretDownFill
 } from "react-icons/pi"
 
-import Input from "@/components/Input"
+import Input from "@/components/primitives/Input"
 import env from "@/assets/enviroment"
 
 export const submitVote = async (navigate, content_id, type, colcoins = undefined) => {
