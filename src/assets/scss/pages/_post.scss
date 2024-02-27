@@ -33,6 +33,11 @@
             margin: 1rem 0;
         }
     }
+
+    >.critiques{
+        transition: all 0.5 ease;
+        height: min-content;
+    }
 }
 
 .timerSlider {

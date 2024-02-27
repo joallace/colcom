@@ -47,6 +47,8 @@ export default ({
   submitSignal = false,
   setSubmitSignal = () => { },
   setCritiques = () => { },
+  setOffset,
+  skipOffset = false,
   interval = []
 }) => {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
@@ -139,11 +141,14 @@ export default ({
 
 
   React.useEffect(() => {
-    if (frameHeight && interval && isDesktop) {
+    if (!skipOffset && frameHeight && interval !== undefined && isDesktop) {
       const y = getSelectionHeight() + window.scrollY - frameHeight - parentRef?.current.offsetTop
 
-      setOffsetTop(y)
-      window.scrollTo({ top: y, behavior: "smooth" })
+      if (Number.isFinite(y)) {
+        setOffsetTop(y)
+        setOffset && setOffset(y)
+        window.scrollTo({ top: y, behavior: "smooth" })
+      }
     }
   }, [frameHeight, interval])
 
@@ -166,7 +171,7 @@ export default ({
       isCritique
       justify
       readOnly={readOnly}
-      style={{ transform: isDesktop ? `translate(0,${offsetTop}px)` : undefined, width: isDesktop ? undefined : "100%" }}
+      style={{ transform: isDesktop && !setOffset ? `translate(0,${offsetTop}px)` : undefined, width: isDesktop ? undefined : "100%" }}
       setHeight={setFrameHeight}
       error={error}
       setError={setError}

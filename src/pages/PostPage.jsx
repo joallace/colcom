@@ -18,6 +18,7 @@ export default () => {
   const [startCommit, setStartCommit] = React.useState()
   const [postBody, setPostBody] = React.useState("")
   const [postCritiques, setPostCritiques] = React.useState([])
+  const [critiquesYOffset, setCritiquesYOffset] = React.useState(0)
   const postTitleRef = React.useRef()
   const { tid, pid } = useParams()
   const isDesktop = useBreakpoint("md")
@@ -102,7 +103,7 @@ export default () => {
     fetchPost()
   }, [])
 
-  const Critique = ({ index }) => (
+  const Critique = ({ index, setOffset, skipOffset }) => (
     <CritiqueFrame
       parent_id={pid}
       interval={index}
@@ -112,19 +113,31 @@ export default () => {
       submitSignal={submitCritique}
       setSubmitSignal={setSubmitCritique}
       setCritiques={setPostCritiques}
+      setOffset={setOffset}
+      skipOffset={skipOffset}
       {...postCritiques[index]}
     />
   )
 
-  const Critiques = () => (
-    <div>
-      {showCritique[0] === "[" ?
-        JSON.parse(showCritique).map(i => <Critique index={i} />)
-        :
-        <Critique index={showCritique} />
-      }
-    </div>
-  )
+  const Critiques = () => {
+    if (showCritique[0] === "[") {
+      return (
+        <div className="critiques" style={{ transform: `translate(0,${critiquesYOffset}px)` }}>
+          {
+            JSON.parse(showCritique).map((index, i) =>
+              <Critique
+                index={index}
+                setOffset={i === 0 ? setCritiquesYOffset : undefined}
+                skipOffset={i !== 0}
+              />
+            )
+          }
+        </div>
+      )
+    }
+    else
+      return <Critique index={showCritique} />
+  }
 
 
   return (
