@@ -37,6 +37,14 @@
                 color: $default-green;
             }
 
+            span {
+                cursor: pointer;
+
+                &.active {
+                    color: darken($default-yellow, 8%);
+                }
+            }
+
             &[contenteditable=true] {
                 cursor: text;
                 outline: none;
@@ -120,7 +128,7 @@
             list-style: none;
         }
 
-        li::marker{
+        li::marker {
             color: $default-green;
         }
 

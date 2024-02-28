@@ -47,6 +47,8 @@ export default ({
   submitSignal = false,
   setSubmitSignal = () => { },
   setCritiques = () => { },
+  tempHighlight,
+  setTempHighlight,
   setOffset,
   skipOffset = false,
   interval = []
@@ -82,7 +84,7 @@ export default ({
     "close": {
       description: "fechar crítica",
       icons: PiX,
-      onClick: () => setShowCritique(false)
+      onClick: () => { setShowCritique(false); setTempHighlight && setTempHighlight([]) }
     }
   }
 
@@ -147,7 +149,7 @@ export default ({
       if (Number.isFinite(y)) {
         setOffsetTop(y)
         setOffset && setOffset(y)
-        window.scrollTo({ top: y, behavior: "smooth" })
+        !tempHighlight.length && window.scrollTo({ top: y, behavior: "smooth" })
       }
     }
   }, [frameHeight, interval])
@@ -161,7 +163,16 @@ export default ({
   return (
     <Frame
       id={id}
-      title={title}
+      title={setTempHighlight ?
+        <span
+          className={JSON.stringify(tempHighlight) === JSON.stringify([config.from, config.to]) ? "active" : undefined}
+          onClick={() => { setTempHighlight([config.from, config.to]) }}
+        >
+          {title}
+        </span>
+        :
+        title
+      }
       titleRef={titleRef}
       headerConfig={headerConfig}
       relevanceVote={relevanceVote}

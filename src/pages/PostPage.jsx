@@ -18,6 +18,7 @@ export default () => {
   const [startCommit, setStartCommit] = React.useState()
   const [postBody, setPostBody] = React.useState("")
   const [postCritiques, setPostCritiques] = React.useState([])
+  const [tempHighlight, setTempHighlight] = React.useState([])
   const [critiquesYOffset, setCritiquesYOffset] = React.useState(0)
   const postTitleRef = React.useRef()
   const { tid, pid } = useParams()
@@ -103,7 +104,7 @@ export default () => {
     fetchPost()
   }, [])
 
-  const Critique = ({ index, setOffset, skipOffset }) => (
+  const Critique = ({ index, setOffset, skipOffset, setHighlight }) => (
     <CritiqueFrame
       parent_id={pid}
       interval={index}
@@ -113,6 +114,8 @@ export default () => {
       submitSignal={submitCritique}
       setSubmitSignal={setSubmitCritique}
       setCritiques={setPostCritiques}
+      tempHighlight={tempHighlight}
+      setTempHighlight={setHighlight}
       setOffset={setOffset}
       skipOffset={skipOffset}
       {...postCritiques[index]}
@@ -129,6 +132,7 @@ export default () => {
                 index={index}
                 setOffset={i === 0 ? setCritiquesYOffset : undefined}
                 skipOffset={i !== 0}
+                setHighlight={setTempHighlight}
               />
             )
           }
@@ -189,6 +193,7 @@ export default () => {
                 setCurrentCommit(history.length - 1)
               }}
               bubbleMenuShouldShow={currentCommit === postData?.history?.length - 1}
+              tempHighlight={tempHighlight}
               resetState={[reset, setReset]}
             />
             {showCritique &&

@@ -36,6 +36,7 @@ export default function Editor({
   critiquesVisible,
   tableConfig = { maxRows: 20, maxColumns: 10 },
   bubbleMenuShouldShow = true,
+  tempHighlight = [],
   ...remainingProps
 }) {
   const [markedBody, setMarkedBody] = React.useState()
@@ -122,6 +123,11 @@ export default function Editor({
       resetChartStr()
     }
   }, [chartString])
+
+  React.useEffect(() => {
+    if (tempHighlight.length === 2)
+      editor.chain().setContent(markedBody).setTextSelection({ from: tempHighlight[0], to: tempHighlight[1] }).setHighlight({ type: "temporary" }).run()
+  }, [tempHighlight])
 
   React.useEffect(() => {
     if (editor) {

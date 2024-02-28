@@ -6,6 +6,7 @@ import {
   PiPencilSimpleFill,
   PiPencilSimple,
   PiGitBranch,
+  PiGitPullRequest,
   PiEye,
   PiEyeClosed
 } from "react-icons/pi"
@@ -29,7 +30,6 @@ export default function Post({
   body,
   upvotes,
   downvotes,
-  config,
   critiques,
   groupedCritiques,
   alongsideCritique,
@@ -37,7 +37,8 @@ export default function Post({
   userInteractions,
   setPostData,
   bubbleMenuShouldShow,
-  resetState
+  resetState,
+  tempHighlight
 }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
@@ -54,7 +55,14 @@ export default function Post({
     "branch": {
       description: "clonar post",
       icons: PiGitBranch,
-      onClick: () => { }
+      hide: author_id === user?.pid,
+      onClick: () => {setModal(3)}
+    },
+    "merge": {
+      description: "incorporar sugestões ao post",
+      icons: PiGitPullRequest,
+      hide: author_id !== user?.pid,
+      onClick: () => {setModal(2)}
     },
     "critiquesVisible": {
       description: ["exibir críticas", "omitir críticas"],
@@ -70,7 +78,7 @@ export default function Post({
       disabled: () => (!bubbleMenuShouldShow || alongsideCritique),
       onClick: (submit) => {
         if (submit && content !== body)
-          setModal(true)
+          setModal(1)
         if (!submit)
           return { "critiquesVisible": false }
       }
@@ -119,7 +127,7 @@ export default function Post({
 
       const data = await res.json()
 
-      if (res.ok && user.pid === author_id)
+      if (res.ok && user?.pid === author_id)
         setPostData(data)
     }
     catch (err) {
@@ -155,11 +163,52 @@ export default function Post({
           setContent={setContent}
           setShowCritique={setShowCritique}
           bubbleMenuShouldShow={bubbleMenuShouldShow}
+          tempHighlight={tempHighlight}
           reset={reset}
         />
       </Frame>
 
-      <Modal isOpen={modal} setIsOpen={setModal} title="o que fazer com a edição?">
+      <Modal isOpen={modal===3} setIsOpen={setModal} title="clonar post">
+        <div className="spaced">
+          <Input
+            ref={commitMessageRef}
+            label="título da cópia"
+            type="area"
+          />
+        </div>
+        <div className="footer center">
+          <button className="error" onClick={() => { setContent(body); setReset(!reset); setModal(false) }}>cancelar</button>
+          <button disabled={isLoading} onClick={submit}>
+            {isLoading ?
+              <><div className="button spinner"></div>enviando...</>
+              :
+              "enviar"
+            }
+          </button>
+        </div>
+      </Modal>
+
+      <Modal isOpen={modal===2} setIsOpen={setModal} title="incorporar sugestões">
+        <div className="spaced">
+          <Input
+            ref={commitMessageRef}
+            label="resumo das alterações"
+            type="area"
+          />
+        </div>
+        <div className="footer center">
+          <button className="error" onClick={() => { setContent(body); setReset(!reset); setModal(false) }}>cancelar</button>
+          <button disabled={isLoading} onClick={submit}>
+            {isLoading ?
+              <><div className="button spinner"></div>enviando...</>
+              :
+              "enviar"
+            }
+          </button>
+        </div>
+      </Modal>
+
+      <Modal isOpen={modal===1} setIsOpen={setModal} title="o que fazer com a edição?">
         <div className="spaced">
           <Input
             ref={commitMessageRef}
