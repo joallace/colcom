@@ -104,7 +104,7 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
   const orderBy = req.query.orderBy ? String(req.query.orderBy) : "id"
   const author_pid = (<any>req.params.user)?.pid
   const getCount = "with_count" in req.query
-  const type = req.route.path.slice(1,-1)
+  const type = req.route.path.slice(1, -1)
 
   try {
     const contents = await Content.findTree({ page, pageSize, orderBy })
@@ -134,7 +134,7 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
       })
     }
 
-    res.status(200).json({tree: contents, count: getCount? (await Content.getCount("topic")) : undefined})
+    res.status(200).json({ tree: contents, count: getCount ? (await Content.getCount("topic")) : undefined })
   }
   catch (err) {
     next(err)
@@ -229,7 +229,7 @@ export const getVersion: RequestHandler = async (req, res, next) => {
     const parent_id = queryParentId || content?.parent_id
     const path = `${dbPath}/${parent_id}`
     const body = await exec("git", ["-C", path, "show", `${commit}:./main.html`])
-    const children = (await Content.findAll({ where: "contents.parent_id = $1 AND contents.config->>'commit' = $2", values: [content_id, commit] })).reverse()
+    const children = (await Content.findAll({ where: "contents.config->>'commit' = $1", values: [commit] })).reverse()
 
     for (const child of children)
       (<any>child).userInteractions = (await Interactions.getUserContentInteractions({ author_pid, content_id: child.id })).map(v => v.type)
@@ -272,7 +272,7 @@ export const updateContent: RequestHandler = async (req, res, next) => {
       await exec("git", ["-C", path, "add", file])
       await exec("git", ["-C", path, "commit", "-m", message])
 
-      const commit = (<any> await exec("git", ["-C", path, "rev-parse", "--short", "HEAD"])).trimEnd()
+      const commit = (<any>await exec("git", ["-C", path, "rev-parse", "--short", "HEAD"])).trimEnd()
       const result = await Content.updateById(content.id, body, author_pid)
       res.status(200).json({ ...result, commit })
     }
@@ -284,6 +284,32 @@ export const updateContent: RequestHandler = async (req, res, next) => {
 
       res.status(204).end()
     }
+  }
+  catch (err) {
+    next(err)
+  }
+}
+
+export const clonePost: RequestHandler = async (req, res, next) => {
+  const content_id = Number(req.params.id)
+  const author_pid = (<any>req.params.user)?.pid
+  const commit = req.params.hash
+  const { title } = req.body
+
+  try {
+    if (!title)
+      throw new ValidationError({
+        action: 'Forneça um título para o "post".',
+        stack: new Error().stack
+      })
+
+    const content = await Content.findById(content_id)
+    const result = await Content.create({ ...(<any>content), author_pid, title })
+
+    const path = `${dbPath}/${result.parent_id}`
+    await exec("git", ["-C", path, "checkout", "-b", String(result.id), commit])
+
+    res.status(200).json(result)
   }
   catch (err) {
     next(err)

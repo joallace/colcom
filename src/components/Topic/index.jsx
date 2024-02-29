@@ -92,7 +92,7 @@ export default function Topic({
             />
           ))}
           {childrenStats?.count > children.length &&
-            <Link to={`/topics/${id}`} style={{ width: "min-content", whiteSpace: "nowrap" }}>. . .</Link>
+            <Link to={`/topics/${id}`} style={{ width: "min-content", whiteSpace: "nowrap", fontWeight: "bolder", fontSize: "1.5rem" }}>. . .</Link>
           }
         </>
         :

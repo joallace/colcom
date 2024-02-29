@@ -51,7 +51,7 @@ export default ({
   setTempHighlight,
   setOffset,
   skipOffset = false,
-  interval = []
+  interval
 }) => {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const readOnly = !!body
@@ -66,7 +66,7 @@ export default ({
   const navigate = useNavigate()
   const isDesktop = useBreakpoint("md")
 
-
+  console.log(interval)
   const headerConfig = {
     "save": {
       description: "confirmar crítica",
@@ -166,6 +166,7 @@ export default ({
       title={setTempHighlight ?
         <span
           className={JSON.stringify(tempHighlight) === JSON.stringify([config.from, config.to]) ? "active" : undefined}
+          title="clique para marcar a crítica no texto"
           onClick={() => { setTempHighlight([config.from, config.to]) }}
         >
           {title}

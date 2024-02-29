@@ -40,7 +40,7 @@ export default function Navbar() {
         <div className="nav-right">
           {(user && token) ?
             <>
-              <a onClick={toggleModal}><PiPlusBold style={{ fontSize: "1.5rem" }} /></a>
+              <a onClick={toggleModal} title="criar tópico"><PiPlusBold style={{ fontSize: "1.5rem" }} /></a>
               <div className="balance">
                 <span>
                   {user.prestige}<PiMedalFill title="prestígio" />
@@ -68,13 +68,18 @@ export default function Navbar() {
                   }
                 }}
               >
-                <PiUser style={{ fontSize: "2rem" }} />
+                <PiUser />
               </DropdownMenu>
             </>
             :
-            <Link to="/login" className="nav-user-icon">
-              <PiUser style={{ fontSize: "2rem" }} />
-            </Link>
+            <>
+              <Link to="/login" title="criar tópico">
+                <PiPlusBold style={{ fontSize: "1.5rem" }} />
+              </Link>
+              <Link to="/login" className="nav-user-icon" title="login e criação de conta">
+                <PiUser />
+              </Link>
+            </>
           }
         </div>
       </nav>

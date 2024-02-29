@@ -90,7 +90,7 @@ export default ({ isOpen, setIsOpen }) => {
         />
         <Input
           id="limitedAnswers"
-          label="respostas limitadas"
+          label="definir opções de resposta"
           type="checkbox"
           checked={answers.length !== 0}
           onChange={() => {

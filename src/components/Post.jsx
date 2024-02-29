@@ -25,6 +25,7 @@ export default function Post({
   id,
   author,
   author_id,
+  commit,
   title,
   titleRef,
   body,
@@ -56,13 +57,13 @@ export default function Post({
       description: "clonar post",
       icons: PiGitBranch,
       hide: author_id === user?.pid,
-      onClick: () => {setModal(3)}
+      onClick: () => { setModal(3) }
     },
     "merge": {
       description: "incorporar sugestões ao post",
       icons: PiGitPullRequest,
       hide: author_id !== user?.pid,
-      onClick: () => {setModal(2)}
+      onClick: () => { setModal(2) }
     },
     "critiquesVisible": {
       description: ["exibir críticas", "omitir críticas"],
@@ -101,7 +102,7 @@ export default function Post({
     ]
   }
 
-  const submit = async () => {
+  const submitEdition = async () => {
     const message = commitMessageRef?.current?.value
 
     if (!message) {
@@ -139,6 +140,44 @@ export default function Post({
     }
   }
 
+  const submitClone = async () => {
+    const title = commitMessageRef?.current?.value
+
+    if (!title) {
+      return
+    }
+
+    const token = localStorage.getItem("accessToken")
+    if (!token) {
+      navigate("/login")
+      return
+    }
+
+    try {
+      setIsLoading(true)
+
+      const url = `${env.apiAddress}/contents/${id}/${commit}/clone`
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ title })
+      })
+
+      const data = await res.json()
+
+      if (res.ok && data)
+        navigate(`/topics/${data.parent_id}/posts/${data.id}`)
+    }
+    catch (err) {
+      console.error(err)
+    }
+    finally {
+      setIsLoading(false)
+      setModal(false)
+    }
+  }
+
+
   return (
     <>
       <Frame
@@ -168,7 +207,7 @@ export default function Post({
         />
       </Frame>
 
-      <Modal isOpen={modal===3} setIsOpen={setModal} title="clonar post">
+      <Modal isOpen={modal === 3} setIsOpen={setModal} title="clonar post">
         <div className="spaced">
           <Input
             ref={commitMessageRef}
@@ -177,18 +216,18 @@ export default function Post({
           />
         </div>
         <div className="footer center">
-          <button className="error" onClick={() => { setContent(body); setReset(!reset); setModal(false) }}>cancelar</button>
-          <button disabled={isLoading} onClick={submit}>
+          <button className="error" onClick={() => { setModal(false) }}>cancelar</button>
+          <button disabled={isLoading} onClick={submitClone}>
             {isLoading ?
-              <><div className="button spinner"></div>enviando...</>
+              <><div className="button spinner"></div>clonando...</>
               :
-              "enviar"
+              "clonar"
             }
           </button>
         </div>
       </Modal>
 
-      <Modal isOpen={modal===2} setIsOpen={setModal} title="incorporar sugestões">
+      <Modal isOpen={modal === 2} setIsOpen={setModal} title="incorporar sugestões">
         <div className="spaced">
           <Input
             ref={commitMessageRef}
@@ -198,7 +237,7 @@ export default function Post({
         </div>
         <div className="footer center">
           <button className="error" onClick={() => { setContent(body); setReset(!reset); setModal(false) }}>cancelar</button>
-          <button disabled={isLoading} onClick={submit}>
+          <button disabled={isLoading} onClick={submitEdition}>
             {isLoading ?
               <><div className="button spinner"></div>enviando...</>
               :
@@ -208,7 +247,7 @@ export default function Post({
         </div>
       </Modal>
 
-      <Modal isOpen={modal===1} setIsOpen={setModal} title="o que fazer com a edição?">
+      <Modal isOpen={modal === 1} setIsOpen={setModal} title="o que fazer com a edição?">
         <div className="spaced">
           <Input
             ref={commitMessageRef}
@@ -218,7 +257,7 @@ export default function Post({
         </div>
         <div className="footer center">
           <button className="error" onClick={() => { setContent(body); setReset(!reset); setModal(false) }}>cancelar</button>
-          <button disabled={isLoading} onClick={submit}>
+          <button disabled={isLoading} onClick={submitEdition}>
             {isLoading ?
               <><div className="button spinner"></div>enviando...</>
               :

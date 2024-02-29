@@ -60,7 +60,7 @@ export default () => {
     let previousMark = null
 
     marks.forEach(mark => {
-      if (!currentMark || mark.from > previousMark.to) {
+      if (!currentMark || mark.from >= previousMark.to) {
         if (previousMark)
           groupedMarks.push(previousMark)
         currentMark = mark
@@ -102,7 +102,7 @@ export default () => {
     }
 
     fetchPost()
-  }, [])
+  }, [pid])
 
   const Critique = ({ index, setOffset, skipOffset, setHighlight }) => (
     <CritiqueFrame
@@ -181,6 +181,7 @@ export default () => {
           <div className="post">
             <Post
               {...postData}
+              commit={postData?.history && postData?.history[currentCommit].commit}
               titleRef={postTitleRef}
               body={postBody}
               critiques={postCritiques}
