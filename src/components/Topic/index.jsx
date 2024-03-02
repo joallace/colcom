@@ -86,6 +86,7 @@ export default function Topic({
               parent_id={id}
               id={child.id}
               shortAnswer={child.title}
+              summary={`${child.body}${child.body.length===280?"...":""}`}
               percentage={child.votes / childrenStats?.votes}
               isAuthor={user?.pid === child.author_id}
               chosen={userVote === child.id}

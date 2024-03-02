@@ -66,7 +66,6 @@ export default ({
   const navigate = useNavigate()
   const isDesktop = useBreakpoint("md")
 
-  console.log(interval)
   const headerConfig = {
     "save": {
       description: "confirmar crítica",

@@ -93,7 +93,7 @@ async function create({ title, author_pid, parent_id, body, type, config }: Cont
       title,
       id,
       parent_id,
-      body,
+      type === "post" ? (<any>body)?.match("<p>(.*?)</p>")[1].slice(0, 280) : body,
       type,
       config
     ],
@@ -207,6 +207,7 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
             topics.title,
             topics.parent_id,
             topics.type,
+            topics.body,
             topics.status,
             topics.created_at,
             topics.config,
@@ -258,6 +259,7 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
             posts.title,
             posts.parent_id,
             posts.type,
+            posts.body,
             posts.status,
             posts.created_at,
             posts.config,
@@ -328,7 +330,7 @@ async function updateById(id: number, body: string, author_pid: string) {
       RETURNING
         *
       ;`,
-    values: [body, id]
+    values: [(<any>body)?.match("<p>(.*?)</p>")[1].slice(0, 280), id]
   }
 
   const result = await db.query(query)
