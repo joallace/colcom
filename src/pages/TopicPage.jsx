@@ -2,7 +2,7 @@ import React from "react"
 import { useParams } from 'react-router-dom'
 
 import env from "@/assets/enviroment"
-import { default as Topic } from "@/components/Topic"
+import Topic from "@/components/Topic"
 
 
 export default function TopicPage() {
@@ -21,8 +21,10 @@ export default function TopicPage() {
         const res = await fetch(url, { method: "get", headers })
         const data = await res.json()
 
-        if (data)
+        if (data){
           setTopicData(data)
+          document.title = `${data.title} · colcom`
+        }
       }
       catch (err) {
         console.error(err)

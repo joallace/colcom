@@ -76,6 +76,10 @@ export default function Write() {
     }
   }
 
+  React.useEffect(()=>{
+    document.title = `respondendo a "${state.title}" · colcom`
+  }, [])
+
   return (
     <div className="content">
       <div className="topicName">respondendo ao tópico "<Link to={`/topics/${state.id}`}>{state.title}</Link>"</div>

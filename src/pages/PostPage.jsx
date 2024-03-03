@@ -89,6 +89,7 @@ export default () => {
 
         if (res.ok && data) {
           setPostData(data)
+          document.title = `${data.title} · colcom`
           setCurrentCommit(data.history.length - 1)
           await fetchCommitBody(data.history[data.history.length - 1].commit)
         }
@@ -129,6 +130,7 @@ export default () => {
           {
             JSON.parse(showCritique).map((index, i) =>
               <Critique
+                key={`critique-${index}`}
                 index={index}
                 setOffset={i === 0 ? setCritiquesYOffset : undefined}
                 skipOffset={i !== 0}

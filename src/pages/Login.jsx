@@ -67,6 +67,10 @@ export default function Login() {
     }
   }
 
+  React.useEffect(()=>{
+    document.title = "Login · colcom"
+  }, [])
+
   return (
     <div className="content login">
       <div className="loginContainer">

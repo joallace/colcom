@@ -8,7 +8,7 @@ import {
 } from "react-icons/pi"
 
 import Frame from "@/components/primitives/Frame"
-import PostSummary from "@/components/Topic/PostSummary"
+import PostSummary from "@/components/PostSummary"
 import NoResponse from "@/components/NoResponse"
 import { submitVote } from "@/components/primitives/VotingButtons"
 import { UserContext } from "@/context/UserContext"
@@ -86,7 +86,7 @@ export default function Topic({
               parent_id={id}
               id={child.id}
               shortAnswer={child.title}
-              summary={`${child.body}${child.body.length===280?"...":""}`}
+              summary={`${child.body}${child.body.length === 280 ? "..." : ""}`}
               percentage={child.votes / childrenStats?.votes}
               isAuthor={user?.pid === child.author_id}
               chosen={userVote === child.id}

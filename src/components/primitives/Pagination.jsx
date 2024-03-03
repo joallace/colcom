@@ -55,9 +55,11 @@ export default function Pagination({ path = "", state, isLoading, maxIndex = -1 
           {pages.map((page, i) => {
             return (
               <Link
+                key={`pag_${i+1}`}
                 to={page === 0 ? path : `${path}?p=${page + 1}`}
                 className={`${(maxIndex >= 0 && page > maxIndex) ? "disabled" : ""}${index === page ? " active" : ""}`}
                 contentEditable={index === page}
+                suppressContentEditableWarning={true}
                 disabled={maxIndex >= 0 && page > maxIndex}
                 active={index === page}
                 onClick={() => { index !== page && setIndex(page) }}

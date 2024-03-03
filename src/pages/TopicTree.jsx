@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom"
 
 import NoResponse from "@/components/NoResponse"
 import env from "@/assets/enviroment"
-import { default as Topic } from "@/components/Topic"
+import Topic from "@/components/Topic"
 import Pagination from "@/components/primitives/Pagination"
 
 
@@ -50,6 +50,10 @@ export default function TopicTree({ orderBy, where }) {
     const pageQuery = searchParams.get("p")
     setPage(pageQuery ? pageQuery - 1 : 0)
   }, [searchParams])
+
+  React.useEffect(()=>{
+    document.title = "colcom: colaboração e competição na criação de ideias"
+  }, [])
 
   return (
     <div className="content tree">

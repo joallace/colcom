@@ -1,3 +1,7 @@
+input, div, span {
+    font-family: "Lato", sans-serif;
+}
+
 button {
     min-width: min-content;
     background: transparent;
@@ -7,6 +11,7 @@ button {
     padding: 0.25rem 0.5rem;
     transition: all 0.15s ease;
     cursor: pointer;
+    font-family: "Lato", sans-serif;
 
     &:hover {
         border-color: $default-orange;
@@ -45,6 +50,7 @@ a {
     color: white;
     text-decoration: none;
     transition: all 0.1s ease;
+    font-family: "Lato", sans-serif;
 
     &:hover {
         color: $default-orange;
@@ -203,10 +209,13 @@ datalist {
     flex-direction: column;
     justify-content: space-between;
     writing-mode: vertical-lr;
+    font-family: "Lato", sans-serif;
 }
 
 
 fieldset {
+    font-family: "Lato", sans-serif;
+    
     legend {
         color: $default-green;
     }

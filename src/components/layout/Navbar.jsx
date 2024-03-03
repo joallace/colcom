@@ -3,7 +3,7 @@ import { NavLink, Link, useNavigate } from "react-router-dom"
 import { PiUser, PiUserFill, PiPlusBold, PiMedalFill, PiCoinsFill, PiBookmarkSimpleFill, PiSignOutFill } from "react-icons/pi"
 
 import Icon from "@/components/Icon"
-import TopicModal from "@/components/Topic/TopicModal"
+import TopicModal from "@/components/TopicModal"
 import DropdownMenu from "@/components/primitives/DropdownMenu"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import { UserContext } from "@/context/UserContext"

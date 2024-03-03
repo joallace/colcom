@@ -76,6 +76,7 @@ export default function Frame({
         <h1
           className={`title${isCritique ? " critique" : ""}${error && !titleRef?.current?.textContent ? " error" : ""}`}
           contentEditable={!readOnly}
+          suppressContentEditableWarning={true}
           placeholder="Qual é o título?"
           onKeyDown={e => { e.key === "Enter" && e.preventDefault(); setError(false) }}
           onBlur={() => saveInLocalStorage && localStorage.setItem("postTitle", titleRef?.current?.textContent)}
