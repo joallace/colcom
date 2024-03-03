@@ -1,15 +1,9 @@
 import { RequestHandler } from "express"
-import { writeFile, mkdir } from "fs/promises"
-import { promisify } from "util"
-import { execFile } from "child_process"
 
-import { gitDbPath as dbPath } from "@/database"
+import git from "@/gitDatabase"
 import Content, { ContentInsertRequest } from "@/models/content"
-import { ValidationError, NotFoundError } from "@/errors"
 import Interactions from "@/models/interactions"
-
-
-const exec = promisify(execFile)
+import { ValidationError, NotFoundError } from "@/errors"
 
 
 const validateContent = (content: ContentInsertRequest) => {
@@ -42,40 +36,29 @@ export const createContent: RequestHandler = async (req, res, next) => {
   const author_pid = (<any>req.params.user).pid
 
   try {
-    const { parent_id: grandparentId } = !parent_id ?
-      { parent_id: null }
+    const grandparentId = parent_id ?
+      (await Content.getDataById(parent_id, ["parent_id"])).parent_id
       :
-      await Content.getDataById(parent_id, ["parent_id"])
+      null
 
     const type = !parent_id ?
       "topic"
       :
       grandparentId ? "critique" : "post"
 
-    const content: ContentInsertRequest = { title, author_pid, parent_id, body, type, config }
+    const content: ContentInsertRequest = {
+      title,
+      author_pid,
+      parent_id,
+      body: type === "post" ? (<any>body)?.match("<p>(.*?)</p>")[1].slice(0, 280) : body,
+      type,
+      config
+    }
 
     validateContent(content)
 
     const result = await Content.create(content)
-
-    if (type === "topic") {
-      const path = `${dbPath}/${result.id}`
-      await mkdir(path)
-      await writeFile(`${path}/main.html`, "")
-      await exec("git", ["-C", path, "init", "-b", "main"])
-      await exec("git", ["-C", path, "add", "."])
-      await exec("git", ["-C", path, "commit", "-m", "init topic"])
-    }
-
-    if (type === "post") {
-      const path = `${dbPath}/${result.parent_id}`
-      const file = `${path}/main.html`
-      // Maybe a lock will be needed
-      await exec("git", ["-C", path, "checkout", "-b", String(result.id), "main"])
-      await writeFile(file, body)
-      await exec("git", ["-C", path, "add", file])
-      await exec("git", ["-C", path, "commit", "-m", `init post ${result.id}`])
-    }
+    await git.create(result)
 
     res.status(201).json(result)
   }
@@ -183,22 +166,12 @@ export const getContent: RequestHandler = async (req, res, next) => {
     res.status(200).json({
       ...content,
       userInteractions,
-      history: content.type === "post" ? await getPostHistory(content.id, Number(content.parent_id)) : undefined
+      history: content.type === "post" ? await git.log(content) : undefined
     })
   }
   catch (err) {
     next(err)
   }
-}
-
-
-const getPostHistory = async (post_id: number, parent_id: number) => {
-  const path = `${dbPath}/${parent_id}/`
-  const formatFlag = "--pretty=format:{^^^^commit^^^^:^^^^%h^^^^,^^^^subject^^^^:^^^^%s^^^^,^^^^date^^^^:^^^^%ar^^^^,^^^^author^^^^:^^^^%aN^^^^},"
-
-  const log: any = await exec("git", ["-C", path, "log", `main..${post_id}`, formatFlag], { encoding: "utf-8" })
-
-  return (JSON.parse("[" + log.replaceAll('"', '\\"').replaceAll("^^^^", '"').slice(0, -1) + "]")).reverse()
 }
 
 export const getVersion: RequestHandler = async (req, res, next) => {
@@ -227,8 +200,7 @@ export const getVersion: RequestHandler = async (req, res, next) => {
     }
 
     const parent_id = queryParentId || content?.parent_id
-    const path = `${dbPath}/${parent_id}`
-    const body = await exec("git", ["-C", path, "show", `${commit}:./main.html`])
+    const body = await git.read(Number(parent_id), commit)
     const children = (await Content.findAll({ where: "contents.config->>'commit' = $1", values: [commit] })).reverse()
 
     for (const child of children)
@@ -263,27 +235,20 @@ export const updateContent: RequestHandler = async (req, res, next) => {
         stack: new Error().stack
       })
 
-    const path = `${dbPath}/${content.parent_id}`
-    const file = `${path}/main.html`
+    const interactionId = content.author_id !== author_pid ?
+      (await Interactions.create({ author_pid, content_id, type: "suggestion" })).id
+      :
+      undefined
 
-    if (content.author_id === author_pid) {
-      await exec("git", ["-C", path, "checkout", String(content.id)])
-      await writeFile(file, body)
-      await exec("git", ["-C", path, "add", file])
-      await exec("git", ["-C", path, "commit", "-m", message])
+    console.log(interactionId)
+    const commit = await git.update(content, body, message, interactionId)
 
-      const commit = (<any>await exec("git", ["-C", path, "rev-parse", "--short", "HEAD"])).trimEnd()
+    if (interactionId === undefined) {
       const result = await Content.updateById(content.id, body, author_pid)
       res.status(200).json({ ...result, commit })
     }
-    else {
-      await exec("git", ["-C", path, "checkout", "-b", `${content.id}_${author_pid}`, String(content.id)])
-      await writeFile(file, body)
-      await exec("git", ["-C", path, "add", file])
-      await exec("git", ["-C", path, "commit", "-m", message])
-
+    else
       res.status(204).end()
-    }
   }
   catch (err) {
     next(err)
@@ -305,9 +270,7 @@ export const clonePost: RequestHandler = async (req, res, next) => {
 
     const content = await Content.findById(content_id)
     const result = await Content.create({ ...(<any>content), author_pid, title })
-
-    const path = `${dbPath}/${result.parent_id}`
-    await exec("git", ["-C", path, "checkout", "-b", String(result.id), commit])
+    await git.branch(result, commit)
 
     res.status(200).json(result)
   }

@@ -1,6 +1,6 @@
 import { hash } from "bcryptjs"
 
-import db from "@/database"
+import db from "@/pgDatabase"
 import { NotFoundError, ValidationError } from "@/errors"
 
 

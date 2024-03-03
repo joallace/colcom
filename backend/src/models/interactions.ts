@@ -1,10 +1,10 @@
-import db from "@/database"
+import db from "@/pgDatabase"
 import { getDataByPublicId } from "@/models/user"
 import { NotFoundError, ValidationError } from "@/errors"
 import Content from "@/models/content"
 
 
-type InteractionType = "up" | "down" | "vote" | "bookmark" | "promote"
+type InteractionType = "up" | "down" | "vote" | "bookmark" | "promote" | "suggestion"
 
 interface InteractionInsertRequest {
   author_pid: string,
@@ -20,6 +20,15 @@ interface InteractionAlterRequest {
   content_id?: number
 }
 
+interface Interaction {
+  id: number,
+  author_id: string,
+  content_id: number
+  type: InteractionType,
+  created_at: Date,
+  valid_until: Date
+}
+
 const minimumPromoteValue = 10
 
 
@@ -28,7 +37,7 @@ function coinsToTime(amount: number) {
 }
 
 
-async function findAll({ where = "", values = [] as any[] }) {
+async function findAll({ where = "", values = [] as any[] }): Promise<Interaction[]> {
   const query = {
     text: `
       SELECT
@@ -51,7 +60,7 @@ async function findAll({ where = "", values = [] as any[] }) {
   return result.rows
 }
 
-async function getUserContentInteractions({ author_pid, content_id }: InteractionInsertRequest) {
+async function getUserContentInteractions({ author_pid, content_id }: InteractionInsertRequest): Promise<Interaction[]> {
   const query = {
     text: `
       SELECT
@@ -74,7 +83,7 @@ async function getUserContentInteractions({ author_pid, content_id }: Interactio
   return results.rows
 }
 
-async function getUserTopicVote(author_pid: string, topic_id: number) {
+async function getUserTopicVote(author_pid: string, topic_id: number): Promise<Interaction> {
   const query = {
     text: `
     SELECT
@@ -153,7 +162,7 @@ async function handleChange({ author_pid, content_id, type, colcoins }: Interact
 
 
 
-async function create({ author_pid, content_id, type, colcoins }: InteractionInsertRequest) {
+async function create({ author_pid, content_id, type, colcoins }: InteractionInsertRequest): Promise<Interaction> {
   const { id, colcoins: authorAmount } = await getDataByPublicId(author_pid, ["id", "colcoins"])
 
   if (type === "promote" && (!colcoins || authorAmount < colcoins || colcoins < minimumPromoteValue))
@@ -186,7 +195,7 @@ async function create({ author_pid, content_id, type, colcoins }: InteractionIns
   return { ...result.rows[0], author_id: author_pid }
 }
 
-async function updateById({ id, author_pid, type, content_id = undefined }: InteractionAlterRequest) {
+async function updateById({ id, author_pid, type, content_id = undefined }: InteractionAlterRequest): Promise<Interaction> {
   const query = {
     text: `
       UPDATE

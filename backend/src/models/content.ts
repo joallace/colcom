@@ -1,7 +1,6 @@
-import db from "@/database"
+import db from "@/pgDatabase"
 import { NotFoundError, ValidationError } from "@/errors"
 import { getDataByPublicId } from "@/models/user"
-import { QueryResult } from "pg"
 
 
 type ContentType = "topic" | "post" | "critique"
@@ -93,7 +92,7 @@ async function create({ title, author_pid, parent_id, body, type, config }: Cont
       title,
       id,
       parent_id,
-      type === "post" ? (<any>body)?.match("<p>(.*?)</p>")[1].slice(0, 280) : body,
+      body,
       type,
       config
     ],

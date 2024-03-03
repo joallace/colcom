@@ -53,15 +53,6 @@
 }
 
 @font-face {
-    font-family: "Lato Hairline";
-    src: url("../../fonts/Lato-Hairline.woff2") format("woff2"),
-        url("../../fonts/Lato-Hairline.woff") format("woff");
-    font-weight: 300;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
     font-family: "Lato";
     src: url("../../fonts/Lato-LightItalic.woff2") format("woff2"),
         url("../../fonts/Lato-LightItalic.woff") format("woff");
@@ -76,14 +67,5 @@
         url("../../fonts/Lato-Bold.woff") format("woff");
     font-weight: bold;
     font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Lato Hairline";
-    src: url("../../fonts/Lato-HairlineItalic.woff2") format("woff2"),
-        url("../../fonts/Lato-HairlineItalic.woff") format("woff");
-    font-weight: 300;
-    font-style: italic;
     font-display: swap;
 }
