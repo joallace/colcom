@@ -1,7 +1,7 @@
 import React from "react"
 import { useSearchParams } from "react-router-dom"
 
-import NoResponse from "@/components/NoResponse"
+import NoResponse from "@/components/primitives/NoResponse"
 import env from "@/assets/enviroment"
 import Topic from "@/components/Topic"
 import Pagination from "@/components/primitives/Pagination"
@@ -11,7 +11,7 @@ export default function TopicTree({ orderBy, where }) {
   const [searchParams] = useSearchParams();
   const [topics, setTopics] = React.useState([])
   const [page, setPage] = React.useState(searchParams.get("p") ? searchParams.get("p") - 1 : 0)
-  const [pageSize, setPageSize] = React.useState(10)
+  const [pageSize, setPageSize] = React.useState(5)
   const [maxIndex, setMaxIndex] = React.useState()
   const [isLoading, setIsLoading] = React.useState(false)
 

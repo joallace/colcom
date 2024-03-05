@@ -9,7 +9,7 @@ import {
 
 import Frame from "@/components/primitives/Frame"
 import PostSummary from "@/components/PostSummary"
-import NoResponse from "@/components/NoResponse"
+import NoResponse from "@/components/primitives/NoResponse"
 import { submitVote } from "@/components/primitives/VotingButtons"
 import { UserContext } from "@/context/UserContext"
 import { toPercentageStr, getUserVote } from "@/assets/util"
@@ -80,12 +80,12 @@ export default function Topic({
     >
       {children?.length > 0 ?
         <>
-          {children.map(child => (
+          {children.map((child, i) => (
             <PostSummary
               key={`p${id}-s${child.id}`}
               parent_id={id}
               id={child.id}
-              shortAnswer={child.title}
+              shortAnswer={`${i+1}. ${child.title}`}
               summary={`${child.body}${child.body.length === 280 ? "..." : ""}`}
               percentage={child.votes / childrenStats?.votes}
               isAuthor={user?.pid === child.author_id}
