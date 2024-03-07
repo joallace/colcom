@@ -13,8 +13,7 @@ interface PromoteConfig {
 interface SuggestionConfig {
   message: string,
   accepted: boolean | null,
-  commit_hash: string,
-  parent_commit_hash: string
+  commit: string
 }
 
 type ConfigType = PromoteConfig | SuggestionConfig | null
@@ -28,8 +27,10 @@ interface InteractionInsertRequest {
 
 interface InteractionAlterRequest {
   id: number,
+  field: keyof Interaction,
   author_pid: string,
   type?: InteractionType,
+  config?: ConfigType,
   content_id?: number
 }
 
@@ -43,7 +44,7 @@ interface Interaction {
 }
 
 
-async function findAll({ where = "", values = [] as any[] }): Promise<Interaction[]> {
+async function findAll({ where = "", values = [] as any[], orderBy = "" }): Promise<Interaction[]> {
   const query = {
     text: `
       SELECT
@@ -59,6 +60,7 @@ async function findAll({ where = "", values = [] as any[] }): Promise<Interactio
       INNER JOIN
         users ON users.id = i.author_id
       WHERE ${where}
+      ${orderBy? `ORDER BY ${orderBy}` : ""}
       ;`,
     values
   }
@@ -123,7 +125,7 @@ async function handleChange({ author_pid, content_id, type }: InteractionInsertR
     case "down":
       for (const interaction of postInteractions) {
         if (interaction.type === "up")
-          return [200, await updateById({ id: interaction.id, type, author_pid })]
+          return [200, await updateById({ id: interaction.id, field: "type", type, author_pid })]
         if (interaction.type === "down")
           return [204, await removeById(interaction.id)]
       }
@@ -131,7 +133,7 @@ async function handleChange({ author_pid, content_id, type }: InteractionInsertR
     case "up":
       for (const interaction of postInteractions) {
         if (interaction.type === "down")
-          return [200, await updateById({ id: interaction.id, type, author_pid })]
+          return [200, await updateById({ id: interaction.id, field: "type", type, author_pid })]
         if (interaction.type === "up")
           return [204, await removeById(interaction.id)]
       }
@@ -145,7 +147,7 @@ async function handleChange({ author_pid, content_id, type }: InteractionInsertR
       const oldVoteId = (await getUserTopicVote(author_pid, parent_id))?.id
 
       if (oldVoteId)
-        return [200, await updateById({ id: oldVoteId, author_pid, content_id })]
+        return [200, await updateById({ id: oldVoteId, field: "content_id", content_id, author_pid })]
 
       break
     case "bookmark":
@@ -202,19 +204,19 @@ async function create({ author_pid, content_id, type, config = null }: Interacti
   return { ...result.rows[0], author_id: author_pid }
 }
 
-async function updateById({ id, author_pid, type, content_id = undefined }: InteractionAlterRequest): Promise<Interaction> {
+async function updateById({ id, field, type, content_id, config, author_pid }: InteractionAlterRequest): Promise<Interaction> {
   const query = {
     text: `
       UPDATE
         interactions
       SET
-        ${content_id ? "content_id" : "type"} = $1
+        ${field} = $1
       WHERE
         id = $2
       RETURNING
         *
       ;`,
-    values: [content_id || type, id]
+    values: [content_id || type || config, id]
   }
 
   const result = await db.query(query)

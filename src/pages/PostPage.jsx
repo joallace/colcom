@@ -184,6 +184,7 @@ export default () => {
           <div className="post">
             <Post
               {...postData}
+              fetchCommit={fetchCommitBody}
               commit={postData?.history && postData?.history[currentCommit].commit}
               titleRef={postTitleRef}
               body={postBody}

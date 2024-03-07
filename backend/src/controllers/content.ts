@@ -168,7 +168,11 @@ export const getContent: RequestHandler = async (req, res, next) => {
       userInteractions,
       history: content.type === "post" ? await git.log(content) : undefined,
       suggestions: content.type === "post" && author_pid === content.author_id ?
-        await Interactions.findAll({ where: `i.content_id = $1 AND i.type='suggestion' AND i.config->>'accepted' IS NULL`, values: [content_id] })
+        await Interactions.findAll({
+          where: `i.content_id = $1 AND i.type='suggestion' AND i.config->>'accepted' IS NULL`,
+          values: [content_id],
+          orderBy: "i.id DESC"
+        })
         :
         undefined
     })
@@ -250,8 +254,10 @@ export const updateContent: RequestHandler = async (req, res, next) => {
       const result = await Content.updateById(content.id, body, author_pid)
       res.status(200).json({ ...result, commit })
     }
-    else
-      res.status(204).end()
+    else {
+      const result = await Interactions.updateById({ id: interactionId, field: "config", config: { message, commit, accepted: null }, author_pid })
+      res.status(200).json(result)
+    }
   }
   catch (err) {
     next(err)

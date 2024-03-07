@@ -8,8 +8,7 @@ import {
   PiGitBranch,
   PiGitPullRequest,
   PiEye,
-  PiEyeClosed,
-  PiArrowRight
+  PiEyeClosed
 } from "react-icons/pi"
 
 import { default as Editor } from "@/components/Editor"
@@ -34,6 +33,7 @@ export default function Post({
   downvotes,
   critiques,
   suggestions,
+  fetchCommit,
   groupedCritiques,
   alongsideCritique,
   setShowCritique,
@@ -239,10 +239,15 @@ export default function Post({
         <ul className="suggestions">
           {
             suggestions?.map(suggestion => {
-              console.log(suggestion)
               const Dot = () => <span className="dot"> • </span>
               return <li>
-                <span className="icons" >{suggestion.config.message}</span>
+                <span
+                  className="icons"
+                  title="visualizar sugestão"
+                  onClick={() => { fetchCommit(suggestion.config.commit); setModal(false) }}
+                >
+                  {suggestion.config.message}
+                </span>
                 <div className="description">por {suggestion.author}<Dot />{relativeTime(suggestion.created_at)}</div>
               </li>
             })
