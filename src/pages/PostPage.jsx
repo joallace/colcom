@@ -6,6 +6,7 @@ import CritiqueFrame from "@/components/Critique"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import env from "@/assets/enviroment"
 import Modal from "@/components/primitives/Modal"
+import { relativeTime } from "@/assets/util"
 
 
 export default () => {
@@ -175,7 +176,7 @@ export default () => {
             />
             <datalist id="commits">
               {postData?.history?.map((commit, i) => (
-                <option key={commit.commit} label={currentCommit === i ? `— ${commit.date}` : "—"} />
+                <option key={commit.commit} label={currentCommit === i ? `— ${relativeTime(commit.date)}` : "—"} />
               ))}
             </datalist>
           </div>

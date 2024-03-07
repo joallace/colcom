@@ -32,9 +32,26 @@
         .spaced {
             margin: 1rem 0;
         }
+
+        .suggestions {
+            // list-style-type: none;
+            display: grid;
+            padding: 0 1rem;
+            gap: 1rem;
+
+
+            .description {
+                color: darken($default-font-color, 33%);
+                font-size: 0.75rem;
+
+                .dot {
+                    color: $default-green;
+                }
+            }
+        }
     }
 
-    >.critiques{
+    >.critiques {
         transition: all 0.5 ease;
         height: min-content;
     }
@@ -46,5 +63,23 @@
     input,
     datalist {
         @include content-responsiveness(50vw, 60vw, 80vw);
+    }
+}
+
+.iconWithBadge {
+    display: flex;
+    position: relative;
+
+    >span {
+        cursor: pointer;
+        position: absolute;
+        background-color: $default-orange;
+        width: 1.15rem;
+        height: 1.15rem;
+        font-size: 0.75rem;
+        border-radius: 50%;
+        right: -0.5rem;
+        bottom: -0.5rem;
+        text-align: center;
     }
 }

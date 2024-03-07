@@ -166,7 +166,11 @@ export const getContent: RequestHandler = async (req, res, next) => {
     res.status(200).json({
       ...content,
       userInteractions,
-      history: content.type === "post" ? await git.log(content) : undefined
+      history: content.type === "post" ? await git.log(content) : undefined,
+      suggestions: content.type === "post" && author_pid === content.author_id ?
+        await Interactions.findAll({ where: `i.content_id = $1 AND i.type='suggestion' AND i.config->>'accepted' IS NULL`, values: [content_id] })
+        :
+        undefined
     })
   }
   catch (err) {
@@ -240,7 +244,6 @@ export const updateContent: RequestHandler = async (req, res, next) => {
       :
       undefined
 
-    console.log(interactionId)
     const commit = await git.update(content, body, message, interactionId)
 
     if (interactionId === undefined) {

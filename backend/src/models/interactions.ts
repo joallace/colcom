@@ -1,16 +1,29 @@
 import db from "@/pgDatabase"
 import { getDataByPublicId } from "@/models/user"
-import { NotFoundError, ValidationError } from "@/errors"
+import { ValidationError } from "@/errors"
 import Content from "@/models/content"
 
 
 type InteractionType = "up" | "down" | "vote" | "bookmark" | "promote" | "suggestion"
 
+interface PromoteConfig {
+  valid_until: Date
+}
+
+interface SuggestionConfig {
+  message: string,
+  accepted: boolean | null,
+  commit_hash: string,
+  parent_commit_hash: string
+}
+
+type ConfigType = PromoteConfig | SuggestionConfig | null
+
 interface InteractionInsertRequest {
   author_pid: string,
   content_id: number,
   type?: InteractionType,
-  colcoins?: number
+  config?: ConfigType
 }
 
 interface InteractionAlterRequest {
@@ -25,15 +38,8 @@ interface Interaction {
   author_id: string,
   content_id: number
   type: InteractionType,
-  created_at: Date,
-  valid_until: Date
-}
-
-const minimumPromoteValue = 10
-
-
-function coinsToTime(amount: number) {
-
+  config: ConfigType,
+  created_at: Date
 }
 
 
@@ -44,8 +50,9 @@ async function findAll({ where = "", values = [] as any[] }): Promise<Interactio
         i.id,
         i.content_id,
         i.type,
+        i.config,
         i.created_at,
-        i.valid_until,
+        users.name as author,
         users.pid as author_id
       FROM
         interactions i
@@ -109,7 +116,7 @@ async function getUserTopicVote(author_pid: string, topic_id: number): Promise<I
   return result.rows[0]
 }
 
-async function handleChange({ author_pid, content_id, type, colcoins }: InteractionInsertRequest) {
+async function handleChange({ author_pid, content_id, type }: InteractionInsertRequest): Promise<Array<any>> {
   const postInteractions = await getUserContentInteractions({ author_pid, content_id, type })
 
   switch (type) {
@@ -157,21 +164,21 @@ async function handleChange({ author_pid, content_id, type, colcoins }: Interact
       })
   }
 
-  return [201, await create({ author_pid, content_id, type, colcoins })]
+  return [201, await create({ author_pid, content_id, type })]
 }
 
+async function create({ author_pid, content_id, type, config = null }: InteractionInsertRequest): Promise<Interaction> {
+  const { id } = await getDataByPublicId(author_pid, ["id"])
 
+  // if (type === "promote" && (!colcoins || authorBalance < colcoins || colcoins < minimumPromoteValue))
+  //   throw new ValidationError({
+  //     message: "Quantidade de colcoins insuficiente para realizar a ação.",
+  //     action: "Atue na comunidade para ganhar mais colcoins!",
+  //     stack: new Error().stack,
+  //     errorLocationCode: 'MODEL:INTERACTION:CREATE:INSUFFICIENT_BALANCE'
+  //   })
 
-async function create({ author_pid, content_id, type, colcoins }: InteractionInsertRequest): Promise<Interaction> {
-  const { id, colcoins: authorAmount } = await getDataByPublicId(author_pid, ["id", "colcoins"])
-
-  if (type === "promote" && (!colcoins || authorAmount < colcoins || colcoins < minimumPromoteValue))
-    throw new ValidationError({
-      message: "Quantidade de colcoins insuficiente para realizar a ação.",
-      action: "Atue na comunidade para ganhar mais colcoins!",
-      stack: new Error().stack,
-      errorLocationCode: 'MODEL:INTERACTION:CREATE:INSUFFICIENT_BALANCE'
-    })
+  const promoteConfig = () => ({ valid_until: new Date().setUTCHours(23, 59, 59, 999) })
 
   const query = {
     text: `
@@ -180,14 +187,14 @@ async function create({ author_pid, content_id, type, colcoins }: InteractionIns
           author_id,
           content_id,
           type,
-          valid_until
+          config
         )
       VALUES
         ($1, $2, $3, $4)
       RETURNING
         *
       ;`,
-    values: [id, content_id, type, type === "promote" ? coinsToTime(Number(colcoins)) : null]
+    values: [id, content_id, type, type === "promote" ? promoteConfig() : config]
   }
 
   const result = await db.query(query)

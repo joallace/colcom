@@ -84,7 +84,7 @@ async function log(content: IContent) {
   const { parent_id: repo, id } = content
 
   const path = `${dbPath}/${repo}/`
-  const formatFlag = "--pretty=format:{^^^^commit^^^^:^^^^%h^^^^,^^^^subject^^^^:^^^^%s^^^^,^^^^date^^^^:^^^^%ar^^^^,^^^^author^^^^:^^^^%aN^^^^},"
+  const formatFlag = "--pretty=format:{^^^^commit^^^^:^^^^%h^^^^,^^^^subject^^^^:^^^^%s^^^^,^^^^date^^^^:^^^^%aD^^^^,^^^^author^^^^:^^^^%aN^^^^},"
 
   const log: any = await exec("git", ["-C", path, "log", `main..${id}`, formatFlag], { encoding: "utf-8" })
 

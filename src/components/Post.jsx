@@ -8,7 +8,8 @@ import {
   PiGitBranch,
   PiGitPullRequest,
   PiEye,
-  PiEyeClosed
+  PiEyeClosed,
+  PiArrowRight
 } from "react-icons/pi"
 
 import { default as Editor } from "@/components/Editor"
@@ -17,7 +18,7 @@ import Modal from "@/components/primitives/Modal"
 import Input from "@/components/primitives/Input"
 import { submitVote } from "@/components/primitives/VotingButtons"
 import { UserContext } from "@/context/UserContext"
-import { toPercentageStr, getUserVote } from "@/assets/util"
+import { toPercentageStr, getUserVote, relativeTime } from "@/assets/util"
 import env from "@/assets/enviroment"
 
 
@@ -32,6 +33,7 @@ export default function Post({
   upvotes,
   downvotes,
   critiques,
+  suggestions,
   groupedCritiques,
   alongsideCritique,
   setShowCritique,
@@ -61,8 +63,14 @@ export default function Post({
     },
     "merge": {
       description: "incorporar sugestões ao post",
-      icons: PiGitPullRequest,
+      icons: ({ onClick, ...props }) => (
+        <div className="iconWithBadge">
+          <PiGitPullRequest onClick={onClick} {...props} />
+          {suggestions?.length > 0 && <span onClick={onClick}>{suggestions.length}</span>}
+        </div>
+      ),
       hide: author_id !== user?.pid,
+      disabled: () => suggestions?.length === 0,
       onClick: () => { setModal(2) }
     },
     "critiquesVisible": {
@@ -228,23 +236,18 @@ export default function Post({
       </Modal>
 
       <Modal isOpen={modal === 2} setIsOpen={setModal} title="incorporar sugestões">
-        <div className="spaced">
-          <Input
-            ref={commitMessageRef}
-            label="resumo das alterações"
-            type="area"
-          />
-        </div>
-        <div className="footer center">
-          <button className="error" onClick={() => { setContent(body); setReset(!reset); setModal(false) }}>cancelar</button>
-          <button disabled={isLoading} onClick={submitEdition}>
-            {isLoading ?
-              <><div className="button spinner"></div>enviando...</>
-              :
-              "enviar"
-            }
-          </button>
-        </div>
+        <ul className="suggestions">
+          {
+            suggestions?.map(suggestion => {
+              console.log(suggestion)
+              const Dot = () => <span className="dot"> • </span>
+              return <li>
+                <span className="icons" >{suggestion.config.message}</span>
+                <div className="description">por {suggestion.author}<Dot />{relativeTime(suggestion.created_at)}</div>
+              </li>
+            })
+          }
+        </ul>
       </Modal>
 
       <Modal isOpen={modal === 1} setIsOpen={setModal} title="o que fazer com a edição?">

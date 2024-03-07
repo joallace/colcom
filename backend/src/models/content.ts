@@ -147,7 +147,7 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
               AND
                 interaction.type = 'promote'
               AND
-                interaction.valid_until > NOW()
+                (interaction.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
             )
             ELSE NULL
           END
@@ -239,7 +239,7 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
               AND
                 interaction.type = 'promote'
               AND
-                interaction.valid_until > NOW()
+                (interaction.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
             )::INT as promotions
           FROM
             contents as topics
