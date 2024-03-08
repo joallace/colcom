@@ -3,7 +3,7 @@ import { RequestHandler } from "express"
 import git from "@/gitDatabase"
 import Content, { ContentInsertRequest } from "@/models/content"
 import Interactions from "@/models/interactions"
-import { ValidationError, NotFoundError } from "@/errors"
+import { ValidationError, NotFoundError, UnauthorizedError } from "@/errors"
 
 
 const validateContent = (content: ContentInsertRequest) => {
@@ -58,6 +58,7 @@ export const createContent: RequestHandler = async (req, res, next) => {
     validateContent(content)
 
     const result = await Content.create(content)
+    result.body = body
     await git.create(result)
 
     res.status(201).json(result)
@@ -282,6 +283,30 @@ export const clonePost: RequestHandler = async (req, res, next) => {
     await git.branch(result, commit)
 
     res.status(200).json(result)
+  }
+  catch (err) {
+    next(err)
+  }
+}
+
+export const mergePost: RequestHandler = async (req, res, next) => {
+  const content_id = Number(req.params.id)
+  const author_pid = (<any>req.params.user)?.pid
+  const commit = req.params.hash
+
+  try {
+    const content = await Content.findById(content_id)
+
+    if(author_pid !== content.author_id)
+      throw new UnauthorizedError({
+        message: "Somente o autor do post pode realizar merges",
+        stack: new Error().stack
+      })
+
+    await git.merge(content, commit)
+    // TODO: update suggestion interaction to accepted
+
+    res.status(204).end()
   }
   catch (err) {
     next(err)

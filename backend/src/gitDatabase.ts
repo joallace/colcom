@@ -80,6 +80,17 @@ async function branch(content: IContent, commit: string) {
   })
 }
 
+async function merge(content: IContent, commit: string) {
+  const { parent_id: repo, id } = content
+  const path = `${dbPath}/${repo}`
+  const lock = new AsyncLock()
+
+  await lock.acquire(String(repo), async () => {
+    await exec("git", ["-C", path, "checkout", String(id)])
+    await exec("git", ["-C", path, "merge", commit])
+  })
+}
+
 async function log(content: IContent) {
   const { parent_id: repo, id } = content
 
@@ -96,5 +107,6 @@ export default Object.freeze({
   read,
   update,
   branch,
+  merge,
   log
 })

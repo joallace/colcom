@@ -8,7 +8,10 @@ import {
   PiGitBranch,
   PiGitPullRequest,
   PiEye,
-  PiEyeClosed
+  PiEyeClosed,
+  PiCheck,
+  PiTrash,
+  PiX
 } from "react-icons/pi"
 
 import { default as Editor } from "@/components/Editor"
@@ -41,7 +44,9 @@ export default function Post({
   setPostData,
   bubbleMenuShouldShow,
   resetState,
-  tempHighlight
+  tempHighlight,
+  currentSuggestion,
+  setCurrentSuggestion
 }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
@@ -98,6 +103,37 @@ export default function Post({
       initialValue: userInteractions?.includes("bookmark") || false,
       onClick: () => submitVote(navigate, id, "bookmark")
     }
+  }
+
+  const editionHeader = {
+    "accept": {
+      description: "aceitar sugestão",
+      icons: PiCheck,
+      onClick: async () => {
+        const token = localStorage.getItem("accessToken")
+        const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
+        try {
+          setIsLoading(true)
+          await fetch(`${env.apiAddress}/contents/${id}/${currentSuggestion}/merge`, { headers })
+        }
+        catch (err) {
+          console.error(err)
+        }
+        finally {
+          setIsLoading(false)
+        }
+      }
+    },
+    "reject": {
+      description: "rejeitar sugestão",
+      icons: PiTrash,
+      onClick: () => { setModal(2) }
+    },
+    "close": {
+      description: "fechar sugestão",
+      icons: PiX,
+      onClick: () => { fetchCommit(); setCurrentSuggestion(undefined) }
+    },
   }
 
   const getMetrics = () => {
@@ -192,7 +228,7 @@ export default function Post({
         id={id}
         title={title}
         titleRef={titleRef}
-        headerConfig={headerConfig}
+        headerConfig={currentSuggestion ? editionHeader : headerConfig}
         relevanceVote={relevanceVote}
         setRelevanceVote={setRelevanceVote}
         definitiveVote={definitiveVote}
@@ -244,7 +280,7 @@ export default function Post({
                 <span
                   className="icons"
                   title="visualizar sugestão"
-                  onClick={() => { fetchCommit(suggestion.config.commit); setModal(false) }}
+                  onClick={() => { fetchCommit(suggestion.config.commit); setCurrentSuggestion(suggestion.config.commit); setModal(false) }}
                 >
                   {suggestion.config.message}
                 </span>

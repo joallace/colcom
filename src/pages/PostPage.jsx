@@ -16,6 +16,7 @@ export default () => {
   const [submitCritique, setSubmitCritique] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
   const [currentCommit, setCurrentCommit] = React.useState()
+  const [currentSuggestion, setCurrentSuggestion] = React.useState()
   const [startCommit, setStartCommit] = React.useState()
   const [postBody, setPostBody] = React.useState("")
   const [postCritiques, setPostCritiques] = React.useState([])
@@ -186,6 +187,8 @@ export default () => {
               {...postData}
               fetchCommit={fetchCommitBody}
               commit={postData?.history && postData?.history[currentCommit].commit}
+              currentSuggestion={currentSuggestion}
+              setCurrentSuggestion={setCurrentSuggestion}
               titleRef={postTitleRef}
               body={postBody}
               critiques={postCritiques}
@@ -197,7 +200,7 @@ export default () => {
                 setPostData({ ...postData, ...data, history, commit: undefined })
                 setCurrentCommit(history.length - 1)
               }}
-              bubbleMenuShouldShow={currentCommit === postData?.history?.length - 1}
+              bubbleMenuShouldShow={currentCommit === postData?.history?.length - 1 && !currentSuggestion}
               tempHighlight={tempHighlight}
               resetState={[reset, setReset]}
             />

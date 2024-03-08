@@ -23,6 +23,8 @@ export function UserProvider({ children }) {
 
     if(!res.ok){
       console.error(data)
+      if(res.status === 404)
+        localStorage.removeItem("accessToken")
       return
     }
 

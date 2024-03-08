@@ -31,6 +31,8 @@ body {
 
     &.login {
         height: calc(100vh - $navbar-height);
+        min-height: min-content;
+        margin: 3rem 0;
         align-content: center;
     }
 }

@@ -9,7 +9,8 @@ import {
     getTopicTree,
     updateContent,
     getVersion,
-    clonePost
+    clonePost,
+    mergePost
 } from "@/controllers/content"
 
 
@@ -26,6 +27,8 @@ router.post("/contents", authHandler(), createContent)
 router.get("/contents/:id", authHandler(true), getContent)
 
 router.get("/contents/:id/:hash", authHandler(true), getVersion)
+
+router.get("/contents/:id/:hash/merge", authHandler(), mergePost)
 
 router.post("/contents/:id/:hash/clone", authHandler(), clonePost)
 
