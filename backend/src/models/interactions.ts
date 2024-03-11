@@ -60,7 +60,7 @@ async function findAll({ where = "", values = [] as any[], orderBy = "" }): Prom
       INNER JOIN
         users ON users.id = i.author_id
       WHERE ${where}
-      ${orderBy? `ORDER BY ${orderBy}` : ""}
+      ${orderBy ? `ORDER BY ${orderBy}` : ""}
       ;`,
     values
   }
@@ -223,6 +223,27 @@ async function updateById({ id, field, type, content_id, config, author_pid }: I
   return { ...result.rows[0], author_id: author_pid }
 }
 
+async function updateByCommit(commit: string, field: string, data: any, author_pid: string): Promise<Interaction> {
+  const query = {
+    text: `
+      UPDATE
+        interactions
+      SET
+        ${field} = $1
+      WHERE
+        config['commit'] = $2
+      RETURNING
+        *
+      ;`,
+    values: [data, commit]
+  }
+
+  const result = await db.query(query)
+  console.log(result)
+  return { ...result.rows[0], author_id: author_pid }
+}
+
+
 async function removeById(interaction_id: number) {
   const query = {
     text: `
@@ -245,6 +266,7 @@ export default Object.freeze({
   getUserContentInteractions,
   getUserTopicVote,
   updateById,
+  updateByCommit,
   removeById
 })
 

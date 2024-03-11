@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     colcoins INT DEFAULT 0,
     prestige INT DEFAULT 0,
     permissions TEXT[] DEFAULT '{"read:activation_token"}',
-    config JSON,
+    config JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT (now() AT TIME ZONE 'utc')
 );
 
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS contents (
     body TEXT,
     type TEXT NOT NULL,
     status TEXT DEFAULT 'open',
-    config JSON,
+    config JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT (now() AT TIME ZONE 'utc'),
     FOREIGN KEY (author_id) REFERENCES users(id),
     FOREIGN KEY (parent_id) REFERENCES contents(id)
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS contents (
 CREATE TABLE IF NOT EXISTS tags (
     id SERIAL PRIMARY KEY,
     name TEXT UNIQUE NOT NULL,
-    config JSON
+    config JSONB
 );
 
 CREATE TABLE IF NOT EXISTS contents_tags (
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS interactions (
     author_id INT NOT NULL,
     content_id INT NOT NULL,
     type TEXT NOT NULL,
-    config JSON,
+    config JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT (now() AT TIME ZONE 'utc'),
     FOREIGN KEY (author_id) REFERENCES users(id),
     FOREIGN KEY (content_id) REFERENCES contents(id)

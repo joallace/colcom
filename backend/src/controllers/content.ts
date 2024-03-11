@@ -297,14 +297,14 @@ export const mergePost: RequestHandler = async (req, res, next) => {
   try {
     const content = await Content.findById(content_id)
 
-    if(author_pid !== content.author_id)
+    if (author_pid !== content.author_id)
       throw new UnauthorizedError({
         message: "Somente o autor do post pode realizar merges",
         stack: new Error().stack
       })
 
     await git.merge(content, commit)
-    // TODO: update suggestion interaction to accepted
+    await Interactions.updateByCommit(commit, "config['accepted']", true, author_pid)
 
     res.status(204).end()
   }

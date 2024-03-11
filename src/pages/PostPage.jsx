@@ -196,7 +196,7 @@ export default () => {
               alongsideCritique={showCritique}
               setShowCritique={setShowCritique}
               setPostData={(data) => {
-                const history = [...postData.history, { commit: data.commit, date: "agora" }]
+                const history = [...postData.history, { commit: data.commit, date: new Date().getTime() }]
                 setPostData({ ...postData, ...data, history, commit: undefined })
                 setCurrentCommit(history.length - 1)
               }}
