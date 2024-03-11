@@ -28,3 +28,16 @@ export const handleInteraction: RequestHandler = async (req, res, next) => {
     next(err)
   }
 }
+
+export const rejectSuggestion: RequestHandler = async (req, res, next) => {
+  const commit = req.params.hash
+  const author_pid = (<any>req.params.user).pid
+  
+  try {
+    const interactions = await Interactions.updateByCommit(commit, "config['accepted']", false, author_pid)
+    res.status(200).json(interactions)
+  }
+  catch (err) {
+    next(err)
+  }
+}

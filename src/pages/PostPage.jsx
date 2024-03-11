@@ -200,7 +200,7 @@ export default () => {
                 setPostData({ ...postData, ...data, history, commit: undefined })
                 setCurrentCommit(history.length - 1)
               }}
-              bubbleMenuShouldShow={currentCommit === postData?.history?.length - 1 && !currentSuggestion}
+              bubbleMenuShouldShow={currentCommit === postData?.history?.length - 1 && !Number.isFinite(currentSuggestion)}
               tempHighlight={tempHighlight}
               resetState={[reset, setReset]}
             />

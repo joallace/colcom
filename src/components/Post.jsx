@@ -114,25 +114,43 @@ export default function Post({
         const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
         try {
           setIsLoading(true)
-          await fetch(`${env.apiAddress}/contents/${id}/${currentSuggestion}/merge`, { headers })
+          await fetch(`${env.apiAddress}/contents/${id}/${suggestions[currentSuggestion].config.commit}/merge`, { headers })
         }
         catch (err) {
           console.error(err)
         }
         finally {
+          setCurrentSuggestion(undefined)
           setIsLoading(false)
+          await fetchCommit()
         }
       }
     },
     "reject": {
       description: "rejeitar sugestão",
       icons: PiTrash,
-      onClick: () => { setModal(2) }
+      onClick: async () => {
+        const token = localStorage.getItem("accessToken")
+        const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
+        try {
+          setIsLoading(true)
+          await fetch(`${env.apiAddress}/interactions/${suggestions[currentSuggestion].config.commit}/reject`, { headers })
+        }
+        catch (err) {
+          console.error(err)
+        }
+        finally {
+          setPostData(prev => ({ ...prev, suggestions: suggestions.filter((_, i) => i !== currentSuggestion) }))
+          setCurrentSuggestion(undefined)
+          setIsLoading(false)
+          await fetchCommit()
+        }
+      }
     },
     "close": {
       description: "fechar sugestão",
       icons: PiX,
-      onClick: () => { fetchCommit(); setCurrentSuggestion(undefined) }
+      onClick: async () => { await fetchCommit(); setCurrentSuggestion(undefined) }
     },
   }
 
@@ -228,7 +246,7 @@ export default function Post({
         id={id}
         title={title}
         titleRef={titleRef}
-        headerConfig={currentSuggestion ? editionHeader : headerConfig}
+        headerConfig={Number.isFinite(currentSuggestion) ? editionHeader : headerConfig}
         relevanceVote={relevanceVote}
         setRelevanceVote={setRelevanceVote}
         definitiveVote={definitiveVote}
@@ -274,13 +292,13 @@ export default function Post({
       <Modal isOpen={modal === 2} setIsOpen={setModal} title="incorporar sugestões">
         <ul className="suggestions">
           {
-            suggestions?.map(suggestion => {
+            suggestions?.map((suggestion, index) => {
               const Dot = () => <span className="dot"> • </span>
               return <li>
                 <span
                   className="icons"
                   title="visualizar sugestão"
-                  onClick={() => { fetchCommit(suggestion.config.commit); setCurrentSuggestion(suggestion.config.commit); setModal(false) }}
+                  onClick={() => { fetchCommit(suggestion.config.commit); setCurrentSuggestion(index); setModal(false) }}
                 >
                   {suggestion.config.message}
                 </span>

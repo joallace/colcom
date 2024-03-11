@@ -87,7 +87,7 @@ async function merge(content: IContent, commit: string) {
 
   await lock.acquire(String(repo), async () => {
     await exec("git", ["-C", path, "checkout", String(id)])
-    await exec("git", ["-C", path, "merge", commit])
+    await exec("git", ["-C", path, "merge", commit, "--no-ff"])
   })
 }
 

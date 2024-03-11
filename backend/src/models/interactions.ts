@@ -224,22 +224,27 @@ async function updateById({ id, field, type, content_id, config, author_pid }: I
 }
 
 async function updateByCommit(commit: string, field: string, data: any, author_pid: string): Promise<Interaction> {
+  if(!/^[0-9a-f]{7}$/.test(commit))
+    throw new ValidationError({
+      message: `Hash de commit inválido.`,
+      action: 'Forneça um hash de commit válido.',
+      stack: new Error().stack
+    })
+
   const query = {
     text: `
       UPDATE
         interactions
       SET
-        ${field} = $1
+        ${field} = '${data}'
       WHERE
-        config['commit'] = $2
+        config['commit'] = '"${commit}"'
       RETURNING
         *
-      ;`,
-    values: [data, commit]
+      ;`
   }
 
   const result = await db.query(query)
-  console.log(result)
   return { ...result.rows[0], author_id: author_pid }
 }
 
