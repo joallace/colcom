@@ -41,6 +41,7 @@ export default function Post({
   alongsideCritique,
   setShowCritique,
   userInteractions,
+  updatePostData,
   setPostData,
   bubbleMenuShouldShow,
   resetState,
@@ -114,7 +115,10 @@ export default function Post({
         const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
         try {
           setIsLoading(true)
-          await fetch(`${env.apiAddress}/contents/${id}/${suggestions[currentSuggestion].config.commit}/merge`, { headers })
+          const res = await fetch(`${env.apiAddress}/contents/${id}/${suggestions[currentSuggestion].config.commit}/merge`, { headers })
+
+          if (res.ok)
+            setPostData(prev => ({ ...prev, suggestions: suggestions.filter((_, i) => i !== currentSuggestion) }))
         }
         catch (err) {
           console.error(err)
@@ -134,13 +138,15 @@ export default function Post({
         const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
         try {
           setIsLoading(true)
-          await fetch(`${env.apiAddress}/interactions/${suggestions[currentSuggestion].config.commit}/reject`, { headers })
+          const res = await fetch(`${env.apiAddress}/interactions/${suggestions[currentSuggestion].config.commit}/reject`, { headers })
+
+          if (res.ok)
+            setPostData(prev => ({ ...prev, suggestions: suggestions.filter((_, i) => i !== currentSuggestion) }))
         }
         catch (err) {
           console.error(err)
         }
         finally {
-          setPostData(prev => ({ ...prev, suggestions: suggestions.filter((_, i) => i !== currentSuggestion) }))
           setCurrentSuggestion(undefined)
           setIsLoading(false)
           await fetchCommit()
@@ -191,7 +197,7 @@ export default function Post({
       const data = await res.json()
 
       if (res.ok && user?.pid === author_id)
-        setPostData(data)
+        updatePostData(data)
     }
     catch (err) {
       console.error(err)

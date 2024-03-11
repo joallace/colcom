@@ -7,6 +7,7 @@ import AsyncLock from "async-lock"
 
 import { IContent } from "@/models/content"
 import logger from "@/logger"
+import { ValidationError } from "./errors"
 
 const exec = promisify(execFile)
 
@@ -87,7 +88,14 @@ async function merge(content: IContent, commit: string) {
 
   await lock.acquire(String(repo), async () => {
     await exec("git", ["-C", path, "checkout", String(id)])
-    await exec("git", ["-C", path, "merge", commit, "--no-ff"])
+    try {
+      await exec("git", ["-C", path, "merge", commit, "--no-ff"])
+    } catch (err) {
+      await exec("git", ["-C", path, "merge", "--abort"])
+      throw new ValidationError({
+        message: "Conflito no merge!"
+      })
+    }
   })
 }
 

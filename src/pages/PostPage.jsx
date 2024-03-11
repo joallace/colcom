@@ -195,7 +195,8 @@ export default () => {
               groupedCritiques={groupOverlappingMarks(postCritiques)}
               alongsideCritique={showCritique}
               setShowCritique={setShowCritique}
-              setPostData={(data) => {
+              setPostData={setPostData}
+              updatePostData={(data) => {
                 const history = [...postData.history, { commit: data.commit, date: new Date().getTime() }]
                 setPostData({ ...postData, ...data, history, commit: undefined })
                 setCurrentCommit(history.length - 1)
