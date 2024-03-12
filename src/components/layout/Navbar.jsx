@@ -25,13 +25,15 @@ export default function Navbar() {
           <Link to="/promoted" className="nav-icon">
             <Icon isDesktop={isDesktop} />
           </Link>
-          <ul className="paths">
+          <ul className="unselectable paths">
             <li key="promoted">
               <NavLink to="/promoted">promovido</NavLink>
             </li>
+            •
             <li key="all">
               <NavLink to="/all">todos</NavLink>
             </li>
+            •
             <li key="meta">
               <NavLink to="/meta">meta</NavLink>
             </li>

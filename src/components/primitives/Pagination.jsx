@@ -61,7 +61,7 @@ export default function Pagination({ path = "", state, isLoading, maxIndex = -1 
                 contentEditable={index === page}
                 suppressContentEditableWarning={true}
                 disabled={maxIndex >= 0 && page > maxIndex}
-                active={index === page}
+                active={String(index === page)}
                 onClick={() => { index !== page && setIndex(page) }}
                 onKeyDown={e => {
                   const content = e.target.textContent

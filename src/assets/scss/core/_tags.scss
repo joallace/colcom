@@ -1,4 +1,6 @@
-input, div, span {
+input,
+div,
+span {
     font-family: "Lato", sans-serif;
 }
 
@@ -125,7 +127,6 @@ input[type=radio] {
 
         &[type=radio] {
             border-radius: 50%;
-
         }
 
         &:hover {
@@ -215,7 +216,7 @@ datalist {
 
 fieldset {
     font-family: "Lato", sans-serif;
-    
+
     legend {
         color: $default-green;
     }

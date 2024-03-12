@@ -61,7 +61,7 @@ async function update(content: IContent, body: string, message: string, interact
     if (interactionId === undefined)
       await exec("git", ["-C", path, "checkout", String(id)])
     else
-      await exec("git", ["-C", path, "checkout", "-b", String(interactionId), String(id)])
+      await exec("git", ["-C", path, "checkout", "-b", `${id}_${interactionId}`, String(id)])
 
     await writeFile(file, body)
     await exec("git", ["-C", path, "add", file])

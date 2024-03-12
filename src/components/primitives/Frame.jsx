@@ -151,8 +151,12 @@ export default function Frame({
         <div className={`bottom bracket${error ? " error" : ""}`} />
         {metrics &&
           <ul className="metrics">
-            {metrics().map((metric, index) => (
-              <li key={`t${id}-info-${index}`}>{metric}</li>
+            {metrics().map((metric, index, arr) => (
+              <>
+                <li key={`t${id}-info-${index}`}>{metric}</li>
+                {(index + 1) !== arr.length &&
+                "•"}
+              </>
             ))}
           </ul>
         }
