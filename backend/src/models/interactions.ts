@@ -74,7 +74,8 @@ async function getUserContentInteractions({ author_pid, content_id }: Interactio
     text: `
       SELECT
         i.id,
-        i.type
+        i.type,
+        i.config
       FROM
         interactions i
       INNER JOIN
@@ -83,6 +84,13 @@ async function getUserContentInteractions({ author_pid, content_id }: Interactio
         i.author_id = users.id
       AND
         i.content_id = $2
+      AND(
+        i.config IS NULL
+        OR
+        i.config->>'valid_until' IS NULL
+        OR
+        (i.config->>'valid_until')::TIMESTAMP WITHOUT TIME ZONE > NOW()
+      )
       ;`,
     values: [author_pid, content_id]
   }
@@ -110,8 +118,34 @@ async function getUserTopicVote(author_pid: string, topic_id: number): Promise<I
       users.pid = $1
     AND
       contents.parent_id = $2
+    LIMIT 1
     ;`,
     values: [author_pid, topic_id]
+  }
+
+  const result = await db.query(query)
+  return result.rows[0]
+}
+
+async function getUserCurrentPromote(author_pid: string): Promise<Interaction> {
+  const query = {
+    text: `
+    SELECT
+      i.id,
+      i.content_id
+    FROM
+      interactions i
+    INNER JOIN
+      users ON users.id = i.author_id
+    WHERE
+      i.type = 'promote'
+    AND
+      users.pid = $1
+    AND
+      (i.config->>'valid_until')::TIMESTAMP WITHOUT TIME ZONE > NOW()
+    LIMIT 1
+    ;`,
+    values: [author_pid]
   }
 
   const result = await db.query(query)
@@ -157,6 +191,14 @@ async function handleChange({ author_pid, content_id, type }: InteractionInsertR
       }
       break
     case "promote":
+      for (const interaction of postInteractions) {
+        if (interaction.type === "promote" && (new Date((<PromoteConfig>interaction.config)?.valid_until) > new Date()))
+          return [204, await removeById(interaction.id)]
+      }
+      const oldPromoteId = (await getUserCurrentPromote(author_pid))?.id
+
+      if (oldPromoteId)
+        return [200, await updateById({ id: oldPromoteId, field: "content_id", content_id, author_pid })]
       break
     default:
       throw new ValidationError({
@@ -180,7 +222,7 @@ async function create({ author_pid, content_id, type, config = null }: Interacti
   //     errorLocationCode: 'MODEL:INTERACTION:CREATE:INSUFFICIENT_BALANCE'
   //   })
 
-  const promoteConfig = () => ({ valid_until: new Date().setUTCHours(23, 59, 59, 999) })
+  const promoteConfig = () => ({ valid_until: new Date(new Date().setUTCHours(23, 59, 59, 999)) })
 
   const query = {
     text: `
@@ -224,7 +266,7 @@ async function updateById({ id, field, type, content_id, config, author_pid }: I
 }
 
 async function updateByCommit(commit: string, field: string, data: any, author_pid: string): Promise<Interaction> {
-  if(!/^[0-9a-f]{7}$/.test(commit))
+  if (!/^[0-9a-f]{7}$/.test(commit))
     throw new ValidationError({
       message: `Hash de commit inválido.`,
       action: 'Forneça um hash de commit válido.',

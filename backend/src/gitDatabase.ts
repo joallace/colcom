@@ -21,7 +21,7 @@ else
   logger.info(`[gitDatabase.ts] Loaded git db at "${dbPath}"`)
 
 
-async function create(content: IContent) {
+async function create(content: IContent, author: any) {
   const { parent_id, id, type, body } = content
 
   if (type === "critique")
@@ -42,7 +42,7 @@ async function create(content: IContent) {
 
     await writeFile(file, body || "")
     await exec("git", ["-C", path, "add", file])
-    await exec("git", ["-C", path, "commit", "-m", type === "topic" ? "init topic" : `init post ${id}`])
+    await exec("git", ["-C", path, "commit", "-m", type === "topic" ? "init topic" : `init post ${id}`, "--author", `${author.username} <${author.email}>`])
   })
 }
 
@@ -51,7 +51,7 @@ async function read(repo: number, commit: string) {
   return (<any>await exec("git", ["-C", path, "show", `${commit}:./main.html`]))
 }
 
-async function update(content: IContent, body: string, message: string, interactionId: number | undefined) {
+async function update(content: IContent, author: any, body: string, message: string, interactionId: number | undefined) {
   const { parent_id: repo, id } = content
   const path = `${dbPath}/${repo}`
   const file = `${path}/main.html`
@@ -65,7 +65,7 @@ async function update(content: IContent, body: string, message: string, interact
 
     await writeFile(file, body)
     await exec("git", ["-C", path, "add", file])
-    await exec("git", ["-C", path, "commit", "-m", message])
+    await exec("git", ["-C", path, "commit", "-m", message, "--author", `${author.username} <${author.email}>`])
 
     return (<any>await exec("git", ["-C", path, "rev-parse", "--short", "HEAD"])).trimEnd()
   })

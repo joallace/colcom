@@ -59,7 +59,7 @@ export const createContent: RequestHandler = async (req, res, next) => {
 
     const result = await Content.create(content)
     result.body = body
-    await git.create(result)
+    await git.create(result, req.params.user)
 
     res.status(201).json(result)
   }
@@ -249,7 +249,7 @@ export const updateContent: RequestHandler = async (req, res, next) => {
       :
       undefined
 
-    const commit = await git.update(content, body, message, interactionId)
+    const commit = await git.update(content, req.params.user, body, message, interactionId)
 
     if (interactionId === undefined) {
       const result = await Content.updateById(content.id, body, author_pid)

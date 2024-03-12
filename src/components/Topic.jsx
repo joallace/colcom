@@ -12,6 +12,7 @@ import PostSummary from "@/components/PostSummary"
 import NoResponse from "@/components/primitives/NoResponse"
 import { submitVote } from "@/components/primitives/VotingButtons"
 import { UserContext } from "@/context/UserContext"
+import { defaultOrange } from "@/assets/scss/_export.module.scss"
 import { toPercentageStr, getUserVote } from "@/assets/util"
 
 
@@ -42,8 +43,8 @@ export default function Topic({
     },
     "promote": {
       description: "promover tópico",
-      icons: PiCaretDoubleUp,
-      onClick: () => submitVote(navigate, id, "promote",)
+      icons: (props) => <PiCaretDoubleUp style={{ color: userInteractions?.includes("promote") ? defaultOrange : null }} {...props} />,
+      onClick: () => submitVote(navigate, id, "promote")
     },
     "bookmark": {
       description: ["salvar tópico", "remover tópico dos salvos"],
@@ -85,7 +86,7 @@ export default function Topic({
               key={`p${id}-s${child.id}`}
               parent_id={id}
               id={child.id}
-              shortAnswer={`${i+1}. ${child.title}`}
+              shortAnswer={`${i + 1}. ${child.title}`}
               summary={`${child.body}${child.body.length === 280 ? "..." : ""}`}
               percentage={child.votes / childrenStats?.votes}
               isAuthor={user?.pid === child.author_id}
