@@ -95,8 +95,6 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
 
     // Probably doing this the dirtiest way possible, but right now I don't know another way
     // to crop the number of each topic's posts to a certain limit and to count all stats.
-    // Also, I still don't have found a way to preserve the sorting from the query when transforming
-    // the data into a tree, so since it's just a page I'll sort it again here.
     // Should refactor in the future.
     if (type === "topic") {
       for (const topic of contents) {
@@ -107,15 +105,6 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
           topic.userVote = (await Interactions.getUserTopicVote(author_pid, topic.id))?.content_id
         }
       }
-
-      contents.sort((a, b) => {
-        if (a.promotions < b.promotions)
-          return 1
-        else if (a.promotions > b.promotions)
-          return -1
-        else
-          return Number(a.upvotes < b.upvotes)
-      })
     }
 
     res.status(200).json({ tree: contents, count: getCount ? (await Content.getCount("topic")) : undefined })
