@@ -174,8 +174,8 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           {...remainingProps}
         >
           <CartesianGrid />
-          <XAxis type="number" dataKey="0x" name="stature" unit="cm" />
-          <YAxis type="number" dataKey="0y" name="weight" unit="kg" />
+          <XAxis type="number" dataKey="0x" name="stature"/>
+          <YAxis type="number" dataKey="0y" name="weight"/>
           <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={tooltipStyle} itemStyle={{ color: defaultFontColor }} />
           <Scatter data={data} fill={defaultOrange} />
         </ScatterChart>
@@ -189,7 +189,6 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
           width={width * (isDesktop ? 1 : 0.7)}
           height={height * (isDesktop ? 1 : 0.7)}
           data={transformedData()}
-          // margin={isDesktop? desktopMargin : mobileMargin}
           {...remainingProps}
         >
           <PolarGrid />

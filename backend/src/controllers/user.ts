@@ -3,6 +3,7 @@ import { compare } from "bcryptjs"
 import jwt from "jsonwebtoken"
 
 import User, { UserInsertRequest } from "@/models/user"
+import Interactions from "@/models/interactions"
 import { ValidationError } from "@/errors"
 
 
@@ -82,7 +83,8 @@ export const getCurrentUser: RequestHandler = async (req, res, next) => {
   const public_id = (<any>req.params.user).pid
   try {
     const user = await User.findByPid(public_id)
-    res.status(200).json(user)
+    const promoting = (await Interactions.getUserCurrentPromote(user.pid))?.content_id
+    res.status(200).json({ ...user, promoting })
   }
   catch (err) {
     next(err)

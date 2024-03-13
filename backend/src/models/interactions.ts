@@ -89,7 +89,7 @@ async function getUserContentInteractions({ author_pid, content_id }: Interactio
         OR
         i.config->>'valid_until' IS NULL
         OR
-        (i.config->>'valid_until')::TIMESTAMP WITHOUT TIME ZONE > NOW()
+        (i.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
       )
       ;`,
     values: [author_pid, content_id]
@@ -142,7 +142,7 @@ async function getUserCurrentPromote(author_pid: string): Promise<Interaction> {
     AND
       users.pid = $1
     AND
-      (i.config->>'valid_until')::TIMESTAMP WITHOUT TIME ZONE > NOW()
+      (i.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
     LIMIT 1
     ;`,
     values: [author_pid]
@@ -222,7 +222,7 @@ async function create({ author_pid, content_id, type, config = null }: Interacti
   //     errorLocationCode: 'MODEL:INTERACTION:CREATE:INSUFFICIENT_BALANCE'
   //   })
 
-  const promoteConfig = () => ({ valid_until: new Date(new Date().setUTCHours(23, 59, 59, 999)) })
+  const promoteConfig = () => ({ valid_until: new Date(new Date().setHours(23, 59, 59, 999)) })
 
   const query = {
     text: `
@@ -312,6 +312,7 @@ export default Object.freeze({
   create,
   getUserContentInteractions,
   getUserTopicVote,
+  getUserCurrentPromote,
   updateById,
   updateByCommit,
   removeById

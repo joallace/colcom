@@ -21,9 +21,9 @@ export function UserProvider({ children }) {
     })
     const data = await res.json()
 
-    if(!res.ok){
+    if (!res.ok) {
       console.error(data)
-      if(res.status === 404)
+      if (res.status === 404)
         localStorage.removeItem("accessToken")
       return
     }
@@ -31,13 +31,17 @@ export function UserProvider({ children }) {
     setUser(data)
   }
 
-  React.useEffect(()=>{
-    if(localStorage.getItem("accessToken"))
+  const updatePromoted = (contentId) => {
+    setUser(prev => ({ ...prev, promoting: contentId }))
+  }
+
+  React.useEffect(() => {
+    if (localStorage.getItem("accessToken"))
       fetchUser()
   }, [])
 
   return (
-    <UserContext.Provider value={{ user, fetchUser }}>
+    <UserContext.Provider value={{ user, fetchUser, updatePromoted }}>
       {children}
     </UserContext.Provider>
   )

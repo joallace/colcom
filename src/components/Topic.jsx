@@ -12,7 +12,6 @@ import PostSummary from "@/components/PostSummary"
 import NoResponse from "@/components/primitives/NoResponse"
 import { submitVote } from "@/components/primitives/VotingButtons"
 import { UserContext } from "@/context/UserContext"
-import { defaultOrange } from "@/assets/scss/_export.module.scss"
 import { toPercentageStr, getUserVote } from "@/assets/util"
 
 
@@ -31,8 +30,7 @@ export default function Topic({
 }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
-  const [definitiveVote, setDefinitiveVote] = React.useState(userVote)
-  const { user } = React.useContext(UserContext)
+  const { user, updatePromoted } = React.useContext(UserContext)
   const navigate = useNavigate()
 
   const headerConfig = {
@@ -40,11 +38,6 @@ export default function Topic({
       description: "responder tópico",
       icons: PiArrowBendUpLeft,
       onClick: () => navigate("/write", { state: { id, title, config } })
-    },
-    "promote": {
-      description: "promover tópico",
-      icons: (props) => <PiCaretDoubleUp style={{ color: userInteractions?.includes("promote") ? defaultOrange : null }} {...props} />,
-      onClick: () => submitVote(navigate, id, "promote")
     },
     "bookmark": {
       description: ["salvar tópico", "remover tópico dos salvos"],
@@ -57,11 +50,15 @@ export default function Topic({
   const getMetrics = () => {
     const removeOrAddVote = initialVoteState ? -(relevanceVote === "") : +(relevanceVote === "up" || relevanceVote === "down")
     const allVotes = upvotes + downvotes + removeOrAddVote
+
     const interactions = childrenStats?.upvotes + childrenStats?.downvotes
+
+    const removeOrAddPromote = userInteractions?.includes("promote") ? -(user?.promoting !== id) : +(user?.promoting === id)
+    const currentPromotions = promotions + removeOrAddPromote
 
     return [
       `iniciado por ${author}`,
-      `promovido por ${promotions} usuário${promotions === 1 ? "" : "s"}`,
+      `promovido por ${currentPromotions} usuário${currentPromotions === 1 ? "" : "s"}`,
       allVotes ? `${toPercentageStr((upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos",
       `${childrenStats?.count} post${childrenStats?.count === 1 ? "" : "s"}`,
       `${interactions} interaç${interactions === 1 ? "ão" : "ões"}`
@@ -72,11 +69,13 @@ export default function Topic({
     <Frame
       id={id}
       title={<Link to={`/topics/${id}`}>{String(title)}</Link>}
+      headerConfig={headerConfig}
       relevanceVote={relevanceVote}
       setRelevanceVote={setRelevanceVote}
-      definitiveVote={definitiveVote}
-      setDefinitiveVote={setDefinitiveVote}
-      headerConfig={headerConfig}
+      definitiveVote={user?.promoting}
+      setDefinitiveVote={updatePromoted}
+      definitiveVoteType="promote"
+      showDefinitiveVoteButton
       metrics={getMetrics}
     >
       {children?.length > 0 ?

@@ -257,9 +257,10 @@ export default function Post({
         setRelevanceVote={setRelevanceVote}
         definitiveVote={definitiveVote}
         setDefinitiveVote={setDefinitiveVote}
+        definitiveVoteType="vote"
+        showDefinitiveVoteButton
         metrics={getMetrics}
         alongsideCritique={alongsideCritique}
-        showDefinitiveVoteButton
         justify
       >
         <Editor

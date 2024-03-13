@@ -21,6 +21,7 @@ export default function Frame({
   readOnly = true,
   hideVoteButtons = false,
   showDefinitiveVoteButton = false,
+  definitiveVoteType,
   initialVoteState = { vote: false, relevance: "" },
   alongsideCritique = false,
   isCritique = false,
@@ -71,6 +72,7 @@ export default function Frame({
             definitiveVote={definitiveVote}
             setDefinitiveVote={setDefinitiveVote}
             showDefinitiveVoteButton={showDefinitiveVoteButton}
+            definitiveVoteType={definitiveVoteType}
           />
         }
         <h1
@@ -155,7 +157,7 @@ export default function Frame({
               <>
                 <li key={`t${id}-info-${index}`}>{metric}</li>
                 {(index + 1) !== arr.length &&
-                "•"}
+                  "•"}
               </>
             ))}
           </ul>
