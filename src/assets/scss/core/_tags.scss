@@ -1,3 +1,9 @@
+input,
+div,
+span {
+    font-family: "Lato", sans-serif;
+}
+
 button {
     min-width: min-content;
     background: transparent;
@@ -5,7 +11,9 @@ button {
     border: 2px solid $default-green;
     border-radius: 0.25rem;
     padding: 0.25rem 0.5rem;
+    transition: all 0.15s ease;
     cursor: pointer;
+    font-family: "Lato", sans-serif;
 
     &:hover {
         border-color: $default-orange;
@@ -23,12 +31,28 @@ button {
         cursor: default;
         background-color: transparent;
     }
+
+    &.error {
+        border-color: $default-red;
+
+        &:hover {
+            border-color: $default-red;
+            background-color: $default-red;
+        }
+
+        &:active {
+            border-color: darken($default-red, 10%);
+            background-color: darken($default-red, 10%);
+        }
+    }
 }
 
 a {
     cursor: pointer;
     color: white;
     text-decoration: none;
+    transition: all 0.1s ease;
+    font-family: "Lato", sans-serif;
 
     &:hover {
         color: $default-orange;
@@ -42,8 +66,8 @@ a {
 table {
     border-collapse: collapse;
     table-layout: fixed;
-    width: 100%;
-    margin: 1rem;
+    width: 95%;
+    margin: 1rem 2.5%;
     overflow: hidden;
     text-align: center;
 
@@ -103,7 +127,6 @@ input[type=radio] {
 
         &[type=radio] {
             border-radius: 50%;
-
         }
 
         &:hover {
@@ -112,17 +135,113 @@ input[type=radio] {
     }
 }
 
-fieldset{
-    legend{
+input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+
+    &:focus {
+        outline: none;
+    }
+
+    &::-moz-range-track {
+        background-color: darken($default-font-color, 20%);
+        border-radius: 0.5rem;
+        height: 0.5rem;
+    }
+
+    &::-webkit-slider-runnable-track {
+        background-color: darken($default-font-color, 20%);
+        border-radius: 0.5rem;
+        height: 0.5rem;
+    }
+
+    &::-webkit-slider-thumb {
+        transition: all 0.2s ease;
+        -webkit-appearance: none;
+        appearance: none;
+        margin-top: -4px;
+        background-color: $default-green;
+        border-radius: 50%;
+        height: 1rem;
+        width: 1rem;
+        border: none;
+    }
+
+    &::-moz-range-thumb {
+        transition: all 0.2s ease;
+        background-color: $default-green;
+        border-radius: 50%;
+        height: 1rem;
+        width: 1rem;
+        border: none;
+    }
+
+    &:not(:disabled):active::-webkit-slider-thumb {
+        background-color: $default-orange;
+
+        outline: 3px solid $default-orange;
+        outline-offset: 0.125rem;
+    }
+
+    &:not(:disabled):active::-moz-range-thumb {
+        background-color: $default-orange;
+
+        outline: 3px solid $default-orange;
+        outline-offset: 0.125rem;
+    }
+
+    &:disabled {
+        cursor: default;
+
+        &::-webkit-slider-thumb {
+            background-color: darken($default-font-color, 50%);
+        }
+
+        &::-moz-range-thumb {
+            background-color: darken($default-font-color, 50%);
+        }
+    }
+}
+
+datalist {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    writing-mode: vertical-lr;
+    font-family: "Lato", sans-serif;
+}
+
+
+fieldset {
+    font-family: "Lato", sans-serif;
+
+    legend {
         color: $default-green;
     }
+
     border: 2px solid $default-green;
     border-radius: 0.75rem 0.25rem 0.25rem 0.25rem;
 
-    &.error{
-        legend{
+    &.error {
+        legend {
             color: $default-red;
         }
+
         border-color: $default-red;
+    }
+}
+
+footer {
+    display: flex;
+    place-content: center;
+    padding: 1rem;
+    margin: 0 auto;
+    border-top: 2px solid darken($default-green, 10%);
+    @include content-responsiveness;
+
+    a {
+        color: darken($default-font-color, 10%);
     }
 }

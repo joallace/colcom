@@ -1,11 +1,11 @@
-@mixin content-responsiveness{
-    width: 60%;
-    
-    @media screen and (min-width: $screen-sm)  and (max-width: $screen-xl) {
-        width: 70%;
+@mixin content-responsiveness($default: 60vw, $medium: 80vw, $small: 95vw) {
+    width: $default;
+
+    @media screen and (min-width: $screen-sm) and (max-width: $screen-xl) {
+        width: $medium;
     }
 
-    @media screen and (min-width: 0px)  and (max-width: $screen-sm) {
-        width: 85%;
+    @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+        width: $small;
     }
 }

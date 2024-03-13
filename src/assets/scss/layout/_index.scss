@@ -3,7 +3,7 @@
 }
 
 body {
-    margin: 0
+    margin: 0;
 }
 
 :root {
@@ -11,9 +11,17 @@ body {
     color: $default-font-color;
 }
 
+#root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
 .content {
     display: grid;
+    grid-auto-rows: min-content;
     justify-items: center;
+    flex: 1;
 
 
     &.tree {
@@ -23,6 +31,31 @@ body {
 
     &.login {
         height: calc(100vh - $navbar-height);
+        min-height: min-content;
+        margin: 3rem 0;
         align-content: center;
     }
+}
+
+.icons {
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+        color: $default-orange;
+    }
+}
+
+.unselectable {
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.disabled {
+    cursor: default !important;
+    color: darken($default-font-color, 50%) !important;
+    pointer-events: none;
 }

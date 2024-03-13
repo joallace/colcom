@@ -7,11 +7,12 @@ import {
   PiCaretDoubleUp
 } from "react-icons/pi"
 
-import Frame from "@/components/Frame"
+import Frame from "@/components/primitives/Frame"
 import PostSummary from "@/components/PostSummary"
-import NoResponse from "@/components/NoResponse"
-import { submitVote } from "@/components/VotingButtons"
-import { toPercentageStr } from "@/assets/util"
+import NoResponse from "@/components/primitives/NoResponse"
+import { submitVote } from "@/components/primitives/VotingButtons"
+import { UserContext } from "@/context/UserContext"
+import { toPercentageStr, getUserVote } from "@/assets/util"
 
 
 export default function Topic({
@@ -29,7 +30,7 @@ export default function Topic({
 }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
-  const [definitiveVote, setDefinitiveVote] = React.useState(userVote)
+  const { user, updatePromoted } = React.useContext(UserContext)
   const navigate = useNavigate()
 
   const headerConfig = {
@@ -37,11 +38,6 @@ export default function Topic({
       description: "responder tópico",
       icons: PiArrowBendUpLeft,
       onClick: () => navigate("/write", { state: { id, title, config } })
-    },
-    "promote": {
-      description: "promover tópico",
-      icons: PiCaretDoubleUp,
-      onClick: () => submitVote(navigate, id, "promote",)
     },
     "bookmark": {
       description: ["salvar tópico", "remover tópico dos salvos"],
@@ -51,26 +47,19 @@ export default function Topic({
     }
   }
 
-  const updateVoteMetric = () => {
-    if (relevanceVote === initialVoteState)
-      return 0
-    if (relevanceVote === "up" && (initialVoteState === "down" || !initialVoteState))
-      return 1
-    if ((relevanceVote === "down" || !relevanceVote) && initialVoteState === "up")
-      return -1
-
-    return 0
-  }
-
   const getMetrics = () => {
     const removeOrAddVote = initialVoteState ? -(relevanceVote === "") : +(relevanceVote === "up" || relevanceVote === "down")
     const allVotes = upvotes + downvotes + removeOrAddVote
+
     const interactions = childrenStats?.upvotes + childrenStats?.downvotes
+
+    const removeOrAddPromote = userInteractions?.includes("promote") ? -(user?.promoting !== id) : +(user?.promoting === id)
+    const currentPromotions = promotions + removeOrAddPromote
 
     return [
       `iniciado por ${author}`,
-      `promovido por ${promotions} usuário${promotions === 1 ? "" : "s"}`,
-      allVotes ? `${toPercentageStr((upvotes + updateVoteMetric()) / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos",
+      `promovido por ${currentPromotions} usuário${currentPromotions === 1 ? "" : "s"}`,
+      allVotes ? `${toPercentageStr((upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos",
       `${childrenStats?.count} post${childrenStats?.count === 1 ? "" : "s"}`,
       `${interactions} interaç${interactions === 1 ? "ão" : "ões"}`
     ]
@@ -80,24 +69,33 @@ export default function Topic({
     <Frame
       id={id}
       title={<Link to={`/topics/${id}`}>{String(title)}</Link>}
+      headerConfig={headerConfig}
       relevanceVote={relevanceVote}
       setRelevanceVote={setRelevanceVote}
-      definitiveVote={definitiveVote}
-      setDefinitiveVote={setDefinitiveVote}
-      headerConfig={headerConfig}
+      definitiveVote={user?.promoting}
+      setDefinitiveVote={updatePromoted}
+      definitiveVoteType="promote"
+      showDefinitiveVoteButton
       metrics={getMetrics}
     >
       {children?.length > 0 ?
-        children.map(child => (
-          <PostSummary
-            key={`p${id}-s${child.id}`}
-            parent_id={id}
-            id={child.id}
-            shortAnswer={child.title}
-            percentage={child.votes / childrenStats?.votes}
-            chosen={userVote === child.id}
-          />
-        ))
+        <>
+          {children.map((child, i) => (
+            <PostSummary
+              key={`p${id}-s${child.id}`}
+              parent_id={id}
+              id={child.id}
+              shortAnswer={`${i + 1}. ${child.title}`}
+              summary={`${child.body}${child.body.length === 280 ? "..." : ""}`}
+              percentage={child.votes / childrenStats?.votes}
+              isAuthor={user?.pid === child.author_id}
+              chosen={userVote === child.id}
+            />
+          ))}
+          {childrenStats?.count > children.length &&
+            <Link to={`/topics/${id}`} style={{ width: "min-content", whiteSpace: "nowrap", fontWeight: "bolder", fontSize: "1.5rem" }}>. . .</Link>
+          }
+        </>
         :
         <NoResponse />
       }

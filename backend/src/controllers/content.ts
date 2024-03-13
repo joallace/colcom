@@ -1,15 +1,9 @@
 import { RequestHandler } from "express"
-import { writeFile, mkdir } from "fs/promises"
-import { promisify } from "util"
-import { execFile } from "child_process"
 
-import { gitDbPath as dbPath } from "@/database"
+import git from "@/gitDatabase"
 import Content, { ContentInsertRequest } from "@/models/content"
-import { ValidationError, NotFoundError } from "@/errors"
 import Interactions from "@/models/interactions"
-
-
-const exec = promisify(execFile)
+import { ValidationError, NotFoundError, UnauthorizedError } from "@/errors"
 
 
 const validateContent = (content: ContentInsertRequest) => {
@@ -42,51 +36,30 @@ export const createContent: RequestHandler = async (req, res, next) => {
   const author_pid = (<any>req.params.user).pid
 
   try {
-    const { parent_id: grandparentId } = !parent_id ?
-      { parent_id: null }
+    const grandparentId = parent_id ?
+      (await Content.getDataById(parent_id, ["parent_id"])).parent_id
       :
-      await Content.getDataById(parent_id, ["parent_id"])
+      null
 
     const type = !parent_id ?
       "topic"
       :
       grandparentId ? "critique" : "post"
 
-    const content: ContentInsertRequest = { title, author_pid, parent_id, body, type, config }
+    const content: ContentInsertRequest = {
+      title,
+      author_pid,
+      parent_id,
+      body: type === "post" ? (<any>body)?.match("<p>(.*?)</p>")[1].slice(0, 280) : body,
+      type,
+      config
+    }
 
     validateContent(content)
 
     const result = await Content.create(content)
-
-    switch (type) {
-      case "topic": {
-        const path = `${dbPath}/${result.id}`
-        await mkdir(`${path}/critiques`, { recursive: true })
-        await Promise.all([writeFile(`${path}/critiques/.gitkeep`, ""), writeFile(`${path}/main.html`, "")])
-        await exec("git", ["-C", path, "init", "-b", "main"])
-        await exec("git", ["-C", path, "add", "."])
-        await exec("git", ["-C", path, "commit", "-m", "init topic"])
-        break
-      }
-      case "post": {
-        const path = `${dbPath}/${result.parent_id}`
-        const file = `${path}/main.html`
-        // Maybe a lock will be needed
-        await exec("git", ["-C", path, "checkout", "-b", author_pid])
-        await writeFile(file, body)
-        await exec("git", ["-C", path, "add", file])
-        await exec("git", ["-C", path, "commit", "-m", `init post ${result.id}`])
-        break
-      }
-      case "critique": {
-        const path = `${dbPath}/${grandparentId}/critiques`
-        const file = `${path}/${result.id}.html`
-        await exec("git", ["-C", path, "checkout", author_pid])
-        await writeFile(file, body)
-        await exec("git", ["-C", path, "add", file])
-        await exec("git", ["-C", path, "commit", "-m", `init critique ${result.id}`])
-      }
-    }
+    result.body = body
+    await git.create(result, req.params.user)
 
     res.status(201).json(result)
   }
@@ -114,7 +87,8 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
   const pageSize = Number(req.query.pageSize) || 10
   const orderBy = req.query.orderBy ? String(req.query.orderBy) : "id"
   const author_pid = (<any>req.params.user)?.pid
-  const type = req.query.type
+  const getCount = "with_count" in req.query
+  const type = req.route.path.slice(1, -1)
 
   try {
     const contents = await Content.findTree({ page, pageSize, orderBy })
@@ -144,7 +118,7 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
       })
     }
 
-    res.status(200).json(contents)
+    res.status(200).json({ tree: contents, count: getCount ? (await Content.getCount("topic")) : undefined })
   }
   catch (err) {
     next(err)
@@ -174,9 +148,11 @@ export const getTopicTree: RequestHandler = async (req, res, next) => {
 export const getContent: RequestHandler = async (req, res, next) => {
   const author_pid = (<any>req.params.user)?.pid
   const content_id = Number(req.params.id)
+  const omitBody = "omit_body" in req.query
+  const includeParentTitle = "include_parent_title" in req.query
 
   try {
-    const content = await Content.findById(content_id)
+    const content = await Content.findById(content_id, { omitBody, includeParentTitle })
 
     if (!content)
       throw new NotFoundError({
@@ -188,16 +164,71 @@ export const getContent: RequestHandler = async (req, res, next) => {
 
     const userInteractions = author_pid ? (await Interactions.getUserContentInteractions({ author_pid, content_id })).map(v => v.type) : undefined
 
-    res.status(200).json({ ...content, userInteractions })
+    res.status(200).json({
+      ...content,
+      userInteractions,
+      history: content.type === "post" ? await git.log(content) : undefined,
+      suggestions: content.type === "post" && author_pid === content.author_id ?
+        await Interactions.findAll({
+          where: `i.content_id = $1 AND i.type='suggestion' AND i.config->>'accepted' IS NULL`,
+          values: [content_id],
+          orderBy: "i.id DESC"
+        })
+        :
+        undefined
+    })
   }
   catch (err) {
     next(err)
   }
 }
 
-export const getContentHistory: RequestHandler = async (req, res, next) => {
+export const getVersion: RequestHandler = async (req, res, next) => {
+  const content_id = Number(req.params.id)
+  const author_pid = (<any>req.params.user)?.pid
+  const commit = req.params.hash
+  const queryParentId = req.query.parent_id
+
   try {
-    const content = await Content.findById(Number(req.params.id))
+    const content = queryParentId ? undefined : await Content.findById(content_id)
+
+    if (!queryParentId) {
+      if (!content)
+        throw new NotFoundError({
+          message: "Conteúdo não encontrado.",
+          action: 'Verifique se o "id" fornecido está correto.',
+          stack: new Error().stack
+        })
+
+      if (content.type !== "post")
+        throw new ValidationError({
+          message: `Conteúdos do tipo "${content.type}" não podem têm histórico.`,
+          action: 'Forneça um "id" de um "post".',
+          stack: new Error().stack
+        })
+    }
+
+    const parent_id = queryParentId || content?.parent_id
+    const body = await git.read(Number(parent_id), commit)
+    const children = (await Content.findAll({ where: "contents.config->>'commit' = $1", values: [commit] })).reverse()
+
+    for (const child of children)
+      (<any>child).userInteractions = (await Interactions.getUserContentInteractions({ author_pid, content_id: child.id })).map(v => v.type)
+
+    res.status(200).json({ body, children })
+  }
+  catch (err) {
+    next(err)
+  }
+}
+
+export const updateContent: RequestHandler = async (req, res, next) => {
+  const author_pid = (<any>req.params.user).pid
+  const content_id = Number(req.params.id)
+  const { message, body } = req.body
+
+  try {
+    const content = await Content.findById(content_id)
 
     if (!content)
       throw new NotFoundError({
@@ -208,19 +239,74 @@ export const getContentHistory: RequestHandler = async (req, res, next) => {
 
     if (content.type !== "post")
       throw new ValidationError({
-        message: `Conteúdos do tipo "${content.type}" não possuem histórico.`,
+        message: `Conteúdos do tipo "${content.type}" não podem ser alterados.`,
         action: 'Forneça um "id" de um "post".',
         stack: new Error().stack
       })
 
-    const path = `${dbPath}/${content.parent_id}/`
-    const formatFlag = "--pretty=format:{^^^^commit^^^^:^^^^%h^^^^,^^^^subject^^^^:^^^^%s^^^^,^^^^date^^^^:^^^^%aD^^^^,^^^^author^^^^:^^^^%aN^^^^},"
+    const interactionId = content.author_id !== author_pid ?
+      (await Interactions.create({ author_pid, content_id, type: "suggestion" })).id
+      :
+      undefined
 
-    const log: any = await exec("git", ["-C", path, "log", formatFlag], { encoding: "utf-8" })
+    const commit = await git.update(content, req.params.user, body, message, interactionId)
 
-    const result = JSON.parse("[" + log.replaceAll('"', '\\"').replaceAll("^^^^", '"').slice(0, -1) + "]")
+    if (interactionId === undefined) {
+      const result = await Content.updateById(content.id, body, author_pid)
+      res.status(200).json({ ...result, commit })
+    }
+    else {
+      const result = await Interactions.updateById({ id: interactionId, field: "config", config: { message, commit, accepted: null }, author_pid })
+      res.status(200).json(result)
+    }
+  }
+  catch (err) {
+    next(err)
+  }
+}
+
+export const clonePost: RequestHandler = async (req, res, next) => {
+  const content_id = Number(req.params.id)
+  const author_pid = (<any>req.params.user)?.pid
+  const commit = req.params.hash
+  const { title } = req.body
+
+  try {
+    if (!title)
+      throw new ValidationError({
+        action: 'Forneça um título para o "post".',
+        stack: new Error().stack
+      })
+
+    const content = await Content.findById(content_id)
+    const result = await Content.create({ ...(<any>content), author_pid, title })
+    await git.branch(result, commit)
 
     res.status(200).json(result)
+  }
+  catch (err) {
+    next(err)
+  }
+}
+
+export const mergePost: RequestHandler = async (req, res, next) => {
+  const content_id = Number(req.params.id)
+  const author_pid = (<any>req.params.user)?.pid
+  const commit = req.params.hash
+
+  try {
+    const content = await Content.findById(content_id)
+
+    if (author_pid !== content.author_id)
+      throw new UnauthorizedError({
+        message: "Somente o autor do post pode realizar merges",
+        stack: new Error().stack
+      })
+
+    await git.merge(content, commit)
+    await Interactions.updateByCommit(commit, "config['accepted']", true, author_pid)
+
+    res.status(204).end()
   }
   catch (err) {
     next(err)

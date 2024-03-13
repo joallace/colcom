@@ -1,8 +1,8 @@
 import React from "react"
 import { useNavigate } from "react-router-dom"
 
-import Modal from "@/components/Modal"
-import Input from "@/components/Input"
+import Modal from "@/components/primitives/Modal"
+import Input from "@/components/primitives/Input"
 import env from "@/assets/enviroment"
 
 export default ({ isOpen, setIsOpen }) => {
@@ -90,7 +90,7 @@ export default ({ isOpen, setIsOpen }) => {
         />
         <Input
           id="limitedAnswers"
-          label="respostas limitadas"
+          label="definir opções de resposta"
           type="checkbox"
           checked={answers.length !== 0}
           onChange={() => {

@@ -1,7 +1,17 @@
 import { Router } from "express"
 
 import authHandler from "@/middleware/authHandler"
-import { getContents, createContent, getContent, getContentHistory, getContentTree, getTopicTree } from "@/controllers/content"
+import {
+    getContents,
+    createContent,
+    getContent,
+    getContentTree,
+    getTopicTree,
+    updateContent,
+    getVersion,
+    clonePost,
+    mergePost
+} from "@/controllers/content"
 
 
 const router = Router()
@@ -16,6 +26,12 @@ router.post("/contents", authHandler(), createContent)
 
 router.get("/contents/:id", authHandler(true), getContent)
 
-router.get("/contents/:id/history", getContentHistory)
+router.get("/contents/:id/:hash", authHandler(true), getVersion)
+
+router.get("/contents/:id/:hash/merge", authHandler(), mergePost)
+
+router.post("/contents/:id/:hash/clone", authHandler(), clonePost)
+
+router.patch("/contents/:id", authHandler(), updateContent)
 
 export default router

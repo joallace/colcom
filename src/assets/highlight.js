@@ -6,49 +6,47 @@ export default Mark.create({
     return {
       multicolor: false,
       HTMLAttributes: {},
-    };
+    }
   },
   addAttributes() {
     if (!this.options.multicolor) {
-      return {};
+      return {}
     }
     return {
       type: {
         default: "definitive",
-        parseHTML: element => element.getAttribute("data-type"),
+        parseHTML: element => element.getAttribute("class"),
         renderHTML: attributes => {
           if (!attributes.type) {
-            return {};
+            return {}
           }
           return {
-            "data-type": attributes.type
-          };
+            "class": attributes.type
+          }
         },
       },
-      color: {
-        default: null,
-        parseHTML: element => element.getAttribute("data-color") || element.style.backgroundColor,
+      index: {
+        parseHTML: element => element.getAttribute("data-commit-index"),
         renderHTML: attributes => {
-          if (!attributes.color) {
-            return {};
+          if (attributes.index === undefined) {
+            return {}
           }
           return {
-            "data-color": attributes.color,
-            style: `background-color: ${attributes.color}; color: inherit`,
-          };
+            "data-commit-index": attributes.index
+          }
         },
       }
-    };
+    }
   },
   parseHTML() {
     return [
       {
         tag: "mark",
       },
-    ];
+    ]
   },
   renderHTML({ HTMLAttributes }) {
-    return ["mark", mergeAttributes(this.options.HTMLAttributes, HTMLAttributes), 0];
+    return ["mark", mergeAttributes(this.options.HTMLAttributes, HTMLAttributes), 0]
   },
   addCommands() {
     return {
@@ -61,6 +59,6 @@ export default Mark.create({
       unsetHighlight: () => ({ commands }) => {
         return commands.unsetMark(this.name)
       },
-    };
+    }
   }
-});
+})

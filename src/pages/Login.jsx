@@ -1,7 +1,7 @@
 import React from "react"
 import { useNavigate } from "react-router-dom"
 
-import Input from "@/components/Input"
+import Input from "@/components/primitives/Input"
 import { UserContext } from "@/context/UserContext"
 import env from "@/assets/enviroment"
 
@@ -53,7 +53,10 @@ export default function Login() {
         fetchUser()
       }
 
-      navigate("/")
+      if (isSignUp)
+        setIsSignUp(false)
+      else
+        navigate("/")
     }
     catch (err) {
       setGlobalError("Não foi possível se conectar ao colcom. Por favor, verifique sua conexão.")
@@ -63,6 +66,10 @@ export default function Login() {
       setIsLoading(false)
     }
   }
+
+  React.useEffect(()=>{
+    document.title = "Login · colcom"
+  }, [])
 
   return (
     <div className="content login">
@@ -123,30 +130,30 @@ export default function Login() {
 
           </div>
           <div className="reverse critique bracket" />
-         
+
         </div>
         <div className="footer">
-            <div className="bottom bracket" />
-            <div className="buttonRow">
-              <button disabled={isLoading} onClick={send}>
-                {isLoading ?
-                  <>
-                    <div className="button spinner" />
-                    {isSignUp ?
-                      "cadastrando..."
-                      :
-                      "entrando..."}
-                  </>
-                  :
-                  isSignUp ?
-                    "cadastrar"
+          <div className="bottom bracket" />
+          <div className="buttonRow">
+            <button disabled={isLoading} onClick={send}>
+              {isLoading ?
+                <>
+                  <div className="button spinner" />
+                  {isSignUp ?
+                    "cadastrando..."
                     :
-                    "entrar"
-                }
-              </button>
-            </div>
-            <div className="reverse bottom critique bracket" />
+                    "entrando..."}
+                </>
+                :
+                isSignUp ?
+                  "cadastrar"
+                  :
+                  "entrar"
+              }
+            </button>
           </div>
+          <div className="reverse bottom critique bracket" />
+        </div>
       </div>
     </div>
   )

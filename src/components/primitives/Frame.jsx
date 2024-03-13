@@ -2,9 +2,9 @@ import React from "react"
 import { isEmptyObject } from "@tiptap/react"
 import { PiDotsThreeVerticalBold } from "react-icons/pi"
 
-import useScreenSize from "@/hooks/useScreenSize"
-import VotingButtons from "@/components/VotingButtons"
-import DropdownMenu from "@/components/DropdownMenu"
+import useBreakpoint from "@/hooks/useBreakpoint"
+import VotingButtons from "@/components/primitives/VotingButtons"
+import DropdownMenu from "@/components/primitives/DropdownMenu"
 
 
 export default function Frame({
@@ -21,6 +21,7 @@ export default function Frame({
   readOnly = true,
   hideVoteButtons = false,
   showDefinitiveVoteButton = false,
+  definitiveVoteType,
   initialVoteState = { vote: false, relevance: "" },
   alongsideCritique = false,
   isCritique = false,
@@ -38,20 +39,29 @@ export default function Frame({
         .filter(tuple => tuple[1] !== undefined)
     )
   )
-  const topicRef = React.useRef()
+  const [dropdownHeight, setDropdownHeight] = React.useState(0)
+  const ref = React.useRef()
   const dotsRef = React.useRef()
-  const isDesktop = useScreenSize()
+  const isDesktop = useBreakpoint()
 
-  const toggle = (str) => { setHeaderStatus({ ...headerStatus, [str]: !headerStatus[str] }) }
+  const toggle = (str, value = undefined) => {
+    if (headerStatus[str] !== undefined || value !== undefined)
+      setHeaderStatus({
+        ...headerStatus,
+        [str]: (headerStatus[str] !== undefined) ? !headerStatus[str] : undefined,
+        ...value
+      })
+  }
 
 
   React.useEffect(() => {
-    setHeight(topicRef?.current?.clientHeight || 0)
+    setHeight(ref?.current?.clientHeight || 0)
+    setDropdownHeight((dotsRef?.current?.offsetTop + dotsRef?.current?.clientHeight) || 0)
   }, [])
 
 
   return (
-    <div className={`frame${alongsideCritique ? " original" : ""}${isCritique ? " critique" : ""}`} ref={topicRef} {...remainingProps}>
+    <div className={`frame${alongsideCritique ? " original" : ""}${isCritique ? " critique" : ""}`} ref={ref} {...remainingProps}>
       <div className="header">
         <div className={`top bracket${error ? " error" : ""}`} />
         {!hideVoteButtons &&
@@ -62,11 +72,13 @@ export default function Frame({
             definitiveVote={definitiveVote}
             setDefinitiveVote={setDefinitiveVote}
             showDefinitiveVoteButton={showDefinitiveVoteButton}
+            definitiveVoteType={definitiveVoteType}
           />
         }
         <h1
           className={`title${isCritique ? " critique" : ""}${error && !titleRef?.current?.textContent ? " error" : ""}`}
           contentEditable={!readOnly}
+          suppressContentEditableWarning={true}
           placeholder="Qual é o título?"
           onKeyDown={e => { e.key === "Enter" && e.preventDefault(); setError(false) }}
           onBlur={() => saveInLocalStorage && localStorage.setItem("postTitle", titleRef?.current?.textContent)}
@@ -79,36 +91,45 @@ export default function Frame({
             {isDesktop ?
               <>
                 {Object.entries(headerConfig).map((([buttonName, buttonConfig]) => {
-                  switch (headerStatus[buttonName]) {
-                    case false:
-                      return buttonConfig.icons[0]({
-                        key: buttonName,
-                        className: "icons",
-                        title: buttonConfig.description[0],
-                        onClick: () => { buttonConfig.onClick(); toggle(buttonName) }
-                      })
-                    case true:
-                      return buttonConfig.icons[1]({
-                        key: buttonName,
-                        className: "icons",
-                        title: buttonConfig.description[1],
-                        onClick: () => { buttonConfig.onClick(); toggle(buttonName) }
-                      })
-                    case undefined:
-                      return buttonConfig.icons({
-                        key: buttonName,
-                        className: "icons",
-                        title: buttonConfig.description,
-                        onClick: () => buttonConfig.onClick()
-                      })
-                  }
+                  const { icons, description, hide, disabled, onClick } = buttonConfig
+                  const active = disabled?.constructor === Function ?
+                    !disabled(headerStatus)
+                    :
+                    disabled?.constructor === Boolean ?
+                      !disabled
+                      :
+                      true
+
+                  if (hide)
+                    return
+
+                  const index = Number(headerStatus[buttonName])
+
+                  const Icon = icons.constructor === Array ?
+                    icons[index]
+                    :
+                    icons
+
+                  const title = description.constructor === Array ?
+                    description[index]
+                    :
+                    description
+
+                  return (
+                    <Icon
+                      key={`${id}-${buttonName}`}
+                      className={`icons${active ? "" : " disabled"}`}
+                      title={title}
+                      onClick={() => { if (active) { toggle(buttonName, onClick(headerStatus[buttonName])) } }}
+                    />
+                  )
                 }))}
               </>
               :
               <DropdownMenu
                 options={headerConfig}
                 optionsStatus={[headerStatus, setHeaderStatus]}
-                top={(dotsRef?.current?.offsetTop + dotsRef?.current?.clientHeight) || 0}
+                top={dropdownHeight}
               >
                 <div ref={dotsRef}>
                   <PiDotsThreeVerticalBold className="icons" />
@@ -132,8 +153,12 @@ export default function Frame({
         <div className={`bottom bracket${error ? " error" : ""}`} />
         {metrics &&
           <ul className="metrics">
-            {metrics().map((metric, index) => (
-              <li key={`t${id}-info-${index}`}>{metric}</li>
+            {metrics().map((metric, index, arr) => (
+              <>
+                <li key={`t${id}-info-${index}`}>{metric}</li>
+                {(index + 1) !== arr.length &&
+                  "•"}
+              </>
             ))}
           </ul>
         }

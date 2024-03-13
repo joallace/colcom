@@ -21,8 +21,10 @@ export default function TopicPage() {
         const res = await fetch(url, { method: "get", headers })
         const data = await res.json()
 
-        if (data)
+        if (data){
           setTopicData(data)
+          document.title = `${data.title} · colcom`
+        }
       }
       catch (err) {
         console.error(err)

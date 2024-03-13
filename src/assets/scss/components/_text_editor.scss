@@ -68,7 +68,7 @@
         }
     }
 
-    span{
+    span {
         font-size: 0.8rem;
     }
 }
@@ -166,5 +166,24 @@
         color: darken($default-font-color, 40%);
         pointer-events: none;
         height: 0;
+    }
+
+    mark {
+        color: inherit;
+
+        &.definitive {
+            transition: all 0.15s ease;
+            cursor: pointer;
+            background-color: darken($default-orange, 10%);
+
+            &:hover {
+                background-color: darken($default-orange, 15%);
+
+            }
+        }
+
+        &.temporary {
+            background-color: darken($default-yellow, 18%);
+        }
     }
 }

@@ -14,11 +14,11 @@ export const getContentInteractions: RequestHandler = async (req, res, next) => 
 }
 
 export const handleInteraction: RequestHandler = async (req, res, next) => {
-  const { content_id, type, colcoins } = req.body
+  const { content_id, type } = req.body
   const author_pid = (<any>req.params.user).pid
 
   try {
-    const interaction: InteractionInsertRequest = { author_pid, content_id, type, colcoins }
+    const interaction: InteractionInsertRequest = { author_pid, content_id, type }
 
     const [status, result] = await Interactions.handleChange(interaction)
 
@@ -29,33 +29,15 @@ export const handleInteraction: RequestHandler = async (req, res, next) => {
   }
 }
 
-// export const updateInteraction: RequestHandler = async (req, res, next) => {
-//   const interaction_id = Number(req.params.id)
-//   const { type } = req.body
-//   const author_pid = (<any>req.params.user).pid
-
-//   try {
-//     const interaction: InteractionAlterRequest = { id: interaction_id, type }
-
-//     const result = await Interactions.updateById(interaction)
-
-//     res.status(201).json(result)
-//   }
-//   catch (err) {
-//     next(err)
-//   }
-// }
-
-// export const deleteInteraction: RequestHandler = async (req, res, next) => {
-//   const interaction_id = Number(req.params.id)
-//   const author_pid = (<any>req.params.user).pid
-
-//   try {
-//     const result = await Interactions.removeById(interaction_id)
-
-//     res.status(201).json(result)
-//   }
-//   catch (err) {
-//     next(err)
-//   }
-// }
+export const rejectSuggestion: RequestHandler = async (req, res, next) => {
+  const commit = req.params.hash
+  const author_pid = (<any>req.params.user).pid
+  
+  try {
+    const interactions = await Interactions.updateByCommit(commit, "config['accepted']", false, author_pid)
+    res.status(200).json(interactions)
+  }
+  catch (err) {
+    next(err)
+  }
+}

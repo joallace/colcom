@@ -7,7 +7,7 @@ import {
   PiCaretDownFill
 } from "react-icons/pi"
 
-import Input from "@/components/Input"
+import Input from "@/components/primitives/Input"
 import env from "@/assets/enviroment"
 
 export const submitVote = async (navigate, content_id, type, colcoins = undefined) => {
@@ -40,6 +40,7 @@ export default ({
   setRelevanceVote,
   definitiveVote,
   setDefinitiveVote,
+  definitiveVoteType,
   showDefinitiveVoteButton = false
 }) => {
   const [isLoading, setIsLoading] = React.useState(false)
@@ -54,8 +55,16 @@ export default ({
 
   const defVoteClick = async () => {
     setIsLoading(true)
-    setDefinitiveVote(!definitiveVote)
-    await submitVote(navigate, id, "vote")
+
+    if (definitiveVoteType === "vote")
+      setDefinitiveVote(!definitiveVote)
+    else
+      if (definitiveVote === id)
+        setDefinitiveVote(null)
+      else
+        setDefinitiveVote(id)
+
+    await submitVote(navigate, id, definitiveVoteType)
     setIsLoading(false)
   }
 
@@ -82,7 +91,7 @@ export default ({
           className="center"
           title={definitiveVote ? "remover voto" : "votar nesta resposta"}
           type="radio"
-          checked={definitiveVote}
+          checked={definitiveVoteType === "vote" ? definitiveVote : (definitiveVote === id)}
           onClick={() => !isLoading && defVoteClick()}
           style={{ cursor: isLoading ? "default" : "pointer" }}
         />

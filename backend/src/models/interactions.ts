@@ -1,48 +1,66 @@
-import db from "@/database"
+import db from "@/pgDatabase"
 import { getDataByPublicId } from "@/models/user"
-import { NotFoundError, ValidationError } from "@/errors"
+import { ValidationError } from "@/errors"
 import Content from "@/models/content"
 
 
-type InteractionType = "up" | "down" | "vote" | "bookmark" | "promote"
+type InteractionType = "up" | "down" | "vote" | "bookmark" | "promote" | "suggestion"
+
+interface PromoteConfig {
+  valid_until: Date
+}
+
+interface SuggestionConfig {
+  message: string,
+  accepted: boolean | null,
+  commit: string
+}
+
+type ConfigType = PromoteConfig | SuggestionConfig | null
 
 interface InteractionInsertRequest {
   author_pid: string,
   content_id: number,
   type?: InteractionType,
-  colcoins?: number
+  config?: ConfigType
 }
 
 interface InteractionAlterRequest {
   id: number,
+  field: keyof Interaction,
   author_pid: string,
   type?: InteractionType,
+  config?: ConfigType,
   content_id?: number
 }
 
-const minimumPromoteValue = 10
-
-
-function coinsToTime(amount: number) {
-
+interface Interaction {
+  id: number,
+  author_id: string,
+  content_id: number
+  type: InteractionType,
+  config: ConfigType,
+  created_at: Date
 }
 
 
-async function findAll({ where = "", values = [] as any[] }) {
+async function findAll({ where = "", values = [] as any[], orderBy = "" }): Promise<Interaction[]> {
   const query = {
     text: `
       SELECT
         i.id,
         i.content_id,
         i.type,
+        i.config,
         i.created_at,
-        i.valid_until,
+        users.name as author,
         users.pid as author_id
       FROM
         interactions i
       INNER JOIN
         users ON users.id = i.author_id
       WHERE ${where}
+      ${orderBy ? `ORDER BY ${orderBy}` : ""}
       ;`,
     values
   }
@@ -51,12 +69,13 @@ async function findAll({ where = "", values = [] as any[] }) {
   return result.rows
 }
 
-async function getUserContentInteractions({ author_pid, content_id }: InteractionInsertRequest) {
+async function getUserContentInteractions({ author_pid, content_id }: InteractionInsertRequest): Promise<Interaction[]> {
   const query = {
     text: `
       SELECT
         i.id,
-        i.type
+        i.type,
+        i.config
       FROM
         interactions i
       INNER JOIN
@@ -65,6 +84,13 @@ async function getUserContentInteractions({ author_pid, content_id }: Interactio
         i.author_id = users.id
       AND
         i.content_id = $2
+      AND(
+        i.config IS NULL
+        OR
+        i.config->>'valid_until' IS NULL
+        OR
+        (i.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
+      )
       ;`,
     values: [author_pid, content_id]
   }
@@ -74,7 +100,7 @@ async function getUserContentInteractions({ author_pid, content_id }: Interactio
   return results.rows
 }
 
-async function getUserTopicVote(author_pid: string, topic_id: number) {
+async function getUserTopicVote(author_pid: string, topic_id: number): Promise<Interaction> {
   const query = {
     text: `
     SELECT
@@ -92,6 +118,7 @@ async function getUserTopicVote(author_pid: string, topic_id: number) {
       users.pid = $1
     AND
       contents.parent_id = $2
+    LIMIT 1
     ;`,
     values: [author_pid, topic_id]
   }
@@ -100,14 +127,39 @@ async function getUserTopicVote(author_pid: string, topic_id: number) {
   return result.rows[0]
 }
 
-async function handleChange({ author_pid, content_id, type, colcoins }: InteractionInsertRequest) {
+async function getUserCurrentPromote(author_pid: string): Promise<Interaction> {
+  const query = {
+    text: `
+    SELECT
+      i.id,
+      i.content_id
+    FROM
+      interactions i
+    INNER JOIN
+      users ON users.id = i.author_id
+    WHERE
+      i.type = 'promote'
+    AND
+      users.pid = $1
+    AND
+      (i.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
+    LIMIT 1
+    ;`,
+    values: [author_pid]
+  }
+
+  const result = await db.query(query)
+  return result.rows[0]
+}
+
+async function handleChange({ author_pid, content_id, type }: InteractionInsertRequest): Promise<Array<any>> {
   const postInteractions = await getUserContentInteractions({ author_pid, content_id, type })
 
   switch (type) {
     case "down":
       for (const interaction of postInteractions) {
         if (interaction.type === "up")
-          return [200, await updateById({ id: interaction.id, type, author_pid })]
+          return [200, await updateById({ id: interaction.id, field: "type", type, author_pid })]
         if (interaction.type === "down")
           return [204, await removeById(interaction.id)]
       }
@@ -115,7 +167,7 @@ async function handleChange({ author_pid, content_id, type, colcoins }: Interact
     case "up":
       for (const interaction of postInteractions) {
         if (interaction.type === "down")
-          return [200, await updateById({ id: interaction.id, type, author_pid })]
+          return [200, await updateById({ id: interaction.id, field: "type", type, author_pid })]
         if (interaction.type === "up")
           return [204, await removeById(interaction.id)]
       }
@@ -129,7 +181,7 @@ async function handleChange({ author_pid, content_id, type, colcoins }: Interact
       const oldVoteId = (await getUserTopicVote(author_pid, parent_id))?.id
 
       if (oldVoteId)
-        return [200, await updateById({ id: oldVoteId, author_pid, content_id })]
+        return [200, await updateById({ id: oldVoteId, field: "content_id", content_id, author_pid })]
 
       break
     case "bookmark":
@@ -139,6 +191,14 @@ async function handleChange({ author_pid, content_id, type, colcoins }: Interact
       }
       break
     case "promote":
+      for (const interaction of postInteractions) {
+        if (interaction.type === "promote" && (new Date((<PromoteConfig>interaction.config)?.valid_until) > new Date()))
+          return [204, await removeById(interaction.id)]
+      }
+      const oldPromoteId = (await getUserCurrentPromote(author_pid))?.id
+
+      if (oldPromoteId)
+        return [200, await updateById({ id: oldPromoteId, field: "content_id", content_id, author_pid })]
       break
     default:
       throw new ValidationError({
@@ -148,21 +208,21 @@ async function handleChange({ author_pid, content_id, type, colcoins }: Interact
       })
   }
 
-  return [201, await create({ author_pid, content_id, type, colcoins })]
+  return [201, await create({ author_pid, content_id, type })]
 }
 
+async function create({ author_pid, content_id, type, config = null }: InteractionInsertRequest): Promise<Interaction> {
+  const { id } = await getDataByPublicId(author_pid, ["id"])
 
+  // if (type === "promote" && (!colcoins || authorBalance < colcoins || colcoins < minimumPromoteValue))
+  //   throw new ValidationError({
+  //     message: "Quantidade de colcoins insuficiente para realizar a ação.",
+  //     action: "Atue na comunidade para ganhar mais colcoins!",
+  //     stack: new Error().stack,
+  //     errorLocationCode: 'MODEL:INTERACTION:CREATE:INSUFFICIENT_BALANCE'
+  //   })
 
-async function create({ author_pid, content_id, type, colcoins }: InteractionInsertRequest) {
-  const { id, colcoins: authorAmount } = await getDataByPublicId(author_pid, ["id", "colcoins"])
-
-  if (type === "promote" && (!colcoins || authorAmount < colcoins || colcoins < minimumPromoteValue))
-    throw new ValidationError({
-      message: "Quantidade de colcoins insuficiente para realizar a ação.",
-      action: "Atue na comunidade para ganhar mais colcoins!",
-      stack: new Error().stack,
-      errorLocationCode: 'MODEL:INTERACTION:CREATE:INSUFFICIENT_BALANCE'
-    })
+  const promoteConfig = () => ({ valid_until: new Date(new Date().setHours(23, 59, 59, 999)) })
 
   const query = {
     text: `
@@ -171,14 +231,14 @@ async function create({ author_pid, content_id, type, colcoins }: InteractionIns
           author_id,
           content_id,
           type,
-          valid_until
+          config
         )
       VALUES
         ($1, $2, $3, $4)
       RETURNING
         *
       ;`,
-    values: [id, content_id, type, type === "promote" ? coinsToTime(Number(colcoins)) : null]
+    values: [id, content_id, type, type === "promote" ? promoteConfig() : config]
   }
 
   const result = await db.query(query)
@@ -186,24 +246,50 @@ async function create({ author_pid, content_id, type, colcoins }: InteractionIns
   return { ...result.rows[0], author_id: author_pid }
 }
 
-async function updateById({ id, author_pid, type, content_id = undefined }: InteractionAlterRequest) {
+async function updateById({ id, field, type, content_id, config, author_pid }: InteractionAlterRequest): Promise<Interaction> {
   const query = {
     text: `
       UPDATE
         interactions
       SET
-        ${content_id ? "content_id" : "type"} = $1
+        ${field} = $1
       WHERE
         id = $2
       RETURNING
         *
       ;`,
-    values: [content_id || type, id]
+    values: [content_id || type || config, id]
   }
 
   const result = await db.query(query)
   return { ...result.rows[0], author_id: author_pid }
 }
+
+async function updateByCommit(commit: string, field: string, data: any, author_pid: string): Promise<Interaction> {
+  if (!/^[0-9a-f]{7}$/.test(commit))
+    throw new ValidationError({
+      message: `Hash de commit inválido.`,
+      action: 'Forneça um hash de commit válido.',
+      stack: new Error().stack
+    })
+
+  const query = {
+    text: `
+      UPDATE
+        interactions
+      SET
+        ${field} = '${data}'
+      WHERE
+        config['commit'] = '"${commit}"'
+      RETURNING
+        *
+      ;`
+  }
+
+  const result = await db.query(query)
+  return { ...result.rows[0], author_id: author_pid }
+}
+
 
 async function removeById(interaction_id: number) {
   const query = {
@@ -226,7 +312,9 @@ export default Object.freeze({
   create,
   getUserContentInteractions,
   getUserTopicVote,
+  getUserCurrentPromote,
   updateById,
+  updateByCommit,
   removeById
 })
 

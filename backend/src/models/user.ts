@@ -1,6 +1,6 @@
 import { hash } from "bcryptjs"
 
-import db from "@/database"
+import db from "@/pgDatabase"
 import { NotFoundError, ValidationError } from "@/errors"
 
 
@@ -129,7 +129,7 @@ export async function findByPid(pid: string, options = {}): Promise<User> {
 
   if (result.length === 0) {
     throw new NotFoundError({
-      message: `O id público fornecido não está atrleado a nenhum usuário.`,
+      message: `O id público fornecido não está atrelado a nenhum usuário.`,
       stack: new Error().stack,
       errorLocationCode: 'MODEL:USER:FIND_BY_PID:NOT_FOUND',
       key: "pid",

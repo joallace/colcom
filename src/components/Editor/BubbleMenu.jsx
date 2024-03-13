@@ -7,10 +7,9 @@ import {
   PiQuotesFill
 } from "react-icons/pi"
 
-import { highlightYellow } from "@/assets/scss/_export.module.scss"
 
-export default ({ editor, readOnly, setShowCritique }) => {
-  if (!editor)
+export default ({ editor, shouldShow = true, readOnly, setShowCritique }) => {
+  if (!editor || !shouldShow)
     return
 
   return (
@@ -21,12 +20,12 @@ export default ({ editor, readOnly, setShowCritique }) => {
         editor={editor}
         shouldShow={readOnly ?
           ({ state, from, to }) => {
-            const { doc, selection } = state;
-            const { empty } = selection;
-            const isEmptyTextBlock = !doc.textBetween(from, to).length && isTextSelection(state.selection);
+            const { doc, selection } = state
+            const { empty } = selection
+            const isEmptyTextBlock = !doc.textBetween(from, to).length && isTextSelection(state.selection)
             if (empty || isEmptyTextBlock)
-              return false;
-            return true;
+              return false
+            return true
           }
           :
           null
@@ -35,7 +34,10 @@ export default ({ editor, readOnly, setShowCritique }) => {
         {readOnly ?
           <>
             <button
-              onClick={() => {editor.chain().focus().toggleHighlight({ color: "#8e390c", type: "temporary" }).run(); setShowCritique(true)}}
+              onClick={() => {
+                editor.chain().focus().toggleHighlight({ type: "temporary" }).run()
+                setShowCritique([editor.view.state.selection.ranges[0]["$from"].pos, editor.view.state.selection.ranges[0]["$to"].pos])
+              }}
             >
               criticar
             </button>

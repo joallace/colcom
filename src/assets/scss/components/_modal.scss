@@ -10,6 +10,8 @@
 
 .modal{
     background-color: $navbar-bg;
+    display: grid;
+    gap: 1rem;
     position: fixed;
     top: 50%;
     left: 50%;
@@ -22,11 +24,11 @@
     @media screen and (min-width: 0px) and (max-width: $screen-sm) {
         max-height: 80%;
         min-width: 0;
-        max-width: 90%;
+        width: 90%;
         overflow: scroll;
     }
 
-    .header{
+    >.header{
         font-size: 1.5rem;
         font-weight: bold;
         margin-bottom: 1.5rem;
@@ -48,10 +50,12 @@
         }
     }
 
-    .footer{
-        text-align: right;
-        margin-top: 1rem;
+    >.footer{
+        display: flex;
+        place-content: end;
+        gap: 1rem;
         &.center{
+            place-content: center;
             text-align: center;
         }
     }

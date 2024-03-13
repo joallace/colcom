@@ -1,13 +1,13 @@
 import React from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 
-import TextEditor from "@/components/TextEditor"
-import Frame from "@/components/Frame"
-import Input from "@/components/Input"
+import { default as Editor } from "@/components/Editor"
+import Frame from "@/components/primitives/Frame"
+import Input from "@/components/primitives/Input"
 import env from "@/assets/enviroment"
 
 export default function Write() {
-  const titleRef = React.useRef(localStorage.getItem("postTitle") || "")
+  const titleRef = React.useRef()
   const [body, setBody] = React.useState(localStorage.getItem("editorContent") || "")
   const [answer, setAnswer] = React.useState("")
   const [isLoading, setIsLoading] = React.useState(false)
@@ -76,12 +76,17 @@ export default function Write() {
     }
   }
 
+  React.useEffect(()=>{
+    document.title = `respondendo a "${state.title}" · colcom`
+  }, [])
+
   return (
     <div className="content">
       <div className="topicName">respondendo ao tópico "<Link to={`/topics/${state.id}`}>{state.title}</Link>"</div>
 
       <Frame
         titleRef={titleRef}
+        title={localStorage.getItem("postTitle") || ""}
         readOnly={false}
         hideVoteButtons
         saveInLocalStorage
@@ -89,7 +94,7 @@ export default function Write() {
         error={error && (!titleRef?.current.textContent || !body)}
         setError={setError}
       >
-        <TextEditor content={body} setContent={(text) => { setBody(text); setError(false) }} />
+        <Editor content={body} setContent={(text) => { setBody(text); setError(false) }} />
       </Frame>
       {globalError &&
         <div className="globalError">{globalError}</div>
@@ -114,7 +119,10 @@ export default function Write() {
         }
         <button onClick={download}>salvar</button>
         <button disabled={isLoading} onClick={submit}>
-          {isLoading ? <><div className="button spinner"></div>publicando...</> : "publicar"}
+          {isLoading ?
+            <><div className="button spinner"></div>publicando...</>
+            :
+            "publicar"}
         </button>
       </div>
     </div>

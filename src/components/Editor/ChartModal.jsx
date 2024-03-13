@@ -1,8 +1,8 @@
 import React from "react"
 
-import Modal from "@/components/Modal"
-import Input from "@/components/Input"
-import Chart from "@/components/Chart"
+import Modal from "@/components/primitives/Modal"
+import Input from "@/components/primitives/Input"
+import Chart from "@/components/primitives/Chart"
 import { ChartContext } from "@/context/ChartContext"
 
 const chartDefaults = {
@@ -158,7 +158,7 @@ export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false
               <thead>
                 <tr>
                   {chartKeys.map((key, i) =>
-                    <th>
+                    <th key={`chart-modal-th-${i}`}>
                       <input
                         value={key[0] === "0" ? reservedWords[key] : key}
                         onChange={e => { updateKey(i, e.target.value) }}
@@ -173,9 +173,9 @@ export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false
               </thead>
               <tbody>
                 {chartData.map((data, i) =>
-                  <tr>
+                  <tr key={`chart-modal-tr-${i}`}>
                     {chartKeys.map((_, j) =>
-                      <td>
+                      <td key={`chart-modal-td-${i}-${j}`}>
                         <input
                           value={Object.values(data)[j]}
                           onChange={e => updateChartValue(i, j, e.target.value)}
@@ -207,7 +207,7 @@ export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false
                 label={`n.º de ${chartDefaults[chartType].inputs[0]}`}
                 value={input1 ? input1 : ""}
                 onChange={validateAndUpdate(0, setInput1)}
-                onBlur={()=>{setError(0)}}
+                onBlur={() => { setError(0) }}
                 errorMessage={error === 1 && `deve ser de 1 a ${chartDefaults[chartType].bounds[0][1]}`}
               />
 
@@ -216,7 +216,7 @@ export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false
                   label={`n.º de ${chartDefaults[chartType].inputs[1]}`}
                   value={input2 ? input2 : ""}
                   onChange={validateAndUpdate(1, setInput2)}
-                  onBlur={()=>{setError(0)}}
+                  onBlur={() => { setError(0) }}
                   errorMessage={error === 2 && `deve ser de 1 a ${chartDefaults[chartType].bounds[1][1]}`}
                 />
               }
@@ -246,10 +246,7 @@ export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false
           <>
             {
               !editionMode &&
-              <button
-                style={{ marginRight: "0.5rem" }}
-                onClick={() => { setDataInputStage(false) }}
-              >
+              <button onClick={() => { setDataInputStage(false) }}>
                 voltar
               </button>
             }

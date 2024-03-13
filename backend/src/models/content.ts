@@ -1,7 +1,6 @@
-import db from "@/database"
+import db from "@/pgDatabase"
 import { NotFoundError, ValidationError } from "@/errors"
 import { getDataByPublicId } from "@/models/user"
-import { QueryResult } from "pg"
 
 
 type ContentType = "topic" | "post" | "critique"
@@ -36,7 +35,7 @@ interface Content {
   id: number,
   title: string,
   author: string,
-  author_pid: string,
+  author_id: string,
   parent_id?: number,
   body?: string,
   type: ContentType,
@@ -103,14 +102,15 @@ async function create({ title, author_pid, parent_id, body, type, config }: Cont
   return { ...result.rows[0], author: name, author_id: author_pid }
 }
 
-async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as any[] }): Promise<Content[]> {
+async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as any[], omitBody = false, includeParentTitle = false }): Promise<Content[]> {
   const query = {
     text: `
       SELECT
         contents.id,
         contents.title,
         contents.parent_id,
-        contents.body,
+        ${includeParentTitle ? "parent.title as parent_title," : ""}
+        ${omitBody ? "" : "contents.body,"}
         contents.type,
         contents.status,
         contents.created_at,
@@ -147,7 +147,7 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
               AND
                 interaction.type = 'promote'
               AND
-                interaction.valid_until > NOW()
+                (interaction.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
             )
             ELSE NULL
           END
@@ -156,6 +156,12 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
         contents
       INNER JOIN
         users ON contents.author_id = users.id
+      ${includeParentTitle ?
+        `LEFT JOIN
+          contents as parent ON contents.parent_id = parent.id`
+        :
+        ""
+      }
       WHERE ${where}
       ORDER BY ${orderBy} DESC
       LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}
@@ -200,6 +206,7 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
             topics.title,
             topics.parent_id,
             topics.type,
+            topics.body,
             topics.status,
             topics.created_at,
             topics.config,
@@ -232,7 +239,7 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
               AND
                 interaction.type = 'promote'
               AND
-                interaction.valid_until > NOW()
+                (interaction.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
             )::INT as promotions
           FROM
             contents as topics
@@ -251,6 +258,7 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
             posts.title,
             posts.parent_id,
             posts.type,
+            posts.body,
             posts.status,
             posts.created_at,
             posts.config,
@@ -304,37 +312,28 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
   return rowsToTree(result.rows)
 }
 
-async function findById(id: number): Promise<Content> {
-  const result = await findAll({ where: "contents.id = $1", values: [id], pageSize: 1 })
+async function findById(id: number, options = {}): Promise<Content> {
+  const result = await findAll({ where: "contents.id = $1", values: [id], pageSize: 1, ...options })
   return result[0]
 }
 
-async function getTopicNumberOfVotes(topic_id: number): Promise<number> {
+async function updateById(id: number, body: string, author_pid: string) {
   const query = {
     text: `
-      SELECT
-        COUNT(*)
-      FROM
-        interactions
+      UPDATE
+        contents
+      SET
+        body = $1
       WHERE
-        interactions.type = 'favorite'
-      AND
-        interactions.content_id
-      IN
-        (
-          SELECT
-            id
-          FROM
-            contents
-          WHERE
-            contents.parent_id = $1
-        )
-    ;`,
-    values: [topic_id]
+        id = $2
+      RETURNING
+        *
+      ;`,
+    values: [(<any>body)?.match("<p>(.*?)</p>")[1].slice(0, 280), id]
   }
 
   const result = await db.query(query)
-  return result.rows[0].count
+  return { ...result.rows[0], author_id: author_pid }
 }
 
 export async function getDataById(id: number, data: (keyof Content)[]): Promise<any> {
@@ -362,13 +361,32 @@ export async function getDataById(id: number, data: (keyof Content)[]): Promise<
   return result.rows[0]
 }
 
+export async function getCount(type: ContentType): Promise<any> {
+  const query = {
+    text: `
+      SELECT
+        COUNT(*)::int
+      FROM
+        contents
+      WHERE
+        contents.type = $1
+      ;`,
+    values: [type],
+  }
+
+  const result = await db.query(query)
+
+  return result.rows[0].count
+}
+
 export default Object.freeze({
   create,
   findAll,
   findTree,
   findById,
-  getTopicNumberOfVotes,
-  getDataById
+  updateById,
+  getDataById,
+  getCount
 })
 
 export { Content as IContent, ContentInsertRequest, ContentType }

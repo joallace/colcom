@@ -1,18 +1,8 @@
 import { resolve } from "path"
 import { Pool } from "pg"
-import { readFileSync, existsSync, mkdirSync } from "fs"
+import { readFileSync } from "fs"
 
 import logger from "@/logger"
-
-
-const gitDbPath = process.env.DB_PATH || resolve(__dirname, "db/")
-
-if (!existsSync(gitDbPath)) {
-  logger.info(`[database.ts] Creating git db at "${gitDbPath}"`)
-  mkdirSync(gitDbPath)
-}
-else
-  logger.info(`[database.ts] Loaded git db at "${gitDbPath}"`)
 
 
 const config = {
@@ -51,7 +41,5 @@ pool.once("connect", () => {
 })
 
 connect()
-
-export { gitDbPath }
 
 export default pool

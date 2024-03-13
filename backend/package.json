@@ -1,9 +1,10 @@
 {
   "name": "colcom-backend",
-  "license":"AGPL-3.0-only",
+  "license": "AGPL-3.0-only",
   "module": "server.ts",
   "type": "module",
   "devDependencies": {
+    "@types/async-lock": "^1.4.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
@@ -17,6 +18,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "async-lock": "^1.4.1",
     "bcryptjs": "^2.4.3",
     "child_process": "^1.0.2",
     "cors": "^2.8.5",

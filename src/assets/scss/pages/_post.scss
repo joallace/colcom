@@ -6,41 +6,80 @@
 
     .frame {
         &.original {
-            width: 50%;
-
-            @media screen and (min-width: $screen-sm) and (max-width: $screen-xl) {
-                width: 60%;
-            }
-
-            @media screen and (min-width: 0px) and (max-width: $screen-sm) {
-                width: 75%;
-            }
+            @include content-responsiveness(55vw, 60vw, 95vw);
         }
-        
+
         &.critique {
-            width: 40%;
-
-            @media screen and (min-width: $screen-sm) and (max-width: $screen-xl) {
-                width: 35%;
-            }
-
-            @media screen and (min-width: 0px) and (max-width: $screen-sm) {
-                width: 20%;
-            }
+            @include content-responsiveness(30vw, 30vw, 0);
         }
     }
 
-    .modal{
-        .header{
+    .modal {
+        .header {
             margin: 0;
-            h1{
+
+            h1 {
                 margin: 0;
                 display: flex;
                 align-items: center;
-                textarea{
+
+                textarea {
                     background-color: $navbar-bg;
                 }
             }
         }
+
+        .spaced {
+            margin: 1rem 0;
+        }
+
+        .suggestions {
+            // list-style-type: none;
+            display: grid;
+            padding: 0 1rem;
+            gap: 1rem;
+
+
+            .description {
+                color: darken($default-font-color, 33%);
+                font-size: 0.75rem;
+
+                .dot {
+                    color: $default-green;
+                }
+            }
+        }
+    }
+
+    >.critiques {
+        transition: all 0.5 ease;
+        height: min-content;
+    }
+}
+
+.timerSlider {
+    margin: 1rem 0;
+
+    input,
+    datalist {
+        @include content-responsiveness(50vw, 60vw, 80vw);
+    }
+}
+
+.iconWithBadge {
+    display: flex;
+    position: relative;
+
+    >span {
+        cursor: pointer;
+        position: absolute;
+        background-color: $default-orange;
+        width: 1.15rem;
+        height: 1.15rem;
+        font-size: 0.75rem;
+        border-radius: 50%;
+        right: -0.5rem;
+        bottom: -0.5rem;
+        text-align: center;
     }
 }

@@ -1,14 +1,18 @@
 import React from "react"
+import { useSearchParams } from "react-router-dom"
 
-import NoResponse from "@/components/NoResponse"
+import NoResponse from "@/components/primitives/NoResponse"
 import env from "@/assets/enviroment"
 import Topic from "@/components/Topic"
+import Pagination from "@/components/primitives/Pagination"
 
 
-export default function Promoted({ orderBy, where }) {
+export default function TopicTree({ orderBy, where }) {
+  const [searchParams] = useSearchParams();
   const [topics, setTopics] = React.useState([])
-  const [page, setPage] = React.useState(0)
-  const [pageSize, setPageSize] = React.useState(10)
+  const [page, setPage] = React.useState(searchParams.get("p") ? searchParams.get("p") - 1 : 0)
+  const [pageSize, setPageSize] = React.useState(5)
+  const [maxIndex, setMaxIndex] = React.useState()
   const [isLoading, setIsLoading] = React.useState(false)
 
   React.useEffect(() => {
@@ -17,14 +21,19 @@ export default function Promoted({ orderBy, where }) {
       const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
       try {
         setIsLoading(true)
-        const url = `${env.apiAddress}/topics?${where ? `$where=${where}&` : ""}page=${page + 1}&pageSize=${pageSize}&${orderBy ? `$orderBy=${orderBy}&` : ""}type=topic`
+        const url = `${env.apiAddress}/topics?page=${page + 1}&pageSize=${pageSize}${where ? `&where=${where}` : ""}${orderBy ? `&orderBy=${orderBy}` : ""}${maxIndex === undefined ? "&with_count" : ""}`
         const res = await fetch(url, { method: "get", headers })
         const data = await res.json()
 
-        if (Array.isArray(data))
-          setTopics(data)
-        else
+        if (res.ok) {
+          setTopics(data.tree)
+          if (maxIndex === undefined)
+            setMaxIndex(Math.floor(data.count / pageSize))
+        }
+        else {
           setTopics([])
+          setMaxIndex(0)
+        }
       }
       catch (err) {
         console.error(err)
@@ -35,6 +44,15 @@ export default function Promoted({ orderBy, where }) {
     }
 
     fetchPromoted()
+  }, [page])
+
+  React.useEffect(() => {
+    const pageQuery = searchParams.get("p")
+    setPage(pageQuery ? pageQuery - 1 : 0)
+  }, [searchParams])
+
+  React.useEffect(()=>{
+    document.title = "colcom: colaboração e competição na criação de ideias"
   }, [])
 
   return (
@@ -50,6 +68,12 @@ export default function Promoted({ orderBy, where }) {
             :
             <NoResponse />
       }
+      <Pagination
+        path="/promoted"
+        state={[page, setPage]}
+        isLoading={isLoading}
+        maxIndex={maxIndex}
+      />
     </div>
   )
 }
