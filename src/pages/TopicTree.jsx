@@ -44,7 +44,7 @@ export default function TopicTree({ orderBy, where }) {
     }
 
     fetchPromoted()
-  }, [page])
+  }, [page, orderBy])
 
   React.useEffect(() => {
     const pageQuery = searchParams.get("p")

@@ -176,18 +176,18 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
 const rowsToTree = (rows: Array<any>) => {
   const tree: any = {}
 
-  for (const row of rows) {
+  rows.forEach((row, i) => {
     if (row.parent_id === null)
-      tree[row.id] = { ...row, children: tree[row.id]?.children || [] }
+      tree[row.id] = { ...row, children: tree[row.id]?.children || [], i }
     else {
       if (tree[row.parent_id])
         tree[row.parent_id].children.push({ ...row })
       else
         tree[row.parent_id] = { children: [{ ...row }] }
     }
-  }
+  })
 
-  const result = Object.values(tree).reverse()
+  const result = Object.values(tree).reverse().sort((a: any, b: any) => a.i - b.i)
 
   for (const topic of result)
     (<any>topic).children.reverse()
