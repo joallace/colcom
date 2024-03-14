@@ -172,6 +172,43 @@ export const getContent: RequestHandler = async (req, res, next) => {
   }
 }
 
+export const getBookmarkedContent: RequestHandler = async (req, res, next) => {
+  const author_pid = (<any>req.params.user)?.pid
+
+  try {
+    const contents = await Content.findAll({
+      where: `
+      contents.id IN (
+        SELECT
+          content_id AS id
+        FROM
+          interactions
+        INNER JOIN
+          users ON users.id = interactions.author_id
+        WHERE
+          interactions.type = 'bookmark'
+        AND
+          users.pid = $1
+      )
+      `,
+      values: [author_pid]
+    })
+
+    for (const content of contents) {
+      (<any>content).userInteractions = (await Interactions.getUserContentInteractions({ author_pid, content_id: content.id })).map(v => v.type)
+      if (content.type === "post")
+        (<any>content).userVote = (await Interactions.getUserTopicVote(author_pid, content.id))?.content_id
+    }
+
+    const count = await Interactions.getCount(`interactions.type = 'bookmark' AND users.pid = $1`, [author_pid], "INNER JOIN users ON users.id = interactions.author_id")
+
+    res.status(200).json({contents, count})
+  }
+  catch (err) {
+    next(err)
+  }
+}
+
 export const getVersion: RequestHandler = async (req, res, next) => {
   const content_id = Number(req.params.id)
   const author_pid = (<any>req.params.user)?.pid

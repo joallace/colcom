@@ -83,6 +83,7 @@ export default ({
     "close": {
       description: "fechar crítica",
       icons: PiX,
+      hide: !setShowCritique,
       onClick: () => { setShowCritique(false); setTempHighlight && setTempHighlight([]) }
     }
   }

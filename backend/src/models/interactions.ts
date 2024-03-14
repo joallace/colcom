@@ -152,6 +152,25 @@ async function getUserCurrentPromote(author_pid: string): Promise<Interaction> {
   return result.rows[0]
 }
 
+async function getCount(where: string, values: Array<any>, join = ""): Promise<any> {
+  const query = {
+    text: `
+      SELECT
+        COUNT(*)::int
+      FROM
+        interactions
+      ${join}
+      WHERE
+        ${where}
+      ;`,
+    values,
+  }
+
+  const result = await db.query(query)
+
+  return result.rows[0].count
+}
+
 async function handleChange({ author_pid, content_id, type }: InteractionInsertRequest): Promise<Array<any>> {
   const postInteractions = await getUserContentInteractions({ author_pid, content_id, type })
 
@@ -313,6 +332,7 @@ export default Object.freeze({
   getUserContentInteractions,
   getUserTopicVote,
   getUserCurrentPromote,
+  getCount,
   updateById,
   updateByCommit,
   removeById

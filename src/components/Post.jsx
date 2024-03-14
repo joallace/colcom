@@ -1,5 +1,5 @@
 import React from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import {
   PiBookmarkSimple,
   PiBookmarkSimpleFill,
@@ -26,6 +26,7 @@ import env from "@/assets/enviroment"
 
 export default function Post({
   id,
+  parent_id,
   author,
   author_id,
   commit,
@@ -44,7 +45,7 @@ export default function Post({
   updatePostData,
   setPostData,
   bubbleMenuShouldShow,
-  resetState,
+  resetState = [],
   tempHighlight,
   currentSuggestion,
   setCurrentSuggestion
@@ -76,7 +77,7 @@ export default function Post({
         </div>
       ),
       hide: author_id !== user?.pid,
-      disabled: () => suggestions?.length === 0,
+      disabled: () => !suggestions || suggestions?.length === 0,
       onClick: () => { setModal(2) }
     },
     "critiquesVisible": {
@@ -250,7 +251,7 @@ export default function Post({
     <>
       <Frame
         id={id}
-        title={title}
+        title={<Link to={`/topics/${parent_id}/posts/${id}`}>{String(title)}</Link>}
         titleRef={titleRef}
         headerConfig={Number.isFinite(currentSuggestion) ? editionHeader : headerConfig}
         relevanceVote={relevanceVote}

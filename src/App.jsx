@@ -8,6 +8,7 @@ import Write from "@/pages/Write"
 import PostPage from "@/pages/PostPage"
 import Login from "@/pages/Login"
 import TopicPage from "@/pages/TopicPage"
+import Bookmarked from "@/pages/Bookmarked"
 
 function App() {
   return (
@@ -16,7 +17,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/promoted" />} />
         <Route path="/promoted" element={<TopicTree orderBy="promotions" />} />
-        <Route path="/bookmarked" element={<TopicTree where="bookmark" />} />
+        <Route path="/bookmarked" element={<Bookmarked />} />
         <Route path="/all" element={<TopicTree orderBy="id" />} />
         <Route path="/meta" element={<TopicTree where="meta" />} />
         <Route path="/write" element={<Write />} />

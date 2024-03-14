@@ -3,6 +3,7 @@ import { Router } from "express"
 import authHandler from "@/middleware/authHandler"
 import {
     getContents,
+    getBookmarkedContent,
     createContent,
     getContent,
     getContentTree,
@@ -17,6 +18,8 @@ import {
 const router = Router()
 
 router.get("/contents", getContents)
+
+router.get("/contents/bookmarked", authHandler(), getBookmarkedContent)
 
 router.get("/topics", authHandler(true), getContentTree)
 
