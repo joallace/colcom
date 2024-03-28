@@ -2,7 +2,7 @@ import { resolve } from "path"
 import { existsSync, mkdirSync } from "fs"
 import { writeFile, mkdir } from "fs/promises"
 import { promisify } from "util"
-import { execFile } from "child_process"
+import { execFile } from "node:child_process"
 import AsyncLock from "async-lock"
 
 import { IContent } from "@/models/content"
