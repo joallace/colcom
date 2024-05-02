@@ -46,8 +46,9 @@ export default function Bookmarked() {
       }
     }
 
-    fetchBookmarked()
-  }, [page])
+    if(user)
+      fetchBookmarked()
+  }, [user, page])
 
   React.useEffect(() => {
     const pageQuery = searchParams.get("p")

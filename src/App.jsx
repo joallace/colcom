@@ -19,6 +19,7 @@ function App() {
         <Route path="/promoted" element={<TopicTree orderBy="promotions" />} />
         <Route path="/bookmarked" element={<Bookmarked />} />
         <Route path="/all" element={<TopicTree orderBy="id" />} />
+        <Route path="/leaderboard" element={<></>} />
         <Route path="/meta" element={<TopicTree where="meta" />} />
         <Route path="/write" element={<Write />} />
         <Route path="/topics/:id" element={<TopicPage />} />

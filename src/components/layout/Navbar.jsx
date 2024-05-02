@@ -36,7 +36,7 @@ export default function Navbar() {
               <>
                 •
                 <li key="leaderboard">
-                  <NavLink to="/meta">leaderboard</NavLink>
+                  <NavLink to="/leaderboard">leaderboard</NavLink>
                 </li>
                 •
                 <li key="meta">
