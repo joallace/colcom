@@ -6,6 +6,7 @@ import CritiqueFrame from "@/components/Critique"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import env from "@/assets/enviroment"
 import Modal from "@/components/primitives/Modal"
+import useUser from "@/context/UserContext"
 import { relativeTime } from "@/assets/util"
 
 
@@ -24,6 +25,7 @@ export default () => {
   const [critiquesYOffset, setCritiquesYOffset] = React.useState(0)
   const postTitleRef = React.useRef()
   const { tid, pid } = useParams()
+  const { user } = useUser()
   const isDesktop = useBreakpoint("md")
 
 
@@ -31,8 +33,7 @@ export default () => {
     if (!commitToFetch && (startCommit === currentCommit))
       return
 
-    const token = localStorage.getItem("accessToken")
-    const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
+    const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
     const commit = commitToFetch || postData.history[currentCommit].commit
     try {
       setIsLoading(true)
@@ -81,8 +82,7 @@ export default () => {
 
   React.useEffect(() => {
     const fetchPost = async () => {
-      const token = localStorage.getItem("accessToken")
-      const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
+      const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
       try {
         setIsLoading(true)
         const url = `${env.apiAddress}/contents/${pid}?omit_body&include_parent_title`

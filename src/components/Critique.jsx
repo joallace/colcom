@@ -13,6 +13,7 @@ import { submitVote } from "@/components/primitives/VotingButtons"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import { toPercentageStr, getUserVote } from "@/assets/util"
 import env from "@/assets/enviroment"
+import useUser from "@/context/UserContext"
 
 
 function getSelectionHeight() {
@@ -64,6 +65,7 @@ export default ({
   const [error, setError] = React.useState(false)
   const titleRef = React.useRef()
   const navigate = useNavigate()
+  const { user } = useUser()
   const isDesktop = useBreakpoint("md")
 
   const headerConfig = {
@@ -107,8 +109,7 @@ export default ({
       return
     }
 
-    const token = localStorage.getItem("accessToken")
-    if (!token) {
+    if (!user) {
       navigate("/login")
       return
     }
@@ -119,7 +120,7 @@ export default ({
 
       const res = await fetch(url, {
         method: "post",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.accessToken}` },
         body: JSON.stringify({ title, body: content, config: { from, to, commit }, parent_id })
       })
 

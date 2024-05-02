@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 import Modal from "@/components/primitives/Modal"
 import Input from "@/components/primitives/Input"
 import env from "@/assets/enviroment"
+import useUser from "@/context/UserContext"
 
 export default ({ isOpen, setIsOpen }) => {
   const [title, setTitle] = React.useState("")
@@ -13,6 +14,7 @@ export default ({ isOpen, setIsOpen }) => {
   const [globalError, setGlobalError] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
   const navigate = useNavigate()
+  const { user } = useUser()
 
   const handleAnswerChange = (index, value) => {
     setAnswers(answers.map((answer, i) => {
@@ -33,11 +35,10 @@ export default ({ isOpen, setIsOpen }) => {
       setIsLoading(true)
       setGlobalError(false)
       const url = `${env.apiAddress}/contents`
-      const token = localStorage.getItem("accessToken")
 
       const res = await fetch(url, {
         method: "post",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.accessToken}` },
         body: JSON.stringify({ title, config: { allowMultipleAnswers, answers: answers.filter(v => v !== "") } })
       })
 

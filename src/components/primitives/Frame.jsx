@@ -92,6 +92,10 @@ export default function Frame({
               <>
                 {Object.entries(headerConfig).map((([buttonName, buttonConfig]) => {
                   const { icons, description, hide, disabled, onClick } = buttonConfig
+
+                  if (hide)
+                    return
+
                   const active = disabled?.constructor === Function ?
                     !disabled(headerStatus)
                     :
@@ -99,9 +103,6 @@ export default function Frame({
                       !disabled
                       :
                       true
-
-                  if (hide)
-                    return
 
                   const index = Number(headerStatus[buttonName])
 

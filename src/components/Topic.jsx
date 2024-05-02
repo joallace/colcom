@@ -37,7 +37,7 @@ export default function Topic({
     "answer": {
       description: "responder tópico",
       icons: PiArrowBendUpLeft,
-      onClick: () => navigate("/write", { state: { id, title, config } })
+      onClick: () => { user ? navigate("/write", { state: { id, title, config } }) : navigate("/login") }
     },
     "bookmark": {
       description: ["salvar tópico", "remover tópico dos salvos"],

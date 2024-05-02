@@ -5,6 +5,7 @@ import NoResponse from "@/components/primitives/NoResponse"
 import env from "@/assets/enviroment"
 import Topic from "@/components/Topic"
 import Pagination from "@/components/primitives/Pagination"
+import useUser from "@/context/UserContext"
 
 
 export default function TopicTree({ orderBy, where }) {
@@ -14,11 +15,11 @@ export default function TopicTree({ orderBy, where }) {
   const [pageSize, setPageSize] = React.useState(5)
   const [maxIndex, setMaxIndex] = React.useState()
   const [isLoading, setIsLoading] = React.useState(false)
+  const { user } = useUser()
 
   React.useEffect(() => {
     const fetchPromoted = async () => {
-      const token = localStorage.getItem("accessToken")
-      const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
+      const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
       try {
         setIsLoading(true)
         const url = `${env.apiAddress}/topics?page=${page + 1}&pageSize=${pageSize}${where ? `&where=${where}` : ""}${orderBy ? `&orderBy=${orderBy}` : ""}${maxIndex === undefined ? "&with_count" : ""}`
@@ -43,8 +44,9 @@ export default function TopicTree({ orderBy, where }) {
       }
     }
 
-    fetchPromoted()
-  }, [page, orderBy])
+    if(user !== undefined)
+      fetchPromoted()
+  }, [user, page, orderBy])
 
   React.useEffect(() => {
     const pageQuery = searchParams.get("p")

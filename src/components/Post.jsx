@@ -66,7 +66,7 @@ export default function Post({
       description: "clonar post",
       icons: PiGitBranch,
       hide: author_id === user?.pid,
-      onClick: () => { setModal(3) }
+      onClick: () => { if (!user) navigate("/login"); setModal(3) }
     },
     "merge": {
       description: "incorporar sugestões ao post",
@@ -93,6 +93,8 @@ export default function Post({
       initialValue: false,
       disabled: () => (!bubbleMenuShouldShow || alongsideCritique),
       onClick: (submit) => {
+        if (!user)
+          navigate("/login")
         if (submit && content !== body)
           setModal(1)
         if (!submit)
@@ -103,7 +105,7 @@ export default function Post({
       description: ["salvar post", "remover post dos salvos"],
       icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
       initialValue: userInteractions?.includes("bookmark") || false,
-      onClick: () => submitVote(navigate, id, "bookmark")
+      onClick: () => { if (!user) navigate("/login"); submitVote(navigate, id, "bookmark") }
     }
   }
 
@@ -112,8 +114,7 @@ export default function Post({
       description: "aceitar sugestão",
       icons: PiCheck,
       onClick: async () => {
-        const token = localStorage.getItem("accessToken")
-        const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
+        const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
         try {
           setIsLoading(true)
           const res = await fetch(`${env.apiAddress}/contents/${id}/${suggestions[currentSuggestion].config.commit}/merge`, { headers })
@@ -135,8 +136,7 @@ export default function Post({
       description: "rejeitar sugestão",
       icons: PiTrash,
       onClick: async () => {
-        const token = localStorage.getItem("accessToken")
-        const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
+        const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
         try {
           setIsLoading(true)
           const res = await fetch(`${env.apiAddress}/interactions/${suggestions[currentSuggestion].config.commit}/reject`, { headers })
@@ -179,19 +179,13 @@ export default function Post({
       return
     }
 
-    const token = localStorage.getItem("accessToken")
-    if (!token) {
-      navigate("/login")
-      return
-    }
-
     try {
       setIsLoading(true)
 
       const url = `${env.apiAddress}/contents/${id}`
       const res = await fetch(url, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.accessToken}` },
         body: JSON.stringify({ message, body: content })
       })
 
@@ -216,19 +210,13 @@ export default function Post({
       return
     }
 
-    const token = localStorage.getItem("accessToken")
-    if (!token) {
-      navigate("/login")
-      return
-    }
-
     try {
       setIsLoading(true)
 
       const url = `${env.apiAddress}/contents/${id}/${commit}/clone`
       const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.accessToken}` },
         body: JSON.stringify({ title })
       })
 

@@ -7,6 +7,7 @@ import Topic from "@/components/Topic"
 import Pagination from "@/components/primitives/Pagination"
 import Post from "@/components/Post"
 import Critique from "@/components/Critique"
+import useUser from "@/context/UserContext"
 
 
 export default function Bookmarked() {
@@ -16,11 +17,11 @@ export default function Bookmarked() {
   const [pageSize, setPageSize] = React.useState(5)
   const [maxIndex, setMaxIndex] = React.useState()
   const [isLoading, setIsLoading] = React.useState(false)
+  const { user } = useUser()
 
   React.useEffect(() => {
     const fetchBookmarked = async () => {
-      const token = localStorage.getItem("accessToken")
-      const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
+      const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
       try {
         setIsLoading(true)
         const url = `${env.apiAddress}/contents/bookmarked?page=${page + 1}&pageSize=${pageSize}`

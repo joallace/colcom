@@ -6,14 +6,13 @@ import Icon from "@/components/Icon"
 import TopicModal from "@/components/TopicModal"
 import DropdownMenu from "@/components/primitives/DropdownMenu"
 import useBreakpoint from "@/hooks/useBreakpoint"
-import { UserContext } from "@/context/UserContext"
+import useUser from "@/context/UserContext"
 
 export default function Navbar() {
   const [modalOpen, setModalOpen] = React.useState(false)
-  const { user } = React.useContext(UserContext)
+  const { user, clearUser } = useUser()
   const navigate = useNavigate()
   const isDesktop = useBreakpoint()
-  const token = localStorage.getItem("accessToken")
 
   const toggleModal = () => setModalOpen(!modalOpen)
 
@@ -33,30 +32,52 @@ export default function Navbar() {
             <li key="all">
               <NavLink to="/all">todos</NavLink>
             </li>
-            •
-            <li key="meta">
-              <NavLink to="/meta">meta</NavLink>
-            </li>
+            {isDesktop &&
+              <>
+                •
+                <li key="leaderboard">
+                  <NavLink to="/meta">leaderboard</NavLink>
+                </li>
+                •
+                <li key="meta">
+                  <NavLink to="/meta">meta</NavLink>
+                </li>
+              </>
+            }
           </ul>
         </div>
         <div className="nav-right">
-          {(user && token) ?
+          {user ?
             <>
               <a onClick={toggleModal} title="criar tópico"><PiPlusBold style={{ fontSize: "1.5rem" }} /></a>
-              <div className="balance">
-                <span>
-                  {user.prestige}<PiMedalFill title="prestígio" />
-                </span>
-                <span>
-                  {user.colcoins}<PiCoinsFill title="colcoins" />
-                </span>
-              </div>
+
+              {isDesktop &&
+                <>
+                  <div className="balance">
+                    <span>
+                      {user.prestige}<PiMedalFill title="prestígio" />
+                    </span>
+                    {/*
+                    <span>
+                      {user.colcoins}<PiCoinsFill title="colcoins" />
+                    </span> 
+                    */}
+                  </div>
+                  {user.name}
+                </>
+              }
               <DropdownMenu
                 className="nav-user-icon"
                 options={{
                   "user": {
                     description: user.name,
-                    icons: PiUserFill
+                    icons: PiUserFill,
+                    hide: isDesktop
+                  },
+                  "balance": {
+                    description: `prestígio: ${user.prestige}`,
+                    icons: PiMedalFill,
+                    hide: isDesktop
                   },
                   "bookmarked": {
                     description: "conteúdos salvos",
@@ -66,7 +87,7 @@ export default function Navbar() {
                   "logout": {
                     description: "sair",
                     icons: PiSignOutFill,
-                    onClick: () => { localStorage.removeItem("accessToken"); navigate("/login") }
+                    onClick: () => { clearUser(); navigate("/login") }
                   }
                 }}
               >
@@ -78,6 +99,7 @@ export default function Navbar() {
               <Link to="/login" title="criar tópico">
                 <PiPlusBold style={{ fontSize: "1.5rem" }} />
               </Link>
+              {/* <Link to="/login">log in</Link> */}
               <Link to="/login" className="nav-user-icon" title="login e criação de conta">
                 <PiUser />
               </Link>

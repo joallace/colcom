@@ -50,6 +50,10 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
             {
               Object.entries(options).map((([buttonName, buttonConfig]) => {
                 const { icons, description, hide, disabled, onClick } = buttonConfig
+
+                if (hide)
+                  return
+
                 const active = disabled?.constructor === Function ?
                   !disabled(status)
                   :
@@ -57,9 +61,6 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
                     !disabled
                     :
                     true
-
-                if (hide)
-                  return
 
                 const [Icon, text] = icons.constructor === Array ?
                   [
@@ -76,7 +77,7 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
                   <li
                     key={buttonName}
                     className={`${active ? "" : "disabled"}${onClick ? "" : " unclickable"}`}
-                    onClick={() => { if (active) { toggle(buttonName, onClick(status[buttonName])); toggleMenu() } }}
+                    onClick={() => { if (active) { toggle(buttonName, onClick && onClick(status[buttonName])); toggleMenu() } }}
                   >
                     <Icon className={`dropdown-icon${active ? "" : " disabled"}`} /> {text}
                   </li>

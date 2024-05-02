@@ -7,12 +7,17 @@ import env from "@/assets/enviroment"
 export const UserContext = React.createContext()
 
 export function UserProvider({ children }) {
-  const [user, setUser] = React.useState(null)
+  const [user, setUser] = React.useState(undefined)
+
+  const clearUser = () => {localStorage.removeItem("accessToken"); setUser(null)}
 
   const fetchUser = async () => {
     const accessToken = localStorage.getItem("accessToken")
-    if (!accessToken)
+
+    if (!accessToken){
+      setUser(null)
       return
+    }
 
     const url = `${env.apiAddress}/users/self`
     const res = await fetch(url, {
@@ -21,16 +26,14 @@ export function UserProvider({ children }) {
     })
     const data = await res.json()
 
-    if (!res.ok) {
-      console.error(data)
-      if (res.status === 404)
-        localStorage.removeItem("accessToken")
+    if (res.status === 401) {
+      clearUser()
       return
     }
 
-    setUser(data)
+    setUser({ ...data, accessToken })
   }
-
+  
   const updatePromoted = (contentId) => {
     setUser(prev => ({ ...prev, promoting: contentId }))
   }
@@ -38,10 +41,12 @@ export function UserProvider({ children }) {
   React.useEffect(() => {
     if (localStorage.getItem("accessToken"))
       fetchUser()
+    else
+      setUser(null)
   }, [])
 
   return (
-    <UserContext.Provider value={{ user, fetchUser, updatePromoted }}>
+    <UserContext.Provider value={{ user, clearUser, fetchUser, updatePromoted }}>
       {children}
     </UserContext.Provider>
   )

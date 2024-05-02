@@ -3,18 +3,19 @@ import { useParams } from 'react-router-dom'
 
 import env from "@/assets/enviroment"
 import Topic from "@/components/Topic"
+import useUser from "@/context/UserContext"
 
 
 export default function TopicPage() {
   const [topicData, setTopicData] = React.useState({})
   const [isLoading, setIsLoading] = React.useState(false)
+  const { user } = useUser()
   const { id } = useParams()
 
 
   React.useEffect(() => {
     const fetchTopic = async () => {
-      const token = localStorage.getItem("accessToken")
-      const headers = token ? { "Authorization": `Bearer ${token}` } : undefined
+      const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
       try {
         setIsLoading(true)
         const url = `${env.apiAddress}/topics/${id}`

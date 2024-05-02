@@ -5,6 +5,7 @@ import { default as Editor } from "@/components/Editor"
 import Frame from "@/components/primitives/Frame"
 import Input from "@/components/primitives/Input"
 import env from "@/assets/enviroment"
+import useUser from "@/context/UserContext"
 
 export default function Write() {
   const titleRef = React.useRef()
@@ -15,6 +16,7 @@ export default function Write() {
   const [globalError, setGlobalError] = React.useState(false)
   const navigate = useNavigate()
   const { state } = useLocation()
+  const { user } = useUser()
 
   const download = _ => {
     let element = document.createElement("a")
@@ -42,8 +44,7 @@ export default function Write() {
       return
     }
 
-    const token = localStorage.getItem("accessToken")
-    if (!token) {
+    if (!user) {
       navigate("/login")
       return
     }
@@ -54,7 +55,7 @@ export default function Write() {
 
       const res = await fetch(url, {
         method: "post",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.accessToken}` },
         body: JSON.stringify({ title, body, config: { answer }, parent_id: state.id })
       })
 
@@ -117,7 +118,7 @@ export default function Write() {
             }
           </fieldset>
         }
-        <button onClick={download}>salvar</button>
+        {/* <button onClick={download}>salvar</button> */}
         <button disabled={isLoading} onClick={submit}>
           {isLoading ?
             <><div className="button spinner"></div>publicando...</>
