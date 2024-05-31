@@ -11,7 +11,8 @@ import { Link } from "react-router-dom"
 export default function Pagination({ path = "", state, isLoading, maxIndex = -1 }) {
   const [index, setIndex] = state
   const [pages, setPages] = React.useState([...Array(maxIndex >= 0 ? Math.min(maxIndex + 1, 5) : 5).keys()])
-  const refs = new Array(pages.length).fill(React.useRef())
+  const refs = pages.map(_ => React.useRef(null))
+
   const nextPage = () => {
     setIndex(index + 1)
   }
@@ -45,56 +46,56 @@ export default function Pagination({ path = "", state, isLoading, maxIndex = -1 
 
         <Link
           to={index === 1 ? path : `${path}?p=${index}`}
-          className={`icons${index === 0 ? " disabled" : ""}`}
+          className={`icons${(index === 0 || (maxIndex >= 0 && index>maxIndex+1)) ? " disabled" : ""}`}
           onClick={previousPage}
         >
           <PiCaretLeft />
         </Link>
 
         <div className="pages">
-          {pages.map((page, i) => {
-            return (
-              <Link
-                key={`pag_${i+1}`}
-                to={page === 0 ? path : `${path}?p=${page + 1}`}
-                className={`${(maxIndex >= 0 && page > maxIndex) ? "disabled" : ""}${index === page ? " active" : ""}`}
-                contentEditable={index === page}
-                suppressContentEditableWarning={true}
-                disabled={maxIndex >= 0 && page > maxIndex}
-                active={String(index === page)}
-                onClick={() => { index !== page && setIndex(page) }}
-                onKeyDown={e => {
-                  const content = e.target.textContent
+          {pages.map((page, i) => (
+            <Link
+              key={`pag_${i + 1}`}
+              to={page === 0 ? path : `${path}?p=${page + 1}`}
+              className={`${(index !== page && (maxIndex >= 0 && page > maxIndex)) ? "disabled" : ""}${index === page ? " active" : ""}`}
+              contentEditable={index === page}
+              suppressContentEditableWarning={true}
+              disabled={maxIndex >= 0 && page > maxIndex}
+              active={String(index === page)}
+              onClick={() => { index !== page && setIndex(page) }}
+              ref={refs[i]}
+              onBlur={_ => {
+                refs[i].current.innerHTML = page + 1
+              }}
+              onKeyDown={e => {
+                const content = e.target.textContent
 
-                  if (e.key === "Enter") {
-                    e.preventDefault()
-                    const value = +content - 1
-                    if (value < 0) {
-                      setIndex(0)
-                      return
-                    }
-                    if (maxIndex >= 0 && value > maxIndex) {
-                      setIndex(maxIndex)
-                      return
-                    }
-                    setIndex(value)
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  const value = +content - 1
+
+                  if (value < 0) {
+                    setIndex(0)
+                    return
                   }
 
-                  if (!(["Backspace", "Delete", "ArrowRight", "ArrowLeft"].includes(e.key)) && !/\d/.test(e.key)) {
-                    e.preventDefault()
-                  }
-                }}
-                onBlur={e => {
-                  if (e.target.value === "") {
-                    refs[i].current.innerHTML = page
+                  if (maxIndex >= 0 && value > maxIndex) {
+                    setIndex(maxIndex)
+                    return
                   }
 
-                }}
-              >
-                {page + 1}
-              </Link>
-            )
-          })}
+                  setIndex(value)
+                }
+
+                if (!(["Backspace", "Delete", "ArrowRight", "ArrowLeft"].includes(e.key)) && !/\d/.test(e.key)) {
+                  e.preventDefault()
+                }
+              }}
+            >
+              {page + 1}
+            </Link>
+          )
+          )}
         </div>
 
         <Link
