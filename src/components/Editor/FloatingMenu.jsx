@@ -2,7 +2,7 @@ import React from "react"
 import { FloatingMenu } from "@tiptap/react"
 import {
   PiListBulletsBold,
-  PiListNumbersFill,
+  PiListNumbersBold,
   PiPresentationChartFill,
   PiTableFill,
   PiQuotesFill
@@ -85,7 +85,7 @@ export default ({ editor, tableConfig, modal, setModal }) => {
               className={editor.isActive("orderedList") ? "icon is-active" : "icon"}
               onClick={() => editor.chain().focus().toggleOrderedList().run()}
             >
-              <PiListNumbersFill title="inserir tópicos ordenados" />
+              <PiListNumbersBold title="inserir tópicos ordenados" />
             </button>
             <button
               className={editor.isActive("blockquote") ? "icon is-active" : "icon"}

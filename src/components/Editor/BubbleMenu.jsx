@@ -3,7 +3,7 @@ import { BubbleMenu } from "@tiptap/react"
 import { isTextSelection } from '@tiptap/core';
 import {
   PiListBulletsBold,
-  PiListNumbersFill,
+  PiListNumbersBold,
   PiQuotesFill
 } from "react-icons/pi"
 
@@ -84,7 +84,7 @@ export default ({ editor, shouldShow = true, readOnly, setShowCritique }) => {
                 editor.chain().focus().toggleOrderedList().run()
               }}
             >
-              <PiListNumbersFill title="tópicos ordenados" />
+              <PiListNumbersBold title="tópicos ordenados" />
             </button>
             <button
               className={editor.isActive("blockquote") ? "icon is-active" : "icon"}
