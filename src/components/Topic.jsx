@@ -35,12 +35,12 @@ export default function Topic({
 
   const headerConfig = {
     "answer": {
-      description: "responder tópico",
+      description: "responder ao tópico",
       icons: PiArrowBendUpLeft,
       onClick: () => { user ? navigate("/write", { state: { id, title, config } }) : navigate("/login") }
     },
     "bookmark": {
-      description: ["salvar tópico", "remover tópico dos salvos"],
+      description: ["salvar tópico", "remover dos salvos"],
       icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
       initialValue: userInteractions?.includes("bookmark") || false,
       onClick: () => submitVote(navigate, id, "bookmark")

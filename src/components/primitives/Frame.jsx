@@ -117,12 +117,15 @@ export default function Frame({
                     description
 
                   return (
-                    <Icon
-                      key={`${id}-${buttonName}`}
+                    <div
                       className={`icons${active ? "" : " disabled"}`}
-                      title={title}
                       onClick={() => { if (active) { toggle(buttonName, onClick(headerStatus[buttonName])) } }}
-                    />
+                      title={title}
+                      key={`${id}-${buttonName}`}
+                    >
+                      <Icon/>
+                      <span>{title.replace(" ", "\n")}</span>
+                    </div>
                   )
                 }))}
               </>

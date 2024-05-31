@@ -76,7 +76,7 @@ export default ({
       onClick: () => submit()
     },
     "bookmark": {
-      description: ["salvar crítica", "remover crítica dos salvos"],
+      description: ["salvar crítica", "remover dos salvos"],
       icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
       initialValue: userInteractions?.includes("bookmark") || false,
       hide: !readOnly,

@@ -69,7 +69,7 @@ export default function Post({
       onClick: () => { if (!user) navigate("/login"); setModal(3) }
     },
     "merge": {
-      description: "incorporar sugestões ao post",
+      description: "incorporar sugestões",
       icons: ({ onClick, ...props }) => (
         <div className="iconWithBadge">
           <PiGitPullRequest onClick={onClick} {...props} />
@@ -88,7 +88,7 @@ export default function Post({
       onClick: () => { }
     },
     "edit": {
-      description: ["sugerir edição no post", "finalizar edição"],
+      description: ["sugerir edição", "finalizar edição"],
       icons: [PiPencilSimple, PiPencilSimpleFill],
       initialValue: false,
       disabled: () => (!bubbleMenuShouldShow || alongsideCritique),
@@ -102,7 +102,7 @@ export default function Post({
       }
     },
     "bookmark": {
-      description: ["salvar post", "remover post dos salvos"],
+      description: ["salvar post", "remover dos salvos"],
       icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
       initialValue: userInteractions?.includes("bookmark") || false,
       onClick: () => { if (!user) navigate("/login"); submitVote(navigate, id, "bookmark") }
