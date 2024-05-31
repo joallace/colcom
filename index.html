@@ -6,8 +6,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="colaboração e competição na criação de ideias">
     <title>colcom</title>
+    <style>
+      body{
+        background-color: #1F0D00;
+      }
+
+      .loading-container {
+        height: 100vh;
+        width: 100vw;
+        place-items: center;
+        display: grid;
+      }
+  
+      .loading-icon{
+        height: 40vh;
+        max-height: 512px;
+        width: auto;
+        margin-bottom: -20rem;
+      }
+  
+      .loading-spinner {
+        width: 5rem;
+        height: 5rem;
+        border-radius: 100%;
+        border: 0.4rem solid transparent;
+        border-top-color: #918200;
+        background: transparent;
+        animation: spinner 0.8s linear infinite;
+      }
+  
+      @keyframes spinner {
+        from {
+          transform: rotate(0deg);
+        }
+  
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="loading-page" class="loading-container">
+      <div class="loading-spinner"></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

@@ -11,6 +11,9 @@ import TopicPage from "@/pages/TopicPage"
 import Bookmarked from "@/pages/Bookmarked"
 
 function App() {
+  const loadingPage = document.getElementById("loading-page")
+  loadingPage.style.display = "none"
+  
   return (
     <>
       <Navbar />
