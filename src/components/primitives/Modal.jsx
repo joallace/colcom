@@ -17,7 +17,7 @@ export default function Modal({ isOpen = false, setIsOpen = () => { }, children,
       <div className="modal" {...remainingProps}>
         <div className="header" style={{ justifyContent: !title && "right" }}>
           {title}
-          <PiXBold className="icon" onClick={() => { setIsOpen(false) }} />
+          <PiXBold className="icon icons" onClick={() => { setIsOpen(false) }} />
         </div>
         {children}
       </div>

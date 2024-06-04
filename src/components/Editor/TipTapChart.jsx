@@ -25,15 +25,17 @@ export const TipTapChart = props => {
         />
       </NodeViewWrapper>
 
-      <ChartModal
-        editionMode
-        isOpen={modal}
-        setIsOpen={setModal}
-        currentData={data}
-        currentType={type}
-        setChartOutput={setData}
-        setIsLegendOn={setIsLegendOn}
-      />
+      {modal &&
+        <ChartModal
+          editionMode
+          isOpen={modal}
+          setIsOpen={setModal}
+          currentData={data}
+          currentType={type}
+          setChartOutput={setData}
+          setIsLegendOn={setIsLegendOn}
+        />
+      }
     </>
   );
 }
@@ -45,7 +47,7 @@ export default Node.create({
 
   addAttributes() {
     return {
-      "readOnly":{
+      "readOnly": {
         default: false
       },
       "data": {

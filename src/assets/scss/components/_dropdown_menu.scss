@@ -1,5 +1,6 @@
 .dropdown-menu {
     transition: all 0.3s ease;
+
     .dropdown-options {
         z-index: 999;
         font-size: 1rem;
@@ -25,7 +26,7 @@
                 transition: all 0.15s ease;
                 cursor: pointer;
 
-                .dropdown-icon{
+                .dropdown-icon {
                     font-size: 1.25rem;
                 }
 
@@ -37,7 +38,7 @@
                     background-color: lighten($default-bg, 10%);
                 }
 
-                &.unclickable{
+                &.unclickable {
                     cursor: default;
                 }
             }

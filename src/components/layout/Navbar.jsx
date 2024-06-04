@@ -63,11 +63,10 @@ export default function Navbar() {
                     </span> 
                     */}
                   </div>
-                  {user.name}
                 </>
               }
               <DropdownMenu
-                className="nav-user-icon"
+                className="nav-user-drop"
                 options={{
                   "user": {
                     description: user.name,
@@ -91,7 +90,8 @@ export default function Navbar() {
                   }
                 }}
               >
-                <PiUser />
+                <span>{user.name}</span>
+                <PiUser className="nav-user-icon" />
               </DropdownMenu>
             </>
             :

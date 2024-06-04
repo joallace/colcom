@@ -41,7 +41,7 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
 
   return (
     <div className="dropdown-menu">
-      <div className={`dropdown-trigger${className ? ` ${className}` : ""}`} onClick={toggleMenu} ref={triggerRef}>
+      <div className={`icons${className ? ` ${className}` : ""}`} onClick={toggleMenu} ref={triggerRef}>
         {children}
       </div>
       {isOpen && (
@@ -76,7 +76,7 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
                 return (
                   <li
                     key={buttonName}
-                    className={`${active ? "" : "disabled"}${onClick ? "" : " unclickable"}`}
+                    className={`icons${active ? "" : " disabled"}${onClick ? "" : " unclickable"}`}
                     onClick={() => { if (active) { toggle(buttonName, onClick && onClick(status[buttonName])); toggleMenu() } }}
                   >
                     <Icon className={`dropdown-icon${active ? "" : " disabled"}`} /> {text}

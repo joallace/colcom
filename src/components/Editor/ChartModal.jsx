@@ -224,7 +224,7 @@ export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false
           }
           {chartType !== "scatter" && (!dataInputStage || (dataInputStage && editionMode)) &&
             <Input
-              label="Legenda"
+              label="legenda"
               type="checkbox"
               id="legend"
               checked={legend}
@@ -244,12 +244,9 @@ export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false
       <div className="footer">
         {dataInputStage ?
           <>
-            {
-              !editionMode &&
-              <button onClick={() => { setDataInputStage(false) }}>
-                voltar
-              </button>
-            }
+            <button onClick={() => { setDataInputStage(false) }}>
+              voltar
+            </button>
             <button
               onClick={() => {
                 if (editionMode) {

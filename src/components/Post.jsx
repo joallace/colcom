@@ -314,7 +314,7 @@ export default function Post({
           />
         </div>
         <div className="footer center">
-          <button className="error" onClick={() => { setContent(body); setReset(!reset); setModal(false) }}>cancelar</button>
+          <button className="error" onClick={() => { setContent(body); setReset(!reset); setModal(false) }}>descartar</button>
           <button disabled={isLoading} onClick={submitEdition}>
             {isLoading ?
               <><div className="button spinner"></div>enviando...</>

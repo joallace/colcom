@@ -42,7 +42,7 @@ body {
     transition: all 0.15s ease;
 
     &:hover {
-        color: $default-orange;
+        color: $default-orange !important;
     }
 }
 
