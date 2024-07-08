@@ -1,5 +1,5 @@
 import React from "react"
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import {
   PiBookmarkSimple,
   PiBookmarkSimpleFill,
@@ -173,7 +173,10 @@ export default ({
           {title}
         </span>
         :
-        title
+        readOnly?
+          <Link to={`/topics/${parent_id}/posts/${parent_id}?commit=${config.commit}`}>{title}</Link>
+          :
+          title
       }
       titleRef={titleRef}
       headerConfig={headerConfig}

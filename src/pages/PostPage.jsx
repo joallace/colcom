@@ -1,5 +1,5 @@
 import React from "react"
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 
 import Post from "@/components/Post"
 import CritiqueFrame from "@/components/Critique"
@@ -24,15 +24,13 @@ export default () => {
   const [tempHighlight, setTempHighlight] = React.useState([])
   const [critiquesYOffset, setCritiquesYOffset] = React.useState(0)
   const postTitleRef = React.useRef()
+  const [searchParams, setSearchParams] = useSearchParams();
   const { tid, pid } = useParams()
   const { user } = useUser()
   const isDesktop = useBreakpoint("md")
 
 
   const fetchCommitBody = async (commitToFetch = undefined) => {
-    if (!commitToFetch && (startCommit === currentCommit))
-      return
-
     const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
     const commit = commitToFetch || postData.history[currentCommit].commit
     try {
@@ -80,6 +78,40 @@ export default () => {
     return groupedMarks
   }
 
+  const updateCommitQuery = () => {
+    if(currentCommit === postData?.history.length-1){
+      if(searchParams.has("commit"))
+        setSearchParams(query => {
+          query.delete("commit")
+          return query
+        })
+      return
+    }
+
+    const commit = postData.history[currentCommit].commit
+    setSearchParams(query => {
+      query.set("commit", commit)
+      return query
+    })
+  }
+
+  React.useEffect(() => {
+    const history = postData?.history
+
+    if (!history)
+      return
+
+    const commit = searchParams.get("commit")
+    const index = history.findIndex(version => version.commit === commit)
+
+    if (index > -1)
+      setCurrentCommit(index)
+    else
+      setCurrentCommit(history.length - 1)
+
+    fetchCommitBody()
+  }, [searchParams, postData.history])
+
   React.useEffect(() => {
     const fetchPost = async () => {
       const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
@@ -90,10 +122,10 @@ export default () => {
         const data = await res.json()
 
         if (res.ok && data) {
-          setPostData(data)
           document.title = `${data.title} · colcom`
-          setCurrentCommit(data.history.length - 1)
-          await fetchCommitBody(data.history[data.history.length - 1].commit)
+          setPostData(data)
+          const commit = data.history[data.history.length - 1].commit
+          await fetchCommitBody(commit)
         }
       }
       catch (err) {
@@ -170,9 +202,9 @@ export default () => {
               value={currentCommit}
               disabled={showCritique}
               onMouseDown={e => setStartCommit(Number(e.target.value))}
-              onMouseUp={() => fetchCommitBody()}
+              onMouseUp={() => {if(startCommit!==currentCommit){fetchCommitBody(); updateCommitQuery()}}}
               onTouchStart={e => setStartCommit(Number(e.target.value))}
-              onTouchEnd={() => fetchCommitBody()}
+              onTouchEnd={() => {if(startCommit!==currentCommit){fetchCommitBody(); updateCommitQuery()}}}
               onChange={e => setCurrentCommit(Number(e.target.value))}
             />
             <datalist id="commits">

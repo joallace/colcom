@@ -11,7 +11,7 @@ import useUser from "@/context/UserContext"
 export default function TopicTree({ orderBy, where }) {
   const [searchParams] = useSearchParams();
   const [topics, setTopics] = React.useState([])
-  const [page, setPage] = React.useState(searchParams.get("p") ? searchParams.get("p") - 1 : 0)
+  const [page, setPage] = React.useState(searchParams.has("p") ? searchParams.get("p") - 1 : 0)
   const [pageSize, setPageSize] = React.useState(5)
   const [maxIndex, setMaxIndex] = React.useState()
   const [isLoading, setIsLoading] = React.useState(false)

@@ -77,7 +77,7 @@ export default function Post({
         </div>
       ),
       hide: author_id !== user?.pid,
-      disabled: () => !suggestions || suggestions?.length === 0,
+      disabled: () => !bubbleMenuShouldShow || !suggestions || suggestions?.length === 0,
       onClick: () => { setModal(2) }
     },
     "critiquesVisible": {

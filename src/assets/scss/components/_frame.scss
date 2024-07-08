@@ -138,6 +138,10 @@
     &.critique {
         .title {
             color: $default-orange;
+            
+            a {
+                color: $default-orange;
+            }
 
             textarea {
                 color: $default-orange;
