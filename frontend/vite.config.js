@@ -7,6 +7,9 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     // eslint-disable-next-line no-undef
-    alias: [{ find: "@", replacement: path.resolve(__dirname, "src") }]
+    alias: {
+      "@": path.resolve(__dirname, "src"),
+      "$fonts": path.resolve(__dirname, "src/assets/fonts")
+    }
   }
 })

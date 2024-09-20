@@ -1,0 +1,42 @@
+name: colcom
+
+services:
+  db:
+    image: postgres:16.4-alpine3.20
+    environment: &env
+      POSTGRES_DB: colcom
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      TZ: "America/Recife"
+    ports:
+      - "5430:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    ports:
+      - "4000:4000"
+    environment:
+      <<: *env
+      POSTGRES_PORT: 5230
+      PORT: 4000
+      DB_PATH: /app/gitDB
+    depends_on:
+      - "db"
+    volumes:
+      - git_data:/app/gitDB
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    environment:
+      VITE_API_ADDRESS: http://localhost:4000
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  git_data:
