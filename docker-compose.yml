@@ -36,7 +36,7 @@ services:
       CHOKIDAR_USEPOLLING: "true"
       TZ: "America/Recife"
     depends_on:
-      - backend
+      - "backend"
 
 volumes:
   postgres_data:
