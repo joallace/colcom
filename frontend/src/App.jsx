@@ -1,4 +1,4 @@
-import { Route, Routes, Navigate } from "react-router-dom"
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom"
 
 import Navbar from "@/components/layout/Navbar"
 import Footer from "@/components/layout/Footer"
@@ -15,7 +15,7 @@ function App() {
   loadingPage.style.display = "none"
   
   return (
-    <>
+    <BrowserRouter>
       <Navbar />
       <Routes>
         <Route path="/" element={<Navigate to="/promoted" />} />
@@ -30,7 +30,7 @@ function App() {
         <Route path="/login" element={<Login />} />
       </Routes>
       <Footer />
-    </>
+    </BrowserRouter>
   )
 }
 
