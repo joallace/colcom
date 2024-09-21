@@ -7,17 +7,18 @@ ARG TIMEZONE
 ENV TZ=${TIMEZONE:-"America/Recife"}
 
 # Install app dependencies
-COPY package.json yarn.lock ./
-RUN yarn install
+COPY package.json ./
+RUN npm install
+RUN npm install -g typescript
 
 # Copy the rest of the app
 COPY . .
 
 # Build TypeScript into JavaScript
-RUN yarn build
+RUN npm run build
 
 # Expose the port on which the app runs
 EXPOSE 4000
 
 # Start the application
-CMD ["yarn", "start"]
+CMD ["npm", "start"]

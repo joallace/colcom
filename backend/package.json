@@ -3,6 +3,10 @@
   "license": "AGPL-3.0-only",
   "module": "server.ts",
   "type": "module",
+  "scripts": {
+    "build": "tsc && tsc-alias && node copySqlFiles.js",
+    "start": "node ./build/src/server.js"
+  },
   "devDependencies": {
     "@types/async-lock": "^1.4.2",
     "@types/bcryptjs": "^2.4.6",
@@ -11,7 +15,8 @@
     "@types/jsonwebtoken": "^9.0.5",
     "@types/pg": "^8.10.9",
     "@types/pino": "^7.0.5",
-    "@types/uuid": "^9.0.7"
+    "@types/uuid": "^9.0.7",
+    "tsc-alias": "^1.8.10"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
