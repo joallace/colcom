@@ -1,4 +1,5 @@
-import { resolve } from "path"
+import { dirname, resolve } from "path"
+import { fileURLToPath } from "url"
 import { existsSync, mkdirSync } from "fs"
 import { writeFile, mkdir } from "fs/promises"
 import { promisify } from "util"
@@ -10,6 +11,9 @@ import logger from "@/logger"
 import { ValidationError } from "./errors"
 
 const exec = promisify(execFile)
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const dbPath = process.env.DB_PATH || resolve(__dirname, "db/")
 
