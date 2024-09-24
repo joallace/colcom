@@ -14,7 +14,7 @@ export default function TopicTree({ orderBy, where }) {
   const [page, setPage] = React.useState(searchParams.has("p") ? searchParams.get("p") - 1 : 0)
   const [pageSize, setPageSize] = React.useState(5)
   const [maxIndex, setMaxIndex] = React.useState()
-  const [isLoading, setIsLoading] = React.useState(false)
+  const [isLoading, setIsLoading] = React.useState(true)
   const { user } = useUser()
 
   React.useEffect(() => {

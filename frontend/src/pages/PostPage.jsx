@@ -15,7 +15,7 @@ export default () => {
   const [reset, setReset] = React.useState(false)
   const [showCritique, setShowCritique] = React.useState(false)
   const [submitCritique, setSubmitCritique] = React.useState(false)
-  const [isLoading, setIsLoading] = React.useState(false)
+  const [isLoading, setIsLoading] = React.useState(true)
   const [currentCommit, setCurrentCommit] = React.useState()
   const [currentSuggestion, setCurrentSuggestion] = React.useState()
   const [startCommit, setStartCommit] = React.useState()
@@ -79,8 +79,8 @@ export default () => {
   }
 
   const updateCommitQuery = () => {
-    if(currentCommit === postData?.history.length-1){
-      if(searchParams.has("commit"))
+    if (currentCommit === postData?.history.length - 1) {
+      if (searchParams.has("commit"))
         setSearchParams(query => {
           query.delete("commit")
           return query
@@ -202,9 +202,9 @@ export default () => {
               value={currentCommit}
               disabled={showCritique}
               onMouseDown={e => setStartCommit(Number(e.target.value))}
-              onMouseUp={() => {if(startCommit!==currentCommit){fetchCommitBody(); updateCommitQuery()}}}
+              onMouseUp={() => { if (startCommit !== currentCommit) { fetchCommitBody(); updateCommitQuery() } }}
               onTouchStart={e => setStartCommit(Number(e.target.value))}
-              onTouchEnd={() => {if(startCommit!==currentCommit){fetchCommitBody(); updateCommitQuery()}}}
+              onTouchEnd={() => { if (startCommit !== currentCommit) { fetchCommitBody(); updateCommitQuery() } }}
               onChange={e => setCurrentCommit(Number(e.target.value))}
             />
             <datalist id="commits">

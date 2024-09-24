@@ -8,7 +8,7 @@ import useUser from "@/context/UserContext"
 
 export default function TopicPage() {
   const [topicData, setTopicData] = React.useState({})
-  const [isLoading, setIsLoading] = React.useState(false)
+  const [isLoading, setIsLoading] = React.useState(true)
   const { user } = useUser()
   const { id } = useParams()
 
