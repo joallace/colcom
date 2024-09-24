@@ -105,7 +105,7 @@ export default function Write() {
           <fieldset className={(!answer && error) ? "error" : ""}>
             <legend>sua resposta</legend>
             {
-              state.config.answers.map(option => (
+              state.config.answers.map((option, index) => (
                 <Input
                   id={option.toLowerCase()}
                   type="radio"
@@ -113,6 +113,7 @@ export default function Write() {
                   label={option}
                   checked={answer === option}
                   onChange={e => setAnswer(e.target.value)}
+                  key={`a${index}`}
                 />
               ))
             }

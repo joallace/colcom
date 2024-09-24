@@ -121,7 +121,7 @@ export default function Frame({
                       className={`icons${active ? "" : " disabled"}`}
                       onClick={() => { if (active) { toggle(buttonName, onClick(headerStatus[buttonName])) } }}
                       title={title}
-                      key={`${id}-${buttonName}`}
+                      key={`f${id}-${buttonName}`}
                     >
                       <Icon/>
                       <span>{title.replace(" ", "\n")}</span>
@@ -158,11 +158,10 @@ export default function Frame({
         {metrics &&
           <ul className="metrics">
             {metrics().map((metric, index, arr) => (
-              <>
-                <li key={`t${id}-info-${index}`}>{metric}</li>
-                {(index + 1) !== arr.length &&
-                  "•"}
-              </>
+              <React.Fragment key={`f${id}-metric-${index}`}>
+                <li>{metric}</li>
+                {(index + 1) !== arr.length && "•"}
+              </React.Fragment>
             ))}
           </ul>
         }

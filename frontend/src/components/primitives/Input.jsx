@@ -22,6 +22,7 @@ export default React.forwardRef(({ id, type, label, options = {}, style = {}, er
             className={errorMessage ? " error" : null}
             type={type}
             placeholder="_"
+            readOnly={type === "radio" && true }
             {...remainingProps}
           />
         }
