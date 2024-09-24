@@ -47,7 +47,7 @@
         top: 50%;
         pointer-events: none;
         transform: translateY(-50%);
-        color: color.scale($default-font-color, $lightness: 40%);
+        color: color.scale($default-font-color, $lightness: -40%);
         transition: .3s;
         font-weight: bold;
         white-space: nowrap;

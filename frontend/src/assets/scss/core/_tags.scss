@@ -23,13 +23,13 @@ button {
     }
 
     &:active {
-        border-color: color.scale($default-orange, $lightness: 10%);
-        background-color: color.scale($default-orange, $lightness: 10%);
+        border-color: color.scale($default-orange, $lightness: -10%);
+        background-color: color.scale($default-orange, $lightness: -10%);
     }
 
     &:disabled {
-        border-color: color.scale($default-font-color, $lightness: 40%);
-        color: color.scale($default-font-color, $lightness: 40%);
+        border-color: color.scale($default-font-color, $lightness: -40%);
+        color: color.scale($default-font-color, $lightness: -40%);
         cursor: default;
         background-color: transparent;
     }
@@ -43,8 +43,8 @@ button {
         }
 
         &:active {
-            border-color: color.scale($default-red, $lightness: 10%);
-            background-color: color.scale($default-red, $lightness: 10%);
+            border-color: color.scale($default-red, $lightness: -10%);
+            background-color: color.scale($default-red, $lightness: -10%);
         }
     }
 }
@@ -61,7 +61,7 @@ a {
     }
 
     &:active {
-        color: color.scale($default-orange, $lightness: 10%);
+        color: color.scale($default-orange, $lightness: -10%);
     }
 }
 
@@ -148,13 +148,13 @@ input[type=range] {
     }
 
     &::-moz-range-track {
-        background-color: color.scale($default-font-color, $lightness: 20%);
+        background-color: color.scale($default-font-color, $lightness: -20%);
         border-radius: 0.5rem;
         height: 0.5rem;
     }
 
     &::-webkit-slider-runnable-track {
-        background-color: color.scale($default-font-color, $lightness: 20%);
+        background-color: color.scale($default-font-color, $lightness: -20%);
         border-radius: 0.5rem;
         height: 0.5rem;
     }
@@ -198,11 +198,11 @@ input[type=range] {
         cursor: default;
 
         &::-webkit-slider-thumb {
-            background-color: color.scale($default-font-color, $lightness: 50%);
+            background-color: color.scale($default-font-color, $lightness: -50%);
         }
 
         &::-moz-range-thumb {
-            background-color: color.scale($default-font-color, $lightness: 50%);
+            background-color: color.scale($default-font-color, $lightness: -50%);
         }
     }
 }
@@ -240,10 +240,10 @@ footer {
     place-content: center;
     padding: 1rem;
     margin: 2rem auto 0 auto;
-    border-top: 2px solid color.scale($default-green, $lightness: 10%);
+    border-top: 2px solid color.scale($default-green, $lightness: -10%);
     @include content-responsiveness;
 
     a {
-        color: color.scale($default-font-color, $lightness: 10%);
+        color: color.scale($default-font-color, $lightness: -10%);
     }
 }

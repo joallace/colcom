@@ -43,7 +43,7 @@
 
 
             .description {
-                color: color.scale($default-font-color, $lightness: 33%);
+                color: color.scale($default-font-color, $lightness: -33%);
                 font-size: 0.75rem;
 
                 .dot {

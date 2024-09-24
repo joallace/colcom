@@ -58,6 +58,6 @@ body {
 
 .disabled {
     cursor: default !important;
-    color: color.scale($default-font-color, $lightness: 50%) !important;
+    color: color.scale($default-font-color, $lightness: -50%) !important;
     pointer-events: none;
 }

@@ -44,7 +44,7 @@
                 cursor: pointer;
 
                 &.active {
-                    color: color.scale($default-yellow, $lightness: 8%);
+                    color: color.scale($default-yellow, $lightness: -8%);
                 }
             }
 
@@ -56,19 +56,19 @@
                     font-size: 2rem;
 
                     &:empty:before {
-                        color: color.scale($default-orange, $lightness: 15%);
+                        color: color.scale($default-orange, $lightness: -15%);
                     }
                 }
 
                 &.error {
                     &:empty:before {
-                        color: color.scale($default-red, $lightness: 15%);
+                        color: color.scale($default-red, $lightness: -15%);
                     }
                 }
 
                 &:empty:before {
                     content: attr(placeholder);
-                    color: color.scale($default-green, $lightness: 15%);
+                    color: color.scale($default-green, $lightness: -15%);
                 }
             }
         }
