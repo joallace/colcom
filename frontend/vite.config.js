@@ -11,5 +11,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
       "$fonts": path.resolve(__dirname, "src/assets/fonts")
     }
+  },
+  css:{
+    preprocessorOptions:{
+      scss:{
+        api: "modern-compiler"
+      }
+    }
   }
 })

@@ -1,3 +1,5 @@
+@use "sass:color";
+
 .backdrop{
     min-width: 100%;
     min-height: 100%;
@@ -57,7 +59,7 @@
 
     hr{
         margin: 1rem -1rem 0.5rem -1rem;
-        color: lighten($navbar-bg, 10%);
+        color: color.scale($navbar-bg, $lightness: 10%);
         
     }
 }

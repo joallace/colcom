@@ -1,8 +1,10 @@
+@use "sass:color";
+
 // Layout
 $default-bg: #1F0D00;
 $default-font-color: #d9d9d9;
 $navbar-bg: #522B00;
-$default-input-bg: darken($navbar-bg, 5%);
+$default-input-bg: color.scale($navbar-bg, $lightness: 5%);
 $navbar-height: 3rem;
 
 // Default theme colors

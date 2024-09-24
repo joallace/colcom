@@ -1,3 +1,5 @@
+@use "sass:color";
+
 nav {
     display: flex;
     background-color: $navbar-bg;
@@ -48,11 +50,11 @@ nav {
     color: white;
     background-color: $default-input-bg;
     height: 1.75rem;
-    border: 1px solid darken($default-font-color, 40%);
+    border: 1px solid color.scale($default-font-color, $lightness: 40%);
     border-radius: 0.25rem;
 
     &:focus {
-        border-color: darken($default-font-color, 30%);
+        border-color: color.scale($default-font-color, $lightness: 30%);
         outline: none !important;
     }
 }

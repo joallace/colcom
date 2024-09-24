@@ -1,3 +1,5 @@
+@use "sass:color";
+
 .menu {
     display: flex;
     min-width: min-content;
@@ -163,7 +165,7 @@
     .is-editor-empty:first-child::before {
         content: attr(data-placeholder);
         float: left;
-        color: darken($default-font-color, 40%);
+        color: color.scale($default-font-color, $lightness: 40%);
         pointer-events: none;
         height: 0;
     }
@@ -174,16 +176,16 @@
         &.definitive {
             transition: all 0.15s ease;
             cursor: pointer;
-            background-color: darken($default-orange, 10%);
+            background-color: color.scale($default-orange, $lightness: 10%);
 
             &:hover {
-                background-color: darken($default-orange, 15%);
+                background-color: color.scale($default-orange, $lightness: 15%);
 
             }
         }
 
         &.temporary {
-            background-color: darken($default-yellow, 18%);
+            background-color: color.scale($default-yellow, $lightness: 18%);
         }
     }
 }

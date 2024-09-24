@@ -1,10 +1,12 @@
+@use "sass:color";
+
 .frame {
     display: grid;
     line-height: 1.5;
     height: min-content;
-    @include content-responsiveness;
     transition: all 0.5s ease;
     font-family: 'Lato', sans-serif;
+    @include content-responsiveness;
 
     >.container {
         display: flex;
@@ -42,7 +44,7 @@
                 cursor: pointer;
 
                 &.active {
-                    color: darken($default-yellow, 8%);
+                    color: color.scale($default-yellow, $lightness: 8%);
                 }
             }
 
@@ -54,19 +56,19 @@
                     font-size: 2rem;
 
                     &:empty:before {
-                        color: darken($default-orange, 15%);
+                        color: color.scale($default-orange, $lightness: 15%);
                     }
                 }
 
                 &.error {
                     &:empty:before {
-                        color: darken($default-red, 15%);
+                        color: color.scale($default-red, $lightness: 15%);
                     }
                 }
 
                 &:empty:before {
                     content: attr(placeholder);
-                    color: darken($default-green, 15%);
+                    color: color.scale($default-green, $lightness: 15%);
                 }
             }
         }

@@ -1,3 +1,5 @@
+@use "sass:color";
+
 .post {
     display: flex;
     gap: 1.5rem;
@@ -41,7 +43,7 @@
 
 
             .description {
-                color: darken($default-font-color, 33%);
+                color: color.scale($default-font-color, $lightness: 33%);
                 font-size: 0.75rem;
 
                 .dot {

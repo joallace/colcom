@@ -1,3 +1,5 @@
+@use "sass:color";
+
 * {
     box-sizing: border-box;
 }
@@ -56,6 +58,6 @@ body {
 
 .disabled {
     cursor: default !important;
-    color: darken($default-font-color, 50%) !important;
+    color: color.scale($default-font-color, $lightness: 50%) !important;
     pointer-events: none;
 }
