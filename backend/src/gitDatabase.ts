@@ -52,7 +52,9 @@ async function create(content: IContent, author: any) {
 
 async function read(repo: number, commit: string) {
   const path = `${dbPath}/${repo}`
-  return (<any>await exec("git", ["-C", path, "show", `${commit}:./main.html`]))
+
+  const output = await exec("git", ["-C", path, "show", `${commit}:./main.html`])
+  return (output.stdout ?? output)
 }
 
 async function update(content: IContent, author: any, body: string, message: string, interactionId: number | undefined) {
@@ -71,7 +73,8 @@ async function update(content: IContent, author: any, body: string, message: str
     await exec("git", ["-C", path, "add", file])
     await exec("git", ["-C", path, "commit", "-m", message, "--author", `${author.username} <${author.email}>`])
 
-    return (<any>await exec("git", ["-C", path, "rev-parse", "--short", "HEAD"])).trimEnd()
+    const output = await exec("git", ["-C", path, "rev-parse", "--short", "HEAD"])
+    return (<any>(output.stdout ?? output)).trimEnd()
   })
 }
 
@@ -109,7 +112,8 @@ async function log(content: IContent) {
   const path = `${dbPath}/${repo}/`
   const formatFlag = "--pretty=format:{^^^^commit^^^^:^^^^%h^^^^,^^^^subject^^^^:^^^^%s^^^^,^^^^date^^^^:^^^^%aD^^^^,^^^^author^^^^:^^^^%aN^^^^},"
 
-  const log: any = await exec("git", ["-C", path, "log", `main..${id}`, formatFlag], { encoding: "utf-8" })
+  const output = await exec("git", ["-C", path, "log", `main..${id}`, formatFlag], { encoding: "utf-8" })
+  const log: any = output?.stdout ?? output
 
   return (JSON.parse("[" + log.replaceAll('"', '\\"').replaceAll("^^^^", '"').slice(0, -1) + "]")).reverse()
 }
