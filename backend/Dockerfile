@@ -9,7 +9,7 @@ RUN apk add --no-cache git
 RUN git config --global user.email "admin@colcom.com"
 RUN git config --global user.name "admin"
 
-COPY package.json ./
+COPY package.json package-lock.json ./
 RUN npm install
 RUN npm install -g typescript
 
