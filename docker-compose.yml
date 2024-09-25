@@ -30,9 +30,9 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "5173:80"
+      - "80:80"
     environment:
-      # VITE_API_ADDRESS: http://localhost:4000
+      # VITE_API_ADDRESS: Can't be passed through here, needs to be a build-arg
       CHOKIDAR_USEPOLLING: "true"
       TZ: "America/Recife"
     depends_on:
