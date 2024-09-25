@@ -11,7 +11,7 @@ import { relativeTime } from "@/assets/util"
 
 
 export default () => {
-  const [postData, setPostData] = React.useState({})
+  const [postData, setPostData] = React.useState({ parent_title: "..." })
   const [reset, setReset] = React.useState(false)
   const [showCritique, setShowCritique] = React.useState(false)
   const [submitCritique, setSubmitCritique] = React.useState(false)
@@ -32,7 +32,11 @@ export default () => {
 
   const fetchCommitBody = async (commitToFetch = undefined) => {
     const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
-    const commit = commitToFetch || postData.history[currentCommit].commit
+    const commit = commitToFetch ?? postData.history[currentCommit]?.commit
+
+    if (!commit)
+      return
+
     try {
       setIsLoading(true)
       const res = await fetch(`${env.apiAddress}/contents/${pid}/${commit}?parent_id=${tid}`, { headers })
@@ -109,8 +113,9 @@ export default () => {
     else
       setCurrentCommit(history.length - 1)
 
-    fetchCommitBody()
-  }, [searchParams, postData.history])
+    if (user !== undefined)
+      fetchCommitBody()
+  }, [user, searchParams, postData.history])
 
   React.useEffect(() => {
     const fetchPost = async () => {
@@ -182,38 +187,38 @@ export default () => {
 
   return (
     <div className="content">
-      {isLoading ?
-        <div className="spinner" />
-        :
-        <>
-          <div className="topicName">
-            respondendo ao tópico
-            "<Link to={`/topics/${postData.parent_id}`}>{postData.parent_title}</Link>"
-            {postData?.config?.answer && <> com "<strong style={{ color: "white" }}>{postData.config.answer}</strong>"</>}
-          </div>
+      <>
+        <div className="topicName">
+          respondendo ao tópico
+          "<Link to={postData.parent_id && `/topics/${postData.parent_id}`}>{postData.parent_title}</Link>"
+          {postData?.config?.answer && <> com "<strong style={{ color: "white" }}>{postData.config.answer}</strong>"</>}
+        </div>
 
-          <div className="timerSlider">
-            <input
-              type="range"
-              id="commit"
-              list="commits"
-              min={0}
-              max={postData?.history?.length - 1 || 0}
-              value={currentCommit}
-              disabled={showCritique}
-              onMouseDown={e => setStartCommit(Number(e.target.value))}
-              onMouseUp={() => { if (startCommit !== currentCommit) { fetchCommitBody(); updateCommitQuery() } }}
-              onTouchStart={e => setStartCommit(Number(e.target.value))}
-              onTouchEnd={() => { if (startCommit !== currentCommit) { fetchCommitBody(); updateCommitQuery() } }}
-              onChange={e => setCurrentCommit(Number(e.target.value))}
-            />
-            <datalist id="commits">
-              {postData?.history?.map((commit, i) => (
-                <option key={commit.commit} label={currentCommit === i ? `— ${relativeTime(commit.date)}` : "—"} />
-              ))}
-            </datalist>
-          </div>
+        <div className="timerSlider">
+          <input
+            type="range"
+            id="commit"
+            list="commits"
+            min={0}
+            max={postData?.history?.length - 1 || 0}
+            value={currentCommit}
+            disabled={showCritique}
+            onMouseDown={e => setStartCommit(Number(e.target.value))}
+            onMouseUp={() => { if (startCommit !== currentCommit) { fetchCommitBody(); updateCommitQuery() } }}
+            onTouchStart={e => setStartCommit(Number(e.target.value))}
+            onTouchEnd={() => { if (startCommit !== currentCommit) { fetchCommitBody(); updateCommitQuery() } }}
+            onChange={e => setCurrentCommit(Number(e.target.value))}
+          />
+          <datalist id="commits">
+            {postData?.history?.map((commit, i) => (
+              <option key={commit.commit} label={currentCommit === i ? `— ${relativeTime(commit.date)}` : "—"} />
+            ))}
+          </datalist>
+        </div>
 
+        {isLoading ?
+          <div className="spinner" />
+          :
           <div className="post">
             <Post
               {...postData}
@@ -262,8 +267,8 @@ export default () => {
               </Modal>
             }
           </div>
-        </>
-      }
+        }
+      </>
     </div>
   )
 }

@@ -44,7 +44,7 @@ export default function TopicTree({ orderBy, where }) {
       }
     }
 
-    if(user !== undefined)
+    if (user !== undefined)
       fetchPromoted()
   }, [user, page, orderBy])
 
@@ -53,7 +53,7 @@ export default function TopicTree({ orderBy, where }) {
     setPage(pageQuery ? pageQuery - 1 : 0)
   }, [searchParams])
 
-  React.useEffect(()=>{
+  React.useEffect(() => {
     document.title = "colcom: colaboração e competição na criação de ideias"
   }, [])
 
