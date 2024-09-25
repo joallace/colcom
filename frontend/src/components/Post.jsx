@@ -88,7 +88,7 @@ export default function Post({
       onClick: () => { }
     },
     "edit": {
-      description: ["sugerir edição", "finalizar edição"],
+      description: [`${author_id === user?.pid ? "realizar" : "sugerir"} edição`, "finalizar edição"],
       icons: [PiPencilSimple, PiPencilSimpleFill],
       initialValue: false,
       disabled: () => (!bubbleMenuShouldShow || alongsideCritique),
