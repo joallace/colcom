@@ -1,0 +1,88 @@
+@use "sass:color";
+
+.post {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+
+    .frame {
+        &.original {
+            @include content-responsiveness(55vw, 60vw, 95vw);
+        }
+
+        &.critique {
+            @include content-responsiveness(30vw, 30vw, 0);
+        }
+    }
+
+    .modal {
+        .header {
+            margin: 0;
+
+            h1 {
+                margin: 0;
+                display: flex;
+                align-items: center;
+
+                textarea {
+                    background-color: $navbar-bg;
+                }
+            }
+        }
+
+        .spaced {
+            margin: 1rem 0;
+        }
+
+        .suggestions {
+            // list-style-type: none;
+            display: grid;
+            padding: 0 1rem;
+            gap: 1rem;
+
+
+            .description {
+                color: color.scale($default-font-color, $lightness: -33%);
+                font-size: 0.75rem;
+
+                .dot {
+                    color: $default-green;
+                }
+            }
+        }
+    }
+
+    >.critiques {
+        transition: all 0.5 ease;
+        height: min-content;
+    }
+}
+
+.timerSlider {
+    margin: 1rem 0;
+
+    input,
+    datalist {
+        @include content-responsiveness(50vw, 60vw, 80vw);
+    }
+}
+
+.iconWithBadge {
+    display: flex;
+    position: relative;
+
+    >span {
+        cursor: pointer;
+        color: white;
+        position: absolute;
+        background-color: $default-orange;
+        width: 1.15rem;
+        height: 1.15rem;
+        font-size: 0.75rem;
+        border-radius: 50%;
+        right: -0.5rem;
+        bottom: -0.5rem;
+        text-align: center;
+    }
+}

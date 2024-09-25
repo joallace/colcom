@@ -1,13 +1,21 @@
-FROM node:21-alpine3.19
+FROM node:20-alpine3.20
 
-RUN apk --no-cache add git
+WORKDIR /app
+
+ARG TIMEZONE
+ENV TZ=${TIMEZONE:-"America/Recife"}
+
+RUN apk add --no-cache git
+RUN git config --global user.email "admin@colcom.com"
+RUN git config --global user.name "admin"
+
+COPY package.json package-lock.json ./
+RUN npm install
+RUN npm install -g typescript
 
 COPY . .
+RUN npm run build
 
-RUN npm ci
+EXPOSE 4000
 
-RUN npm install -g typescript forever
-
-RUN tsc
-
-CMD ["forever", "-f", "./build/src/server.js"]
+CMD ["npm", "start"]

@@ -1,0 +1,49 @@
+@use "sass:color";
+
+.dropdown-menu {
+    transition: all 0.3s ease;
+
+    .dropdown-options {
+        z-index: 999;
+        font-size: 1rem;
+        position: absolute;
+        top: 3.5rem;
+        right: 20px;
+        background-color: color.scale($default-bg, $lightness: 10%);
+        border-radius: 0.25rem;
+        padding: 0.5rem;
+
+        ul {
+            display: grid;
+            margin: 0;
+            padding: 0;
+            gap: 0.5rem;
+
+            li {
+                display: flex;
+                gap: 0.5rem;
+                align-content: center;
+                padding: 0.5rem;
+                list-style: none;
+                transition: all 0.15s ease;
+                cursor: pointer;
+
+                .dropdown-icon {
+                    font-size: 1.25rem;
+                }
+
+                &:not(.unclickable):hover {
+                    background-color: color.scale($default-bg, $lightness: 5%);
+                }
+
+                &.disabled:hover {
+                    background-color: color.scale($default-bg, $lightness: 10%);
+                }
+
+                &.unclickable {
+                    cursor: default;
+                }
+            }
+        }
+    }
+}

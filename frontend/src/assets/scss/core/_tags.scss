@@ -1,0 +1,249 @@
+@use "sass:color";
+
+input,
+div,
+span {
+    font-family: "Lato", sans-serif;
+}
+
+button {
+    min-width: min-content;
+    background: transparent;
+    color: $default-font-color;
+    border: 2px solid $default-green;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    font-family: "Lato", sans-serif;
+
+    &:hover {
+        border-color: $default-orange;
+        background-color: $default-orange;
+    }
+
+    &:active {
+        border-color: color.scale($default-orange, $lightness: -10%);
+        background-color: color.scale($default-orange, $lightness: -10%);
+    }
+
+    &:disabled {
+        border-color: color.scale($default-font-color, $lightness: -40%);
+        color: color.scale($default-font-color, $lightness: -40%);
+        cursor: default;
+        background-color: transparent;
+    }
+
+    &.error {
+        border-color: $default-red;
+
+        &:hover {
+            border-color: $default-red;
+            background-color: $default-red;
+        }
+
+        &:active {
+            border-color: color.scale($default-red, $lightness: -10%);
+            background-color: color.scale($default-red, $lightness: -10%);
+        }
+    }
+}
+
+a {
+    cursor: pointer;
+    color: white;
+    text-decoration: none;
+    transition: all 0.1s ease;
+    font-family: "Lato", sans-serif;
+
+    &:hover {
+        color: $default-orange;
+    }
+
+    &:active {
+        color: color.scale($default-orange, $lightness: -10%);
+    }
+}
+
+table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 95%;
+    margin: 1rem 2.5%;
+    overflow: hidden;
+    text-align: center;
+
+    td,
+    th {
+        min-width: 1em;
+        border: 2px solid $default-orange;
+        padding: 3px 5px;
+        vertical-align: top;
+        box-sizing: border-box;
+        position: relative;
+
+        >* {
+            margin-bottom: 0;
+        }
+    }
+
+    th {
+        font-weight: bold;
+        background-color: $default-orange;
+    }
+
+    input {
+        background-color: transparent;
+        border: none;
+        color: $default-font-color;
+        width: 100%;
+    }
+
+    .selectedCell:after {
+        z-index: 2;
+        position: absolute;
+        content: "";
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        background: rgba(255, 200, 200, 0.4);
+        pointer-events: none;
+    }
+}
+
+input[type=checkbox],
+input[type=radio] {
+    accent-color: $default-orange;
+    cursor: pointer;
+    min-width: 1rem;
+    min-height: 1rem;
+
+    &:not(:checked) {
+        appearance: none;
+        border: 2px solid $default-green;
+
+        &[type=checkbox] {
+            border-radius: 0.1rem;
+        }
+
+        &[type=radio] {
+            border-radius: 50%;
+        }
+
+        &:hover {
+            border-color: $default-orange;
+        }
+    }
+}
+
+input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+
+    &:focus {
+        outline: none;
+    }
+
+    &::-moz-range-track {
+        background-color: color.scale($default-font-color, $lightness: -20%);
+        border-radius: 0.5rem;
+        height: 0.5rem;
+    }
+
+    &::-webkit-slider-runnable-track {
+        background-color: color.scale($default-font-color, $lightness: -20%);
+        border-radius: 0.5rem;
+        height: 0.5rem;
+    }
+
+    &::-webkit-slider-thumb {
+        transition: all 0.2s ease;
+        -webkit-appearance: none;
+        appearance: none;
+        margin-top: -4px;
+        background-color: $default-green;
+        border-radius: 50%;
+        height: 1rem;
+        width: 1rem;
+        border: none;
+    }
+
+    &::-moz-range-thumb {
+        transition: all 0.2s ease;
+        background-color: $default-green;
+        border-radius: 50%;
+        height: 1rem;
+        width: 1rem;
+        border: none;
+    }
+
+    &:not(:disabled):active::-webkit-slider-thumb {
+        background-color: $default-orange;
+
+        outline: 3px solid $default-orange;
+        outline-offset: 0.125rem;
+    }
+
+    &:not(:disabled):active::-moz-range-thumb {
+        background-color: $default-orange;
+
+        outline: 3px solid $default-orange;
+        outline-offset: 0.125rem;
+    }
+
+    &:disabled {
+        cursor: default;
+
+        &::-webkit-slider-thumb {
+            background-color: color.scale($default-font-color, $lightness: -50%);
+        }
+
+        &::-moz-range-thumb {
+            background-color: color.scale($default-font-color, $lightness: -50%);
+        }
+    }
+}
+
+datalist {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    writing-mode: vertical-lr;
+    font-family: "Lato", sans-serif;
+}
+
+
+fieldset {
+    font-family: "Lato", sans-serif;
+
+    legend {
+        color: $default-green;
+    }
+
+    border: 2px solid $default-green;
+    border-radius: 0.75rem 0.25rem 0.25rem 0.25rem;
+
+    &.error {
+        legend {
+            color: $default-red;
+        }
+
+        border-color: $default-red;
+    }
+}
+
+footer {
+    display: flex;
+    place-content: center;
+    padding: 1rem;
+    margin: 2rem auto 0 auto;
+    border-top: 2px solid color.scale($default-green, $lightness: -10%);
+    @include content-responsiveness;
+
+    a {
+        color: color.scale($default-font-color, $lightness: -10%);
+    }
+}

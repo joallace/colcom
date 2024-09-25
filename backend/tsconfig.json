@@ -13,9 +13,12 @@
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "allowJs": true,
+    "allowJs": false,
     "paths": {
       "@/*": ["./src/*"]
     }
   },
+  "tsc-alias": {
+    "resolveFullPaths": true,
+  }
 }

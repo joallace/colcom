@@ -1,0 +1,22 @@
+@use "sass:color";
+
+// Layout
+$default-bg: #1F0D00;
+$default-font-color: #d9d9d9;
+$navbar-bg: #522B00;
+$default-input-bg: color.scale($navbar-bg, $lightness: -5%);
+$navbar-height: 3rem;
+
+// Default theme colors
+$default-green: #918200;
+$default-orange: #BC5200;
+$default-red: #be2400;
+$default-yellow: #cdcd00;
+$default-blue: #4da8c1;
+
+// Screen sizes
+$screen-sm: 640px;
+$screen-md: 768px;
+$screen-lg: 1024px;
+$screen-xl: 1280px;
+$screen-2xl: 1536px;

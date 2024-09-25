@@ -1,0 +1,191 @@
+@use "sass:color";
+
+.menu {
+    display: flex;
+    min-width: min-content;
+    background-color: $default-orange;
+    padding: 0.2rem;
+    border-radius: 0.5rem;
+    gap: 0.25rem;
+
+    &.bubble {
+        @media screen and (max-width: $screen-sm) {
+            position: relative;
+            top: 5rem;
+        }
+    }
+
+    &.hidden {
+        display: none;
+    }
+
+    button {
+        display: flex;
+        white-space: nowrap;
+        align-items: end;
+        border: none;
+        background: none;
+        color: #FFF;
+        font-size: 0.85rem;
+        font-weight: 500;
+        padding: 0 0.2rem;
+        opacity: 0.6;
+
+        &:hover,
+        &.is-active {
+            opacity: 1;
+        }
+
+        &.bold {
+            font-weight: 900;
+        }
+
+        &.italic {
+            font-style: italic;
+        }
+
+        &.icon {
+            font-size: 1.25rem;
+        }
+
+        &.h1 {
+            font-size: 0.95rem;
+        }
+
+        &.h2 {
+            font-size: 0.9rem;
+        }
+    }
+
+    input {
+        width: 5rem;
+        font-size: 0.75rem;
+        color: $default-font-color;
+        background-color: $default-input-bg;
+        border: none;
+        border-radius: 0.4rem;
+
+        &:focus {
+            outline: none !important;
+        }
+    }
+
+    span {
+        font-size: 0.8rem;
+    }
+}
+
+.text-editor {
+    display: flex;
+    @include content-responsiveness;
+
+    .text {
+        width: 100%;
+
+        .title {
+            color: $default-green;
+            word-wrap: anywhere;
+            cursor: text;
+
+            textarea {
+                line-height: 1;
+                resize: none;
+                overflow-y: hidden;
+                width: 100%;
+                background-color: $default-bg;
+                outline: none;
+                border: none;
+                color: $default-green;
+                font-size: 2rem;
+                font-weight: bolder;
+            }
+        }
+    }
+}
+
+.tiptap {
+    min-height: 10rem;
+
+    &:focus {
+        outline: none;
+    }
+
+    >*+* {
+        margin-top: 0.75em;
+    }
+
+    h1 {
+        color: $default-green;
+    }
+
+    ul,
+    ol {
+        padding: 0 1rem;
+    }
+
+    blockquote {
+        border-left: 2px solid $default-orange;
+        margin: 1.5rem 1rem;
+        padding: 0.5rem 1rem;
+
+        :last-child {
+            display: inline;
+            margin-bottom: 0;
+        }
+
+        :first-child {
+            display: inline;
+        }
+
+        &:before {
+            color: $default-orange;
+            content: open-quote;
+            font-size: 2.5rem;
+            line-height: 0.1rem;
+            margin-right: 0.25rem;
+            vertical-align: -0.5rem;
+        }
+
+        &:after {
+            color: $default-orange;
+            content: close-quote;
+            font-size: 2.5rem;
+            line-height: 0.1rem;
+            margin-left: 0.25rem;
+            vertical-align: -1.75rem;
+        }
+    }
+
+    .chart {
+        display: flex;
+        place-content: center;
+        margin: 1rem 0;
+    }
+
+    .is-editor-empty:first-child::before {
+        content: attr(data-placeholder);
+        float: left;
+        color: color.scale($default-font-color, $lightness: -40%);
+        pointer-events: none;
+        height: 0;
+    }
+
+    mark {
+        color: inherit;
+
+        &.definitive {
+            transition: all 0.15s ease;
+            cursor: pointer;
+            background-color: color.scale($default-orange, $lightness: -10%);
+
+            &:hover {
+                background-color: color.scale($default-orange, $lightness: -15%);
+
+            }
+        }
+
+        &.temporary {
+            background-color: color.scale($default-yellow, $lightness: -18%);
+        }
+    }
+}

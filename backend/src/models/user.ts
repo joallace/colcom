@@ -1,4 +1,4 @@
-import { hash } from "bcryptjs"
+import bcrypt from "bcryptjs"
 
 import db from "@/pgDatabase"
 import { NotFoundError, ValidationError } from "@/errors"
@@ -50,7 +50,7 @@ export async function create({ name, pass, email }: UserInsertRequest): Promise<
   await validateUnique(name, "name")
   await validateUnique(email, "email")
 
-  const hashedPass = await hash(pass, 10)
+  const hashedPass = await bcrypt.hash(pass, 10)
 
   const query = {
     text: `

@@ -1,0 +1,104 @@
+@use "sass:color";
+
+nav {
+    display: flex;
+    background-color: $navbar-bg;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    height: $navbar-height;
+
+    @media screen and (max-width: $screen-sm) {
+        padding: 0 0.5rem;
+    }
+
+    div {
+        align-items: center;
+        display: flex;
+    }
+
+    .paths {
+        list-style: none;
+        color: $default-green;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        gap: 0.75rem;
+
+        @media screen and (max-width: $screen-sm) {
+            gap: 0.5rem;
+        }
+    }
+}
+
+.active {
+    color: $default-orange;
+}
+
+.nav-icon {
+    color: $default-green;
+    margin: 0 2rem 0 1rem;
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+    font-size: 1.25rem;
+
+    @media screen and (max-width: $screen-sm) {
+        margin: 0 0.75rem 0 0.25rem;
+    }
+}
+
+.nav-searchbar {
+    color: white;
+    background-color: $default-input-bg;
+    height: 1.75rem;
+    border: 1px solid color.scale($default-font-color, $lightness: -40%);
+    border-radius: 0.25rem;
+
+    &:focus {
+        border-color: color.scale($default-font-color, $lightness: -30%);
+        outline: none !important;
+    }
+}
+
+.nav-user-icon {
+    width: 2rem;
+    height: 2rem;
+    font-size: 2rem;
+    color: $default-green;
+    justify-content: center;
+    align-items: end;
+    background-color: white;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.nav-user-drop{
+    display: flex;
+    gap: 0.25rem;
+}
+
+.nav-right {
+    gap: 0.75rem;
+
+    @media screen and (max-width: $screen-sm) {
+        gap: 0.25rem;
+    }
+}
+
+.balance {
+    gap: 0.4rem;
+
+    span {
+        display: flex;
+        align-items: center;
+        font-size: 1.25rem;
+    }
+
+    @media screen and (max-width: $screen-sm) {
+        display: grid;
+
+        span {
+            font-size: 1rem;
+        }
+    }
+}

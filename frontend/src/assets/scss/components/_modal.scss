@@ -1,0 +1,65 @@
+@use "sass:color";
+
+.backdrop{
+    min-width: 100%;
+    min-height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.33);
+    z-index: 9999;
+}
+
+.modal{
+    background-color: $navbar-bg;
+    display: grid;
+    gap: 1rem;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-height: min-content;
+    min-width: min-content;  
+    padding: 1.25rem;
+    border-radius: 0.75rem;
+
+    @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+        max-height: 80%;
+        min-width: 0;
+        width: 90%;
+        overflow: scroll;
+    }
+
+    >.header{
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 1.5rem;
+        display: flex;
+        color: $default-green;
+        align-content: center;
+        justify-content: space-between;
+
+        .icon{
+            align-self: top;
+            font-size: 1.25rem;
+            color: $default-font-color;
+            margin-left: 2rem;
+        }
+    }
+
+    >.footer{
+        display: flex;
+        place-content: end;
+        gap: 1rem;
+        &.center{
+            place-content: center;
+            text-align: center;
+        }
+    }
+
+    hr{
+        margin: 1rem -1rem 0.5rem -1rem;
+        color: color.scale($navbar-bg, $lightness: 10%);
+        
+    }
+}

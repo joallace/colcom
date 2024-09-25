@@ -1,8 +1,13 @@
-import { resolve } from "path"
-import { Pool } from "pg"
+import pg from "pg"
+import { dirname, resolve } from "path"
+import { fileURLToPath } from "url"
 import { readFileSync } from "fs"
 
 import logger from "@/logger"
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 
 const config = {
@@ -17,16 +22,16 @@ const config = {
 }
 const URL = `postgres://${config.user}:${"*".repeat(config.password?.length || 0)}@${config.host}:${config.port}/${config.database}`
 
-const pool = new Pool(config)
+const pool = new pg.Pool(config)
 
 async function connect() {
   try {
-    logger.info(`[database.ts] Connecting to db ${URL}`)
+    logger.info(`[pgDatabase.ts] Connecting to db ${URL}`)
     await pool.connect()
   } catch (err) {
     setTimeout(() => {
       connect()
-      logger.error(`[database.ts] an error occured when connecting ${err} retrying connection on 3 secs`)
+      logger.error(`[pgDatabase.ts] an error occured when connecting ${err} retrying connection on 3 secs`)
     }, 3000)
   }
 }
@@ -34,8 +39,8 @@ async function connect() {
 pool.on("error", connect)
 
 pool.once("connect", () => {
-  logger.info(`[database.ts] Connected to db ${URL}`)
-  logger.info(`[database.ts] Creating inital tables from "sql/init.sql" if they do not exist`)
+  logger.info(`[pgDatabase.ts] Connected to db ${URL}`)
+  logger.info(`[pgDatabase.ts] Creating inital tables from "sql/init.sql" if they do not exist`)
   const initSql = readFileSync(resolve(__dirname, "sql/init.sql"), { encoding: "utf-8" })
   return pool.query(initSql)
 })

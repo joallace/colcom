@@ -1,5 +1,5 @@
 import { RequestHandler } from "express"
-import { compare } from "bcryptjs"
+import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 
 import User, { UserInsertRequest } from "@/models/user"
@@ -56,7 +56,7 @@ export const loginUser: RequestHandler = async (req, res, next) => {
   try {
     const user = await User.findByLogin(login, { hideSensitiveInfo: false })
 
-    if (user && (await compare(pass, user.pass))) {
+    if (user && (await bcrypt.compare(pass, user.pass))) {
       const accessToken = jwt.sign(
         {
           user: {
