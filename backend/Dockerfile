@@ -1,21 +1,21 @@
-FROM node:20-alpine3.20
+FROM node:20-alpine3.20 as build
 
 WORKDIR /app
 
-ARG TIMEZONE
-ENV TZ=${TIMEZONE:-"America/Recife"}
+ARG TZ
+ENV TZ=$TZ
 
-RUN apk add --no-cache git
+RUN apk add --no-cache git tzdata
 RUN git config --global user.email "admin@colcom.com"
 RUN git config --global user.name "admin"
 
-COPY package.json package-lock.json ./
+COPY package*.json ./
 RUN npm install
 RUN npm install -g typescript
 
 COPY . .
 RUN npm run build
 
-EXPOSE 4000
+EXPOSE 3000
 
 CMD ["npm", "start"]

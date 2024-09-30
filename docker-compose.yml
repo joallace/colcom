@@ -7,36 +7,43 @@ services:
       POSTGRES_DB: colcom
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      TZ: "America/Recife"
-    ports:
-      - "5432:5432"
+      TZ: &timezone America/Recife
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      args:
+        TZ: *timezone
     environment:
       <<: *env
-      PORT: 4000
+      PORT: 3000
       POSTGRES_HOST: db
       DB_PATH: /app/gitDB
+      NODE_ENV: production
     depends_on:
-      - "db"
+      - db
     ports:
-      - "4000:4000"
+      - "3000:3000"
+    restart: always
     volumes:
       - git_data:/app/gitDB
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_API_ADDRESS: http://localhost:3000
     ports:
       - "80:80"
     environment:
-      # VITE_API_ADDRESS: Can't be passed through here, needs to be a build-arg
       CHOKIDAR_USEPOLLING: "true"
-      TZ: "America/Recife"
+      TZ: *timezone
     depends_on:
-      - "backend"
+      - backend
 
 volumes:
   postgres_data:
