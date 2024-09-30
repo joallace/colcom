@@ -36,15 +36,24 @@ services:
     build:
       context: ./frontend
       args:
-        VITE_API_ADDRESS: http://localhost:3000
+        VITE_API_ADDRESS: http://localhost/api
+    volumes:
+      - frontend_build:/app/dist
+
+  nginx:
+    image: nginx:1.27.1-alpine3.20
+    container_name: nginx
     ports:
       - "80:80"
-    environment:
-      CHOKIDAR_USEPOLLING: "true"
-      TZ: *timezone
+    volumes:
+      - frontend_build:/usr/share/nginx/html
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
+      - frontend
       - backend
+    restart: always
 
 volumes:
   postgres_data:
   git_data:
+  frontend_build:
