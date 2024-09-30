@@ -141,8 +141,9 @@ export default () => {
       }
     }
 
-    fetchPost()
-  }, [pid])
+    if (user !== undefined)
+      fetchPost()
+  }, [pid, user])
 
   const Critique = ({ index, setOffset, skipOffset, setHighlight }) => (
     <CritiqueFrame
