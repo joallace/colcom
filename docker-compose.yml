@@ -7,37 +7,50 @@ services:
       POSTGRES_DB: colcom
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      TZ: "America/Recife"
-    ports:
-      - "5432:5432"
+      PGPORT: 5433
+      TZ: America/Recife
+    network_mode: host
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      args:
+        TZ: America/Recife
     environment:
       <<: *env
-      PORT: 4000
-      POSTGRES_HOST: db
+      PORT: 3000
       DB_PATH: /app/gitDB
+      NODE_ENV: production
     depends_on:
-      - "db"
-    ports:
-      - "4000:4000"
+      - db
+    network_mode: host
+    restart: always
     volumes:
       - git_data:/app/gitDB
 
   frontend:
-    build: ./frontend
-    ports:
-      - "80:80"
-    environment:
-      # VITE_API_ADDRESS: Can't be passed through here, needs to be a build-arg
-      CHOKIDAR_USEPOLLING: "true"
-      TZ: "America/Recife"
+    build:
+      context: ./frontend
+      args:
+        VITE_API_ADDRESS: http://localhost/api
+    volumes:
+      - frontend_build:/app/dist
+
+  nginx:
+    image: nginx:1.27.1-alpine3.20
+    container_name: nginx
+    network_mode: host
+    volumes:
+      - frontend_build:/usr/share/nginx/html
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - "backend"
+      - frontend
+      - backend
+    restart: always
 
 volumes:
   postgres_data:
   git_data:
+  frontend_build: # This volume needs to be cleared so changes can take effect
