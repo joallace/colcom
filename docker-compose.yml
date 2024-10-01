@@ -7,27 +7,26 @@ services:
       POSTGRES_DB: colcom
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      TZ: &timezone America/Recife
-    expose:
-      - "5432"
+      POSTGRES_PORT: 5433
+      TZ: America/Recife
+    network_mode: host
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    command: -p 5433
 
   backend:
     build:
       context: ./backend
       args:
-        TZ: *timezone
+        TZ: America/Recife
     environment:
       <<: *env
       PORT: 3000
-      POSTGRES_HOST: db
       DB_PATH: /app/gitDB
       NODE_ENV: production
     depends_on:
       - db
-    ports:
-      - "3000:3000"
+    network_mode: host
     restart: always
     volumes:
       - git_data:/app/gitDB
@@ -43,8 +42,7 @@ services:
   nginx:
     image: nginx:1.27.1-alpine3.20
     container_name: nginx
-    ports:
-      - "80:80"
+    network_mode: host
     volumes:
       - frontend_build:/usr/share/nginx/html
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
