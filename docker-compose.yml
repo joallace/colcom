@@ -53,4 +53,4 @@ services:
 volumes:
   postgres_data:
   git_data:
-  frontend_build:
+  frontend_build: # This volume needs to be cleared so changes can take effect
