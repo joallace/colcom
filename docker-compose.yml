@@ -7,12 +7,11 @@ services:
       POSTGRES_DB: colcom
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_PORT: 5433
+      PGPORT: 5433
       TZ: America/Recife
     network_mode: host
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    command: -p 5433
 
   backend:
     build:
