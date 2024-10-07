@@ -30,7 +30,7 @@ services:
     volumes:
       - git_data:/app/gitDB
 
-  frontend_&_nginx:
+  frontend_nginx:
     build:
       context: ./frontend
       args:
