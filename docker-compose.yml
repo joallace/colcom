@@ -30,30 +30,23 @@ services:
     volumes:
       - git_data:/app/gitDB
 
-  frontend:
+  frontend_&_nginx:
     build:
       context: ./frontend
       args:
         VITE_API_ADDRESS: http://localhost/api
+    environment:
+      TZ: America/Recife
     volumes:
-      - frontend_build:/app/dist
-
-  nginx:
-    image: nginx:1.27.1-alpine3.20
-    container_name: nginx
-    network_mode: host
-    volumes:
-      - frontend_build:/usr/share/nginx/html
-      # - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro    # Uncomment for using https instead of http
-      - ./nginx/nginx-http-only.conf:/etc/nginx/nginx.conf:ro
+      # - ./nginx/nginx-https.conf:/etc/nginx/nginx.conf:ro    # Uncomment for using https instead of http
+      - ./nginx/nginx-http.conf:/etc/nginx/nginx.conf:ro
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     depends_on:
-      - frontend
       - backend
+    network_mode: host
     restart: always
 
 volumes:
   postgres_data:
   git_data:
-  frontend_build:    # This volume needs to be cleared so changes can take effect

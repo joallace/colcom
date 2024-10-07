@@ -1,4 +1,4 @@
-FROM node:20-alpine3.20
+FROM node:20-alpine3.20 AS build
 
 WORKDIR /app
 
@@ -10,3 +10,11 @@ RUN npm install --legacy-peer-deps
 
 COPY . .
 RUN npm run build
+
+FROM nginx:1.27.1-alpine3.20-slim AS production
+
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
