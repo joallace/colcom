@@ -12,7 +12,7 @@ export default function TopicTree({ orderBy, where }) {
   const [searchParams] = useSearchParams();
   const [topics, setTopics] = React.useState([])
   const [page, setPage] = React.useState(searchParams.has("p") ? searchParams.get("p") - 1 : 0)
-  const [pageSize, setPageSize] = React.useState(5)
+  const [pageSize, setPageSize] = React.useState(10)
   const [maxIndex, setMaxIndex] = React.useState()
   const [isLoading, setIsLoading] = React.useState(true)
   const { user } = useUser()
@@ -29,7 +29,7 @@ export default function TopicTree({ orderBy, where }) {
         if (res.ok) {
           setTopics(data.tree)
           if (maxIndex === undefined)
-            setMaxIndex(Math.floor(data.count / pageSize))
+            setMaxIndex(Math.ceil(data.count / pageSize) - 1)
         }
         else {
           setTopics([])
