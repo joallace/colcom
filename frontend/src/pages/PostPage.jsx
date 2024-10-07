@@ -164,6 +164,8 @@ export default () => {
   )
 
   const Critiques = () => {
+    // We test if the critique to be shown is an array,
+    // then render a container with multiple critiques or only one critique
     if (showCritique[0] === "[") {
       return (
         <div className="critiques" style={{ transform: `translate(0,${critiquesYOffset}px)` }}>
@@ -252,7 +254,21 @@ export default () => {
                 setIsOpen={setShowCritique}
               >
                 <div className="body">
-                  <Critiques />
+                  {(showCritique && showCritique.constructor === Array) ?
+                    <CritiqueFrame
+                      parent_id={pid}
+                      interval={showCritique}
+                      setShowCritique={setShowCritique}
+                      parentRef={postTitleRef}
+                      commit={postData?.history && postData?.history[currentCommit].commit}
+                      submitSignal={submitCritique}
+                      setSubmitSignal={setSubmitCritique}
+                      setCritiques={setPostCritiques}
+                      {...postCritiques[showCritique]}
+                    />
+                    :
+                    <Critiques />
+                  }
                 </div>
                 {(showCritique && showCritique.constructor === Array) &&
                   <div className="footer center">

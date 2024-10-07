@@ -89,7 +89,7 @@ export default ({
       {showDefinitiveVoteButton &&
         <Input
           className="center"
-          title={definitiveVote ? "remover voto" : "votar nesta resposta"}
+          title={definitiveVote ? "remover voto" : ((definitiveVoteType === "vote") ? "votar nesta resposta" : "promover este tópico")}
           type="radio"
           checked={definitiveVoteType === "vote" ? definitiveVote : (definitiveVote === id)}
           onClick={() => !isLoading && defVoteClick()}

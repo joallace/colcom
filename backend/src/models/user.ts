@@ -100,7 +100,7 @@ export async function findAll({ where = "", orderBy = "id", page = 1, pageSize =
 export async function findByLogin(login: string, options = {}): Promise<User> {
   const searchTerm = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(login) ? "email" : "name"
   const result = await findAll({
-    where: `LOWER(${searchTerm}) = $1`,
+    where: `LOWER(${searchTerm}) = LOWER($1)`,
     values: [login],
     pageSize: 1,
     ...options
