@@ -254,7 +254,21 @@ export default () => {
                 setIsOpen={setShowCritique}
               >
                 <div className="body">
-                  <Critiques />
+                  {(showCritique && showCritique.constructor === Array) ?
+                    <CritiqueFrame
+                      parent_id={pid}
+                      interval={showCritique}
+                      setShowCritique={setShowCritique}
+                      parentRef={postTitleRef}
+                      commit={postData?.history && postData?.history[currentCommit].commit}
+                      submitSignal={submitCritique}
+                      setSubmitSignal={setSubmitCritique}
+                      setCritiques={setPostCritiques}
+                      {...postCritiques[showCritique]}
+                    />
+                    :
+                    <Critiques />
+                  }
                 </div>
                 {(showCritique && showCritique.constructor === Array) &&
                   <div className="footer center">
