@@ -164,6 +164,8 @@ export default () => {
   )
 
   const Critiques = () => {
+    // We test if the critique to be shown is an array,
+    // then render a container with multiple critiques or only one critique
     if (showCritique[0] === "[") {
       return (
         <div className="critiques" style={{ transform: `translate(0,${critiquesYOffset}px)` }}>
