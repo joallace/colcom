@@ -35,7 +35,7 @@ nav {
     color: $default-orange;
 }
 
-.nav-icon {
+.nav-main-icon {
     color: $default-green;
     margin: 0 2rem 0 1rem;
     font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
@@ -72,9 +72,14 @@ nav {
     cursor: pointer;
 }
 
-.nav-user-drop{
+.nav-user-drop {
     display: flex;
     gap: 0.25rem;
+    place-items: center;
+}
+
+.nav-icon {
+    font-size: 1.5rem;
 }
 
 .nav-right {

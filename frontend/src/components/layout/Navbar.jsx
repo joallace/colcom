@@ -1,6 +1,15 @@
 import React from "react"
 import { NavLink, Link, useNavigate } from "react-router-dom"
-import { PiUser, PiUserFill, PiPlusBold, PiMedalFill, PiCoinsFill, PiBookmarkSimpleFill, PiSignOutFill } from "react-icons/pi"
+import {
+  PiUser,
+  PiUserFill,
+  PiPlusBold,
+  PiMedalFill,
+  PiCoinsFill,
+  PiBookmarkSimpleFill,
+  PiSignOutFill,
+  PiSignInFill
+} from "react-icons/pi"
 
 import Icon from "@/components/Icon"
 import TopicModal from "@/components/TopicModal"
@@ -21,16 +30,16 @@ export default function Navbar() {
     <>
       <nav className="nav">
         <div>
-          <Link to="/promoted" className="nav-icon">
+          <Link to="/promoted" className="nav-main-icon">
             <Icon isDesktop={isDesktop} />
           </Link>
           <ul className="unselectable paths">
             <li key="promoted">
-              <NavLink to="/promoted">promovido</NavLink>
+              <NavLink to="/promoted">promovidos</NavLink>
             </li>
             •
             <li key="all">
-              <NavLink to="/all">todos</NavLink>
+              <NavLink to="/recent">recentes</NavLink>
             </li>
             {isDesktop &&
               <>
@@ -97,11 +106,11 @@ export default function Navbar() {
             :
             <>
               <Link to="/login" title="criar tópico">
-                <PiPlusBold style={{ fontSize: "1.5rem" }} />
+                <PiPlusBold className="nav-icon" />
               </Link>
-              {/* <Link to="/login">log in</Link> */}
-              <Link to="/login" className="nav-user-icon" title="login e criação de conta">
-                <PiUser />
+              <Link to="/login" className="nav-user-drop" title="login e criação de conta">
+                entrar
+                <PiSignInFill className="nav-icon" />
               </Link>
             </>
           }
