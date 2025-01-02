@@ -176,16 +176,16 @@
         &.definitive {
             transition: all 0.15s ease;
             cursor: pointer;
-            background-color: color.scale($default-orange, $lightness: -10%);
+            background-color: color.scale($default-orange, $lightness: -40%);
 
             &:hover {
-                background-color: color.scale($default-orange, $lightness: -15%);
+                background-color: color.scale($default-orange, $lightness: -20%);
 
             }
         }
 
         &.temporary {
-            background-color: color.scale($default-yellow, $lightness: -18%);
+            background-color: color.scale($default-yellow, $lightness: -60%);
         }
     }
 }

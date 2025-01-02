@@ -37,7 +37,11 @@
             text-align: left;
 
             a {
-                color: $default-green;
+                color: white;
+                &:hover{
+                    color: $default-orange;
+                }
+    
             }
 
             span {
@@ -47,6 +51,7 @@
                     color: color.scale($default-yellow, $lightness: -8%);
                 }
             }
+
 
             &[contenteditable=true] {
                 cursor: text;
@@ -120,18 +125,19 @@
 
                 input {
                     margin: 0;
+                    &:hover{
+                        border-color: color.scale($default-orange, $lightness: -25%) !important; 
+                    }
                 }
             }
 
 
-            .up {
-                color: #479024;
+            .up, .down {
+                color: rgb(113, 118, 123);
                 cursor: pointer;
-            }
-
-            .down {
-                color: #e65000;
-                cursor: pointer;
+                &:hover{
+                    color: $default-orange;
+                }
             }
         }
     }
@@ -157,7 +163,7 @@
 
     .metrics {
         list-style: none;
-        color: $default-green;
+        color: rgb(47, 51, 54);
         font-size: 12px;
         text-align: center;
         padding: 0;
@@ -182,7 +188,7 @@
 
     border-style: solid;
     border-width: 0 0 0px 2px;
-    border-color: $default-green;
+    border-color: rgb(47, 51, 54);
 
     @media screen and (min-width: 0px) and (max-width: $screen-sm) {
         margin-right: 0.25rem;

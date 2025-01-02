@@ -1,3 +1,5 @@
+@use "sass:color";
+
 .postSummary {
     a {
         display: flex;
@@ -17,7 +19,7 @@
         min-height: 2.5rem;
         height: min-content;
         justify-content: space-between;
-        background-color: $default-font-color;
+        background-color: color.scale($default-orange, $lightness: -35%);
         padding: 0 1rem 0 0.5rem;
         align-content: center;
         border-radius: 0 0.75rem 0.75rem 0;
