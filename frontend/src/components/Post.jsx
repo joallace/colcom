@@ -239,7 +239,7 @@ export default function Post({
     <>
       <Frame
         id={id}
-        title={<Link to={`/topics/${parent_id}/posts/${id}`}>{String(title)}</Link>}
+        title={String(title)}
         titleRef={titleRef}
         headerConfig={Number.isFinite(currentSuggestion) ? editionHeader : headerConfig}
         relevanceVote={relevanceVote}
