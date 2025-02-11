@@ -3,10 +3,10 @@ import { useSearchParams } from "react-router-dom"
 
 import NoResponse from "@/components/primitives/NoResponse"
 import env from "@/assets/enviroment"
-import Topic from "@/components/Topic"
+import Topic from "@/components/content/Topic"
 import Pagination from "@/components/primitives/Pagination"
-import Post from "@/components/Post"
-import Critique from "@/components/Critique"
+import Post from "@/components/content/Post"
+import Critique from "@/components/content/Critique"
 import useUser from "@/context/UserContext"
 
 

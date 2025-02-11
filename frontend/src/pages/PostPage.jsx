@@ -1,8 +1,8 @@
 import React from "react"
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 
-import Post from "@/components/Post"
-import CritiqueFrame from "@/components/Critique"
+import Post from "@/components/content/Post"
+import CritiqueFrame from "@/components/content/Critique"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import env from "@/assets/enviroment"
 import Modal from "@/components/primitives/Modal"

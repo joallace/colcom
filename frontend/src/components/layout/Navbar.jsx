@@ -11,8 +11,8 @@ import {
   PiSignInFill
 } from "react-icons/pi"
 
-import Icon from "@/components/Icon"
-import TopicModal from "@/components/TopicModal"
+import Icon from "@/components/primitives/Icon"
+import TopicModal from "@/components/content/TopicModal"
 import DropdownMenu from "@/components/primitives/DropdownMenu"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import useUser from "@/context/UserContext"

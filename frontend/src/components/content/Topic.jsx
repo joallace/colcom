@@ -8,7 +8,7 @@ import {
 } from "react-icons/pi"
 
 import Frame from "@/components/primitives/Frame"
-import PostSummary from "@/components/PostSummary"
+import PostSummary from "@/components/content/PostSummary"
 import NoResponse from "@/components/primitives/NoResponse"
 import { submitVote } from "@/components/primitives/VotingButtons"
 import { UserContext } from "@/context/UserContext"

@@ -2,7 +2,7 @@ import React from "react"
 import { useParams } from 'react-router-dom'
 
 import env from "@/assets/enviroment"
-import Topic from "@/components/Topic"
+import Topic from "@/components/content/Topic"
 import useUser from "@/context/UserContext"
 
 
