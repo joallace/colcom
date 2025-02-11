@@ -27,13 +27,6 @@ button {
         background-color: color.scale($default-orange, $lightness: -10%);
     }
 
-    &:disabled {
-        border-color: color.scale($default-font-color, $lightness: -40%);
-        color: color.scale($default-font-color, $lightness: -40%);
-        cursor: default;
-        background-color: transparent;
-    }
-
     &.error {
         border-color: $default-red;
 
@@ -45,6 +38,18 @@ button {
         &:active {
             border-color: color.scale($default-red, $lightness: -10%);
             background-color: color.scale($default-red, $lightness: -10%);
+        }
+    }
+
+    &:disabled {
+        border-color: color.scale($default-font-color, $lightness: -40%);
+        color: color.scale($default-font-color, $lightness: -40%);
+        cursor: default;
+        background-color: transparent;
+
+        &:hover{
+            background-color: transparent;
+            border-color: color.scale($default-font-color, $lightness: -40%);
         }
     }
 }

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 import Input from "@/components/primitives/Input"
 import { UserContext } from "@/context/UserContext"
 import env from "@/assets/enviroment"
+import PixelArtEditor from "@/components/primitives/PixelArtEditor"
 
 export default function Login() {
   const loginRef = React.useRef()
@@ -67,7 +68,7 @@ export default function Login() {
     }
   }
 
-  React.useEffect(()=>{
+  React.useEffect(() => {
     document.title = "Login · colcom"
   }, [])
 
@@ -101,15 +102,18 @@ export default function Login() {
                 errorMessage={(error && !loginRef.current.value.length) && "campo obrigatório!"}
               />
               {isSignUp &&
-                <Input
-                  type="email"
-                  label="email"
-                  ref={emailRef}
-                  disabled={isLoading}
-                  onChange={() => setError(false)}
-                  onKeyDown={e => e.key === "Enter" && send()}
-                  errorMessage={(error && !emailRef.current?.value.length) && "campo obrigatório!"}
-                />
+                <>
+                  <Input
+                    type="email"
+                    label="email"
+                    ref={emailRef}
+                    disabled={isLoading}
+                    onChange={() => setError(false)}
+                    onKeyDown={e => e.key === "Enter" && send()}
+                    errorMessage={(error && !emailRef.current?.value.length) && "campo obrigatório!"}
+                  />
+                  <PixelArtEditor />
+                </>
               }
               <Input
                 type="password"

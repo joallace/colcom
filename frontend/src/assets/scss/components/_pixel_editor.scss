@@ -1,0 +1,91 @@
+.pixel-art-editor {
+    display: grid;
+    place-items: center;
+    -webkit-overflow-scrolling: auto;
+
+    .palette {
+        display: flex;
+        gap: 5px;
+        margin: 0.5rem 0;
+        align-items: center;
+
+        .color-picker {
+            width: 3rem;
+            height: 3rem;
+            padding: 0;
+            border: 2px solid #333;
+            margin-right: 1.75rem;
+        }
+
+        .palette-color {
+            width: 2rem;
+            height: 2rem;
+            border: 2px solid #333;
+            cursor: pointer;
+            transition: transform 0.1s;
+
+            &.selected {
+                border-color: #ff0;
+                transform: scale(1.1);
+            }
+        }
+    }
+
+    .tools {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        margin-bottom: 10px;
+        gap: 5px;
+
+        button {
+            width: 4.25rem;
+            font-size: 12px;
+
+            &.selected {
+                background: $default-orange;
+                border-color: $default-orange;
+            }
+
+            svg {
+                width: 24px;
+                height: 24px;
+            }
+        }
+
+        .discard {
+            border-color: $default-red;
+        }
+    }
+
+    .canvas-grid {
+        display: grid;
+        width: min-content;
+        grid-template-columns: repeat(16, 16px);
+        border: 2px solid $default-green;
+        cursor: crosshair;
+        touch-action: none;
+        overscroll-behavior: none;
+        -webkit-overflow-scrolling: touch;
+
+        .canvas-cell {
+            width: 16px;
+            height: 16px;
+            border: 1px solid #333;
+            border-width: 0 1px 1px 0;
+            // transition: background-color 0.1s;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+
+            &:hover {
+                filter: brightness(0.8);
+            }
+        }
+
+        &.hide-grid {
+            .canvas-cell {
+                border: none;
+            }
+        }
+    }
+}
