@@ -12,22 +12,24 @@ import {
 } from "react-icons/pi"
 
 import Input from "@/components/primitives/Input"
-
+import { defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultFontColor } from "@/assets/scss/_export.module.scss"
+import useBreakpoint from "@/hooks/useBreakpoint"
 
 const blankGrid = Array(16).fill().map(() => Array(16).fill(""))
 
 export default function PixelArtEditor() {
   const [grid, setGrid] = React.useState(blankGrid)
-  const [selectedColor, setSelectedColor] = React.useState("#000000")
+  const [selectedColor, setSelectedColor] = React.useState(defaultFontColor)
   const [selectedTool, setSelectedTool] = React.useState("pencil")
   const [undoStack, setUndoStack] = React.useState([])
   const [redoStack, setRedoStack] = React.useState([])
   const [isDrawing, setIsDrawing] = React.useState(false)
   const [lastCell, setLastCell] = React.useState(null)
   const [showGrid, setShowGrid] = React.useState(true)
+  const isDesktop = useBreakpoint("md")
 
   const colors = [
-    "#000000", "#FFFFFF", "#FF0000", "#00FF00", "#0000FF"
+    defaultFontColor, defaultGreen, defaultOrange, defaultYellow, defaultBlue
   ]
 
   const saveState = React.useCallback((currentGrid) => {
@@ -161,6 +163,7 @@ export default function PixelArtEditor() {
     setIsDrawing(false)
     setLastCell(null)
   }
+  console.log(grid, JSON.stringify(grid))
 
   return (
     <div className="pixel-art-editor">
@@ -202,6 +205,7 @@ export default function PixelArtEditor() {
 
       <div
         className={`unselectable canvas-grid${showGrid ? "" : " hide-grid"}`}
+        style={{ "--hover-color": selectedTool !== "eraser" ? selectedColor : "" }}
         onMouseLeave={handleMouseUp}
         onMouseUp={handleMouseUp}
       >
@@ -240,7 +244,7 @@ export default function PixelArtEditor() {
           onChange={(e) => setSelectedColor(e.target.value)}
           className="color-picker"
         />
-        {colors.map((color) => (
+        {colors.slice(0, isDesktop ? colors.length : 4).map((color) => (
           <div
             key={color}
             className={`palette-color ${color === selectedColor ? "selected" : ""}`}

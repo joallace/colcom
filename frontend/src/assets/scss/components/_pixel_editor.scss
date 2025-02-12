@@ -1,7 +1,6 @@
 .pixel-art-editor {
     display: grid;
     place-items: center;
-    -webkit-overflow-scrolling: auto;
 
     .palette {
         display: flex;
@@ -72,13 +71,12 @@
             height: 16px;
             border: 1px solid #333;
             border-width: 0 1px 1px 0;
-            // transition: background-color 0.1s;
             touch-action: none;
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
 
             &:hover {
-                filter: brightness(0.8);
+                background-color: var(--hover-color) !important;
             }
         }
 
