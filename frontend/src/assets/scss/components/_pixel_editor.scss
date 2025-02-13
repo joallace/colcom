@@ -2,6 +2,11 @@
     display: grid;
     place-items: center;
 
+    .canvas {
+        display: flex;
+        gap: 0.2rem;
+    }
+
     .palette {
         display: flex;
         gap: 5px;
@@ -32,12 +37,18 @@
 
     .tools {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        margin-bottom: 10px;
-        gap: 5px;
+        margin: 0;
+        place-items: center;
+        gap: 0;
 
         button {
             width: 4.25rem;
+
+            @media screen and (min-width: 0px) and (max-width: $screen-md) {
+                width: min-content;
+                height: min-content;
+            }
+
             font-size: 12px;
 
             &.selected {
@@ -59,16 +70,17 @@
     .canvas-grid {
         display: grid;
         width: min-content;
-        grid-template-columns: repeat(16, 16px);
+        grid-template-columns: repeat(16, 12px);
         border: 2px solid $default-green;
+        border-radius: 0.25rem;
         cursor: crosshair;
         touch-action: none;
         overscroll-behavior: none;
         -webkit-overflow-scrolling: touch;
 
         .canvas-cell {
-            width: 16px;
-            height: 16px;
+            width: 12px;
+            height: 12px;
             border: 1px solid #333;
             border-width: 0 1px 1px 0;
             touch-action: none;

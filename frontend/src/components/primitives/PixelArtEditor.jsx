@@ -29,7 +29,7 @@ export default function PixelArtEditor() {
   const isDesktop = useBreakpoint("md")
 
   const colors = [
-    defaultFontColor, defaultGreen, defaultOrange, defaultYellow, defaultBlue
+    defaultFontColor, defaultOrange, defaultGreen, defaultYellow, defaultBlue
   ]
 
   const saveState = React.useCallback((currentGrid) => {
@@ -163,78 +163,81 @@ export default function PixelArtEditor() {
     setIsDrawing(false)
     setLastCell(null)
   }
-  console.log(grid, JSON.stringify(grid))
 
   return (
     <div className="pixel-art-editor">
-      <div className="tools">
-        <button
-          onClick={undo}
-          disabled={undoStack.length === 0}
-        >
-          <PiArrowCounterClockwiseFill /> desfazer
-        </button>
+      <div className="canvas">
+        <div className="tools">
+          {["pencil", "eraser", "bucket"].map((tool) => (
+            <button
+              key={tool}
+              className={tool === selectedTool ? "selected" : ""}
+              onClick={() => setSelectedTool(tool)}
+            >
+              {tool === "pencil" && <>{tool === selectedTool ? <PiPencilSimpleFill /> : <PiPencilSimple />} {isDesktop ? "lápis" : ""}</>}
+              {tool === "eraser" && <>{tool === selectedTool ? <PiEraserFill /> : <PiEraser />} {isDesktop ? "borracha" : ""}</>}
+              {tool === "bucket" && <>{tool === selectedTool ? <PiPaintBucketFill /> : <PiPaintBucket />} {isDesktop ? "balde" : ""}</>}
+            </button>
+          ))}
+        </div>
 
-        <button
-          onClick={redo}
-          disabled={redoStack.length === 0}
+        <div
+          className={`unselectable canvas-grid${showGrid ? "" : " hide-grid"}`}
+          style={{ "--hover-color": selectedTool !== "eraser" ? selectedColor : "" }}
+          onMouseLeave={handleMouseUp}
+          onMouseUp={handleMouseUp}
         >
-          <PiArrowClockwiseFill /> refazer
-        </button>
+          {grid.map((row, x) =>
+            row.map((color, y) => (
+              <div
+                key={`${x}-${y}`}
+                className="canvas-cell"
+                style={{ backgroundColor: color }}
+                onMouseDown={() => handleMouseDown(x, y)}
+                onMouseEnter={() => handleMouseEnter(x, y)}
+                onTouchStart={(e) => {
+                  e.preventDefault()
+                  handleMouseDown(x, y)
+                }}
+                onTouchMove={(e) => {
+                  e.preventDefault()
+                  const touch = e.touches[0]
+                  const target = document.elementFromPoint(touch.clientX, touch.clientY)
+                  if (target?.dataset?.x && target?.dataset?.y) {
+                    handleMouseEnter(Number(target.dataset.x), Number(target.dataset.y))
+                  }
+                }}
+                onTouchEnd={handleMouseUp}
+                data-x={x}
+                data-y={y}
+              />
+            ))
+          )}
+        </div>
 
-        <button
-          onClick={discard}
-          className="error"
-          disabled={grid.every(row => row.every(pixel => pixel === ""))}
-        >
-          <PiTrash /> descartar
-        </button>
-
-        {["pencil", "eraser", "bucket"].map((tool) => (
+        <div className="tools">
           <button
-            key={tool}
-            className={tool === selectedTool ? "selected" : ""}
-            onClick={() => setSelectedTool(tool)}
+            onClick={undo}
+            disabled={undoStack.length === 0}
           >
-            {tool === "pencil" && <>{tool === selectedTool ? <PiPencilSimpleFill /> : <PiPencilSimple />} lápis</>}
-            {tool === "eraser" && <>{tool === selectedTool ? <PiEraserFill /> : <PiEraser />} borracha</>}
-            {tool === "bucket" && <>{tool === selectedTool ? <PiPaintBucketFill /> : <PiPaintBucket />} balde</>}
+            <PiArrowCounterClockwiseFill /> {isDesktop ? "desfazer" : ""}
           </button>
-        ))}
-      </div>
 
-      <div
-        className={`unselectable canvas-grid${showGrid ? "" : " hide-grid"}`}
-        style={{ "--hover-color": selectedTool !== "eraser" ? selectedColor : "" }}
-        onMouseLeave={handleMouseUp}
-        onMouseUp={handleMouseUp}
-      >
-        {grid.map((row, x) =>
-          row.map((color, y) => (
-            <div
-              key={`${x}-${y}`}
-              className="canvas-cell"
-              style={{ backgroundColor: color }}
-              onMouseDown={() => handleMouseDown(x, y)}
-              onMouseEnter={() => handleMouseEnter(x, y)}
-              onTouchStart={(e) => {
-                e.preventDefault()
-                handleMouseDown(x, y)
-              }}
-              onTouchMove={(e) => {
-                e.preventDefault()
-                const touch = e.touches[0]
-                const target = document.elementFromPoint(touch.clientX, touch.clientY)
-                if (target?.dataset?.x && target?.dataset?.y) {
-                  handleMouseEnter(Number(target.dataset.x), Number(target.dataset.y))
-                }
-              }}
-              onTouchEnd={handleMouseUp}
-              data-x={x}
-              data-y={y}
-            />
-          ))
-        )}
+          <button
+            onClick={redo}
+            disabled={redoStack.length === 0}
+          >
+            <PiArrowClockwiseFill /> {isDesktop ? "refazer" : ""}
+          </button>
+
+          <button
+            onClick={discard}
+            className="error"
+            disabled={grid.every(row => row.every(pixel => pixel === ""))}
+          >
+            <PiTrash /> {isDesktop ? "descartar" : ""}
+          </button>
+        </div>
       </div>
 
       <div className="palette">
@@ -244,7 +247,7 @@ export default function PixelArtEditor() {
           onChange={(e) => setSelectedColor(e.target.value)}
           className="color-picker"
         />
-        {colors.slice(0, isDesktop ? colors.length : 4).map((color) => (
+        {colors.map((color) => (
           <div
             key={color}
             className={`palette-color ${color === selectedColor ? "selected" : ""}`}

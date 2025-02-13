@@ -93,6 +93,13 @@ export default function Login() {
               <div className="globalError">{globalError}</div>
             }
             <div className="userData">
+              {
+                isSignUp &&
+                <>
+                  <PixelArtEditor />
+                  <hr style={{ width: "100%" }} />
+                </>
+              }
               <Input
                 label={`nome do usuário${isSignUp ? "" : " ou email"}`}
                 ref={loginRef}
@@ -102,18 +109,15 @@ export default function Login() {
                 errorMessage={(error && !loginRef.current.value.length) && "campo obrigatório!"}
               />
               {isSignUp &&
-                <>
-                  <Input
-                    type="email"
-                    label="email"
-                    ref={emailRef}
-                    disabled={isLoading}
-                    onChange={() => setError(false)}
-                    onKeyDown={e => e.key === "Enter" && send()}
-                    errorMessage={(error && !emailRef.current?.value.length) && "campo obrigatório!"}
-                  />
-                  <PixelArtEditor />
-                </>
+                <Input
+                  type="email"
+                  label="email"
+                  ref={emailRef}
+                  disabled={isLoading}
+                  onChange={() => setError(false)}
+                  onKeyDown={e => e.key === "Enter" && send()}
+                  errorMessage={(error && !emailRef.current?.value.length) && "campo obrigatório!"}
+                />
               }
               <Input
                 type="password"
