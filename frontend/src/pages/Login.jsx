@@ -95,10 +95,11 @@ export default function Login() {
             <div className="userData">
               {
                 isSignUp &&
-                <>
+                <div className="profilePictureCanvas">
+                  <h2>foto de perfil</h2>
                   <PixelArtEditor />
-                  <hr style={{ width: "100%" }} />
-                </>
+                  <hr/>
+                </div>
               }
               <Input
                 label={`nome do usuário${isSignUp ? "" : " ou email"}`}
