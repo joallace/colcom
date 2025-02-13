@@ -75,7 +75,7 @@ export default function Login() {
   return (
     <div className="content login">
       <div className="loginContainer">
-        <div className="header">
+        <div className="spaced header">
           <div className="top bracket" />
           <h1>
             {isSignUp ?
@@ -86,7 +86,7 @@ export default function Login() {
           </h1>
           <div className="reverse top critique bracket" />
         </div>
-        <div className="body">
+        <div className="spaced body">
           <div className="bracket" />
           <div className="loginForm">
             {globalError &&
@@ -140,7 +140,7 @@ export default function Login() {
           <div className="reverse critique bracket" />
 
         </div>
-        <div className="footer">
+        <div className="spaced">
           <div className="bottom bracket" />
           <div className="buttonRow">
             <button disabled={isLoading} onClick={send}>

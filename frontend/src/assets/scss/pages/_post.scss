@@ -61,6 +61,8 @@
 
 .timerSlider {
     margin: 1rem 0;
+    display: grid;
+    place-content: center;
 
     input,
     datalist {

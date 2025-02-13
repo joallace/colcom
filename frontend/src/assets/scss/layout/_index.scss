@@ -22,20 +22,18 @@ body {
 .content {
     display: grid;
     grid-auto-rows: min-content;
-    justify-items: center;
+    place-content: center;
     flex: 1;
 
 
     &.tree {
-        gap: 2rem;
-        padding-bottom: 2rem;
+        gap: 1.5rem;
+        padding: 1.5rem 0;
     }
 
     &.login {
         height: calc(100vh - $navbar-height);
         min-height: min-content;
-        margin: 3rem 0;
-        align-content: center;
     }
 }
 

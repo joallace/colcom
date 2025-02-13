@@ -160,7 +160,8 @@ export default function PixelArtEditor() {
     saveState(newGrid)
   }, [selectedTool, selectedColor, grid, floodFill, saveState])
 
-  const handleMouseDown = (x, y) => {
+  const handleMouseDown = (e, x, y) => {
+    if(e?.buttons === 2 || e?.button === 2) return
     setIsDrawing(true)
     setLastCell([x, y])
     handleCellAction(x, y)
@@ -209,11 +210,11 @@ export default function PixelArtEditor() {
                 key={`${x}-${y}`}
                 className="canvas-cell"
                 style={{ backgroundColor: color }}
-                onMouseDown={() => handleMouseDown(x, y)}
+                onMouseDown={(e) => handleMouseDown(e, x, y)}
                 onMouseEnter={() => handleMouseEnter(x, y)}
                 onTouchStart={(e) => {
                   e.preventDefault()
-                  handleMouseDown(x, y)
+                  handleMouseDown(e, x, y)
                 }}
                 onTouchMove={(e) => {
                   e.preventDefault()
