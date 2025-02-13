@@ -63,8 +63,6 @@ export default function PixelArtEditor() {
   }
 
   const floodFill = React.useCallback((startX, startY, targetColor, replacementColor) => {
-    if (targetColor === replacementColor) return
-
     const newGrid = grid.map(row => [...row])
     const queue = [[startX, startY]]
     const visited = new Set([`${startX},${startY}`])
@@ -93,12 +91,13 @@ export default function PixelArtEditor() {
       })
     }
 
-    setGrid(newGrid)
-    saveState(newGrid)
-  }, [grid, saveState])
+    return newGrid
+  }, [grid])
 
   const interpolateCells = React.useCallback((startX, startY, endX, endY) => {
     const newGrid = grid.map(row => [...row])
+    let hasChanges = false
+
     let x0 = startX
     let y0 = startY
     const x1 = endX
@@ -111,10 +110,12 @@ export default function PixelArtEditor() {
     let err = dx + dy
 
     while (true) {
-      if (selectedTool === "pencil") {
-        newGrid[x0][y0] = selectedColor
-      } else if (selectedTool === "eraser") {
-        newGrid[x0][y0] = ""
+      const currentColor = newGrid[x0][y0]
+      const targetColor = (selectedTool === "pencil") ? selectedColor : ""
+
+      if (currentColor !== targetColor) {
+        newGrid[x0][y0] = targetColor
+        hasChanges = true
       }
 
       if (x0 === x1 && y0 === y1) break
@@ -129,19 +130,34 @@ export default function PixelArtEditor() {
       }
     }
 
-    setGrid(newGrid)
-    saveState(newGrid)
+    if (hasChanges) {
+      setGrid(newGrid)
+      saveState(newGrid)
+    }
   }, [selectedColor, selectedTool, grid, saveState])
 
   const handleCellAction = React.useCallback((x, y) => {
-    if (selectedTool === "pencil" || selectedTool === "eraser") {
-      const newGrid = grid.map(row => [...row])
-      newGrid[x][y] = selectedTool === "pencil" ? selectedColor : ""
-      setGrid(newGrid)
-      saveState(newGrid)
-    } else if (selectedTool === "bucket") {
-      floodFill(x, y, grid[x][y], selectedColor)
+    let newGrid
+
+    switch (selectedTool) {
+      case "pencil":
+        if (grid[x][y] === selectedColor) return
+        newGrid = grid.map(row => [...row])
+        newGrid[x][y] = selectedColor
+        break
+      case "eraser":
+        if (grid[x][y] === "") return
+        newGrid = grid.map(row => [...row])
+        newGrid[x][y] = ""
+        break
+      case "bucket":
+        if (grid[x][y] === selectedColor) return
+        newGrid = floodFill(x, y, grid[x][y], selectedColor)
+        break
     }
+
+    setGrid(newGrid)
+    saveState(newGrid)
   }, [selectedTool, selectedColor, grid, floodFill, saveState])
 
   const handleMouseDown = (x, y) => {
