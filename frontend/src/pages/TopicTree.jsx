@@ -58,7 +58,7 @@ export default function TopicTree({ orderBy, where }) {
   }, [])
 
   return (
-    <div className="content tree">
+    <div className={`content tree${topics?.length === 0? " centered" : ""}`}>
       {
         isLoading ?
           <div className="spinner" />
@@ -70,12 +70,14 @@ export default function TopicTree({ orderBy, where }) {
             :
             <NoResponse />
       }
-      <Pagination
-        path="/promoted"
-        state={[page, setPage]}
-        isLoading={isLoading}
-        maxIndex={maxIndex}
-      />
+      {maxIndex > 0 && 
+        <Pagination
+          path="/promoted"
+          state={[page, setPage]}
+          isLoading={isLoading}
+          maxIndex={maxIndex}
+        />
+      }
     </div>
   )
 }

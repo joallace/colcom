@@ -73,7 +73,7 @@ export default function Login() {
   }, [])
 
   return (
-    <div className="content login">
+    <div className="content login centered">
       <div className="loginContainer">
         <div className="spaced header">
           <div className="top bracket" />

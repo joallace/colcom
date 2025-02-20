@@ -22,7 +22,7 @@ body {
 .content {
     display: grid;
     grid-auto-rows: min-content;
-    place-content: center;
+    justify-content: center;
     flex: 1;
 
 
@@ -34,6 +34,10 @@ body {
     &.login {
         height: calc(100vh - $navbar-height);
         min-height: min-content;
+    }
+
+    &.centered{
+        align-content: center;
     }
 }
 
