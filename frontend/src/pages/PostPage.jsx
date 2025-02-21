@@ -191,98 +191,98 @@ export default () => {
 
   return (
     <div className="content">
-      <>
-        <div className="topicName">
-          respondendo ao tópico
-          "<Link to={postData.parent_id && `/topics/${postData.parent_id}`}>{postData.parent_title}</Link>"
-          {postData?.config?.answer && <> com "<strong style={{ color: "white" }}>{postData.config.answer}</strong>"</>}
-        </div>
+      <div className="topicName">
+        respondendo ao tópico
+        "<Link to={postData.parent_id && `/topics/${postData.parent_id}`}>{postData.parent_title}</Link>"
+        {postData?.config?.answer && <> com "<strong style={{ color: "white" }}>{postData.config.answer}</strong>"</>}
+      </div>
 
-        <div className="timerSlider">
-          <input
-            type="range"
-            id="commit"
-            list="commits"
-            min={0}
-            max={postData?.history?.length - 1 || 0}
-            value={currentCommit}
-            disabled={showCritique}
-            onMouseDown={e => setStartCommit(Number(e.target.value))}
-            onMouseUp={() => { if (startCommit !== currentCommit) { fetchCommitBody(); updateCommitQuery() } }}
-            onTouchStart={e => setStartCommit(Number(e.target.value))}
-            onTouchEnd={() => { if (startCommit !== currentCommit) { fetchCommitBody(); updateCommitQuery() } }}
-            onChange={e => setCurrentCommit(Number(e.target.value))}
-          />
-          <datalist id="commits">
-            {postData?.history?.map((commit, i) => (
-              <option key={commit.commit} label={currentCommit === i ? `— ${relativeTime(commit.date)}` : "—"} />
-            ))}
-          </datalist>
-        </div>
+      <div className="timerSlider">
+        <input
+          type="range"
+          id="commit"
+          list="commits"
+          min={0}
+          max={postData?.history?.length - 1 || 0}
+          value={currentCommit}
+          disabled={showCritique}
+          onMouseDown={e => setStartCommit(Number(e.target.value))}
+          onMouseUp={() => { if (startCommit !== currentCommit) { fetchCommitBody(); updateCommitQuery() } }}
+          onTouchStart={e => setStartCommit(Number(e.target.value))}
+          onTouchEnd={() => { if (startCommit !== currentCommit) { fetchCommitBody(); updateCommitQuery() } }}
+          onChange={e => setCurrentCommit(Number(e.target.value))}
+        />
+        <datalist id="commits">
+          {postData?.history?.map((commit, i) => (
+            <option key={commit.commit} label={currentCommit === i ? `— ${relativeTime(commit.date)}` : "—"} />
+          ))}
+        </datalist>
+      </div>
 
-        {isLoading ?
+      {isLoading ?
+        <div className="postSpinnerWrapper">
           <div className="spinner" />
-          :
-          <div className="post">
-            <Post
-              {...postData}
-              fetchCommit={fetchCommitBody}
-              commit={postData?.history && postData?.history[currentCommit].commit}
-              currentSuggestion={currentSuggestion}
-              setCurrentSuggestion={setCurrentSuggestion}
-              titleRef={postTitleRef}
-              body={postBody}
-              critiques={postCritiques}
-              groupedCritiques={groupOverlappingMarks(postCritiques)}
-              alongsideCritique={showCritique}
-              setShowCritique={setShowCritique}
-              setPostData={setPostData}
-              updatePostData={(data) => {
-                const history = [...postData.history, { commit: data.commit, date: new Date().getTime() }]
-                setPostData({ ...postData, ...data, history, commit: undefined })
-                setCurrentCommit(history.length - 1)
-              }}
-              bubbleMenuShouldShow={currentCommit === postData?.history?.length - 1 && !Number.isFinite(currentSuggestion)}
-              tempHighlight={tempHighlight}
-              resetState={[reset, setReset]}
-            />
-            {showCritique &&
-              isDesktop ?
-              <Critiques />
-              :
-              <Modal
-                isOpen={showCritique}
-                setIsOpen={setShowCritique}
-              >
-                <div className="body">
-                  {(showCritique && showCritique.constructor === Array) ?
-                    <CritiqueFrame
-                      parent_id={pid}
-                      interval={showCritique}
-                      setShowCritique={setShowCritique}
-                      parentRef={postTitleRef}
-                      commit={postData?.history && postData?.history[currentCommit].commit}
-                      submitSignal={submitCritique}
-                      setSubmitSignal={setSubmitCritique}
-                      setCritiques={setPostCritiques}
-                      {...postCritiques[showCritique]}
-                    />
-                    :
-                    <Critiques />
-                  }
-                </div>
-                {(showCritique && showCritique.constructor === Array) &&
-                  <div className="footer center">
-                    <LoadingButton isLoading={isLoading} onClick={() => setSubmitCritique(true)}>
-                      {isLoading ? "publicando..." : "publicar"}
-                    </LoadingButton>
-                  </div>
+        </div>
+        :
+        <div className="post">
+          <Post
+            {...postData}
+            fetchCommit={fetchCommitBody}
+            commit={postData?.history && postData?.history[currentCommit].commit}
+            currentSuggestion={currentSuggestion}
+            setCurrentSuggestion={setCurrentSuggestion}
+            titleRef={postTitleRef}
+            body={postBody}
+            critiques={postCritiques}
+            groupedCritiques={groupOverlappingMarks(postCritiques)}
+            alongsideCritique={showCritique}
+            setShowCritique={setShowCritique}
+            setPostData={setPostData}
+            updatePostData={(data) => {
+              const history = [...postData.history, { commit: data.commit, date: new Date().getTime() }]
+              setPostData({ ...postData, ...data, history, commit: undefined })
+              setCurrentCommit(history.length - 1)
+            }}
+            bubbleMenuShouldShow={currentCommit === postData?.history?.length - 1 && !Number.isFinite(currentSuggestion)}
+            tempHighlight={tempHighlight}
+            resetState={[reset, setReset]}
+          />
+          {showCritique &&
+            isDesktop ?
+            <Critiques />
+            :
+            <Modal
+              isOpen={showCritique}
+              setIsOpen={setShowCritique}
+            >
+              <div className="body">
+                {(showCritique && showCritique.constructor === Array) ?
+                  <CritiqueFrame
+                    parent_id={pid}
+                    interval={showCritique}
+                    setShowCritique={setShowCritique}
+                    parentRef={postTitleRef}
+                    commit={postData?.history && postData?.history[currentCommit].commit}
+                    submitSignal={submitCritique}
+                    setSubmitSignal={setSubmitCritique}
+                    setCritiques={setPostCritiques}
+                    {...postCritiques[showCritique]}
+                  />
+                  :
+                  <Critiques />
                 }
-              </Modal>
-            }
-          </div>
-        }
-      </>
+              </div>
+              {(showCritique && showCritique.constructor === Array) &&
+                <div className="footer center">
+                  <LoadingButton isLoading={isLoading} onClick={() => setSubmitCritique(true)}>
+                    {isLoading ? "publicando..." : "publicar"}
+                  </LoadingButton>
+                </div>
+              }
+            </Modal>
+          }
+        </div>
+      }
     </div>
   )
 }
