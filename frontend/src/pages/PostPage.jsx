@@ -3,9 +3,10 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 
 import Post from "@/components/content/Post"
 import CritiqueFrame from "@/components/content/Critique"
+import Modal from "@/components/primitives/Modal"
+import LoadingButton from "@/components/primitives/LoadingButton"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import env from "@/assets/enviroment"
-import Modal from "@/components/primitives/Modal"
 import useUser from "@/context/UserContext"
 import { relativeTime } from "@/assets/util"
 
@@ -272,13 +273,9 @@ export default () => {
                 </div>
                 {(showCritique && showCritique.constructor === Array) &&
                   <div className="footer center">
-                    <button disabled={isLoading} onClick={() => setSubmitCritique(true)}>
-                      {isLoading ?
-                        <><div className="button spinner"></div>publicando...</>
-                        :
-                        "publicar"
-                      }
-                    </button>
+                    <LoadingButton isLoading={isLoading} onClick={() => setSubmitCritique(true)}>
+                      {isLoading ? "publicando..." : "publicar"}
+                    </LoadingButton>
                   </div>
                 }
               </Modal>

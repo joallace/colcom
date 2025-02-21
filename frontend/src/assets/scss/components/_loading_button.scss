@@ -1,0 +1,32 @@
+.loadingButton {
+    padding: 0.25rem;
+
+    >.wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        >.spinnerWrapper {
+            display: flex;
+            transform: scale(0);
+            transition: all 0.5s ease;
+        }
+
+        >.children {
+            transform: translateX(-12px);
+            transition: transform 0.5s ease;
+        }
+    }
+
+    &.loading {
+        padding: 0.25rem 0.5rem;
+
+        .spinnerWrapper {
+            transform: scale(1);
+        }
+
+        .children {
+            transform: translateX(0);
+        }
+    }
+}

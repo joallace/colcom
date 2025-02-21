@@ -2,6 +2,7 @@ import React from "react"
 import { useNavigate } from "react-router-dom"
 
 import Input from "@/components/primitives/Input"
+import LoadingButton from "@/components/primitives/LoadingButton"
 import { UserContext } from "@/context/UserContext"
 import env from "@/assets/enviroment"
 import PixelArtEditor from "@/components/primitives/PixelArtEditor"
@@ -145,22 +146,13 @@ export default function Login() {
         <div className="spaced">
           <div className="bottom bracket" />
           <div className="buttonRow">
-            <button disabled={isLoading} onClick={send}>
+            <LoadingButton isLoading={isLoading} onClick={send}>
               {isLoading ?
-                <>
-                  <div className="button spinner" />
-                  {isSignUp ?
-                    "cadastrando..."
-                    :
-                    "entrando..."}
-                </>
+                isSignUp ? "cadastrando..." : "entrando..."
                 :
-                isSignUp ?
-                  "cadastrar"
-                  :
-                  "entrar"
+                isSignUp ? "cadastrar" : "entrar"
               }
-            </button>
+            </LoadingButton>
           </div>
           <div className="reverse bottom critique bracket" />
         </div>

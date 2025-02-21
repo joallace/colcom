@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 
 import Modal from "@/components/primitives/Modal"
 import Input from "@/components/primitives/Input"
+import LoadingButton from "@/components/primitives/LoadingButton"
 import env from "@/assets/enviroment"
 import useUser from "@/context/UserContext"
 
@@ -116,9 +117,9 @@ export default ({ isOpen, setIsOpen }) => {
         }
       </div>
       <div className="footer">
-        <button disabled={isLoading} onClick={submit}>
-          {isLoading ? <><div className="button spinner"/>publicando...</> : "publicar"}
-        </button>
+        <LoadingButton isLoading={isLoading} onClick={submit}>
+          {isLoading ? "publicando..." : "publicar"}
+        </LoadingButton>
       </div>
     </Modal>
   )

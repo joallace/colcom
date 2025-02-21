@@ -18,6 +18,7 @@ import { default as Editor } from "@/components/Editor"
 import Frame from "@/components/primitives/Frame"
 import Modal from "@/components/primitives/Modal"
 import Input from "@/components/primitives/Input"
+import LoadingButton from "@/components/primitives/LoadingButton"
 import { submitVote } from "@/components/primitives/VotingButtons"
 import { UserContext } from "@/context/UserContext"
 import { toPercentageStr, getUserVote, relativeTime } from "@/assets/util"
@@ -275,13 +276,9 @@ export default function Post({
         </div>
         <div className="footer center">
           <button className="error" onClick={() => { setModal(false) }}>cancelar</button>
-          <button disabled={isLoading} onClick={submitClone}>
-            {isLoading ?
-              <><div className="button spinner"></div>clonando...</>
-              :
-              "clonar"
-            }
-          </button>
+          <LoadingButton isLoading={isLoading} onClick={submitClone}>
+            {isLoading ? "clonando..." : "clonar"}
+          </LoadingButton>
         </div>
       </Modal>
 
@@ -324,13 +321,9 @@ export default function Post({
           >
             descartar
           </button>
-          <button disabled={isLoading} onClick={submitEdition}>
-            {isLoading ?
-              <><div className="button spinner"></div>enviando...</>
-              :
-              "enviar"
-            }
-          </button>
+          <LoadingButton isLoading={isLoading} onClick={submitEdition}>
+            {isLoading ? "enviando..." : "enviar"}
+          </LoadingButton>
         </div>
       </Modal>
     </>

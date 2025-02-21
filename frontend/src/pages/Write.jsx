@@ -7,6 +7,7 @@ import Input from "@/components/primitives/Input"
 import env from "@/assets/enviroment"
 import useUser from "@/context/UserContext"
 import Alert from "@/components/primitives/Alert"
+import LoadingButton from "@/components/primitives/LoadingButton"
 
 export default function Write() {
   const titleRef = React.useRef()
@@ -121,13 +122,9 @@ export default function Write() {
           </fieldset>
         }
         {/* <button onClick={download}>salvar</button> */}
-        <button disabled={isLoading} onClick={submit}>
-          {isLoading ?
-            <><div className="button spinner"></div>publicando...</>
-            :
-            "publicar"
-          }
-        </button>
+        <LoadingButton isLoading={isLoading} onClick={submit}>
+          {isLoading ? "publicando..." : "publicar"}
+        </LoadingButton>
       </div>
     </div>
   )
