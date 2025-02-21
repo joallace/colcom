@@ -5,6 +5,7 @@ import Input from "@/components/primitives/Input"
 import { UserContext } from "@/context/UserContext"
 import env from "@/assets/enviroment"
 import PixelArtEditor from "@/components/primitives/PixelArtEditor"
+import Alert from "@/components/primitives/Alert"
 
 export default function Login() {
   const loginRef = React.useRef()
@@ -13,7 +14,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = React.useState(false)
   const [isSignUp, setIsSignUp] = React.useState(false)
   const [error, setError] = React.useState(false)
-  const [globalError, setGlobalError] = React.useState(false)
+  const [errorMessage, setErrorMessage] = React.useState(false)
   const { fetchUser } = React.useContext(UserContext)
   const navigate = useNavigate()
 
@@ -29,7 +30,7 @@ export default function Login() {
 
     try {
       setIsLoading(true)
-      setGlobalError(false)
+      setErrorMessage("")
       const url = `${env.apiAddress}/${isSignUp ? "users" : "login"}`
       const body = isSignUp ?
         JSON.stringify({ name: login, email, pass })
@@ -45,7 +46,7 @@ export default function Login() {
       const data = await res.json()
 
       if (res.status >= 400) {
-        setGlobalError(data.message.toLowerCase())
+        setErrorMessage(data.message.toLowerCase())
         return
       }
 
@@ -60,7 +61,7 @@ export default function Login() {
         navigate("/")
     }
     catch (err) {
-      setGlobalError("Não foi possível se conectar ao colcom. Por favor, verifique sua conexão.")
+      setErrorMessage("Não foi possível se conectar ao colcom. Por favor, verifique sua conexão.")
       console.error(err)
     }
     finally {
@@ -89,16 +90,16 @@ export default function Login() {
         <div className="spaced body">
           <div className="bracket" />
           <div className="loginForm">
-            {globalError &&
-              <div className="globalError">{globalError}</div>
-            }
+            <Alert setter={setErrorMessage}>
+              {errorMessage}
+            </Alert>
             <div className="userData">
               {
                 isSignUp &&
                 <div className="profilePictureCanvas">
                   <h2>foto de perfil</h2>
                   <PixelArtEditor />
-                  <hr/>
+                  <hr />
                 </div>
               }
               <Input
@@ -132,7 +133,7 @@ export default function Login() {
             </div>
             <span className="createAccount">
               {isSignUp ? "" : "não "}tem uma conta?
-              <a onClick={() => setIsSignUp(!isSignUp)}>
+              <a onClick={() => { setIsSignUp(!isSignUp); setError(false); setErrorMessage("") }}>
                 {isSignUp ? " entre" : " crie uma"} agora!
               </a>
             </span>

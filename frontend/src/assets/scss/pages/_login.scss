@@ -3,6 +3,10 @@
     height: min-content;
     width: min-content;
 
+    @media screen and (min-width: $screen-md) {
+        min-width: 25rem
+    }
+
     .spaced {
         display: flex;
         justify-content: space-between;

@@ -9,6 +9,8 @@ import { Link } from "react-router-dom"
 
 
 export default function Pagination({ path = "", state, isLoading, maxIndex = -1 }) {
+  if (maxIndex < 1) return
+
   const [index, setIndex] = state
   const [pages, setPages] = React.useState([...Array(maxIndex >= 0 ? Math.min(maxIndex + 1, 5) : 5).keys()])
   const refs = pages.map(_ => React.useRef(null))
@@ -46,7 +48,7 @@ export default function Pagination({ path = "", state, isLoading, maxIndex = -1 
 
         <Link
           to={index === 1 ? path : `${path}?p=${index}`}
-          className={`icons${(index === 0 || (maxIndex >= 0 && index>maxIndex+1)) ? " disabled" : ""}`}
+          className={`icons${(index === 0 || (maxIndex >= 0 && index > maxIndex + 1)) ? " disabled" : ""}`}
           onClick={previousPage}
         >
           <PiCaretLeft />
