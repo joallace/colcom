@@ -1,56 +1,84 @@
 <!doctype html>
 <html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/colcom.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="colaboração e competição na criação de ideias">
-    <title>colcom</title>
-    <style>
-      body{
-        background-color: #1F0D00;
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/colcom.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="colaboração e competição na criação de ideias">
+  <title>colcom</title>
+  <style>
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      background-color: #1F0D00;
+    }
+
+    .loading-container {
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-flow: column;
+    }
+
+    .navbar-mock {
+      flex: 0 0 3rem;
+      background-color: #522B00;
+    }
+
+    .container-mock {
+      flex: 1 0 auto;
+      display: grid;
+      place-content: center;
+    }
+
+    .content-mock {
+      height: 100%;
+    }
+
+    .footer-mock {
+      flex: 0 0 54px;
+      width: 60vw;
+      border-top: 2px solid rgb(130.5, 117, 0);
+      place-self: center;
+    }
+
+    .spinner {
+      width: 5rem;
+      height: 5rem;
+      border-radius: 100%;
+      border: 0.25rem solid transparent;
+      border-top-color: #918200;
+      background: transparent;
+      animation: spinner 1s linear infinite;
+    }
+
+    @keyframes spinner {
+      from {
+        transform: rotate(0deg);
       }
 
-      .loading-container {
-        height: 100vh;
-        width: 100vw;
-        place-items: center;
-        display: grid;
+      to {
+        transform: rotate(360deg);
       }
-  
-      .loading-icon{
-        height: 40vh;
-        max-height: 512px;
-        width: auto;
-        margin-bottom: -20rem;
-      }
-  
-      .loading-spinner {
-        width: 5rem;
-        height: 5rem;
-        border-radius: 100%;
-        border: 0.4rem solid transparent;
-        border-top-color: #918200;
-        background: transparent;
-        animation: spinner 0.8s linear infinite;
-      }
-  
-      @keyframes spinner {
-        from {
-          transform: rotate(0deg);
-        }
-  
-        to {
-          transform: rotate(360deg);
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div id="loading-page" class="loading-container">
-      <div class="loading-spinner"></div>
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading-page" class="loading-container">
+    <div class="navbar-mock"></div>
+    <div class="container-mock">
+      <div class="content-mock">
+        <div class="spinner"></div>
+      </div>
     </div>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+    <div class="footer-mock"></div>
+
+  </div>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>

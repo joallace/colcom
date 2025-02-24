@@ -1,13 +1,5 @@
 @use "sass:color";
 
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-}
-
 :root {
     background-color: $default-bg;
     color: $default-font-color;
