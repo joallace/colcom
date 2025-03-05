@@ -243,10 +243,10 @@ fieldset {
 footer {
     display: flex;
     place-content: center;
-    padding: 1rem;
+    padding: 1rem 0;
     margin: 2rem auto 0 auto;
     border-top: 2px solid color.scale($default-green, $lightness: -10%);
-    @include content-responsiveness;
+    @include content-responsiveness(60vw, 80vw, 80vw);
 
     a {
         color: color.scale($default-font-color, $lightness: -10%);
