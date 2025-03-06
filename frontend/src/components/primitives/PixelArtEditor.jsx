@@ -161,7 +161,7 @@ export default function PixelArtEditor() {
   }, [selectedTool, selectedColor, grid, floodFill, saveState])
 
   const handleMouseDown = (e, x, y) => {
-    if(e?.buttons === 2 || e?.button === 2) return
+    if (e?.buttons === 2 || e?.button === 2) return
     setIsDrawing(true)
     setLastCell([x, y])
     handleCellAction(x, y)
@@ -179,6 +179,29 @@ export default function PixelArtEditor() {
   const handleMouseUp = () => {
     setIsDrawing(false)
     setLastCell(null)
+  }
+
+  function serializeGridToBinary(grid) {
+    const flattened = grid.flat();
+    const binaryData = new Uint8Array(flattened.length * 3);
+
+    flattened.forEach((color, index) => {
+      const hex = color.replace('#', '');
+      const i = index * 3;
+
+      if (hex.length !== 6) {
+        binaryData[i] = 0x00;
+        binaryData[i + 1] = 0x00;
+        binaryData[i + 2] = 0x00;
+        return;
+      }
+
+      binaryData[i] = parseInt(hex.substring(0, 2), 16);     // RR
+      binaryData[i + 1] = parseInt(hex.substring(2, 4), 16); // GG
+      binaryData[i + 2] = parseInt(hex.substring(4, 6), 16); // BB
+    });
+
+    return binaryData;
   }
 
   return (
