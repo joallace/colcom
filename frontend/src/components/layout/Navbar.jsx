@@ -14,6 +14,7 @@ import {
 import Icon from "@/components/primitives/Icon"
 import TopicModal from "@/components/content/TopicModal"
 import DropdownMenu from "@/components/primitives/DropdownMenu"
+import ProfilePicture from "@/components/primitives/ProfilePicture"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import useUser from "@/context/UserContext"
 
@@ -100,7 +101,7 @@ export default function Navbar() {
                 }}
               >
                 <span>{user.name}</span>
-                <PiUser className="nav-user-icon" />
+                <ProfilePicture data={user.avatar} />
               </DropdownMenu>
             </>
             :

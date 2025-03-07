@@ -3,12 +3,14 @@ CREATE TABLE IF NOT EXISTS users (
     pid uuid DEFAULT gen_random_uuid() UNIQUE,
     name VARCHAR(32) UNIQUE NOT NULL,
     pass TEXT NOT NULL,
+    avatar BYTEA NOT NULL,
     email VARCHAR(254) UNIQUE NOT NULL,
     colcoins INT DEFAULT 0,
     prestige INT DEFAULT 0,
     permissions TEXT[] DEFAULT '{"read:activation_token"}',
     config JSONB,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT (now() AT TIME ZONE 'utc')
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT (now() AT TIME ZONE 'utc'),
+    modified_at TIMESTAMP WITH TIME ZONE DEFAULT (now() AT TIME ZONE 'utc')
 );
 
 CREATE TABLE IF NOT EXISTS contents (

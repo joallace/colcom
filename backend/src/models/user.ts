@@ -11,7 +11,8 @@ interface UserConfig {
 interface UserInsertRequest {
   name: string,
   pass: string,
-  email: string
+  email: string,
+  avatar: string,
   [key: string]: string
 }
 
@@ -46,11 +47,12 @@ async function validateUnique(value: string, field: keyof User) {
   }
 }
 
-export async function create({ name, pass, email }: UserInsertRequest): Promise<User | undefined> {
+export async function create({ name, pass, email, avatar }: UserInsertRequest): Promise<User | undefined> {
   await validateUnique(name, "name")
   await validateUnique(email, "email")
 
   const hashedPass = await bcrypt.hash(pass, 10)
+  const decodedAvatar = Buffer.from(avatar, "base64")
 
   const query = {
     text: `
@@ -58,14 +60,15 @@ export async function create({ name, pass, email }: UserInsertRequest): Promise<
         users(
           name,
           pass,
-          email
+          email,
+          avatar
         )
       VALUES
-        ($1, $2, $3)
+        ($1, $2, $3, $4)
       RETURNING
         *
       ;`,
-    values: [name, hashedPass, email]
+    values: [name, hashedPass, email, decodedAvatar]
   }
 
   const result = await db.query(query)
@@ -79,6 +82,7 @@ export async function findAll({ where = "", orderBy = "id", page = 1, pageSize =
         pid,
         name,
         ${hideSensitiveInfo ? "" : "pass, email,"}
+        avatar,
         colcoins,
         prestige,
         permissions,
@@ -94,6 +98,8 @@ export async function findAll({ where = "", orderBy = "id", page = 1, pageSize =
   }
 
   const results = await db.query(query)
+  for (const result of results.rows)
+    result["avatar"] = result["avatar"].toString("base64")
   return results.rows
 }
 

@@ -68,6 +68,7 @@
     }
 }
 
-span.error {
+span.error,
+h2.error {
     color: $default-red;
 }

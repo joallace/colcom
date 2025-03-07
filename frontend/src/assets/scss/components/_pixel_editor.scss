@@ -110,5 +110,9 @@
                 border: none;
             }
         }
+
+        &.error{
+            border-color: $default-red;
+        }
     }
 }

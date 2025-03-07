@@ -3,28 +3,30 @@ import { useNavigate } from "react-router-dom"
 
 import Input from "@/components/primitives/Input"
 import LoadingButton from "@/components/primitives/LoadingButton"
+import PixelArtEditor, { blankGrid, serializeGridToBase64 } from "@/components/primitives/PixelArtEditor"
+import Alert from "@/components/primitives/Alert"
 import { UserContext } from "@/context/UserContext"
 import env from "@/assets/enviroment"
-import PixelArtEditor from "@/components/primitives/PixelArtEditor"
-import Alert from "@/components/primitives/Alert"
 
 export default function Login() {
   const loginRef = React.useRef()
   const emailRef = React.useRef()
   const passRef = React.useRef()
+  const [profilePicture, setProfilePicture] = React.useState(blankGrid)
   const [isLoading, setIsLoading] = React.useState(false)
   const [isSignUp, setIsSignUp] = React.useState(false)
   const [error, setError] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState(false)
   const { fetchUser } = React.useContext(UserContext)
   const navigate = useNavigate()
+  const isPfpEmpty = React.useCallback(() => profilePicture.flat().every(pixel => pixel === ""), [profilePicture, error])
 
   const send = async () => {
     const login = loginRef.current.value
     const email = emailRef.current?.value
     const pass = passRef.current.value
 
-    if (!login || !pass || (isSignUp && !email)) {
+    if (!login || !pass || (isSignUp && (!email || isPfpEmpty()))) {
       setError(true)
       return
     }
@@ -34,7 +36,7 @@ export default function Login() {
       setErrorMessage("")
       const url = `${env.apiAddress}/${isSignUp ? "users" : "login"}`
       const body = isSignUp ?
-        JSON.stringify({ name: login, email, pass })
+        JSON.stringify({ name: login, email, pass, avatar: serializeGridToBase64(profilePicture) })
         :
         JSON.stringify({ login, pass })
 
@@ -98,8 +100,11 @@ export default function Login() {
               {
                 isSignUp &&
                 <div className="profilePictureCanvas">
-                  <h2>foto de perfil</h2>
-                  <PixelArtEditor />
+                  <h2 className={error && isPfpEmpty() ? "error" : ""}>foto de perfil</h2>
+                  <PixelArtEditor
+                    gridState={[profilePicture, setProfilePicture]}
+                    error={(error && isPfpEmpty())}
+                  />
                   <hr />
                 </div>
               }

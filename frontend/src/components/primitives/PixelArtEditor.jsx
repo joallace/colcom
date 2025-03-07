@@ -15,10 +15,34 @@ import Input from "@/components/primitives/Input"
 import { defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultFontColor } from "@/assets/scss/_export.module.scss"
 import useBreakpoint from "@/hooks/useBreakpoint"
 
-const blankGrid = Array(16).fill().map(() => Array(16).fill(""))
+export const blankGrid = Array(16).fill().map(() => Array(16).fill(""))
 
-export default function PixelArtEditor() {
-  const [grid, setGrid] = React.useState(blankGrid)
+export const serializeGridToBase64 = (grid) => {
+  const flattened = grid.flat()
+  const binaryData = new Uint8Array(flattened.length * 3)
+
+  flattened.forEach((color, index) => {
+    const hex = color.replace("#", "")
+    const i = index * 3
+
+    if (hex.length !== 6) {
+      binaryData[i] = 0x00
+      binaryData[i + 1] = 0x00
+      binaryData[i + 2] = 0x00
+      return
+    }
+
+    binaryData[i] = parseInt(hex.substring(0, 2), 16)     // RR
+    binaryData[i + 1] = parseInt(hex.substring(2, 4), 16) // GG
+    binaryData[i + 2] = parseInt(hex.substring(4, 6), 16) // BB
+  })
+
+  return btoa(String.fromCharCode.apply(null, binaryData))
+}
+
+export default function PixelArtEditor({ gridState, error }) {
+  const [internalGrid, setInternalGrid] = React.useState(blankGrid)
+  const [grid, setGrid] = gridState.length ? gridState : [internalGrid, setInternalGrid]
   const [selectedColor, setSelectedColor] = React.useState(defaultFontColor)
   const [selectedTool, setSelectedTool] = React.useState("pencil")
   const [undoStack, setUndoStack] = React.useState([])
@@ -181,29 +205,6 @@ export default function PixelArtEditor() {
     setLastCell(null)
   }
 
-  function serializeGridToBinary(grid) {
-    const flattened = grid.flat();
-    const binaryData = new Uint8Array(flattened.length * 3);
-
-    flattened.forEach((color, index) => {
-      const hex = color.replace('#', '');
-      const i = index * 3;
-
-      if (hex.length !== 6) {
-        binaryData[i] = 0x00;
-        binaryData[i + 1] = 0x00;
-        binaryData[i + 2] = 0x00;
-        return;
-      }
-
-      binaryData[i] = parseInt(hex.substring(0, 2), 16);     // RR
-      binaryData[i + 1] = parseInt(hex.substring(2, 4), 16); // GG
-      binaryData[i + 2] = parseInt(hex.substring(4, 6), 16); // BB
-    });
-
-    return binaryData;
-  }
-
   return (
     <div className="pixel-art-editor">
       <div className="canvas">
@@ -222,7 +223,7 @@ export default function PixelArtEditor() {
         </div>
 
         <div
-          className={`unselectable canvas-grid${showGrid ? "" : " hide-grid"}`}
+          className={`unselectable canvas-grid${showGrid ? "" : " hide-grid"}${error ? " error" : ""}`}
           style={{ "--hover-color": selectedTool !== "eraser" ? selectedColor : "" }}
           onMouseLeave={handleMouseUp}
           onMouseUp={handleMouseUp}
@@ -280,6 +281,8 @@ export default function PixelArtEditor() {
         </div>
       </div>
 
+      {error && <span className="error">a foto de perfil é obrigatória!</span>}
+
       <div className="palette">
         <input
           type="color"
@@ -299,7 +302,7 @@ export default function PixelArtEditor() {
 
       <div>
         <Input
-          id="allowMultipleAnswers"
+          id="gridToggle"
           label="exibir grid"
           type="checkbox"
           checked={showGrid}

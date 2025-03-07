@@ -8,7 +8,7 @@ import { ValidationError } from "@/errors"
 
 
 const validateUser = (content: UserInsertRequest) => {
-  const mandatory = ["name", "pass", "email"]
+  const mandatory = ["name", "pass", "email", "avatar"]
 
   for (const field of mandatory)
     if (!content[field])
@@ -19,10 +19,10 @@ const validateUser = (content: UserInsertRequest) => {
 }
 
 export const createUser: RequestHandler = async (req, res, next) => {
-  const { name, pass, email } = req.body
+  const { name, pass, email, avatar } = req.body
 
   try {
-    const user: UserInsertRequest = { name, pass, email }
+    const user: UserInsertRequest = { name, pass, email, avatar }
 
     validateUser(user)
 
