@@ -6,13 +6,19 @@ span {
     font-family: "Lato", sans-serif;
 }
 
+span.error,
+label.error,
+h2.error {
+    color: $default-red !important;
+}
+
 button {
     min-width: min-content;
     background: transparent;
     color: $default-font-color;
     border: 2px solid $default-green;
     border-radius: 0.25rem;
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem 1rem;
     transition: all 0.15s ease;
     cursor: pointer;
     font-family: "Lato", sans-serif;
@@ -27,13 +33,6 @@ button {
         background-color: color.scale($default-orange, $lightness: -10%);
     }
 
-    &:disabled {
-        border-color: color.scale($default-font-color, $lightness: -40%);
-        color: color.scale($default-font-color, $lightness: -40%);
-        cursor: default;
-        background-color: transparent;
-    }
-
     &.error {
         border-color: $default-red;
 
@@ -45,6 +44,18 @@ button {
         &:active {
             border-color: color.scale($default-red, $lightness: -10%);
             background-color: color.scale($default-red, $lightness: -10%);
+        }
+    }
+
+    &:disabled {
+        border-color: color.scale($default-font-color, $lightness: -40%);
+        color: color.scale($default-font-color, $lightness: -40%);
+        cursor: default;
+        background-color: transparent;
+
+        &:hover{
+            background-color: transparent;
+            border-color: color.scale($default-font-color, $lightness: -40%);
         }
     }
 }
@@ -238,10 +249,10 @@ fieldset {
 footer {
     display: flex;
     place-content: center;
-    padding: 1rem;
+    padding: 1rem 0;
     margin: 2rem auto 0 auto;
     border-top: 2px solid color.scale($default-green, $lightness: -10%);
-    @include content-responsiveness;
+    @include content-responsiveness(60vw, 80vw, 80vw);
 
     a {
         color: color.scale($default-font-color, $lightness: -10%);

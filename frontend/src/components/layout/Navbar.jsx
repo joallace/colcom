@@ -11,8 +11,8 @@ import {
   PiSignInFill
 } from "react-icons/pi"
 
-import Icon from "@/components/Icon"
-import TopicModal from "@/components/TopicModal"
+import Icon from "@/components/primitives/Icon"
+import TopicModal from "@/components/content/TopicModal"
 import DropdownMenu from "@/components/primitives/DropdownMenu"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import useUser from "@/context/UserContext"
@@ -45,7 +45,7 @@ export default function Navbar() {
               <>
                 •
                 <li key="leaderboard">
-                  <NavLink to="/leaderboard">leaderboard</NavLink>
+                  <NavLink to="/leaderboard">pódio</NavLink>
                 </li>
                 •
                 <li key="meta">
@@ -100,14 +100,16 @@ export default function Navbar() {
                 }}
               >
                 <span>{user.name}</span>
-                <PiUser className="nav-user-icon" />
+                <img className="avatar" src={`data:image/png;base64,${user.avatar}`} />
               </DropdownMenu>
             </>
             :
             <>
-              <Link to="/login" title="criar tópico">
-                <PiPlusBold className="nav-icon" />
-              </Link>
+              {user &&
+                <Link to="/login" title="criar tópico">
+                  <PiPlusBold className="nav-icon" />
+                </Link>
+              }
               <Link to="/login" className="nav-user-drop" title="login e criação de conta">
                 entrar
                 <PiSignInFill className="nav-icon" />

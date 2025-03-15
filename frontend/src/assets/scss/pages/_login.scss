@@ -1,20 +1,18 @@
 .loginContainer {
-    position: relative;
     display: grid;
     height: min-content;
-    min-width: 20rem;
-    width: 25%;
-    bottom: $navbar-height;
+    width: min-content;
 
-    @media screen and (min-width: $screen-sm) and (max-width: $screen-xl) {
-        width: 40%;
+    @media screen and (min-width: $screen-md) {
+        min-width: 25rem
     }
 
-
-    .header {
+    .spaced {
         display: flex;
         justify-content: space-between;
+    }
 
+    .header {
         span {
             color: $default-green;
 
@@ -25,9 +23,6 @@
     }
 
     .body {
-        display: flex;
-        justify-content: space-between;
-
         .loginForm {
             width: 100%;
             display: grid;
@@ -37,15 +32,25 @@
             .userData {
                 width: 100%;
                 display: grid;
-                gap: 1.5rem;
+                gap: 1rem;
             }
 
-            .createAccount{
+            .createAccount {
                 text-align: center;
                 margin-bottom: 1.5rem;
-                a{
+                white-space: nowrap;
+
+                a {
+                    white-space: nowrap;
                     font-weight: bold;
                 }
+            }
+        }
+
+        .profilePictureCanvas{
+            h2{
+                text-align: center;
+                margin: 0 0 0.5rem 0;
             }
         }
 
@@ -59,10 +64,5 @@
                 }
             }
         }
-    }
-
-    .footer{
-        display: flex;
-        justify-content: space-between;
     }
 }

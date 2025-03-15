@@ -1,0 +1,27 @@
+.alert {
+  background-color: $default-red;
+  padding: 1rem;
+  border-radius: 0.25rem;
+  display: grid;
+  grid-template-columns: 9fr 1fr;
+
+  >div {
+    &:first-of-type {
+      padding-right: 0.5rem;
+
+    }
+
+    display: grid;
+    place-items: center;
+
+    >svg {
+      cursor: pointer;
+      font-size: 1.25rem;
+      transition: color 0.1s ease;
+
+      &:hover {
+        color: white;
+      }
+    }
+  }
+}

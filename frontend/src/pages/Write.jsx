@@ -6,6 +6,8 @@ import Frame from "@/components/primitives/Frame"
 import Input from "@/components/primitives/Input"
 import env from "@/assets/enviroment"
 import useUser from "@/context/UserContext"
+import Alert from "@/components/primitives/Alert"
+import LoadingButton from "@/components/primitives/LoadingButton"
 
 export default function Write() {
   const titleRef = React.useRef()
@@ -13,7 +15,7 @@ export default function Write() {
   const [answer, setAnswer] = React.useState("")
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState(false)
-  const [globalError, setGlobalError] = React.useState(false)
+  const [errorMessage, setErrorMessage] = React.useState(false)
   const navigate = useNavigate()
   const { state } = useLocation()
   const { user } = useUser()
@@ -62,7 +64,7 @@ export default function Write() {
       const data = await res.json()
 
       if (res.status >= 400) {
-        setGlobalError(data.message.toLowerCase())
+        setErrorMessage(data.message.toLowerCase())
         return
       }
 
@@ -77,7 +79,7 @@ export default function Write() {
     }
   }
 
-  React.useEffect(()=>{
+  React.useEffect(() => {
     document.title = `respondendo a "${state.title}" · colcom`
   }, [])
 
@@ -97,9 +99,9 @@ export default function Write() {
       >
         <Editor content={body} setContent={(text) => { setBody(text); setError(false) }} />
       </Frame>
-      {globalError &&
-        <div className="globalError">{globalError}</div>
-      }
+      <Alert setter={setErrorMessage}>
+        {errorMessage}
+      </Alert>
       <div className="buttons">
         {state.config?.answers?.length !== 0 &&
           <fieldset className={(!answer && error) ? "error" : ""}>
@@ -120,12 +122,9 @@ export default function Write() {
           </fieldset>
         }
         {/* <button onClick={download}>salvar</button> */}
-        <button disabled={isLoading} onClick={submit}>
-          {isLoading ?
-            <><div className="button spinner"></div>publicando...</>
-            :
-            "publicar"}
-        </button>
+        <LoadingButton isLoading={isLoading} onClick={submit}>
+          {isLoading ? "publicando..." : "publicar"}
+        </LoadingButton>
       </div>
     </div>
   )

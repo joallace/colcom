@@ -3,10 +3,10 @@ import { useSearchParams } from "react-router-dom"
 
 import NoResponse from "@/components/primitives/NoResponse"
 import env from "@/assets/enviroment"
-import Topic from "@/components/Topic"
+import Topic from "@/components/content/Topic"
 import Pagination from "@/components/primitives/Pagination"
-import Post from "@/components/Post"
-import Critique from "@/components/Critique"
+import Post from "@/components/content/Post"
+import Critique from "@/components/content/Critique"
 import useUser from "@/context/UserContext"
 
 
@@ -60,7 +60,7 @@ export default function Bookmarked() {
   }, [])
 
   return (
-    <div className="content">
+    <div className={`content${contents?.length === 0 ? " centered" : ""}`}>
       {
         isLoading ?
           <div className="spinner" />
@@ -77,7 +77,9 @@ export default function Bookmarked() {
               }
             })
             :
-            <NoResponse />
+            <NoResponse>
+              ainda não há itens salvos, que tal tentar salvar algum conteúdo?
+            </NoResponse>
       }
       <Pagination
         path="/bookmarked"

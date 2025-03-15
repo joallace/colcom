@@ -9,12 +9,12 @@ export const UserContext = React.createContext()
 export function UserProvider({ children }) {
   const [user, setUser] = React.useState(undefined)
 
-  const clearUser = () => {localStorage.removeItem("accessToken"); setUser(null)}
+  const clearUser = () => { localStorage.removeItem("accessToken"); setUser(null) }
 
   const fetchUser = async () => {
     const accessToken = localStorage.getItem("accessToken")
 
-    if (!accessToken){
+    if (!accessToken) {
       setUser(null)
       return
     }
@@ -33,7 +33,7 @@ export function UserProvider({ children }) {
 
     setUser({ ...data, accessToken })
   }
-  
+
   const updatePromoted = (contentId) => {
     setUser(prev => ({ ...prev, promoting: contentId }))
   }

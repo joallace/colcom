@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 
 import Modal from "@/components/primitives/Modal"
 import Input from "@/components/primitives/Input"
+import LoadingButton from "@/components/primitives/LoadingButton"
 import env from "@/assets/enviroment"
 import useUser from "@/context/UserContext"
 
@@ -11,7 +12,7 @@ export default ({ isOpen, setIsOpen }) => {
   const [allowMultipleAnswers, setAllowMultipleAnswers] = React.useState(false)
   const [answers, setAnswers] = React.useState([])
   const [error, setError] = React.useState(false)
-  const [globalError, setGlobalError] = React.useState(false)
+  const [errorMessage, setErrorMessage] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
   const navigate = useNavigate()
   const { user } = useUser()
@@ -33,7 +34,7 @@ export default ({ isOpen, setIsOpen }) => {
 
     try {
       setIsLoading(true)
-      setGlobalError(false)
+      setErrorMessage("")
       const url = `${env.apiAddress}/contents`
 
       const res = await fetch(url, {
@@ -45,7 +46,7 @@ export default ({ isOpen, setIsOpen }) => {
       const data = await res.json()
 
       if (res.status >= 400) {
-        setGlobalError(data.message.toLowerCase())
+        setErrorMessage(data.message.toLowerCase())
         return
       }
       setIsOpen(false)
@@ -54,7 +55,7 @@ export default ({ isOpen, setIsOpen }) => {
         navigate(`/topics/${data.id}`)
     }
     catch (err) {
-      setGlobalError("Não foi possível se conectar ao colcom. Por favor, verifique sua conexão.")
+      setErrorMessage("Não foi possível se conectar ao colcom. Por favor, verifique sua conexão.")
       console.error(err)
     }
     finally {
@@ -116,9 +117,9 @@ export default ({ isOpen, setIsOpen }) => {
         }
       </div>
       <div className="footer">
-        <button disabled={isLoading} onClick={submit}>
-          {isLoading ? <><div className="button spinner"></div>publicando...</> : "publicar"}
-        </button>
+        <LoadingButton isLoading={isLoading} onClick={submit}>
+          {isLoading ? "publicando..." : "publicar"}
+        </LoadingButton>
       </div>
     </Modal>
   )

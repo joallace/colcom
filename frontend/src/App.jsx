@@ -13,17 +13,17 @@ import Bookmarked from "@/pages/Bookmarked"
 function App() {
   const loadingPage = document.getElementById("loading-page")
   loadingPage.style.display = "none"
-  
+
   return (
     <BrowserRouter>
       <Navbar />
       <Routes>
         <Route path="/" element={<Navigate to="/promoted" />} />
         <Route path="/promoted" element={<TopicTree orderBy="promotions" />} />
-        <Route path="/bookmarked" element={<Bookmarked />} />
-        <Route path="/all" element={<TopicTree orderBy="id" />} />
+        <Route path="/recent" element={<TopicTree orderBy="id" />} />
         <Route path="/leaderboard" element={<></>} />
         <Route path="/meta" element={<TopicTree where="meta" />} />
+        <Route path="/bookmarked" element={<Bookmarked />} />
         <Route path="/write" element={<Write />} />
         <Route path="/topics/:id" element={<TopicPage />} />
         <Route path="/topics/:tid/posts/:pid" element={<PostPage />} />

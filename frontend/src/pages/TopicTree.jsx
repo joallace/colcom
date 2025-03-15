@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom"
 
 import NoResponse from "@/components/primitives/NoResponse"
 import env from "@/assets/enviroment"
-import Topic from "@/components/Topic"
+import Topic from "@/components/content/Topic"
 import Pagination from "@/components/primitives/Pagination"
 import useUser from "@/context/UserContext"
 
@@ -58,7 +58,7 @@ export default function TopicTree({ orderBy, where }) {
   }, [])
 
   return (
-    <div className="content tree">
+    <div className={`content tree${topics?.length === 0 ? " centered" : ""}`}>
       {
         isLoading ?
           <div className="spinner" />
