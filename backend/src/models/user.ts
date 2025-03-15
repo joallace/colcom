@@ -66,7 +66,9 @@ export async function create({ name, pass, email, avatar }: UserInsertRequest): 
       VALUES
         ($1, $2, $3, $4)
       RETURNING
-        *
+        pid,
+        name,
+        created_at
       ;`,
     values: [name, hashedPass, email, decodedAvatar]
   }

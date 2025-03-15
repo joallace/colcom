@@ -77,6 +77,20 @@ nav {
     display: flex;
     gap: 0.25rem;
     place-items: center;
+
+    .avatar {
+        width: 3rem;
+        border: 2px solid $default-green;
+        border-radius: 0.25rem;
+        image-rendering: pixelated;
+    }
+
+    &:hover {
+        .avatar {
+            border-color: $default-orange;
+            transition: all 0.15s ease;
+        }
+    }
 }
 
 .nav-icon {

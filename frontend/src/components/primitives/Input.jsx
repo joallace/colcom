@@ -1,14 +1,14 @@
 import React from "react"
 
-export default React.forwardRef(({ id, type, label, options = {}, style = {}, errorMessage, className, ...remainingProps }, ref) => {
+export default React.forwardRef(({ id, type, label, options = {}, style = {}, errorMessage, className = "", ...remainingProps }, ref) => {
   return (
-    <div className="inputWrapper">
-      <div className={`${type === "checkbox" || type === "radio" ? "checkBox" : "inputBox"} ${className}`} style={style}>
+    <div className={`inputWrapper${errorMessage ? " error" : ""}`}>
+      <div className={`${type === "checkbox" || type === "radio" ? "checkBox" : "inputBox"}${className && ` ${className}`}`} style={style}>
         {type === "select" ?
           <select
             id={id}
             ref={ref}
-            className={errorMessage ? " error" : null}
+            className={errorMessage ? " error" : ""}
             {...remainingProps}
           >
             {Object.keys(options).map(option => {
@@ -19,7 +19,7 @@ export default React.forwardRef(({ id, type, label, options = {}, style = {}, er
           <input
             id={id}
             ref={ref}
-            className={errorMessage ? " error" : null}
+            className={errorMessage ? " error" : ""}
             type={type}
             placeholder=" "
             readOnly={type === "radio" && true }
@@ -28,7 +28,7 @@ export default React.forwardRef(({ id, type, label, options = {}, style = {}, er
         }
 
         {label &&
-          <label htmlFor={id}>{label}</label>
+          <label htmlFor={id} className={errorMessage ? " error" : ""}>{label}</label>
         }
 
       </div>

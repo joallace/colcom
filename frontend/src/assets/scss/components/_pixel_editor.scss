@@ -87,8 +87,8 @@
         }
 
         .canvas-cell {
-            width: 16px;
-            height: 16px;
+            width: 15px;
+            height: 15px;
             border: 1px solid #333;
             border-width: 0 1px 1px 0;
             touch-action: none;
@@ -96,8 +96,8 @@
             -webkit-touch-callout: none;
 
             @media screen and (min-width: 0px) and (max-width: $screen-md) {
-                width: 12px;
-                height: 12px;
+                width: 11px;
+                height: 11px;
             }
 
             &:hover {
@@ -107,7 +107,14 @@
 
         &.hide-grid {
             .canvas-cell {
+                width: 16px;
+                height: 16px;
                 border: none;
+
+                @media screen and (min-width: 0px) and (max-width: $screen-md) {
+                    width: 12px;
+                    height: 12px;
+                }
             }
         }
 

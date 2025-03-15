@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 
 import Input from "@/components/primitives/Input"
 import LoadingButton from "@/components/primitives/LoadingButton"
-import PixelArtEditor, { blankGrid, serializeGridToBase64 } from "@/components/primitives/PixelArtEditor"
+import PixelArtEditor, { blankGrid, serializeGridToBase64png } from "@/components/primitives/PixelArtEditor"
 import Alert from "@/components/primitives/Alert"
 import { UserContext } from "@/context/UserContext"
 import env from "@/assets/enviroment"
@@ -36,7 +36,7 @@ export default function Login() {
       setErrorMessage("")
       const url = `${env.apiAddress}/${isSignUp ? "users" : "login"}`
       const body = isSignUp ?
-        JSON.stringify({ name: login, email, pass, avatar: serializeGridToBase64(profilePicture) })
+        JSON.stringify({ name: login, email, pass, avatar: serializeGridToBase64png(profilePicture) })
         :
         JSON.stringify({ login, pass })
 

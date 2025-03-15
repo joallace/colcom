@@ -15,29 +15,38 @@ import Input from "@/components/primitives/Input"
 import { defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultFontColor } from "@/assets/scss/_export.module.scss"
 import useBreakpoint from "@/hooks/useBreakpoint"
 
-export const blankGrid = Array(16).fill().map(() => Array(16).fill(""))
+const GRID_SIZE = 16
+export const blankGrid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(""))
 
-export const serializeGridToBase64 = (grid) => {
+export const serializeGridToBase64png = (grid) => {
   const flattened = grid.flat()
-  const binaryData = new Uint8Array(flattened.length * 3)
+  const binaryData = new Uint8ClampedArray(flattened.length * 4)
 
-  flattened.forEach((color, index) => {
-    const hex = color.replace("#", "")
-    const i = index * 3
+  flattened.forEach((pixelColor, index) => {
+    const hex = pixelColor.replace("#", "")
+    const i = index * 4
 
     if (hex.length !== 6) {
-      binaryData[i] = 0x00
-      binaryData[i + 1] = 0x00
-      binaryData[i + 2] = 0x00
+      for (let idx = i; idx < i + 4; idx++)
+        binaryData[idx] = 0
       return
     }
 
-    binaryData[i] = parseInt(hex.substring(0, 2), 16)     // RR
+    binaryData[i]     = parseInt(hex.substring(0, 2), 16) // RR
     binaryData[i + 1] = parseInt(hex.substring(2, 4), 16) // GG
     binaryData[i + 2] = parseInt(hex.substring(4, 6), 16) // BB
+    binaryData[i + 3] = 255                               // Alpha
   })
 
-  return btoa(String.fromCharCode.apply(null, binaryData))
+  const img = new ImageData(binaryData, GRID_SIZE, GRID_SIZE)
+
+  const canvas = document.createElement("canvas")
+  canvas.setAttribute("width", GRID_SIZE)
+  canvas.setAttribute("height", GRID_SIZE)
+
+  const ctx = canvas.getContext("2d")
+  ctx.putImageData(img, 0, 0)
+  return canvas.toDataURL().split(",")[1]
 }
 
 export default function PixelArtEditor({ gridState, error }) {
@@ -94,7 +103,7 @@ export default function PixelArtEditor({ gridState, error }) {
     while (queue.length > 0) {
       const [x, y] = queue.shift()
 
-      if (x < 0 || x >= 16 || y < 0 || y >= 16) continue
+      if (x < 0 || x >= GRID_SIZE || y < 0 || y >= GRID_SIZE) continue
       if (newGrid[x][y] !== targetColor) continue
 
       newGrid[x][y] = replacementColor

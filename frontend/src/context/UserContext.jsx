@@ -30,9 +30,8 @@ export function UserProvider({ children }) {
       clearUser()
       return
     }
-    const avatar = new Uint8Array(atob(data.avatar).split("").map(c => c.charCodeAt(0)))
 
-    setUser({ ...data, avatar, accessToken })
+    setUser({ ...data, accessToken })
   }
 
   const updatePromoted = (contentId) => {
