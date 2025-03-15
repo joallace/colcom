@@ -45,7 +45,7 @@ export default function Navbar() {
               <>
                 •
                 <li key="leaderboard">
-                  <NavLink to="/leaderboard">leaderboard</NavLink>
+                  <NavLink to="/leaderboard">pódio</NavLink>
                 </li>
                 •
                 <li key="meta">
@@ -105,9 +105,11 @@ export default function Navbar() {
             </>
             :
             <>
-              <Link to="/login" title="criar tópico">
-                <PiPlusBold className="nav-icon" />
-              </Link>
+              {user &&
+                <Link to="/login" title="criar tópico">
+                  <PiPlusBold className="nav-icon" />
+                </Link>
+              }
               <Link to="/login" className="nav-user-drop" title="login e criação de conta">
                 entrar
                 <PiSignInFill className="nav-icon" />

@@ -38,12 +38,12 @@ nav {
 
 .nav-main-icon {
     color: $default-green;
-    margin: 0 2rem 0 1rem;
+    margin-right: 1.5rem;
     font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
     font-size: 1.25rem;
 
     @media screen and (max-width: $screen-sm) {
-        margin: 0 0.75rem 0 0.25rem;
+        margin-right: 0.75rem;
     }
 }
 
@@ -60,19 +60,6 @@ nav {
     }
 }
 
-.nav-user-icon {
-    width: 2rem;
-    height: 2rem;
-    font-size: 2rem;
-    color: $default-green;
-    justify-content: center;
-    align-items: end;
-    background-color: white;
-    border-radius: 50%;
-    overflow: hidden;
-    cursor: pointer;
-}
-
 .nav-user-drop {
     display: flex;
     gap: 0.25rem;
@@ -83,6 +70,9 @@ nav {
         border: 2px solid $default-green;
         border-radius: 0.25rem;
         image-rendering: pixelated;
+        @media screen and (max-width: $screen-sm){
+            width: 2.5rem;
+        }
     }
 
     &:hover {

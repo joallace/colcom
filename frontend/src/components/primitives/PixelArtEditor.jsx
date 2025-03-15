@@ -293,12 +293,14 @@ export default function PixelArtEditor({ gridState, error }) {
       {error && <span className="error">a foto de perfil é obrigatória!</span>}
 
       <div className="palette">
-        <input
-          type="color"
-          value={selectedColor}
-          onChange={(e) => setSelectedColor(e.target.value)}
-          className="color-picker"
-        />
+        <div className="color-picker" style={{ backgroundColor: selectedColor }}>
+          <input
+            type="color"
+            value={selectedColor}
+            className="color-picker"
+            onChange={(e) => setSelectedColor(e.target.value)}
+          />
+        </div>
         {colors.map((color) => (
           <div
             key={color}
