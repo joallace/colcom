@@ -105,6 +105,7 @@
 
 .tiptap {
     min-height: 10rem;
+    word-break: break-word;
 
     &:focus {
         outline: none;

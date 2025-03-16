@@ -10,6 +10,7 @@ import {
 import { default as Editor } from "@/components/Editor"
 import Frame from "@/components/primitives/Frame"
 import { submitVote } from "@/components/primitives/VotingButtons"
+import { Author } from "@/components/content/Metrics"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import { toPercentageStr, getUserVote } from "@/assets/util"
 import env from "@/assets/enviroment"
@@ -37,6 +38,7 @@ export default ({
   commit,
   parent_id,
   author,
+  author_avatar,
   title,
   body,
   upvotes,
@@ -95,7 +97,7 @@ export default ({
     const removeOrAddVote = initialVoteState ? -(relevanceVote === "") : +(relevanceVote === "up" || relevanceVote === "down")
     const allVotes = upvotes + downvotes + removeOrAddVote
     return [
-      `iniciado por ${author}`,
+      <Author name={author} avatar={author_avatar} />,
       allVotes ? `${toPercentageStr((upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos"
     ]
   }
@@ -173,7 +175,7 @@ export default ({
           {title}
         </span>
         :
-        readOnly?
+        readOnly ?
           <Link to={`/topics/${parent_id}/posts/${parent_id}?commit=${config.commit}`}>{title}</Link>
           :
           title

@@ -12,6 +12,7 @@ export default function Login() {
   const loginRef = React.useRef()
   const emailRef = React.useRef()
   const passRef = React.useRef()
+  const confirmPassRef = React.useRef()
   const [profilePicture, setProfilePicture] = React.useState(blankGrid)
   const [isLoading, setIsLoading] = React.useState(false)
   const [isSignUp, setIsSignUp] = React.useState(false)
@@ -72,6 +73,13 @@ export default function Login() {
     }
   }
 
+  const passBlur = () => {
+    if (confirmPassRef.current?.value.length && (confirmPassRef.current?.value !== passRef.current?.value))
+      setError(true)
+    else
+      setError(false)
+  }
+
   React.useEffect(() => {
     document.title = "Login · colcom"
   }, [])
@@ -124,7 +132,14 @@ export default function Login() {
                   disabled={isLoading}
                   onChange={() => setError(false)}
                   onKeyDown={e => e.key === "Enter" && send()}
-                  errorMessage={(error && !emailRef.current?.value.length) && "campo obrigatório!"}
+                  errorMessage={
+                    (error && (emailRef.current?.value.length? !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(emailRef.current?.value.length) && "email inválido!" : "campo obrigatório!"))
+                  }
+                  onBlur={()=>{
+                    const value = emailRef.current.value
+                    if(value.length && !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value))
+                      setError(true)
+                    }}
                 />
               }
               <Input
@@ -134,8 +149,29 @@ export default function Login() {
                 disabled={isLoading}
                 onChange={() => setError(false)}
                 onKeyDown={e => e.key === "Enter" && send()}
-                errorMessage={(error && !passRef.current.value.length) && "campo obrigatório!"}
+                errorMessage={
+                  (error && confirmPassRef.current?.value.length && (passRef.current?.value !== confirmPassRef.current?.value) && "senhas não estão iguais")
+                  ||
+                  (error && !passRef.current.value.length) && "campo obrigatório!"
+                }
+                onBlur={passBlur}
               />
+              {isSignUp &&
+                <Input
+                  type="password"
+                  label="confime a senha"
+                  ref={confirmPassRef}
+                  disabled={isLoading}
+                  onChange={() => setError(false)}
+                  onKeyDown={e => e.key === "Enter" && send()}
+                  errorMessage={
+                    (error && confirmPassRef.current?.value.length && passRef.current?.value !== confirmPassRef.current?.value && "senhas não estão iguais")
+                    ||
+                    (error && !confirmPassRef.current?.value.length) && "campo obrigatório!"
+                  }
+                  onBlur={passBlur}
+                />
+              }
             </div>
             <span className="createAccount">
               {isSignUp ? "" : "não "}tem uma conta?

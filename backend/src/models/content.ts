@@ -1,6 +1,6 @@
 import db from "@/pgDatabase"
 import { NotFoundError, ValidationError } from "@/errors"
-import { getDataByPublicId } from "@/models/user"
+import { avatarToBase64, getDataByPublicId } from "@/models/user"
 
 
 type ContentType = "topic" | "post" | "critique"
@@ -117,6 +117,7 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
         contents.config,
         users.pid as author_id,
         users.name as author,
+        users.avatar as author_avatar,
         (
           SELECT COUNT(*) FROM
             interactions as interaction
@@ -170,6 +171,7 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
   }
 
   const result = await db.query(query)
+  avatarToBase64("author_avatar", result)
   return result.rows
 }
 
@@ -212,6 +214,7 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
             topics.config,
             users.pid as author_id,
             users.name as author,
+            users.avatar as author_avatar,
             (
               SELECT COUNT(*) FROM
                 interactions as interaction
@@ -264,6 +267,7 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
             posts.config,
             users.pid as author_id,
             users.name as author,
+            users.avatar as author_avatar,
             (
               SELECT COUNT(*) FROM
                 interactions as interaction
@@ -308,8 +312,9 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
     values
   }
 
-  const result = await db.query(query)
-  return rowsToTree(result.rows)
+  const results = await db.query(query)
+  avatarToBase64("author_avatar", results)
+  return rowsToTree(results.rows)
 }
 
 async function findById(id: number, options = {}): Promise<Content> {

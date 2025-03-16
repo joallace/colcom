@@ -11,6 +11,7 @@ import Frame from "@/components/primitives/Frame"
 import PostSummary from "@/components/content/PostSummary"
 import NoResponse from "@/components/primitives/NoResponse"
 import { submitVote } from "@/components/primitives/VotingButtons"
+import { Author } from "@/components/content/Metrics"
 import { UserContext } from "@/context/UserContext"
 import { toPercentageStr, getUserVote } from "@/assets/util"
 
@@ -18,6 +19,7 @@ import { toPercentageStr, getUserVote } from "@/assets/util"
 export default function Topic({
   id,
   author,
+  author_avatar,
   title,
   promotions,
   upvotes,
@@ -57,7 +59,7 @@ export default function Topic({
     const currentPromotions = promotions + removeOrAddPromote
 
     return [
-      `iniciado por ${author}`,
+      <Author name={author} avatar={author_avatar} />,
       `promovido por ${currentPromotions} usuário${currentPromotions === 1 ? "" : "s"}`,
       allVotes ? `${toPercentageStr((upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos",
       `${childrenStats?.count} post${childrenStats?.count === 1 ? "" : "s"}`,

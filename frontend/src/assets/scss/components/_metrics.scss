@@ -1,0 +1,16 @@
+.startedBy {
+  display: flex;
+  place-items: center;
+
+  img {
+    image-rendering: pixelated;
+    width: 16px;
+    height: 16px;
+    margin: 0 0.25rem 0 0.5rem;
+    transition: transform 0.25s cubic-bezier(.68, -0.22, .37, 1.32);
+
+    &:hover {
+      transform: scale(6);
+    }
+  }
+}

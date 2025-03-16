@@ -43,6 +43,9 @@
 
 
             .description {
+                display: flex;
+                place-items: center;
+                gap: 0.25rem;
                 color: color.scale($default-font-color, $lightness: -33%);
                 font-size: 0.75rem;
 
@@ -83,8 +86,8 @@
         height: 1.15rem;
         font-size: 0.75rem;
         border-radius: 50%;
-        right: -0.5rem;
-        bottom: -0.5rem;
+        right: -0.25rem;
+        bottom: 0;
         text-align: center;
     }
 }

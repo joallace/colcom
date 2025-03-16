@@ -66,12 +66,12 @@ nav {
     place-items: center;
 
     .avatar {
-        width: 3rem;
+        width: 48px;
         border: 2px solid $default-green;
         border-radius: 0.25rem;
         image-rendering: pixelated;
         @media screen and (max-width: $screen-sm){
-            width: 2.5rem;
+            width: 32px;
         }
     }
 

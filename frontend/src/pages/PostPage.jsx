@@ -205,7 +205,7 @@ export default () => {
           min={0}
           max={postData?.history?.length - 1 || 0}
           value={currentCommit}
-          disabled={showCritique}
+          disabled={showCritique || Number.isFinite(currentSuggestion)}
           onMouseDown={e => setStartCommit(Number(e.target.value))}
           onMouseUp={() => { if (startCommit !== currentCommit) { fetchCommitBody(); updateCommitQuery() } }}
           onTouchStart={e => setStartCommit(Number(e.target.value))}

@@ -20,6 +20,7 @@ import Modal from "@/components/primitives/Modal"
 import Input from "@/components/primitives/Input"
 import LoadingButton from "@/components/primitives/LoadingButton"
 import { submitVote } from "@/components/primitives/VotingButtons"
+import { Author } from "@/components/content/Metrics"
 import { UserContext } from "@/context/UserContext"
 import { toPercentageStr, getUserVote, relativeTime } from "@/assets/util"
 import env from "@/assets/enviroment"
@@ -29,6 +30,7 @@ export default function Post({
   id,
   parent_id,
   author,
+  author_avatar,
   author_id,
   commit,
   title,
@@ -166,7 +168,7 @@ export default function Post({
     const removeOrAddVote = initialVoteState ? -(relevanceVote === "") : +(relevanceVote === "up" || relevanceVote === "down")
     const allVotes = upvotes + downvotes + removeOrAddVote
     return [
-      `iniciado por ${author}`,
+      <Author name={author} avatar={author_avatar} />,
       allVotes ? `${toPercentageStr((upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos",
       `${allVotes} interações`
     ]
@@ -295,7 +297,7 @@ export default function Post({
                 >
                   {suggestion.config.message}
                 </span>
-                <div className="description">por {suggestion.author}<Dot />{relativeTime(suggestion.created_at)}</div>
+                <div className="description"><Author name={author} avatar={author_avatar}/><Dot />{relativeTime(suggestion.created_at)}</div>
               </li>
             })
           }

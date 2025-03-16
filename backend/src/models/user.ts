@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs"
+import { QueryResult } from "pg"
 
 import db from "@/pgDatabase"
 import { NotFoundError, ValidationError } from "@/errors"
@@ -100,8 +101,7 @@ export async function findAll({ where = "", orderBy = "id", page = 1, pageSize =
   }
 
   const results = await db.query(query)
-  for (const result of results.rows)
-    result["avatar"] = result["avatar"].toString("base64")
+  avatarToBase64("avatar", results)
   return results.rows
 }
 
@@ -232,6 +232,11 @@ export async function getDataByPublicId(public_id: string, data: (keyof User)[])
   } catch (err) {
     console.error(err)
   }
+}
+
+export function avatarToBase64(column: string, result: QueryResult<any>) {
+  for (const row of result.rows)
+    row[column] = row[column].toString("base64")
 }
 
 export default Object.freeze({
