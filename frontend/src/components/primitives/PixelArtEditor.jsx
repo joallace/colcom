@@ -13,6 +13,7 @@ import {
 
 import Input from "@/components/primitives/Input"
 import { defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultFontColor } from "@/assets/scss/_export.module.scss"
+import { ERROR_CODES } from "@/pages/Login"
 import useBreakpoint from "@/hooks/useBreakpoint"
 
 const GRID_SIZE = 16
@@ -32,7 +33,7 @@ export const serializeGridToBase64png = (grid) => {
       return
     }
 
-    binaryData[i]     = parseInt(hex.substring(0, 2), 16) // RR
+    binaryData[i] = parseInt(hex.substring(0, 2), 16) // RR
     binaryData[i + 1] = parseInt(hex.substring(2, 4), 16) // GG
     binaryData[i + 2] = parseInt(hex.substring(4, 6), 16) // BB
     binaryData[i + 3] = 255                               // Alpha
@@ -49,7 +50,7 @@ export const serializeGridToBase64png = (grid) => {
   return canvas.toDataURL().split(",")[1]
 }
 
-export default function PixelArtEditor({ gridState, error }) {
+export default function PixelArtEditor({ gridState, error, popError = (err) => { } }) {
   const [internalGrid, setInternalGrid] = React.useState(blankGrid)
   const [grid, setGrid] = gridState.length ? gridState : [internalGrid, setInternalGrid]
   const [selectedColor, setSelectedColor] = React.useState(defaultFontColor)
@@ -198,6 +199,7 @@ export default function PixelArtEditor({ gridState, error }) {
     setIsDrawing(true)
     setLastCell([x, y])
     handleCellAction(x, y)
+    popError(ERROR_CODES.MISSING_FIELD)
   }
 
   const handleMouseEnter = (x, y) => {
@@ -220,6 +222,7 @@ export default function PixelArtEditor({ gridState, error }) {
         <div className="tools">
           {["pencil", "eraser", "bucket"].map((tool) => (
             <button
+              type="button"
               key={tool}
               className={tool === selectedTool ? "selected" : ""}
               onClick={() => setSelectedTool(tool)}
@@ -267,6 +270,7 @@ export default function PixelArtEditor({ gridState, error }) {
 
         <div className="tools">
           <button
+            type="button"
             onClick={undo}
             disabled={undoStack.length === 0}
           >
@@ -274,6 +278,7 @@ export default function PixelArtEditor({ gridState, error }) {
           </button>
 
           <button
+            type="button"
             onClick={redo}
             disabled={redoStack.length === 0}
           >
@@ -281,6 +286,7 @@ export default function PixelArtEditor({ gridState, error }) {
           </button>
 
           <button
+            type="button"
             onClick={discard}
             className="error"
             disabled={grid.every(row => row.every(pixel => pixel === ""))}

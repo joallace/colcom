@@ -8,12 +8,21 @@ import Alert from "@/components/primitives/Alert"
 import { UserContext } from "@/context/UserContext"
 import env from "@/assets/enviroment"
 
-const ERROR_CODES = {
-  EMPTY_FIELD: 0,
+export const ERROR_CODES = {
+  MISSING_FIELD: 0,
   MISMATCHING_PASS: 1,
   INVALID_EMAIL: 2,
+  DUPLICATED_NAME: 3,
+  DUPLICATED_EMAIL: 4
 }
-const ERROR_MSGS = ["campo obrigatório!", "senhas não estão iguais!", "email inválido!"]
+
+const ERROR_MSGS = [
+  "campo obrigatório!",
+  "senhas não estão iguais!",
+  "email inválido!",
+  "nome de usuário já utilizado!",
+  "email já utilizado!"
+]
 
 export default function Login() {
   const loginRef = React.useRef()
@@ -41,16 +50,16 @@ export default function Login() {
 
   const testPasswords = () => {
     if (confirmPassRef.current?.value.length && (confirmPassRef.current?.value !== passRef.current?.value))
-      pushError(ERROR_CODES.MISMATCHING_PASS) // 1 => the passwords are not corresponding
+      pushError(ERROR_CODES.MISMATCHING_PASS)
     else
       popError(ERROR_CODES.MISMATCHING_PASS)
   }
 
   const passErrorMsg = (ref) => (
     (
-      errors.includes(ERROR_CODES.EMPTY_FIELD)
+      errors.includes(ERROR_CODES.MISSING_FIELD)
       && !ref.current.value.length
-      && ERROR_MSGS[ERROR_CODES.EMPTY_FIELD]
+      && ERROR_MSGS[ERROR_CODES.MISSING_FIELD]
     )
     ||
     (
@@ -70,7 +79,7 @@ export default function Login() {
     const pass = passRef.current.value
 
     if (!login || !pass || (isSignUp && (!email || isPfpEmpty()))) {
-      pushError(ERROR_CODES.EMPTY_FIELD)
+      pushError(ERROR_CODES.MISSING_FIELD)
       return
     }
 
@@ -92,6 +101,12 @@ export default function Login() {
       const data = await res.json()
 
       if (res.status >= 400) {
+        if (data.name === "ValidationError") {
+          if (data.key === "name")
+            pushError(ERROR_CODES.DUPLICATED_NAME)
+          if (data.key === "email")
+            pushError(ERROR_CODES.DUPLICATED_EMAIL)
+        }
         setFormErrorMessage(data.message.toLowerCase())
         return
       }
@@ -143,10 +158,11 @@ export default function Login() {
               {
                 isSignUp &&
                 <div className="profilePictureCanvas">
-                  <h2 className={errors.includes(ERROR_CODES.EMPTY_FIELD) && isPfpEmpty() ? "error" : ""}>foto de perfil</h2>
+                  <h2 className={errors.includes(ERROR_CODES.MISSING_FIELD) && isPfpEmpty() ? "error" : ""}>foto de perfil</h2>
                   <PixelArtEditor
                     gridState={[profilePicture, setProfilePicture]}
-                    error={(errors.includes(ERROR_CODES.EMPTY_FIELD) && isPfpEmpty())}
+                    error={(errors.includes(ERROR_CODES.MISSING_FIELD) && isPfpEmpty())}
+                    popError={popError}
                   />
                   <hr />
                 </div>
@@ -155,8 +171,19 @@ export default function Login() {
                 label={`nome do usuário${isSignUp ? "" : " ou email"}`}
                 ref={loginRef}
                 disabled={isLoading}
-                onChange={() => popError(ERROR_CODES.EMPTY_FIELD)}
-                errorMessage={(errors.includes(ERROR_CODES.EMPTY_FIELD) && !loginRef.current.value.length) && ERROR_MSGS[ERROR_CODES.EMPTY_FIELD]}
+                onChange={() => { popError(ERROR_CODES.MISSING_FIELD); popError(ERROR_CODES.DUPLICATED_NAME) }}
+                errorMessage={
+                  (
+                    errors.includes(ERROR_CODES.MISSING_FIELD)
+                    && !loginRef.current.value.length
+                    && ERROR_MSGS[ERROR_CODES.MISSING_FIELD]
+                  )
+                  ||
+                  (
+                    errors.includes(ERROR_CODES.DUPLICATED_NAME)
+                    && ERROR_MSGS[ERROR_CODES.DUPLICATED_NAME]
+                  )
+                }
               />
               {isSignUp &&
                 <Input
@@ -164,12 +191,12 @@ export default function Login() {
                   label="email"
                   ref={emailRef}
                   disabled={isLoading}
-                  onChange={() => { popError(ERROR_CODES.EMPTY_FIELD); popError(ERROR_CODES.INVALID_EMAIL) }}
+                  onChange={() => { popError(ERROR_CODES.MISSING_FIELD); popError(ERROR_CODES.INVALID_EMAIL); popError(ERROR_CODES.DUPLICATED_EMAIL) }}
                   errorMessage={(
                     (
-                      errors.includes(ERROR_CODES.EMPTY_FIELD)
+                      errors.includes(ERROR_CODES.MISSING_FIELD)
                       && !emailRef.current?.value.length
-                      && ERROR_MSGS[ERROR_CODES.EMPTY_FIELD]
+                      && ERROR_MSGS[ERROR_CODES.MISSING_FIELD]
                     )
                     ||
                     (
@@ -177,11 +204,16 @@ export default function Login() {
                       && !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(emailRef.current?.value.length)
                       && ERROR_MSGS[ERROR_CODES.INVALID_EMAIL]
                     )
+                    ||
+                    (
+                      errors.includes(ERROR_CODES.DUPLICATED_EMAIL)
+                      && ERROR_MSGS[ERROR_CODES.DUPLICATED_EMAIL]
+                    )
                   )}
                   onBlur={() => {
                     const value = emailRef.current.value
                     if (value.length && !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value))
-                      pushError(ERROR_CODES.INVALID_EMAIL)   // 2 => invalid email 
+                      pushError(ERROR_CODES.INVALID_EMAIL)
                   }}
                 />
               }
@@ -190,7 +222,7 @@ export default function Login() {
                 label="senha"
                 ref={passRef}
                 disabled={isLoading}
-                onChange={() => { popError(ERROR_CODES.EMPTY_FIELD); popError(ERROR_CODES.MISMATCHING_PASS) }}
+                onChange={() => { popError(ERROR_CODES.MISSING_FIELD); popError(ERROR_CODES.MISMATCHING_PASS) }}
                 errorMessage={passErrorMsg(passRef)}
                 onBlur={testPasswords}
               />
@@ -200,7 +232,7 @@ export default function Login() {
                   label="confime a senha"
                   ref={confirmPassRef}
                   disabled={isLoading}
-                  onChange={() => { popError(ERROR_CODES.EMPTY_FIELD); popError(ERROR_CODES.MISMATCHING_PASS) }}
+                  onChange={() => { popError(ERROR_CODES.MISSING_FIELD); popError(ERROR_CODES.MISMATCHING_PASS) }}
                   errorMessage={passErrorMsg(confirmPassRef)}
                   onBlur={testPasswords}
                 />
@@ -212,7 +244,7 @@ export default function Login() {
                 {isSignUp ? " entre" : " crie uma"} agora!
               </a>
             </span>
-
+            <input type="submit" style={{ display: "none" }} />
           </form>
           <div className="reverse critique bracket" />
 
@@ -220,7 +252,7 @@ export default function Login() {
         <div className="spaced">
           <div className="bottom bracket" />
           <div className="buttonRow">
-            <LoadingButton isLoading={isLoading} onClick={send} disabled={errors.length}>
+            <LoadingButton type="submit" isLoading={isLoading} onClick={send} disabled={errors.length}>
               {isLoading ?
                 isSignUp ? "cadastrando..." : "entrando..."
                 :

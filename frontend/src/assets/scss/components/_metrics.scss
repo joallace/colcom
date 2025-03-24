@@ -3,6 +3,8 @@
   place-items: center;
 
   img {
+    border: 1px solid $default-green;
+    border-radius: 1px;
     image-rendering: pixelated;
     width: 16px;
     height: 16px;
