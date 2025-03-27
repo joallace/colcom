@@ -1,16 +1,22 @@
 import React from "react"
 import { BubbleMenu } from "@tiptap/react"
-import { isTextSelection } from '@tiptap/core';
+import { isTextSelection } from '@tiptap/core'
 import {
   PiListBulletsBold,
   PiListNumbersBold,
   PiQuotesFill
 } from "react-icons/pi"
+import { useNavigate } from "react-router-dom"
+
+import useUser from "@/context/UserContext"
 
 
 export default ({ editor, shouldShow = true, readOnly, setShowCritique }) => {
   if (!editor || !shouldShow)
     return
+
+  const navigate = useNavigate()
+  const { user } = useUser()
 
   return (
     <div>
@@ -35,6 +41,10 @@ export default ({ editor, shouldShow = true, readOnly, setShowCritique }) => {
           <>
             <button
               onClick={() => {
+                if (!user) {
+                  navigate("/login")
+                  return
+                }
                 editor.chain().focus().toggleHighlight({ type: "temporary" }).run()
                 setShowCritique([editor.view.state.selection.ranges[0]["$from"].pos, editor.view.state.selection.ranges[0]["$to"].pos])
               }}
