@@ -50,8 +50,6 @@ export default function Editor({
 
     editor.chain().setTextSelection(0).blur().run()
     setMarkedBody(editor.getHTML())
-
-    editor.on("transaction", onCritiqueClick)
   }
 
   const editor = useEditor({
@@ -69,9 +67,7 @@ export default function Editor({
       Heading.configure({
         levels: [2, 3],
       }),
-      CustomHighlight.configure({
-        multicolor: true
-      }),
+      CustomHighlight.configure({ setShowCritique }),
       Placeholder.configure({
         placeholder: "O que tens a dizer?"
       })
@@ -93,13 +89,6 @@ export default function Editor({
     editable: isEditable,
     content: isEditable ? content : content?.replace(/<chart readonly="false"/g, '<chart readonly="true"')
   })
-
-
-  const onCritiqueClick = ({ editor }) => {
-    if (editor.isActive("highlight", { type: "definitive" }) && !alongsideCritique) {
-      setShowCritique(window?.getSelection()?.focusNode?.parentElement.getAttribute("data-commit-index"))
-    }
-  }
 
   const removeTempHighlight = obj => {
     if (obj.marks)

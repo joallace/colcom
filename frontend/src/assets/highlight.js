@@ -4,14 +4,11 @@ export default Mark.create({
   name: "highlight",
   addOptions() {
     return {
-      multicolor: false,
+      setShowCritique: () => { },
       HTMLAttributes: {},
     }
   },
   addAttributes() {
-    if (!this.options.multicolor) {
-      return {}
-    }
     return {
       type: {
         default: "definitive",
@@ -46,7 +43,17 @@ export default Mark.create({
     ]
   },
   renderHTML({ HTMLAttributes }) {
-    return ["mark", mergeAttributes(this.options.HTMLAttributes, HTMLAttributes), 0]
+    const element = document.createElement('mark')
+
+    Object.entries(
+      mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)
+    ).forEach(([attr, val]) => element.setAttribute(attr, val))
+
+    element.addEventListener("click", () => {
+      this.options.setShowCritique(element.getAttribute("data-commit-index"))
+    })
+
+    return element
   },
   addCommands() {
     return {

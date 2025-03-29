@@ -185,6 +185,7 @@
         }
 
         &.temporary {
+            color: black;
             background-color: color.scale($default-yellow, $lightness: -18%);
         }
     }
