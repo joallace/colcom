@@ -1,10 +1,16 @@
-.content>.buttons {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
+.content.write {
+    >.buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
 
-    button {
-        height: min-content;
+        button {
+            height: min-content;
+        }
+    }
+
+    .tiptap {
+        min-height: 8rem;
     }
 }
 

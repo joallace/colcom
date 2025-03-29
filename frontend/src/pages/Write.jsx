@@ -84,7 +84,7 @@ export default function Write() {
   }, [])
 
   return (
-    <div className="content">
+    <div className="content write">
       <div className="topicName">respondendo ao tópico "<Link to={`/topics/${state.id}`}>{state.title}</Link>"</div>
 
       <Frame
