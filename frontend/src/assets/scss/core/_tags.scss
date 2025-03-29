@@ -127,8 +127,8 @@ input[type=checkbox],
 input[type=radio] {
     accent-color: $default-orange;
     cursor: pointer;
-    min-width: 1rem;
-    min-height: 1rem;
+    width: 1rem;
+    height: 1rem;
 
     &:not(:checked) {
         appearance: none;
@@ -171,7 +171,7 @@ input[type=range] {
     }
 
     &::-webkit-slider-thumb {
-        transition: all 0.2s ease;
+        transition: all 125ms ease;
         -webkit-appearance: none;
         appearance: none;
         margin-top: -4px;
@@ -183,7 +183,7 @@ input[type=range] {
     }
 
     &::-moz-range-thumb {
-        transition: all 0.2s ease;
+        transition: all 125ms ease;
         background-color: $default-green;
         border-radius: 50%;
         height: 1rem;

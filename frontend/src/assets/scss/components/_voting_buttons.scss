@@ -1,0 +1,58 @@
+@use "sass:color";
+
+.votingButtons {
+    display: flex;
+    flex-direction: column;
+    font-size: 1.5rem;
+    gap: 0.5rem;
+    margin-right: 0.5rem;
+    justify-content: center;
+
+    input {
+        min-width: 1.25rem;
+        min-height: 1.25rem;
+    }
+
+    @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+        input {
+            min-width: 1.75rem;
+            min-height: 1.75rem;
+        }
+
+        font-size: 2rem;
+    }
+
+    &.withDefVote {
+        gap: 0.25rem;
+
+        input {
+            margin: 0;
+        }
+    }
+
+
+    .up,
+    .down {
+        cursor: pointer;
+        display: flex;
+        border-radius: 50%;
+
+        &:hover {
+            background-color: color.scale($default-bg, $lightness: 8%);
+        }
+    }
+
+    .down {
+        color: #e65000;
+        &:hover{
+            color: color.scale(#e65000, $lightness: 10%);
+        }
+    }
+
+    .up {
+        color: #479024;
+        &:hover{
+            color: color.scale(#479024, $lightness: 10%);
+        }
+    }
+}

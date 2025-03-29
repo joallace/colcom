@@ -44,11 +44,12 @@ export default ({
   showDefinitiveVoteButton = false
 }) => {
   const [isLoading, setIsLoading] = React.useState(false)
+  const [hovering, setHovering] = React.useState("")
   const navigate = useNavigate()
 
-  const voteClick = async (type, clear) => {
+  const voteClick = async (type) => {
     setIsLoading(true)
-    setRelevanceVote(clear ? "" : type)
+    setRelevanceVote(type === relevanceVote ? "" : type)
     await submitVote(navigate, id, type)
     setIsLoading(false)
   }
@@ -70,22 +71,25 @@ export default ({
 
 
   return (
-    <div className={`vote-buttons${showDefinitiveVoteButton ? " withDefVote" : ""}`}>
-      {relevanceVote === "up" ?
-        <PiCaretUpFill
-          title="remover marcação"
-          className="up"
-          onClick={() => !isLoading && voteClick("up", true)}
-          style={{ cursor: isLoading ? "default" : "pointer" }}
-        />
-        :
-        <PiCaretUpBold
-          title="marcar como relevante"
-          className="up"
-          onClick={() => !isLoading && voteClick("up", false)}
-          style={{ cursor: isLoading ? "default" : "pointer" }}
-        />
-      }
+    <div className={`votingButtons${showDefinitiveVoteButton ? " withDefVote" : ""}`}>
+      <div
+        className="up"
+        onMouseEnter={() => { setHovering("up") }}
+        onMouseLeave={() => { setHovering("") }}
+        onClick={() => !isLoading && voteClick("up")}
+        style={{ cursor: isLoading ? "default" : "pointer" }}
+      >
+        {(hovering === "up" || relevanceVote === "up") ?
+          <PiCaretUpFill
+            title={relevanceVote === "up" ? "remover marcação" : "marcar como relevante"}
+          />
+          :
+          <PiCaretUpBold
+            title="marcar como relevante"
+          />
+        }
+      </div>
+
       {showDefinitiveVoteButton &&
         <Input
           className="center"
@@ -96,21 +100,23 @@ export default ({
           style={{ cursor: isLoading ? "default" : "pointer" }}
         />
       }
-      {relevanceVote === "down" ?
-        <PiCaretDownFill
-          title="remover marcação"
-          className="down"
-          onClick={() => !isLoading && voteClick("down", true)}
-          style={{ cursor: isLoading ? "default" : "pointer" }}
-        />
-        :
-        <PiCaretDownBold
-          title="marcar como não relevante"
-          className="down"
-          onClick={() => !isLoading && voteClick("down", false)}
-          style={{ cursor: isLoading ? "default" : "pointer" }}
-        />
-      }
+      <div
+        className="down"
+        onMouseEnter={() => { setHovering("down") }}
+        onMouseLeave={() => { setHovering("") }}
+        onClick={() => !isLoading && voteClick("down")}
+        style={{ cursor: isLoading ? "default" : "pointer" }}
+      >
+        {(relevanceVote === "down" || hovering === "down") ?
+          <PiCaretDownFill
+            title={relevanceVote === "down" ? "remover marcação" : "marcar como não relevante"}
+          />
+          :
+          <PiCaretDownBold
+            title="marcar como relevante"
+          />
+        }
+      </div>
     </div>
   )
 }
