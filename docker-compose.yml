@@ -7,7 +7,7 @@ services:
       POSTGRES_DB: colcom
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      PGPORT: 5433
+      PGPORT: 5434
       TZ: America/Recife
     network_mode: host
     volumes:
