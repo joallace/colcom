@@ -1,6 +1,7 @@
 import React from "react"
 import { Link } from "react-router-dom"
 import { PiStarFill, PiPencilSimpleLineFill } from "react-icons/pi"
+import DOMPurify from "dompurify"
 
 import { toPercentageStr } from "@/assets/util"
 
@@ -16,7 +17,7 @@ export default ({ parent_id, id, summary, percentage, shortAnswer, chosen, isAut
           <span>{toPercentageStr(percentage)}</span>
         </div>
       </Link>
-      <div style={{textAlign: "justify"}} dangerouslySetInnerHTML={{ __html: summary }} />
+      <div style={{textAlign: "justify"}} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(summary) }} />
       {/* <Link className="unselectable read-more" to={path}>continuar...</Link> */}
     </div>
   )
