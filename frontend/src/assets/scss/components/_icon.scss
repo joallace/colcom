@@ -1,18 +1,19 @@
 .mainIcon {
     display: flex;
-    line-height: 1rem;
+    line-height: 1.2rem;
     width: min-content;
-    color: $default-green;
+    color: $primary;
 
     @media screen and (min-width: 0px) and (max-width: $screen-sm) {
         flex-wrap: wrap;
     }
 
     .dot {
-        color: $default-font-color;
+        color: $light;
     }
 
     .com {
-        color: $default-orange;
+        color: $warning;
+        font-weight: bold;
     }
 }

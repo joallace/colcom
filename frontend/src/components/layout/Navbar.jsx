@@ -16,6 +16,7 @@ import TopicModal from "@/components/content/TopicModal"
 import DropdownMenu from "@/components/primitives/DropdownMenu"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import useUser from "@/context/UserContext"
+import { useTheme } from "@/context/ThemeContext"
 
 export default function Navbar() {
   const [modalOpen, setModalOpen] = React.useState(false)
@@ -23,12 +24,13 @@ export default function Navbar() {
   const navigate = useNavigate()
   const isDesktop = useBreakpoint()
 
-  const toggleModal = () => setModalOpen(!modalOpen)
+  const { themeColors } = useTheme()
 
+  const toggleModal = () => setModalOpen(!modalOpen)
 
   return (
     <>
-      <nav className="nav">
+      <nav className="nav" style={{ backgroundColor: themeColors.navbarBg }}>
         <div>
           <Link to="/promoted" className="nav-main-icon">
             <Icon isDesktop={isDesktop} />

@@ -79,7 +79,7 @@
         display: grid;
         width: min-content;
         grid-template-columns: repeat(16, 16px);
-        border: 2px solid $default-green;
+        border: 2px solid $light;
         border-radius: 0.25rem;
         cursor: crosshair;
         touch-action: none;

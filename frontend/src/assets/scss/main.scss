@@ -1,6 +1,11 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
 
+@mixin theme-styles {
+  @include apply-theme($theme-colors);
+}
+@include theme-styles;
+
 @import "components/alert";
 @import "components/dropdown_menu";
 @import "components/frame";

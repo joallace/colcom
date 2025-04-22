@@ -1,3 +1,15 @@
+@mixin apply-theme($theme-colors) {
+    // Apply colors from the $theme-colors map
+    $colors: map-keys($theme-colors);
+    @each $key in $colors {
+      $value: map-get($theme-colors, $key);
+      --#{$key}: #{$value};
+    }
+  
+  }
+
+
+
 @mixin content-responsiveness($default: 60vw, $medium: 80vw, $small: 95vw) {
     width: $default;
 

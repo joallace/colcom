@@ -1,4 +1,6 @@
 @use "sass:color";
+@use "../abstracts/variables" as *;
+
 
 .backdrop{
     min-width: 100%;
@@ -11,7 +13,7 @@
 }
 
 .modal{
-    background-color: $navbar-bg;
+    background-color: color.scale($background, $lightness: 5%);
     display: grid;
     gap: 1rem;
     position: fixed;
@@ -21,6 +23,7 @@
     min-height: min-content;
     min-width: min-content;  
     padding: 1.25rem;
+    border: 1px solid $dark;
     border-radius: 0.75rem;
 
     @media screen and (min-width: 0px) and (max-width: $screen-sm) {
@@ -35,14 +38,14 @@
         font-weight: bold;
         margin-bottom: 1.5rem;
         display: flex;
-        color: $default-green;
+        color: $primary;
         align-content: center;
         justify-content: space-between;
 
         .icon{
             align-self: top;
             font-size: 1.25rem;
-            color: $default-font-color;
+            color: $light;
             margin-left: 2rem;
         }
     }
@@ -59,7 +62,7 @@
 
     hr{
         margin: 1rem -1rem 0.5rem -1rem;
-        color: color.scale($navbar-bg, $lightness: 10%);
+        color: $dark;
         
     }
 }

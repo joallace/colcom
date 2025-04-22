@@ -1,6 +1,9 @@
 .loginContainer {
     display: grid;
     height: min-content;
+    border-radius: 0.5rem;
+    border: 1px solid $dark;
+    background-color: mix($default-bg, $light, 10%);
     width: min-content;
 
     @media screen and (min-width: $screen-md) {

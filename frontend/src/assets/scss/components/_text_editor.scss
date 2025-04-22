@@ -2,10 +2,10 @@
 
 .menu {
     display: flex;
-    min-width: min-content;
-    background-color: $default-orange;
+    min-width: fit-content;
+    background-color: $dark;
     padding: 0.2rem;
-    border-radius: 0.5rem;
+    border-radius: 0.25rem;
     gap: 0.25rem;
 
     &.bubble {
@@ -16,14 +16,15 @@
     }
 
     &.hidden {
-        display: none;
+        opacity: 0;
+        display: none; // Keep display none so it doesn't take space in the layout.
     }
 
     button {
         display: flex;
         white-space: nowrap;
         align-items: end;
-        border: none;
+        border: 1px solid transparent;
         background: none;
         color: #FFF;
         font-size: 0.85rem;
@@ -78,24 +79,28 @@
 .text-editor {
     display: flex;
     @include content-responsiveness;
+    background-color: $dark;
+    border: 1px solid $light;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
 
     .text {
         width: 100%;
 
         .title {
-            color: $default-green;
+            color: $light;
             word-wrap: anywhere;
             cursor: text;
 
             textarea {
                 line-height: 1;
-                resize: none;
-                overflow-y: hidden;
+                resize: vertical;
+                overflow-y: auto;
                 width: 100%;
-                background-color: $default-bg;
+                background-color: transparent;
                 outline: none;
                 border: none;
-                color: $default-green;
+                color: $light;
                 font-size: 2rem;
                 font-weight: bolder;
             }
@@ -112,7 +117,7 @@
     }
 
     >*+* {
-        margin-top: 0.75em;
+        margin-top: 0.5rem;
     }
 
     h1 {

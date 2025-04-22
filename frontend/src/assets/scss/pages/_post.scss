@@ -1,6 +1,8 @@
 @use "sass:color";
+@use "../abstracts/variables" as *;
 
 .post {
+    background-color: $background;
     display: flex;
     gap: 1.5rem;
     justify-content: center;

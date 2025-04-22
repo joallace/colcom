@@ -19,7 +19,8 @@
         }
 
         >a.active {
-            border-bottom: 2px $default-green;
+            background-color: $primary;
+            color: white;
             cursor: text;
         }
     }

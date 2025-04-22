@@ -1,8 +1,11 @@
 .tree {
+    background-color: $background;
+
     .frame {
         .body {
             display: grid;
             gap: 2rem;
+
         }
     }
 }

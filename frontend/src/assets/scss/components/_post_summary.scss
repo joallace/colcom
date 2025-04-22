@@ -1,5 +1,8 @@
 .postSummary {
+    background-color: lighten($default-bg, 2%);
+    border: 1px solid $dark;
     a {
+        
         display: flex;
         min-width: min-content;
 

@@ -1,4 +1,6 @@
 @use "sass:color";
+@use "../abstracts/variables" as v;
+
 
 .inputBox {
     position: relative;
@@ -7,10 +9,10 @@
     select {
         min-width: min-content;
         width: 100%;
-        height: 2.25rem;
-        color: $default-font-color;
-        background: transparent;
-        border: 2px solid $default-green;
+        height: 2.5rem;
+        color: v.$font-color;
+        background: v.$default-input-bg;
+        border: 1px solid v.$light;
         border-radius: 0.25rem;
         outline: none;
         transition: .3s;
@@ -22,21 +24,21 @@
         &:not(:placeholder-shown)+label,
         &:focus+label {
             top: 0;
-            font-size: .75rem;
-            color: $default-green;
-            background: $navbar-bg;
+            font-size: 0.75rem;
+            color: v.$primary;
+            background: v.$navbar-bg;
             padding: 0.2rem;
         }
 
         &:focus {
-            border: 2px solid $default-orange;
+            border: 1px solid v.$primary;
         }
 
         &:focus+label {
-            color: $default-orange;
+            color: v.$primary;
         }
 
-        &.error {
+        &.error, &.danger {
             border-color: $default-red;
         }
     }
@@ -47,7 +49,7 @@
         top: 50%;
         pointer-events: none;
         transform: translateY(-50%);
-        color: color.scale($default-font-color, $lightness: -40%);
+        color: v.$secondary;
         transition: .3s;
         font-weight: bold;
         white-space: nowrap;

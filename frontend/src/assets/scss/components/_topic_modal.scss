@@ -1,6 +1,7 @@
 .topicModalBody {
     display: grid;
     gap: 1.5rem;
+    background-color: var(--default-input-bg);
 
     .answers {
         display: grid;

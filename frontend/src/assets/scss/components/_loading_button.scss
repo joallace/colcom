@@ -1,5 +1,6 @@
 .loadingButton {
     padding: 0.25rem;
+    background-color: $dark;
 
     >.wrapper {
         display: flex;
@@ -7,6 +8,10 @@
         justify-content: center;
 
         >.spinnerWrapper {
+            >svg {
+                fill: $light;
+            }
+
             display: flex;
             transform: scale(0);
             transition: all 0.5s ease;
