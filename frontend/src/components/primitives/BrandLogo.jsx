@@ -1,6 +1,6 @@
-export default function Icon() {
+export default function BrandLogo() {
     return (
-        <span className="mainIcon">
+        <span className="colcom">
             col
             <span className="dot">.</span>
             <span className="com">com</span>

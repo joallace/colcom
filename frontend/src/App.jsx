@@ -9,6 +9,8 @@ import PostPage from "@/pages/PostPage"
 import Login from "@/pages/Login"
 import TopicPage from "@/pages/TopicPage"
 import Bookmarked from "@/pages/Bookmarked"
+import Profile from "@/pages/Profile"
+import Leaderboard from "@/pages/Leaderboard"
 
 function App() {
   const loadingPage = document.getElementById("loading-page")
@@ -21,13 +23,14 @@ function App() {
         <Route path="/" element={<Navigate to="/promoted" />} />
         <Route path="/promoted" element={<TopicTree orderBy="promotions" />} />
         <Route path="/recent" element={<TopicTree orderBy="id" />} />
-        <Route path="/leaderboard" element={<></>} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/meta" element={<TopicTree where="meta" />} />
         <Route path="/bookmarked" element={<Bookmarked />} />
         <Route path="/write" element={<Write />} />
         <Route path="/topics/:id" element={<TopicPage />} />
         <Route path="/topics/:tid/posts/:pid" element={<PostPage />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
       <Footer />
     </BrowserRouter>

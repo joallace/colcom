@@ -11,9 +11,10 @@ import {
   PiSignInFill
 } from "react-icons/pi"
 
-import Icon from "@/components/primitives/Icon"
+import BrandLogo from "@/components/primitives/BrandLogo"
 import TopicModal from "@/components/content/TopicModal"
 import DropdownMenu from "@/components/primitives/DropdownMenu"
+import Spinner from "@/components/primitives/Spinner"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import useUser from "@/context/UserContext"
 
@@ -21,17 +22,18 @@ export default function Navbar() {
   const [modalOpen, setModalOpen] = React.useState(false)
   const { user, clearUser } = useUser()
   const navigate = useNavigate()
-  const isDesktop = useBreakpoint()
+  const isDesktop = useBreakpoint("md")
+  const isLargeScreen = useBreakpoint("lg")
 
   const toggleModal = () => setModalOpen(!modalOpen)
 
-
+  console.log(user)
   return (
     <>
-      <nav className="nav">
+      <nav>
         <div>
-          <Link to="/promoted" className="nav-main-icon">
-            <Icon isDesktop={isDesktop} />
+          <Link to="/promoted" className="logo">
+            <BrandLogo isDesktop={isDesktop} />
           </Link>
           <ul className="unselectable paths">
             <li key="promoted">
@@ -41,7 +43,7 @@ export default function Navbar() {
             <li key="all">
               <NavLink to="/recent">recentes</NavLink>
             </li>
-            {isDesktop &&
+            {isLargeScreen &&
               <>
                 •
                 <li key="leaderboard">
@@ -55,7 +57,7 @@ export default function Navbar() {
             }
           </ul>
         </div>
-        <div className="nav-right">
+        <div className="rightSide">
           {user ?
             <>
               <a onClick={toggleModal} title="criar tópico"><PiPlusBold style={{ fontSize: "1.5rem" }} /></a>
@@ -75,12 +77,13 @@ export default function Navbar() {
                 </>
               }
               <DropdownMenu
-                className="nav-user-drop"
+                className="userInfo"
                 options={{
-                  "user": {
-                    description: user.name,
+                  "profile": {
+                    description: isDesktop ? "meu perfil" : user.name,
                     icons: PiUserFill,
-                    hide: isDesktop
+                    onClick: () => { navigate("/profile") }
+                    // hide: isDesktop
                   },
                   "balance": {
                     description: `prestígio: ${user.prestige}`,
@@ -99,21 +102,25 @@ export default function Navbar() {
                   }
                 }}
               >
-                <span>{user.name}</span>
+                {isDesktop && <span>{user.name}</span>}
                 <img className="avatar" src={`data:image/png;base64,${user.avatar}`} />
               </DropdownMenu>
             </>
             :
             <>
-              {user &&
+              {user ?
                 <Link to="/login" title="criar tópico">
-                  <PiPlusBold className="nav-icon" />
+                  <PiPlusBold className="icon" />
                 </Link>
+                :
+                user === null ?
+                  <Link to="/login" className="userInfo" title="login e criação de conta">
+                    entrar
+                    <PiSignInFill className="icon" />
+                  </Link>
+                  :
+                  <Spinner size="1rem"/>
               }
-              <Link to="/login" className="nav-user-drop" title="login e criação de conta">
-                entrar
-                <PiSignInFill className="nav-icon" />
-              </Link>
             </>
           }
         </div>

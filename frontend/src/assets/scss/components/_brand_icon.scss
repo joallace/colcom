@@ -1,8 +1,10 @@
-.mainIcon {
+.colcom {
     display: flex;
     line-height: 1rem;
     width: min-content;
     color: $default-green;
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+    font-size: 1.25rem;
 
     @media screen and (min-width: 0px) and (max-width: $screen-sm) {
         flex-wrap: wrap;

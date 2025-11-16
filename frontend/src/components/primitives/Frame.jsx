@@ -118,7 +118,7 @@ export default function Frame({
 
                   return (
                     <div
-                      className={`icons${active ? "" : " disabled"}`}
+                      className={`clickable${active ? "" : " disabled"}`}
                       onClick={() => { if (active) { toggle(buttonName, onClick(headerStatus[buttonName])) } }}
                       title={title}
                       key={`f${id}-${buttonName}`}
@@ -136,7 +136,7 @@ export default function Frame({
                 top={dropdownHeight}
               >
                 <div ref={dotsRef}>
-                  <PiDotsThreeVerticalBold className="icons" />
+                  <PiDotsThreeVerticalBold className="clickable" />
                 </div>
               </DropdownMenu>
             }

@@ -9,6 +9,7 @@ import {
 
 import { default as Editor } from "@/components/Editor"
 import Frame from "@/components/primitives/Frame"
+import Spinner from "@/components/primitives/Spinner"
 import { submitVote } from "@/components/primitives/VotingButtons"
 import { Author } from "@/components/content/Metrics"
 import useBreakpoint from "@/hooks/useBreakpoint"
@@ -195,7 +196,7 @@ export default ({
       setError={setError}
     >
       {isLoading ?
-        <div className="spinner" />
+        <Spinner/>
         :
         <Editor
           initialContent={body}

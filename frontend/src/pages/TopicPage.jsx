@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 
 import env from "@/assets/enviroment"
 import Topic from "@/components/content/Topic"
+import Spinner from "@/components/primitives/Spinner"
 import useUser from "@/context/UserContext"
 
 
@@ -42,7 +43,7 @@ export default function TopicPage() {
   return (
     <div className="content tree">
       {isLoading ?
-        <div className="spinner" />
+        <Spinner/>
         :
         <Topic {...topicData} />
       }

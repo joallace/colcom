@@ -5,6 +5,7 @@ import Post from "@/components/content/Post"
 import CritiqueFrame from "@/components/content/Critique"
 import Modal from "@/components/primitives/Modal"
 import LoadingButton from "@/components/primitives/LoadingButton"
+import Spinner from "@/components/primitives/Spinner"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import env from "@/assets/enviroment"
 import useUser from "@/context/UserContext"
@@ -221,7 +222,7 @@ export default () => {
 
       {isLoading ?
         <div className="postSpinnerWrapper">
-          <div className="spinner" />
+          <Spinner/>
         </div>
         :
         <div className="post">

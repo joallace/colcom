@@ -8,7 +8,7 @@ nav {
     padding: 0 1rem;
     height: $navbar-height;
 
-    @media screen and (max-width: $screen-sm) {
+    @media screen and (max-width: $screen-md) {
         padding: 0 0.5rem;
     }
 
@@ -25,90 +25,72 @@ nav {
         display: flex;
         gap: 0.75rem;
 
-        @media screen and (max-width: $screen-sm) {
+        @media screen and (max-width: $screen-md) {
             gap: 0.5rem;
             margin-right: 0.5rem;
         }
     }
-}
 
-.active {
-    color: $default-orange;
-}
+    .logo {
+        margin-right: 1.5rem;
 
-.nav-main-icon {
-    color: $default-green;
-    margin-right: 1.5rem;
-    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
-    font-size: 1.25rem;
-
-    @media screen and (max-width: $screen-sm) {
-        margin-right: 0.75rem;
-    }
-}
-
-.nav-searchbar {
-    color: white;
-    background-color: $default-input-bg;
-    height: 1.75rem;
-    border: 1px solid color.scale($default-font-color, $lightness: -40%);
-    border-radius: 0.25rem;
-
-    &:focus {
-        border-color: color.scale($default-font-color, $lightness: -30%);
-        outline: none !important;
-    }
-}
-
-.nav-user-drop {
-    display: flex;
-    gap: 0.25rem;
-    place-items: center;
-
-    .avatar {
-        width: 48px;
-        border: 2px solid $default-green;
-        border-radius: 0.25rem;
-        image-rendering: pixelated;
-        @media screen and (max-width: $screen-sm){
-            width: 32px;
+        @media screen and (max-width: $screen-md) {
+            margin-right: 0.75rem;
         }
     }
 
-    &:hover {
-        .avatar {
-            border-color: $default-orange;
-            transition: all 0.15s ease;
+    .dropdownMenu {
+        .menu {
+            border-radius: 0 0 .25rem .25rem !important;
         }
     }
-}
 
-.nav-icon {
-    font-size: 1.5rem;
-}
 
-.nav-right {
-    gap: 0.75rem;
-
-    @media screen and (max-width: $screen-sm) {
-        gap: 0.25rem;
-    }
-}
-
-.balance {
-    gap: 0.4rem;
-
-    span {
+    .userInfo {
         display: flex;
-        align-items: center;
-        font-size: 1.25rem;
+        gap: 0.25rem;
+        place-items: center;
+
+
+        .avatar {
+            width: 48px;
+            border: 2px solid $default-green;
+            border-radius: 0.25rem;
+            image-rendering: pixelated;
+        }
+
+        &:hover {
+            .avatar {
+                border-color: $default-orange;
+                transition: all 0.15s ease;
+            }
+        }
     }
 
-    @media screen and (max-width: $screen-sm) {
-        display: grid;
+    .balance {
+        gap: 0.4rem;
 
         span {
-            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            font-size: 1.25rem;
+        }
+
+        @media screen and (max-width: $screen-md) {
+            display: grid;
+
+            span {
+                font-size: 1rem;
+            }
         }
     }
+
+    .icon {
+        font-size: 1.5rem;
+    }
+
+    .rightSide {
+        gap: 0.75rem;
+    }
+
 }

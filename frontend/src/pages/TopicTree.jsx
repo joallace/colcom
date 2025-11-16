@@ -5,6 +5,7 @@ import NoResponse from "@/components/primitives/NoResponse"
 import env from "@/assets/enviroment"
 import Topic from "@/components/content/Topic"
 import Pagination from "@/components/primitives/Pagination"
+import Spinner from "@/components/primitives/Spinner"
 import useUser from "@/context/UserContext"
 
 
@@ -61,7 +62,7 @@ export default function TopicTree({ orderBy, where }) {
     <div className={`content tree${topics?.length === 0 ? " centered" : ""}`}>
       {
         isLoading ?
-          <div className="spinner" />
+          <Spinner/>
           :
           topics.length > 0 ?
             topics.map(topic => (

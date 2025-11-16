@@ -1,0 +1,1 @@
+export default ({size}) => <div className="spinner" style={size && { width: size, height: size }} />

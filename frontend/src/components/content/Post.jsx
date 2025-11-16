@@ -291,7 +291,7 @@ export default function Post({
               const Dot = () => <span className="dot"> • </span>
               return <li>
                 <span
-                  className="icons"
+                  className="clickable"
                   title="visualizar sugestão"
                   onClick={() => { fetchCommit(suggestion.config.commit); setCurrentSuggestion(index); setModal(false) }}
                 >

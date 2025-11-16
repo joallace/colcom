@@ -58,10 +58,12 @@
 
 }
 
-.no-response {
+.noResponse {
     height: 5rem;
     display: flex;
     justify-content: center;
+    text-align: center;
     align-items: center;
-    font-size: 1.25rem
+    font-size: 1.25rem;
+    white-space:break;
 }

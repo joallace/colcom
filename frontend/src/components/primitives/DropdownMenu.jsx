@@ -40,12 +40,12 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
 
 
   return (
-    <div className="dropdown-menu">
-      <div className={`icons${className ? ` ${className}` : ""}`} onClick={toggleMenu} ref={triggerRef}>
+    <div className="dropdownMenu">
+      <div className={`clickable${className ? ` ${className}` : ""}`} onClick={toggleMenu} ref={triggerRef}>
         {children}
       </div>
       {isOpen && (
-        <div className="dropdown-options" style={top ? { top } : undefined} ref={menuRef}>
+        <div className="menu" style={top ? { top } : undefined} ref={menuRef}>
           <ul>
             {
               Object.entries(options).map((([buttonName, buttonConfig]) => {
@@ -76,10 +76,10 @@ export default function DropdownMenu({ options = {}, optionsStatus = [], childre
                 return (
                   <li
                     key={buttonName}
-                    className={`icons${active ? "" : " disabled"}${onClick ? "" : " unclickable"}`}
+                    className={`clickable${active ? "" : " disabled"}${onClick ? "" : " unclickable"}`}
                     onClick={() => { if (active) { toggle(buttonName, onClick && onClick(status[buttonName])); toggleMenu() } }}
                   >
-                    <Icon className={`dropdown-icon${active ? "" : " disabled"}`} /> {text}
+                    <Icon className={`icon${active ? "" : " disabled"}`} /> {text}
                   </li>
                 )
               }))

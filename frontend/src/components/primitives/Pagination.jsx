@@ -40,7 +40,7 @@ export default function Pagination({ path = "", state, isLoading, maxIndex = -1 
       <div className="pagination">
         <Link
           to={path}
-          className={`icons${index === 0 ? " disabled" : ""}`}
+          className={`clickable${index === 0 ? " disabled" : ""}`}
           onClick={() => setIndex(0)}
         >
           <PiCaretDoubleLeft />
@@ -48,7 +48,7 @@ export default function Pagination({ path = "", state, isLoading, maxIndex = -1 
 
         <Link
           to={index === 1 ? path : `${path}?p=${index}`}
-          className={`icons${(index === 0 || (maxIndex >= 0 && index > maxIndex + 1)) ? " disabled" : ""}`}
+          className={`clickable${(index === 0 || (maxIndex >= 0 && index > maxIndex + 1)) ? " disabled" : ""}`}
           onClick={previousPage}
         >
           <PiCaretLeft />
@@ -102,14 +102,14 @@ export default function Pagination({ path = "", state, isLoading, maxIndex = -1 
 
         <Link
           to={`${path}?p=${index + 2}`}
-          className={`icons${(maxIndex >= 0 ? index >= maxIndex : isLoading) ? " disabled" : ""}`}
+          className={`clickable${(maxIndex >= 0 ? index >= maxIndex : isLoading) ? " disabled" : ""}`}
           onClick={nextPage}
         >
           <PiCaretRight />
         </Link>
         <Link
           to={`${path}?p=${maxIndex + 1}`}
-          className={`icons${((maxIndex >= 0 && index >= maxIndex) || isLoading || maxIndex < 0) ? " disabled" : ""}`}
+          className={`clickable${((maxIndex >= 0 && index >= maxIndex) || isLoading || maxIndex < 0) ? " disabled" : ""}`}
           onClick={() => setIndex(maxIndex)}
         >
           <PiCaretDoubleRight />

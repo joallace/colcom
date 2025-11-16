@@ -2,6 +2,7 @@ import React from "react"
 import { useSearchParams } from "react-router-dom"
 
 import NoResponse from "@/components/primitives/NoResponse"
+import Spinner from "@/components/primitives/Spinner"
 import env from "@/assets/enviroment"
 import Topic from "@/components/content/Topic"
 import Pagination from "@/components/primitives/Pagination"
@@ -63,7 +64,7 @@ export default function Bookmarked() {
     <div className={`content${contents?.length === 0 ? " centered" : ""}`}>
       {
         isLoading ?
-          <div className="spinner" />
+          <Spinner/>
           :
           contents?.length > 0 ?
             contents?.map(content => {
@@ -78,7 +79,7 @@ export default function Bookmarked() {
             })
             :
             <NoResponse>
-              ainda não há itens salvos, que tal tentar salvar algum conteúdo?
+              ainda não há itens salvos... que tal tentar salvar algum conteúdo?
             </NoResponse>
       }
       <Pagination
