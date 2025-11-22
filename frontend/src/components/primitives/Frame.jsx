@@ -43,6 +43,7 @@ export default function Frame({
   const ref = React.useRef()
   const dotsRef = React.useRef()
   const isDesktop = useBreakpoint()
+  const isMobile = useBreakpoint("sm")
 
   const toggle = (str, value = undefined) => {
     if (headerStatus[str] !== undefined || value !== undefined)
@@ -160,7 +161,7 @@ export default function Frame({
             {metrics().map((metric, index, arr) => (
               <React.Fragment key={`f${id}-metric-${index}`}>
                 <li>{metric}</li>
-                {(index + 1) !== arr.length && "•"}
+                {isDesktop && ((index + 1) !== arr.length) && "•"}
               </React.Fragment>
             ))}
           </ul>

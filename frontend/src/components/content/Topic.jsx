@@ -11,9 +11,9 @@ import Frame from "@/components/primitives/Frame"
 import PostSummary from "@/components/content/PostSummary"
 import NoResponse from "@/components/primitives/NoResponse"
 import { submitVote } from "@/components/primitives/VotingButtons"
-import { Author } from "@/components/content/Metrics"
+import { Author, Interactions, PostCount, Promotions, Relevance } from "@/components/content/Metrics"
 import { UserContext } from "@/context/UserContext"
-import { toPercentageStr, getUserVote } from "@/assets/util"
+import { getUserVote } from "@/assets/util"
 
 
 export default function Topic({
@@ -57,13 +57,14 @@ export default function Topic({
 
     const removeOrAddPromote = userInteractions?.includes("promote") ? -(user?.promoting !== id) : +(user?.promoting === id)
     const currentPromotions = promotions + removeOrAddPromote
+    const upvotePercentage = allVotes ? (upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes : 0
 
     return [
       <Author name={author} avatar={author_avatar} />,
-      `promovido por ${currentPromotions} usuário${currentPromotions === 1 ? "" : "s"}`,
-      allVotes ? `${toPercentageStr((upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos",
-      `${childrenStats?.count} post${childrenStats?.count === 1 ? "" : "s"}`,
-      `${interactions} interaç${interactions === 1 ? "ão" : "ões"}`
+      <Promotions count={currentPromotions}/>,
+      <Relevance {...{allVotes, upvotePercentage}}/>,
+      <PostCount count={childrenStats?.count}/>,
+      <Interactions count={interactions}/>
     ]
   }
 

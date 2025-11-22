@@ -20,9 +20,9 @@ import Modal from "@/components/primitives/Modal"
 import Input from "@/components/primitives/Input"
 import LoadingButton from "@/components/primitives/LoadingButton"
 import { submitVote } from "@/components/primitives/VotingButtons"
-import { Author } from "@/components/content/Metrics"
+import { Author, Interactions, Relevance } from "@/components/content/Metrics"
 import { UserContext } from "@/context/UserContext"
-import { toPercentageStr, getUserVote, relativeTime } from "@/assets/util"
+import { getUserVote, relativeTime } from "@/assets/util"
 import env from "@/assets/enviroment"
 
 
@@ -167,10 +167,12 @@ export default function Post({
   const getMetrics = () => {
     const removeOrAddVote = initialVoteState ? -(relevanceVote === "") : +(relevanceVote === "up" || relevanceVote === "down")
     const allVotes = upvotes + downvotes + removeOrAddVote
+    const upvotePercentage = (upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes
+    
     return [
       <Author name={author} avatar={author_avatar} />,
-      allVotes ? `${toPercentageStr((upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos",
-      `${allVotes} interações`
+      <Relevance {...{allVotes, upvotePercentage}}/>,
+      <Interactions count={allVotes}/>
     ]
   }
 

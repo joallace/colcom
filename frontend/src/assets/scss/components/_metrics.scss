@@ -1,6 +1,42 @@
+@use "sass:color";
+
+.metrics {
+  list-style: none;
+  color: $default-green;
+  font-size: 12px;
+  text-align: center;
+  padding: 0;
+  display: flex;
+  place-items: center;
+  gap: 0.5rem;
+
+  >li {
+    color: color.scale($default-font-color, $lightness: -10%);
+
+    .focus{
+      color: $default-font-color;
+      font-weight: bold;
+    }
+  }
+
+  @media screen and (max-width: $screen-sm) {
+    display: grid;
+    justify-items: left;
+    border-left: 2px solid $default-green;
+    padding-left: 0.5rem;
+  }
+
+  @media screen and (max-width: $screen-lg) {
+    gap: 0.25rem;
+  }
+}
+
 .startedBy {
   display: flex;
   place-items: center;
+  font-size: 13px;
+  font-weight: bold;
+  color: $default-font-color;
 
   img {
     border: 1px solid $default-green;
@@ -8,7 +44,7 @@
     image-rendering: pixelated;
     width: 16px;
     height: 16px;
-    margin: 0 0.25rem 0 0.5rem;
+    margin-right: 0.25rem;
     transition: transform 0.25s cubic-bezier(.68, -0.22, .37, 1.32);
 
     &:hover {

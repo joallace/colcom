@@ -8,6 +8,10 @@
     font-family: 'Lato', sans-serif;
     @include content-responsiveness;
 
+    @media screen and (max-width: $screen-sm) {
+        line-height: 1.25;
+    }
+
     >.container {
         display: flex;
 
@@ -35,6 +39,7 @@
             color: $default-green;
             align-self: center;
             text-align: left;
+            word-wrap: anywhere;
 
             a {
                 color: $default-green;
@@ -113,25 +118,6 @@
             border-color: $default-orange;
         }
     }
-
-    .metrics {
-        list-style: none;
-        color: $default-green;
-        font-size: 12px;
-        text-align: center;
-        padding: 0;
-        display: flex;
-        place-items: center;
-        gap: 0.5rem;
-
-        >li {
-            color: $default-font-color;
-        }
-
-        @media screen and (max-width: $screen-lg) {
-            gap: 0.25rem;
-        }
-    }
 }
 
 .bracket {
@@ -146,6 +132,7 @@
 
     @media screen and (min-width: 0px) and (max-width: $screen-sm) {
         margin-right: 0.25rem;
+        width: 0.5rem;
     }
 
     &.top {
@@ -155,6 +142,9 @@
         margin-bottom: 0;
         border-width: 2px 0 0 2px;
         border-radius: 0.75rem 0 0 0;
+        @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+            border-radius: 0.5rem 0 0 0;
+        }
     }
 
     &.bottom {
@@ -162,6 +152,11 @@
         height: 50%;
         margin-bottom: 0;
         border-width: 0 0 2px 2px;
+
+        @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+            margin-right: 0;
+            width: 1.5rem;
+        }
     }
 
     &.critique {

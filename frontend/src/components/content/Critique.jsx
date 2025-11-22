@@ -11,7 +11,7 @@ import { default as Editor } from "@/components/Editor"
 import Frame from "@/components/primitives/Frame"
 import Spinner from "@/components/primitives/Spinner"
 import { submitVote } from "@/components/primitives/VotingButtons"
-import { Author } from "@/components/content/Metrics"
+import { Author, Relevance } from "@/components/content/Metrics"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import { toPercentageStr, getUserVote } from "@/assets/util"
 import env from "@/assets/enviroment"
@@ -97,9 +97,11 @@ export default ({
   const getMetrics = () => {
     const removeOrAddVote = initialVoteState ? -(relevanceVote === "") : +(relevanceVote === "up" || relevanceVote === "down")
     const allVotes = upvotes + downvotes + removeOrAddVote
+    const upvotePercentage = (upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes
+    
     return [
       <Author name={author} avatar={author_avatar} />,
-      allVotes ? `${toPercentageStr((upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes)} dos ${allVotes} votantes achou relevante` : "0 votos"
+      <Relevance {...{allVotes, upvotePercentage}}/>
     ]
   }
 
