@@ -13,7 +13,6 @@ import Spinner from "@/components/primitives/Spinner"
 import { submitVote } from "@/components/primitives/VotingButtons"
 import { Author, Relevance } from "@/components/content/Metrics"
 import useBreakpoint from "@/hooks/useBreakpoint"
-import { toPercentageStr, getUserVote } from "@/assets/util"
 import env from "@/assets/enviroment"
 import useUser from "@/context/UserContext"
 
@@ -95,13 +94,9 @@ export default ({
 
 
   const getMetrics = () => {
-    const removeOrAddVote = initialVoteState ? -(relevanceVote === "") : +(relevanceVote === "up" || relevanceVote === "down")
-    const allVotes = upvotes + downvotes + removeOrAddVote
-    const upvotePercentage = (upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes
-    
     return [
       <Author name={author} avatar={author_avatar} />,
-      <Relevance {...{allVotes, upvotePercentage}}/>
+      <Relevance {...{ initialVoteState, relevanceVote, upvotes, downvotes }}/>
     ]
   }
 

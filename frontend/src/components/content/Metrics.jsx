@@ -1,6 +1,6 @@
-import { toPercentageStr } from "@/assets/util"
+import { getUserVote, toPercentageStr } from "@/assets/util"
 
-const Focus = ({children}) => <span className="focus">{children}</span>
+const Focus = ({ children }) => <span className="focus">{children}</span>
 
 export const Author = ({ isDesktop, name, avatar }) => {
   return (
@@ -10,36 +10,50 @@ export const Author = ({ isDesktop, name, avatar }) => {
   )
 }
 
-export const Relevance = ({ allVotes, upvotePercentage }) => {
+export const Relevance = ({ initialVoteState, relevanceVote, upvotes, downvotes }) => {
+  const removeOrAddVote = initialVoteState ? -(relevanceVote === "") : +(relevanceVote === "up" || relevanceVote === "down")
+  const allVotes = upvotes + downvotes + removeOrAddVote
+  const upvotePercentage = (upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes
+
   const percentageToColorHSL = (pct) => `hsl(${pct * 120}, 100%, 50%)` // 0=red, 60=yellow, 120=green
 
-  const Colored = ({children}) => (
+  const Colored = ({ children }) => (
     <span className="focus" style={{ color: percentageToColorHSL(upvotePercentage) }}>
       {children}
     </span>
-  
+
   )
-  
+
   return (
     allVotes ?
       allVotes === 1 ?
-      <>
-        <Colored>1</Colored> votante {!upvotePercentage && "não"} achou relevante
-      </>
+        <>
+          <Colored>1</Colored>{" "}votante {!upvotePercentage && "não"} achou relevante
+        </>
+        :
+        <>
+          <Colored>
+            {toPercentageStr(upvotePercentage)}
+          </Colored>
+          {"  "} dos <Focus>{allVotes}</Focus> votantes achou relevante
+        </>
       :
-      <>
-        <Colored>
-          {toPercentageStr(upvotePercentage)}
-        </Colored>
-        {"  "} dos <Focus>{allVotes}</Focus> votantes achou relevante
-      </>
-      :
-      "0 votos"
+      <><Colored>0</Colored> votos</>
   )
 }
 
-export const Promotions = ({count}) => (<>promovido por {" "}<Focus>{count}</Focus>{" "} usuário{count === 1 ? "" : "s"}</>)
+export const Promotions = ({ userIsPromoting, topicId, userPromotingTopicId, promotionCount }) => {
+  const removeOrAddPromote = userIsPromoting ?
+    -(userPromotingTopicId !== topicId)
+    :
+    +(userPromotingTopicId === topicId)
+  const currentPromotions = promotionCount + removeOrAddPromote
 
-export const PostCount = ({count}) => (<><Focus>{count}</Focus>{" "}post{count === 1 ? "" : "s"}</>)
+  return (
+    <>promovido por {" "}<Focus>{currentPromotions}</Focus>{" "} usuário{currentPromotions === 1 ? "" : "s"}</>
+  )
+}
 
-export const Interactions = ({count}) => (<><Focus>{count}</Focus>{" "}interaç{count === 1 ? "ão" : "ões"}</>)
+export const PostCount = ({ count }) => (<><Focus>{count}</Focus>{" "}post{count === 1 ? "" : "s"}</>)
+
+export const Interactions = ({ count }) => (<><Focus>{count}</Focus>{" "}interaç{count === 1 ? "ão" : "ões"}</>)

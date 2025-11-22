@@ -22,7 +22,7 @@ import LoadingButton from "@/components/primitives/LoadingButton"
 import { submitVote } from "@/components/primitives/VotingButtons"
 import { Author, Interactions, Relevance } from "@/components/content/Metrics"
 import { UserContext } from "@/context/UserContext"
-import { getUserVote, relativeTime } from "@/assets/util"
+import { relativeTime } from "@/assets/util"
 import env from "@/assets/enviroment"
 
 
@@ -64,7 +64,7 @@ export default function Post({
   const { user } = React.useContext(UserContext)
   const navigate = useNavigate()
 
-  const headerConfig = {
+  const readingHeaderCfg = {
     "branch": {
       description: "clonar post",
       icons: PiGitBranch,
@@ -112,7 +112,7 @@ export default function Post({
     }
   }
 
-  const editionHeader = {
+  const editingHeaderCfg = {
     "accept": {
       description: "aceitar sugestão",
       icons: PiCheck,
@@ -167,11 +167,10 @@ export default function Post({
   const getMetrics = () => {
     const removeOrAddVote = initialVoteState ? -(relevanceVote === "") : +(relevanceVote === "up" || relevanceVote === "down")
     const allVotes = upvotes + downvotes + removeOrAddVote
-    const upvotePercentage = (upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes
     
     return [
       <Author name={author} avatar={author_avatar} />,
-      <Relevance {...{allVotes, upvotePercentage}}/>,
+      <Relevance {...{ initialVoteState, relevanceVote, upvotes, downvotes }}/>,
       <Interactions count={allVotes}/>
     ]
   }
@@ -246,7 +245,7 @@ export default function Post({
         id={id}
         title={String(title)}
         titleRef={titleRef}
-        headerConfig={Number.isFinite(currentSuggestion) ? editionHeader : headerConfig}
+        headerConfig={Number.isFinite(currentSuggestion) ? editingHeaderCfg : readingHeaderCfg}
         relevanceVote={relevanceVote}
         setRelevanceVote={setRelevanceVote}
         definitiveVote={definitiveVote}

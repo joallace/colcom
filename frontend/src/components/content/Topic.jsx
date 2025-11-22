@@ -13,7 +13,6 @@ import NoResponse from "@/components/primitives/NoResponse"
 import { submitVote } from "@/components/primitives/VotingButtons"
 import { Author, Interactions, PostCount, Promotions, Relevance } from "@/components/content/Metrics"
 import { UserContext } from "@/context/UserContext"
-import { getUserVote } from "@/assets/util"
 
 
 export default function Topic({
@@ -50,21 +49,19 @@ export default function Topic({
   }
 
   const getMetrics = () => {
-    const removeOrAddVote = initialVoteState ? -(relevanceVote === "") : +(relevanceVote === "up" || relevanceVote === "down")
-    const allVotes = upvotes + downvotes + removeOrAddVote
-
     const interactions = childrenStats?.upvotes + childrenStats?.downvotes
-
-    const removeOrAddPromote = userInteractions?.includes("promote") ? -(user?.promoting !== id) : +(user?.promoting === id)
-    const currentPromotions = promotions + removeOrAddPromote
-    const upvotePercentage = allVotes ? (upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes : 0
-
+    
     return [
       <Author name={author} avatar={author_avatar} />,
-      <Promotions count={currentPromotions}/>,
-      <Relevance {...{allVotes, upvotePercentage}}/>,
-      <PostCount count={childrenStats?.count}/>,
-      <Interactions count={interactions}/>
+      <Promotions
+        userIsPromoting={userInteractions?.includes("promote")}
+        userPromotingTopicId={user?.promoting}
+        topicId={id}
+        promotionCount={promotions}
+      />,
+      <Relevance {...{ initialVoteState, relevanceVote, upvotes, downvotes }} />,
+      <PostCount count={childrenStats?.count} />,
+      <Interactions count={interactions} />
     ]
   }
 
