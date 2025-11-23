@@ -59,10 +59,10 @@ export default function TopicTree({ orderBy, where }) {
   }, [])
 
   return (
-    <div className={`content tree${topics?.length === 0 ? " centered" : ""}`}>
+    <div className={`content ${(isLoading || topics?.length === 0) ? "centered" : "tree"}`}>
       {
         isLoading ?
-          <Spinner/>
+          <Spinner />
           :
           topics.length > 0 ?
             topics.map(topic => (

@@ -28,9 +28,20 @@
         min-height: min-content;
     }
 
-    &.centered{
+    &.centered {
         align-content: center;
     }
+}
+
+.avatar {
+    border: 2px solid $default-green;
+    border-radius: 0.25rem;
+    image-rendering: pixelated;
+}
+
+.focus {
+    color: $default-font-color;
+    font-weight: bold;
 }
 
 .clickable {

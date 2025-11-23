@@ -1,0 +1,37 @@
+@use "sass:color";
+
+.profileCard {
+    display: flex;
+    gap: 2rem;
+    width: 60vw;
+    @include content-responsiveness;
+
+    @media screen and (max-width: $screen-sm) {
+        gap: 0.5rem;
+
+        display: grid;
+        place-content: center;
+        place-items: center;
+    }
+
+    .avatar {
+        width: 16rem;
+    }
+}
+
+.profileInfo {
+    color: color.scale($default-font-color, $lightness: -15%);
+    display: grid;
+    place-content: start;
+
+    .username {
+        margin-bottom: 1.5rem;
+        font-size: 32px;
+
+        @media screen and (max-width: $screen-sm) {
+            font-size: 24px;
+            text-align: center;
+
+        }
+    }
+}

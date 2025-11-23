@@ -11,12 +11,7 @@
   gap: 0.5rem;
 
   >li {
-    color: color.scale($default-font-color, $lightness: -10%);
-
-    .focus{
-      color: $default-font-color;
-      font-weight: bold;
-    }
+    color: color.scale($default-font-color, $lightness: -15%);
   }
 
   @media screen and (max-width: $screen-sm) {

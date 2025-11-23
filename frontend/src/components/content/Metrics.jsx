@@ -1,6 +1,5 @@
 import { getUserVote, toPercentageStr } from "@/assets/util"
-
-const Focus = ({ children }) => <span className="focus">{children}</span>
+import Focus from "@/components/primitives/Focus"
 
 export const Author = ({ isDesktop, name, avatar }) => {
   return (
@@ -18,10 +17,9 @@ export const Relevance = ({ initialVoteState, relevanceVote, upvotes, downvotes 
   const percentageToColorHSL = (pct) => `hsl(${pct * 120}, 100%, 50%)` // 0=red, 60=yellow, 120=green
 
   const Colored = ({ children }) => (
-    <span className="focus" style={{ color: percentageToColorHSL(upvotePercentage) }}>
+    <Focus style={{ color: percentageToColorHSL(upvotePercentage) }}>
       {children}
-    </span>
-
+    </Focus>
   )
 
   return (

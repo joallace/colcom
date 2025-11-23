@@ -41,9 +41,9 @@ export default function TopicPage() {
   }, [user])
 
   return (
-    <div className="content tree">
+    <div className={`content ${isLoading ? "centered" : "tree"}`}>
       {isLoading ?
-        <Spinner/>
+        <Spinner />
         :
         <Topic {...topicData} />
       }
