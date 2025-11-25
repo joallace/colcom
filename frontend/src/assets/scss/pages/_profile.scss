@@ -2,8 +2,8 @@
 
 .profileCard {
     display: flex;
+    margin: 2rem 0;
     gap: 2rem;
-    width: 60vw;
     @include content-responsiveness;
 
     @media screen and (max-width: $screen-sm) {
@@ -17,21 +17,25 @@
     .avatar {
         width: 16rem;
     }
-}
 
-.profileInfo {
-    color: color.scale($default-font-color, $lightness: -15%);
-    display: grid;
-    place-content: start;
+    .profileInfo {
+        color: color.scale($default-font-color, $lightness: -15%);
+        display: grid;
+        place-content: start;
 
-    .username {
-        margin-bottom: 1.5rem;
-        font-size: 32px;
+        .username {
+            margin-bottom: 1.5rem;
+            font-size: 32px;
 
-        @media screen and (max-width: $screen-sm) {
-            font-size: 24px;
-            text-align: center;
+            @media screen and (max-width: $screen-sm) {
+                font-size: 24px;
+                text-align: center;
 
+            }
         }
     }
+}
+
+.separator{
+    color: $default-green;
 }

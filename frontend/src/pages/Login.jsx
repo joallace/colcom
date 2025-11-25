@@ -260,7 +260,7 @@ export default function Login() {
               }
             </LoadingButton>
           </div>
-          <div className="reverse bottom critique bracket" />
+          <div className="login reverse bottom critique bracket" />
         </div>
       </div>
     </div>

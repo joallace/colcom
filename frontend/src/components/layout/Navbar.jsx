@@ -27,7 +27,6 @@ export default function Navbar() {
 
   const toggleModal = () => setModalOpen(!modalOpen)
 
-  console.log(user)
   return (
     <>
       <nav>

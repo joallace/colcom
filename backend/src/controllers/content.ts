@@ -71,10 +71,16 @@ export const createContent: RequestHandler = async (req, res, next) => {
 export const getContents: RequestHandler = async (req, res, next) => {
   const page = Number(req.query.page) || 1
   const pageSize = Number(req.query.pageSize) || 10
+  const authorId = req.query.authorId
+
   const orderBy = req.query.orderBy ? String(req.query.orderBy) : "id"
+  const where = authorId ? {
+    where: "users.pid = $1",
+    values: [authorId]
+  } : {}
 
   try {
-    const contents = await Content.findAll({ page, pageSize, orderBy })
+    const contents = await Content.findAll({ page, pageSize, orderBy, ...where })
     res.status(200).json(contents)
   }
   catch (err) {

@@ -19,6 +19,10 @@
     justify-items: left;
     border-left: 2px solid $default-green;
     padding-left: 0.5rem;
+
+    &.critique{
+      border-color: $default-orange;
+    }
   }
 
   @media screen and (max-width: $screen-lg) {

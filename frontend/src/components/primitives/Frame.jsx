@@ -124,7 +124,7 @@ export default function Frame({
                       title={title}
                       key={`f${id}-${buttonName}`}
                     >
-                      <Icon/>
+                      <Icon />
                       <span>{title.replace(" ", "\n")}</span>
                     </div>
                   )
@@ -157,7 +157,7 @@ export default function Frame({
       <div className={metrics ? "footer" : undefined}>
         <div className={`bottom bracket${error ? " error" : ""}`} />
         {metrics &&
-          <ul className="metrics">
+          <ul className={`metrics${isCritique ? " critique" : ""}`}>
             {metrics().map((metric, index, arr) => (
               <React.Fragment key={`f${id}-metric-${index}`}>
                 <li>{metric}</li>
