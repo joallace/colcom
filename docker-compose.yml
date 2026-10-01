@@ -6,9 +6,11 @@ services:
     environment: &env
       POSTGRES_DB: colcom
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (see .env.example)}
       PGPORT: 5434
       TZ: America/Recife
+    # With host networking Postgres would otherwise listen on every public interface
+    command: ["postgres", "-c", "listen_addresses=localhost"]
     network_mode: host
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -21,6 +23,7 @@ services:
     environment:
       <<: *env
       PORT: 3000
+      ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET:?Set ACCESS_TOKEN_SECRET in .env (see .env.example)}
       DB_PATH: /app/gitDB
       NODE_ENV: production
     depends_on:

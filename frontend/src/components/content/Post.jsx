@@ -120,7 +120,7 @@ export default function Post({
         const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
         try {
           setIsLoading(true)
-          const res = await fetch(`${env.apiAddress}/contents/${id}/${suggestions[currentSuggestion].config.commit}/merge`, { headers })
+          const res = await fetch(`${env.apiAddress}/contents/${id}/${suggestions[currentSuggestion].config.commit}/merge`, { method: "post", headers })
 
           if (res.ok)
             setPostData(prev => ({ ...prev, suggestions: suggestions.filter((_, i) => i !== currentSuggestion) }))
@@ -142,7 +142,7 @@ export default function Post({
         const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
         try {
           setIsLoading(true)
-          const res = await fetch(`${env.apiAddress}/interactions/${suggestions[currentSuggestion].config.commit}/reject`, { headers })
+          const res = await fetch(`${env.apiAddress}/contents/${id}/${suggestions[currentSuggestion].config.commit}/reject`, { method: "post", headers })
 
           if (res.ok)
             setPostData(prev => ({ ...prev, suggestions: suggestions.filter((_, i) => i !== currentSuggestion) }))

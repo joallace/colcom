@@ -284,25 +284,43 @@ async function updateById({ id, field, type, content_id, config, author_pid }: I
   return { ...result.rows[0], author_id: author_pid }
 }
 
-async function updateByCommit(commit: string, field: string, data: any, author_pid: string): Promise<Interaction> {
-  if (!/^[0-9a-f]{7}$/.test(commit))
-    throw new ValidationError({
-      message: `Hash de commit inválido.`,
-      action: 'Forneça um hash de commit válido.',
-      stack: new Error().stack
-    })
+async function findPendingSuggestion(content_id: number, commit: string): Promise<Interaction | undefined> {
+  const query = {
+    text: `
+      SELECT
+        *
+      FROM
+        interactions
+      WHERE
+        content_id = $1
+      AND
+        type = 'suggestion'
+      AND
+        config->>'commit' = $2
+      AND
+        config->>'accepted' IS NULL
+      LIMIT 1
+      ;`,
+    values: [content_id, commit]
+  }
 
+  const result = await db.query(query)
+  return result.rows[0]
+}
+
+async function setSuggestionAccepted(id: number, accepted: boolean, author_pid: string): Promise<Interaction> {
   const query = {
     text: `
       UPDATE
         interactions
       SET
-        ${field} = '${data}'
+        config = jsonb_set(config, '{accepted}', to_jsonb($1::BOOLEAN))
       WHERE
-        config['commit'] = '"${commit}"'
+        id = $2
       RETURNING
         *
-      ;`
+      ;`,
+    values: [accepted, id]
   }
 
   const result = await db.query(query)
@@ -334,7 +352,8 @@ export default Object.freeze({
   getUserCurrentPromote,
   getCount,
   updateById,
-  updateByCommit,
+  findPendingSuggestion,
+  setSuggestionAccepted,
   removeById
 })
 

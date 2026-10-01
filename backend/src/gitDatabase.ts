@@ -24,6 +24,36 @@ if (!existsSync(dbPath)) {
 else
   logger.info(`[gitDatabase.ts] Loaded git db at "${dbPath}"`)
 
+// Every write checks out a branch in the repo's shared working tree, so all operations
+// on the same repo must be serialized through this single, module wide lock.
+const lock = new AsyncLock()
+
+// Refs arrive from the URL, and a value such as "--output=..." would be parsed by git as an option
+function validateCommit(commit: string) {
+  if (!/^[0-9a-f]{7,40}$/.test(commit))
+    throw new ValidationError({
+      message: "Hash de commit inválido.",
+      action: "Forneça um hash de commit válido.",
+      stack: new Error().stack,
+      errorLocationCode: "GIT:VALIDATE_COMMIT:INVALID_HASH",
+      key: "hash"
+    })
+}
+
+// Runs a write while holding the repo's lock. If it fails midway, the working tree is reset,
+// otherwise leftover changes would make every later checkout in this repo fail.
+async function write<T>(repo: number, operation: () => Promise<T>): Promise<T> {
+  return await lock.acquire(String(repo), async () => {
+    try {
+      return await operation()
+    }
+    catch (err) {
+      await exec("git", ["-C", `${dbPath}/${repo}`, "reset", "--hard", "--quiet"]).catch(() => { })
+      throw err
+    }
+  })
+}
+
 
 async function create(content: IContent, author: any) {
   const { parent_id, id, type, body } = content
@@ -34,9 +64,8 @@ async function create(content: IContent, author: any) {
   const repo = parent_id || id
   const path = `${dbPath}/${repo}`
   const file = `${path}/main.html`
-  const lock = new AsyncLock()
 
-  lock.acquire(String(repo), async () => {
+  await write(repo, async () => {
     if (type === "topic") {
       await mkdir(path)
       await exec("git", ["-C", path, "init", "-b", "main"])
@@ -51,6 +80,7 @@ async function create(content: IContent, author: any) {
 }
 
 async function read(repo: number, commit: string) {
+  validateCommit(commit)
   const path = `${dbPath}/${repo}`
 
   const output = await exec("git", ["-C", path, "show", `${commit}:./main.html`])
@@ -61,9 +91,8 @@ async function update(content: IContent, author: any, body: string, message: str
   const { parent_id: repo, id } = content
   const path = `${dbPath}/${repo}`
   const file = `${path}/main.html`
-  const lock = new AsyncLock()
 
-  return await lock.acquire(String(repo), async () => {
+  return await write(Number(repo), async () => {
     if (interactionId === undefined)
       await exec("git", ["-C", path, "checkout", String(id)])
     else
@@ -81,9 +110,10 @@ async function update(content: IContent, author: any, body: string, message: str
 async function branch(content: IContent, commit: string) {
   const { parent_id: repo, id } = content
   const path = `${dbPath}/${repo}`
-  const lock = new AsyncLock()
 
-  await lock.acquire(String(repo), async () => {
+  validateCommit(commit)
+
+  await write(Number(repo), async () => {
     await exec("git", ["-C", path, "checkout", "-b", String(id), commit])
   })
 }
@@ -91,12 +121,13 @@ async function branch(content: IContent, commit: string) {
 async function merge(content: IContent, commit: string) {
   const { parent_id: repo, id } = content
   const path = `${dbPath}/${repo}`
-  const lock = new AsyncLock()
 
-  await lock.acquire(String(repo), async () => {
+  validateCommit(commit)
+
+  await write(Number(repo), async () => {
     await exec("git", ["-C", path, "checkout", String(id)])
     try {
-      await exec("git", ["-C", path, "merge", commit, "--no-ff"])
+      await exec("git", ["-C", path, "merge", "--no-ff", commit])
     } catch (err) {
       await exec("git", ["-C", path, "merge", "--abort"])
       throw new ValidationError({

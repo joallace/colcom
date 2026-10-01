@@ -1,9 +1,26 @@
 import db from "@/pgDatabase"
 import { NotFoundError, ValidationError } from "@/errors"
 import { avatarToBase64, getDataByPublicId } from "@/models/user"
+import { limitOffset, orderByColumn } from "@/pagination"
 
 
 type ContentType = "topic" | "post" | "critique"
+
+const contentOrderBy = {
+  id: "contents.id",
+  created_at: "contents.created_at",
+  upvotes: "upvotes",
+  downvotes: "downvotes",
+  promotions: "promotions"
+}
+
+const topicOrderBy = {
+  id: "topics.id",
+  created_at: "topics.created_at",
+  upvotes: "upvotes",
+  downvotes: "downvotes",
+  promotions: "promotions"
+}
 
 interface TopicConfig {
   answers: string[]
@@ -163,9 +180,9 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
         :
         ""
       }
-      WHERE ${where}
-      ORDER BY ${orderBy} DESC
-      LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}
+      ${where ? `WHERE ${where}` : ""}
+      ORDER BY ${orderByColumn(orderBy, contentOrderBy)} DESC, contents.id DESC
+      ${limitOffset(page, pageSize)}
       ;`,
     values
   }
@@ -249,8 +266,8 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
           INNER JOIN
             users ON topics.author_id = users.id
           WHERE ${where}
-          ORDER BY ${orderBy} DESC
-          LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}
+          ORDER BY ${orderByColumn(orderBy, topicOrderBy)} DESC, topics.id DESC
+          ${limitOffset(page, pageSize)}
         )
     
         UNION ALL
@@ -341,6 +358,21 @@ async function updateById(id: number, body: string, author_pid: string) {
   return { ...result.rows[0], author_id: author_pid }
 }
 
+// Only used to roll back a freshly created content whose git write failed, so nothing references it yet
+async function removeById(id: number) {
+  const query = {
+    text: `
+      DELETE FROM
+        contents
+      WHERE
+        id = $1
+      ;`,
+    values: [id],
+  }
+
+  await db.query(query)
+}
+
 export async function getDataById(id: number, data: (keyof Content)[]): Promise<any> {
   const query = {
     text: `
@@ -390,6 +422,7 @@ export default Object.freeze({
   findTree,
   findById,
   updateById,
+  removeById,
   getDataById,
   getCount
 })

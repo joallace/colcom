@@ -11,7 +11,8 @@ import {
     updateContent,
     getVersion,
     clonePost,
-    mergePost
+    mergePost,
+    rejectSuggestion
 } from "@/controllers/content"
 
 
@@ -31,7 +32,9 @@ router.get("/contents/:id", authHandler(true), getContent)
 
 router.get("/contents/:id/:hash", authHandler(true), getVersion)
 
-router.get("/contents/:id/:hash/merge", authHandler(), mergePost)
+router.post("/contents/:id/:hash/merge", authHandler(), mergePost)
+
+router.post("/contents/:id/:hash/reject", authHandler(), rejectSuggestion)
 
 router.post("/contents/:id/:hash/clone", authHandler(), clonePost)
 

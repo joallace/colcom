@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken"
 import User, { UserInsertRequest } from "@/models/user"
 import Interactions from "@/models/interactions"
 import { ValidationError } from "@/errors"
+import config from "@/config"
 
 
 const validateUser = (content: UserInsertRequest) => {
@@ -65,7 +66,7 @@ export const loginUser: RequestHandler = async (req, res, next) => {
             pid: user.pid,
           },
         },
-        process.env.ACCESS_TOKEN_SECRET || "colcom",
+        config.accessTokenSecret,
         { expiresIn: "7d" }
       );
       res.status(200).json({ accessToken });

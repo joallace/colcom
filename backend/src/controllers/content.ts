@@ -3,7 +3,7 @@ import { RequestHandler } from "express"
 import git from "@/gitDatabase"
 import Content, { ContentInsertRequest } from "@/models/content"
 import Interactions from "@/models/interactions"
-import { ValidationError, NotFoundError, UnauthorizedError } from "@/errors"
+import { ValidationError, NotFoundError, ForbiddenError } from "@/errors"
 
 
 const validateContent = (content: ContentInsertRequest) => {
@@ -29,6 +29,46 @@ const getChildrenStats = (topic: any) => {
   }
 
   return { upvotes, downvotes, votes, count: topic.children.length }
+}
+
+// Postgres and git can't share a transaction, so when the git write fails the row that was
+// just inserted is removed, instead of being left pointing to a missing branch or repo.
+const withRollback = async (gitWrite: () => Promise<unknown>, rollback: () => Promise<unknown>) => {
+  try {
+    await gitWrite()
+  }
+  catch (err) {
+    await rollback()
+    throw err
+  }
+}
+
+const findOwnedSuggestion = async (content_id: number, commit: string, author_pid: string) => {
+  const content = await Content.findById(content_id)
+
+  if (!content || content.type !== "post")
+    throw new NotFoundError({
+      message: "Post não encontrado.",
+      action: 'Verifique se o "id" fornecido está correto.',
+      stack: new Error().stack
+    })
+
+  if (author_pid !== content.author_id)
+    throw new ForbiddenError({
+      message: "Somente o autor do post pode aceitar ou rejeitar sugestões.",
+      stack: new Error().stack
+    })
+
+  const suggestion = await Interactions.findPendingSuggestion(content_id, commit)
+
+  if (!suggestion)
+    throw new NotFoundError({
+      message: "Sugestão pendente não encontrada para este post.",
+      action: 'Verifique se o "hash" fornecido está correto.',
+      stack: new Error().stack
+    })
+
+  return { content, suggestion }
 }
 
 export const createContent: RequestHandler = async (req, res, next) => {
@@ -59,7 +99,7 @@ export const createContent: RequestHandler = async (req, res, next) => {
 
     const result = await Content.create(content)
     result.body = body
-    await git.create(result, req.params.user)
+    await withRollback(() => git.create(result, req.params.user), () => Content.removeById(result.id))
 
     res.status(201).json(result)
   }
@@ -281,7 +321,15 @@ export const updateContent: RequestHandler = async (req, res, next) => {
       :
       undefined
 
-    const commit = await git.update(content, req.params.user, body, message, interactionId)
+    let commit
+    try {
+      commit = await git.update(content, req.params.user, body, message, interactionId)
+    }
+    catch (err) {
+      if (interactionId !== undefined)
+        await Interactions.removeById(interactionId)
+      throw err
+    }
 
     if (interactionId === undefined) {
       const result = await Content.updateById(content.id, body, author_pid)
@@ -312,7 +360,7 @@ export const clonePost: RequestHandler = async (req, res, next) => {
 
     const content = await Content.findById(content_id)
     const result = await Content.create({ ...(<any>content), author_pid, title })
-    await git.branch(result, commit)
+    await withRollback(() => git.branch(result, commit), () => Content.removeById(result.id))
 
     res.status(200).json(result)
   }
@@ -327,18 +375,28 @@ export const mergePost: RequestHandler = async (req, res, next) => {
   const commit = req.params.hash
 
   try {
-    const content = await Content.findById(content_id)
-
-    if (author_pid !== content.author_id)
-      throw new UnauthorizedError({
-        message: "Somente o autor do post pode realizar merges",
-        stack: new Error().stack
-      })
+    const { content, suggestion } = await findOwnedSuggestion(content_id, commit, author_pid)
 
     await git.merge(content, commit)
-    await Interactions.updateByCommit(commit, "config['accepted']", true, author_pid)
+    await Interactions.setSuggestionAccepted(suggestion.id, true, author_pid)
 
     res.status(204).end()
+  }
+  catch (err) {
+    next(err)
+  }
+}
+
+export const rejectSuggestion: RequestHandler = async (req, res, next) => {
+  const content_id = Number(req.params.id)
+  const author_pid = (<any>req.params.user)?.pid
+  const commit = req.params.hash
+
+  try {
+    const { suggestion } = await findOwnedSuggestion(content_id, commit, author_pid)
+    const result = await Interactions.setSuggestionAccepted(suggestion.id, false, author_pid)
+
+    res.status(200).json(result)
   }
   catch (err) {
     next(err)

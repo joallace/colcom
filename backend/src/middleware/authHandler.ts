@@ -2,6 +2,8 @@ import { UnauthorizedError, ValidationError } from "@/errors"
 import { RequestHandler } from "express"
 import jwt from "jsonwebtoken"
 
+import config from "@/config"
+
 
 const tokenHandler = (optional = false): RequestHandler => async (req, res, next) => {
   const authHeader = String(req.headers.Authorization || req.headers.authorization)
@@ -26,7 +28,7 @@ const tokenHandler = (optional = false): RequestHandler => async (req, res, next
         })
     }
 
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET || "colcom", (err, decoded) => {
+    jwt.verify(token, config.accessTokenSecret, (err, decoded) => {
       if (err)
         throw new UnauthorizedError({ message: "Token inválido" })
 

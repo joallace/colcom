@@ -31,7 +31,7 @@ interface BaseErrorParams {
 }
 
 
-class BaseError extends Error implements BaseErrorType {
+export class BaseError extends Error implements BaseErrorType {
   message: string
   stack?: string
   action: string

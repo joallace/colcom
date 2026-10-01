@@ -3,7 +3,15 @@ import { QueryResult } from "pg"
 
 import db from "@/pgDatabase"
 import { NotFoundError, ValidationError } from "@/errors"
+import { limitOffset, orderByColumn } from "@/pagination"
 
+
+const userOrderBy = {
+  id: "id",
+  created_at: "created_at",
+  colcoins: "colcoins",
+  prestige: "prestige"
+}
 
 interface UserConfig {
   theme?: string
@@ -93,8 +101,8 @@ export async function findAll({ where = "", orderBy = "id", page = 1, pageSize =
       FROM
         users
       ${where ? `WHERE ${where}` : ""}
-      ORDER BY ${orderBy} DESC
-      LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}
+      ORDER BY ${orderByColumn(orderBy, userOrderBy)} DESC, id DESC
+      ${limitOffset(page, pageSize)}
       ;
     ;`,
     values
