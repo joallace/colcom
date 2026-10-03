@@ -56,9 +56,17 @@
         }
     }
 
+    // Reserves the critiques' width beside the post; the popover inside is placed by Floating UI
     >.critiques {
         transition: all 0.5 ease;
-        height: min-content;
+        @include content-responsiveness(30vw, 30vw, 0);
+        flex-shrink: 0;
+    }
+
+    .critiquePopover {
+        z-index: 1;
+        display: grid;
+        gap: 1.5rem;
     }
 }
 

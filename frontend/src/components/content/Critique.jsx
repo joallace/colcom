@@ -17,23 +17,6 @@ import env from "@/assets/enviroment"
 import useUser from "@/context/UserContext"
 
 
-function getSelectionHeight() {
-  if (window.getSelection) {
-    const selection = window.getSelection()
-    if (selection.rangeCount) {
-      const range = selection.getRangeAt(0).cloneRange()
-      if (range.getBoundingClientRect) {
-        // Sometimes, when selecting a whole paragraph, we can't get the selection rect
-        // so we can just pick it from the starting container
-        const rect = range?.getBoundingClientRect()?.top ? range?.getBoundingClientRect() : range?.startContainer?.getBoundingClientRect?.()
-        // A critique opened from the list of removed passages has no selection in the post to align with
-        return rect && (rect.top + rect.bottom) / 2
-      }
-    }
-  }
-}
-
-
 export default ({
   id,
   commit,
@@ -47,14 +30,11 @@ export default ({
   config,
   userInteractions,
   setShowCritique,
-  parentRef,
   submitSignal = false,
   setSubmitSignal = () => { },
   setCritiques = () => { },
   tempHighlight,
   setTempHighlight,
-  setOffset,
-  skipOffset = false,
   interval,
   anchor,
   quote
@@ -64,8 +44,6 @@ export default ({
 
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
   const [content, setContent] = React.useState(body)
-  const [frameHeight, setFrameHeight] = React.useState()
-  const [offsetTop, setOffsetTop] = React.useState(0)
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState(false)
   const titleRef = React.useRef()
@@ -156,18 +134,6 @@ export default ({
 
 
   React.useEffect(() => {
-    if (!skipOffset && frameHeight && interval !== undefined && isDesktop) {
-      const y = getSelectionHeight() + window.scrollY - frameHeight - parentRef?.current.offsetTop
-
-      if (Number.isFinite(y)) {
-        setOffsetTop(y)
-        setOffset && setOffset(y)
-        !tempHighlight.length && window.scrollTo({ top: y, behavior: "smooth" })
-      }
-    }
-  }, [frameHeight, interval])
-
-  React.useEffect(() => {
     if (submitSignal)
       submit()
   }, [submitSignal])
@@ -199,8 +165,7 @@ export default ({
       isCritique
       justify
       readOnly={readOnly}
-      style={{ transform: isDesktop && !setOffset ? `translate(0,${offsetTop}px)` : undefined, width: isDesktop ? undefined : "100%" }}
-      setHeight={setFrameHeight}
+      style={{ width: isDesktop ? undefined : "100%" }}
       error={error}
       setError={setError}
     >

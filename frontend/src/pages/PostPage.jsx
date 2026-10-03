@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router'
 
 import Post from "@/components/content/Post"
 import CritiqueFrame from "@/components/content/Critique"
+import CritiquePopover from "@/components/content/CritiquePopover"
 import Modal from "@/components/primitives/Modal"
 import LoadingButton from "@/components/primitives/LoadingButton"
 import Spinner from "@/components/primitives/Spinner"
@@ -26,7 +27,6 @@ export default () => {
   const [bodyCommit, setBodyCommit] = React.useState()
   const [postCritiques, setPostCritiques] = React.useState([])
   const [tempHighlight, setTempHighlight] = React.useState([])
-  const [critiquesYOffset, setCritiquesYOffset] = React.useState(0)
   const postTitleRef = React.useRef()
   const [searchParams, setSearchParams] = useSearchParams();
   const { pid } = useParams()
@@ -164,49 +164,43 @@ export default () => {
       fetchPost()
   }, [pid, user])
 
-  const Critique = ({ index, setOffset, skipOffset, setHighlight }) => (
+  // showCritique holds what is open: a new critique's [from, to] selection, the index of one
+  // critique, or the JSON list of overlapping critiques opened together from one highlight
+  const isNewCritique = Array.isArray(showCritique)
+  const isCritiqueGroup = typeof showCritique === "string" && showCritique.startsWith("[")
+  const openCritiques = !showCritique ? [] : isCritiqueGroup ? JSON.parse(showCritique) : [showCritique]
+
+  const renderCritique = index => (
     <CritiqueFrame
+      key={isNewCritique ? "new-critique" : `critique-${index}`}
       parent_id={pid}
       interval={index}
       setShowCritique={setShowCritique}
-      parentRef={postTitleRef}
       commit={postData?.history && postData?.history[currentCommit].commit}
       submitSignal={submitCritique}
       setSubmitSignal={setSubmitCritique}
       setCritiques={setPostCritiques}
       tempHighlight={tempHighlight}
-      setTempHighlight={setHighlight}
-      setOffset={setOffset}
-      skipOffset={skipOffset}
+      // Only a group offers highlighting each critique's own passage
+      setTempHighlight={isCritiqueGroup ? setTempHighlight : undefined}
       quote={newCritiqueQuote}
       {...critiques[index]}
     />
   )
 
-  const Critiques = () => {
-    // We test if the critique to be shown is an array,
-    // then render a container with multiple critiques or only one critique
-    if (showCritique[0] === "[") {
-      return (
-        <div className="critiques" style={{ transform: `translate(0,${critiquesYOffset}px)` }}>
-          {
-            JSON.parse(showCritique).map((index, i) =>
-              <Critique
-                key={`critique-${index}`}
-                index={index}
-                setOffset={i === 0 ? setCritiquesYOffset : undefined}
-                skipOffset={i !== 0}
-                setHighlight={setTempHighlight}
-              />
-            )
-          }
-        </div>
-      )
-    }
-    else
-      return <Critique index={showCritique} />
-  }
+  const getPostFrame = React.useCallback(() => postTitleRef.current?.closest(".frame"), [])
 
+  // The element marking the open passage: the new critique's temporary highlight, the critiques'
+  // highlight, or for a removed passage its entry in the list below the post
+  const getCritiqueAnchor = React.useCallback(() => {
+    const post = getPostFrame()
+
+    if (isNewCritique)
+      return post?.querySelector("mark.temporary")
+
+    return post?.querySelector(`mark[data-commit-index="${CSS.escape(String(showCritique))}"]`)
+      ?? document.querySelector(`.removedCritiques [data-critique-index="${CSS.escape(String(showCritique))}"]`)
+  }, [getPostFrame, isNewCritique, showCritique])
 
   return (
     <div className="content">
@@ -269,29 +263,19 @@ export default () => {
           />
           {showCritique &&
             isDesktop ?
-            <Critiques />
+            // Holds the critiques' width in the layout; the popover itself is positioned beside the post
+            <div className="critiques">
+              <CritiquePopover getPost={getPostFrame} getAnchor={getCritiqueAnchor}>
+                {openCritiques.map(renderCritique)}
+              </CritiquePopover>
+            </div>
             :
             <Modal
               isOpen={showCritique}
               setIsOpen={setShowCritique}
             >
               <div className="body">
-                {(showCritique && showCritique.constructor === Array) ?
-                  <CritiqueFrame
-                    parent_id={pid}
-                    interval={showCritique}
-                    setShowCritique={setShowCritique}
-                    parentRef={postTitleRef}
-                    commit={postData?.history && postData?.history[currentCommit].commit}
-                    submitSignal={submitCritique}
-                    setSubmitSignal={setSubmitCritique}
-                    setCritiques={setPostCritiques}
-                    quote={newCritiqueQuote}
-                    {...critiques[showCritique]}
-                  />
-                  :
-                  <Critiques />
-                }
+                {openCritiques.map(renderCritique)}
               </div>
               {(showCritique && showCritique.constructor === Array) &&
                 <div className="footer center">
@@ -310,7 +294,7 @@ export default () => {
             <ul>
               {removedCritiques.map(({ critique, index }) =>
                 <li key={critique.id}>
-                  <button onClick={() => setShowCritique(String(index))}>{critique.title}</button>
+                  <button data-critique-index={index} onClick={() => setShowCritique(String(index))}>{critique.title}</button>
                   <span>por {critique.author}</span>
                 </li>
               )}

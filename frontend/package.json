@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@floating-ui/dom": "^1.8.0",
+    "@floating-ui/react-dom": "^2.1.9",
     "@tiptap/core": "^3.31.4",
     "@tiptap/extension-document": "^3.31.4",
     "@tiptap/extension-heading": "^3.31.4",

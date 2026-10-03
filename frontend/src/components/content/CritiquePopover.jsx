@@ -1,0 +1,53 @@
+import React from "react"
+import { useFloating, autoUpdate, offset, shift, limitShift } from "@floating-ui/react-dom"
+
+
+const GAP = 24
+const VIEWPORT_PADDING = 16
+
+// Keeps the open critiques beside the post, level with the passage they criticise, while the page
+// scrolls, resizes or the post's text reflows. `getPost` returns the post's frame and `getAnchor`
+// the element marking the passage; both are looked up on every update, because the editor
+// re-renders its highlights (replacing those elements) while a critique is open.
+export default function CritiquePopover({ getPost, getAnchor, children }) {
+  const [floating, setFloating] = React.useState(null)
+  const reference = React.useMemo(() => ({
+    get contextElement() {
+      return getPost()
+    },
+    getBoundingClientRect() {
+      const column = getPost().getBoundingClientRect()
+      const passage = getAnchor()?.getBoundingClientRect() ?? column
+
+      // The post column's horizontal extent with the passage's vertical one, so the critiques
+      // sit to the right of the whole post rather than next to the highlighted words
+      return {
+        x: column.x,
+        y: passage.y,
+        left: column.left,
+        right: column.right,
+        width: column.width,
+        top: passage.top,
+        bottom: passage.bottom,
+        height: passage.height
+      }
+    }
+  }), [getPost, getAnchor])
+
+  const { floatingStyles } = useFloating({
+    placement: "right-start",
+    elements: { reference, floating },
+    middleware: [
+      offset(GAP),
+      // Slides along the post to stay in view, but never past the passage it belongs to
+      shift({ padding: VIEWPORT_PADDING, limiter: limitShift() })
+    ],
+    whileElementsMounted: autoUpdate
+  })
+
+  return (
+    <div ref={setFloating} className="critiquePopover" style={floatingStyles}>
+      {children}
+    </div>
+  )
+}
