@@ -39,8 +39,10 @@ export default function CritiquePopover({ getPost, getAnchor, children }) {
     elements: { reference, floating },
     middleware: [
       offset(GAP),
-      // Slides along the post to stay in view, but never past the passage it belongs to
-      shift({ padding: VIEWPORT_PADDING, limiter: limitShift() })
+      // Slides along the post to stay in view, but never past the passage it belongs to, nor beyond
+      // the post itself (e.g. over the timeline above it). A stack taller than the visible part of
+      // the post stays at the post's top and extends downwards, where it can be scrolled to.
+      shift(() => ({ boundary: getPost(), padding: VIEWPORT_PADDING, limiter: limitShift() }))
     ],
     whileElementsMounted: autoUpdate
   })
