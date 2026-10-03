@@ -339,7 +339,14 @@ export const getVersion: RequestHandler = async (req, res, next) => {
         :
         undefined
 
-    res.status(200).json({ body, critiques })
+    // The text of each earlier version critiques were made on, so the client can diff it against
+    // this one and carry every critique to exactly where its passage went
+    const versions: Record<string, string> = {}
+    for (const critiqueCommit of new Set(critiques.map(critique => String((<any>critique.config).commit))))
+      if (critiqueCommit !== commit)
+        versions[critiqueCommit] = await git.read(repo, critiqueCommit)
+
+    res.status(200).json({ body, critiques, versions })
   }
   catch (err) {
     next(err)

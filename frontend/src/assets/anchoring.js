@@ -1,13 +1,16 @@
 import { getSchema } from "@tiptap/core"
 import { DOMParser as SchemaParser } from "@tiptap/pm/model"
 import search from "approx-string-match"
+import diff from "fast-diff"
 
 import getExtensions from "@/components/Editor/extensions"
 
 
 // Critiques are anchored like W3C Web Annotations: the version they were made on (commit + ProseMirror
 // positions) plus the quoted text and some context around it. On that version the positions are used
-// as they are; on any later version the quote is searched for, so the critique follows its passage.
+// as they are. On a later version the text of the original version is diffed against the current one
+// and the passage is carried through the edits, which stays exact even in repetitive text. Without the
+// original text, the quote is searched for instead.
 
 const CONTEXT_LENGTH = 32
 const CONTEXT_MIN_LENGTH = 8
@@ -200,11 +203,69 @@ function findQuote(index, { exact, prefix, suffix, start }) {
   return { match: "removed" }
 }
 
+// Carries the old text's range [start, end) through the edits that turned it into the new text.
+// Words inserted inside the passage join it, those inserted right before or after it don't.
+function mapThroughDiff(edits, start, end) {
+  let oldPos = 0, newPos = 0, newStart = null, newEnd = null, kept = 0
+
+  for (const [operation, text] of edits) {
+    const length = text.length
+
+    if (operation === diff.INSERT) {
+      newPos += length
+      continue
+    }
+
+    // Equal and deleted text both consume the old text; only equal text survives into the new one
+    const isEqual = operation === diff.EQUAL
+    if (newStart === null && start < oldPos + length)
+      newStart = newPos + (isEqual ? Math.max(0, start - oldPos) : 0)
+    if (newEnd === null && end <= oldPos + length)
+      newEnd = newPos + (isEqual ? Math.max(0, end - oldPos) : 0)
+    if (isEqual)
+      kept += Math.max(0, Math.min(end, oldPos + length) - Math.max(start, oldPos))
+
+    oldPos += length
+    if (isEqual)
+      newPos += length
+  }
+
+  return { start: newStart ?? newPos, end: newEnd ?? newPos, kept }
+}
+
+function findThroughDiff(index, oldIndex, edits, { exact, start }) {
+  const end = start + exact.length
+
+  // The stored offsets must still describe the quote in the original text, or they can't be trusted
+  if (oldIndex.text.slice(start, end) !== exact)
+    return null
+
+  const mapped = mapThroughDiff(edits, start, end)
+  const range = mapped.kept > 0 && toRange(index, mapped.start, mapped.end)
+
+  if (!range)
+    return { match: "removed" }
+
+  const unchanged = mapped.kept === exact.length && index.text.slice(mapped.start, mapped.end) === exact
+  return { ...range, match: unchanged ? "exact" : "fuzzy" }
+}
+
 // Adds to each critique an `anchor` saying where it lands on the version being read (`commit`, whose
 // text is `html`): { from, to, match: "exact" | "fuzzy" } or { match: "removed" }. The backend only
-// sends critiques made on this version or on earlier ones.
-export function projectCritiques(html, critiques, commit) {
+// sends critiques made on this version or on earlier ones, plus `versions`: the text of each earlier
+// version they were made on, by commit.
+export function projectCritiques(html, critiques, commit, versions = {}) {
   let index
+  const diffs = new Map()
+
+  // One diff per earlier version, shared by all critiques made on it
+  const diffAgainst = critiqueCommit => {
+    if (!diffs.has(critiqueCommit)) {
+      const oldIndex = textIndex(docFromHtml(versions[critiqueCommit]))
+      diffs.set(critiqueCommit, { oldIndex, edits: diff(oldIndex.text, index.text) })
+    }
+    return diffs.get(critiqueCommit)
+  }
 
   return critiques.map(critique => {
     const { config } = critique
@@ -216,6 +277,14 @@ export function projectCritiques(html, critiques, commit) {
       return { ...critique, anchor: { match: "removed" } }
 
     index ??= textIndex(docFromHtml(html))
+
+    if (versions[config.commit] !== undefined) {
+      const { oldIndex, edits } = diffAgainst(config.commit)
+      const anchor = findThroughDiff(index, oldIndex, edits, config.quote)
+      if (anchor)
+        return { ...critique, anchor }
+    }
+
     return { ...critique, anchor: findQuote(index, config.quote) }
   })
 }

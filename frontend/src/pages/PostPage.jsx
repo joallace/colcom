@@ -26,6 +26,8 @@ export default () => {
   const [postBody, setPostBody] = React.useState("")
   const [bodyCommit, setBodyCommit] = React.useState()
   const [postCritiques, setPostCritiques] = React.useState([])
+  const [critiqueVersions, setCritiqueVersions] = React.useState({})
+  const latestRequest = React.useRef(0)
   const [tempHighlight, setTempHighlight] = React.useState([])
   const postTitleRef = React.useRef()
   const [searchParams, setSearchParams] = useSearchParams();
@@ -34,29 +36,44 @@ export default () => {
   const isDesktop = useBreakpoint("md")
 
 
-  const fetchCommitBody = async (commitToFetch = undefined) => {
+  // The version the URL asks for (?commit=), or the latest one. The URL is the single source of
+  // truth for which version is shown: the slider and the critiques' links only change the URL.
+  const commitFromUrl = () => {
+    const history = postData?.history
+    if (!history?.length)
+      return
+
+    const commit = searchParams.get("commit")
+    return history.some(version => version.commit === commit) ? commit : history.at(-1).commit
+  }
+
+  const fetchCommitBody = async (commit = commitFromUrl()) => {
     const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
-    const commit = commitToFetch ?? postData.history[currentCommit]?.commit
 
     if (!commit)
       return
+
+    // Only the latest request may update the page, or a slow response could show an older version
+    const request = ++latestRequest.current
 
     try {
       setIsLoading(true)
       const res = await fetch(`${env.apiAddress}/contents/${pid}/${commit}`, { headers })
       const data = await res.json()
 
-      if (res.ok && data) {
+      if (res.ok && data && request === latestRequest.current) {
         setPostBody(data.body)
         setBodyCommit(commit)
         setPostCritiques(data.critiques)
+        setCritiqueVersions(data.versions ?? {})
       }
     }
     catch (err) {
       console.error(err)
     }
     finally {
-      setIsLoading(false)
+      if (request === latestRequest.current)
+        setIsLoading(false)
     }
   }
 
@@ -87,8 +104,8 @@ export default () => {
 
   // Critiques made on earlier versions are carried onto the one being read by searching for their quote
   const critiques = React.useMemo(
-    () => projectCritiques(postBody, postCritiques, bodyCommit),
-    [postBody, postCritiques, bodyCommit]
+    () => projectCritiques(postBody, postCritiques, bodyCommit, critiqueVersions),
+    [postBody, postCritiques, bodyCommit, critiqueVersions]
   )
   const groupedCritiques = React.useMemo(() => groupOverlappingMarks(critiques), [critiques])
   const removedCritiques = critiques
@@ -124,16 +141,11 @@ export default () => {
     if (!history)
       return
 
-    const commit = searchParams.get("commit")
-    const index = history.findIndex(version => version.commit === commit)
-
-    if (index > -1)
-      setCurrentCommit(index)
-    else
-      setCurrentCommit(history.length - 1)
+    const commit = commitFromUrl()
+    setCurrentCommit(history.findIndex(version => version.commit === commit))
 
     if (user !== undefined)
-      fetchCommitBody()
+      fetchCommitBody(commit)
   }, [user, searchParams, postData.history])
 
   React.useEffect(() => {
@@ -145,17 +157,16 @@ export default () => {
         const res = await fetch(url, { method: "get", headers })
         const data = await res.json()
 
+        // The version itself is loaded by the effect above, once the history is known
         if (res.ok && data) {
           document.title = `${data.title} · colcom`
           setPostData(data)
-          const commit = data.history[data.history.length - 1].commit
-          await fetchCommitBody(commit)
         }
+        else
+          setIsLoading(false)
       }
       catch (err) {
         console.error(err)
-      }
-      finally {
         setIsLoading(false)
       }
     }
@@ -220,9 +231,9 @@ export default () => {
           value={currentCommit ?? 0}
           disabled={showCritique || Number.isFinite(currentSuggestion)}
           onMouseDown={e => setStartCommit(Number(e.target.value))}
-          onMouseUp={() => { if (startCommit !== currentCommit) { fetchCommitBody(); updateCommitQuery() } }}
+          onMouseUp={() => { if (startCommit !== currentCommit) updateCommitQuery() }}
           onTouchStart={e => setStartCommit(Number(e.target.value))}
-          onTouchEnd={() => { if (startCommit !== currentCommit) { fetchCommitBody(); updateCommitQuery() } }}
+          onTouchEnd={() => { if (startCommit !== currentCommit) updateCommitQuery() }}
           onChange={e => setCurrentCommit(Number(e.target.value))}
         />
         <datalist id="commits">
