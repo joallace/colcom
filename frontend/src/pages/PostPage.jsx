@@ -108,7 +108,8 @@ export default () => {
       return
 
     const commit = searchParams.get("commit")
-    const index = history.findIndex(version => version.commit === commit)
+    // Prefix match keeps links shared before full hashes were adopted working
+    const index = commit ? history.findIndex(version => version.commit.startsWith(commit)) : -1
 
     if (index > -1)
       setCurrentCommit(index)

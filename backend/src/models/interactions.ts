@@ -260,7 +260,18 @@ async function create({ author_pid, content_id, type, config = null }: Interacti
     values: [id, content_id, type, type === "promote" ? promoteConfig() : config]
   }
 
-  const result = await db.query(query)
+  const result = await db.query(query).catch(err => {
+    // unique_violation: an identical request (e.g. a double click) already registered it
+    if (err?.code === "23505")
+      throw new ValidationError({
+        message: "Esta interação já foi registrada.",
+        action: "Atualize a página para ver o estado atual.",
+        statusCode: 409,
+        stack: new Error().stack,
+        errorLocationCode: "MODEL:INTERACTION:CREATE:ALREADY_EXISTS"
+      })
+    throw err
+  })
 
   return { ...result.rows[0], author_id: author_pid }
 }

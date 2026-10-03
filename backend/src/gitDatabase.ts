@@ -54,6 +54,19 @@ async function write<T>(repo: number, operation: () => Promise<T>): Promise<T> {
   })
 }
 
+// The editor emits the whole document as a single line, and git diffs and merges line by line,
+// so any two edits to the same post would conflict. Breaking the line after every block element
+// makes each paragraph, heading, list item, etc. its own line. The browser's parser drops this
+// whitespace between blocks, so the rendered document and the critiques' positions don't change.
+// Code blocks are left untouched, since their whitespace is meaningful.
+const BLOCK_END = /(<\/(?:p|h[1-6]|li|ul|ol|blockquote|table|thead|tbody|tr|chart)>|<hr>)\n*/g
+
+export function formatHtml(html: string) {
+  return html
+    .split(/(<pre[\s\S]*?<\/pre>\n*)/)
+    .map(part => part.startsWith("<pre") ? part.trimEnd() + "\n" : part.replace(BLOCK_END, "$1\n"))
+    .join("")
+}
 
 async function create(content: IContent, author: any) {
   const { parent_id, id, type, body } = content
@@ -73,9 +86,11 @@ async function create(content: IContent, author: any) {
     else
       await exec("git", ["-C", path, "checkout", "-b", String(id), "main"])
 
-    await writeFile(file, body || "")
+    await writeFile(file, formatHtml(body || ""))
     await exec("git", ["-C", path, "add", file])
-    await exec("git", ["-C", path, "commit", "-m", type === "topic" ? "init topic" : `init post ${id}`, "--author", `${author.username} <${author.email}>`])
+    // A post identical to the topic's text would otherwise have nothing to commit, and every post
+    // needs its own first commit to appear in its history.
+    await exec("git", ["-C", path, "commit", "--allow-empty", "-m", type === "topic" ? "init topic" : `init post ${id}`, "--author", `${author.username} <${author.email}>`])
   })
 }
 
@@ -98,11 +113,21 @@ async function update(content: IContent, author: any, body: string, message: str
     else
       await exec("git", ["-C", path, "checkout", "-b", `${id}_${interactionId}`, String(id)])
 
-    await writeFile(file, body)
+    await writeFile(file, formatHtml(body))
     await exec("git", ["-C", path, "add", file])
+
+    const hasChanges = await exec("git", ["-C", path, "diff", "--cached", "--quiet"]).then(() => false, () => true)
+    if (!hasChanges)
+      throw new ValidationError({
+        message: "Nenhuma alteração foi feita no texto.",
+        action: "Altere o conteúdo antes de enviar a edição.",
+        stack: new Error().stack,
+        errorLocationCode: "GIT:UPDATE:NO_CHANGES"
+      })
+
     await exec("git", ["-C", path, "commit", "-m", message, "--author", `${author.username} <${author.email}>`])
 
-    const output = await exec("git", ["-C", path, "rev-parse", "--short", "HEAD"])
+    const output = await exec("git", ["-C", path, "rev-parse", "HEAD"])
     return (<any>(output.stdout ?? output)).trimEnd()
   })
 }
@@ -137,16 +162,30 @@ async function merge(content: IContent, commit: string) {
   })
 }
 
+// Short hashes were stored before full ones were adopted, this expands them for the migration script
+async function resolveCommit(repo: number, commit: string): Promise<string> {
+  validateCommit(commit)
+
+  const output = await exec("git", ["-C", `${dbPath}/${repo}`, "rev-parse", "--verify", "--quiet", `${commit}^{commit}`])
+  return (<any>(output.stdout ?? output)).trimEnd()
+}
+
 async function log(content: IContent) {
   const { parent_id: repo, id } = content
-
   const path = `${dbPath}/${repo}/`
-  const formatFlag = "--pretty=format:{^^^^commit^^^^:^^^^%h^^^^,^^^^subject^^^^:^^^^%s^^^^,^^^^date^^^^:^^^^%aD^^^^,^^^^author^^^^:^^^^%aN^^^^},"
 
-  const output = await exec("git", ["-C", path, "log", `main..${id}`, formatFlag], { encoding: "utf-8" })
-  const log: any = output?.stdout ?? output
+  // Fields and commits are separated by NUL, the only character that can't appear in commit
+  // messages or author names, since it can't be passed as a command line argument.
+  const output = await exec("git", ["-C", path, "log", "-z", "--reverse", "--format=%H%x00%s%x00%aD%x00%aN", `main..${id}`], { encoding: "utf-8" })
+  const fields = String(output?.stdout ?? output).split("\0")
 
-  return (JSON.parse("[" + log.replaceAll('"', '\\"').replaceAll("^^^^", '"').slice(0, -1) + "]")).reverse()
+  const history = []
+  for (let i = 0; i + 3 < fields.length; i += 4) {
+    const [commit, subject, date, author] = fields.slice(i, i + 4)
+    history.push({ commit, subject, date, author })
+  }
+
+  return history
 }
 
 export default Object.freeze({
@@ -155,5 +194,6 @@ export default Object.freeze({
   update,
   branch,
   merge,
+  resolveCommit,
   log
 })

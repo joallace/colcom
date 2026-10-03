@@ -27,7 +27,9 @@ const pool = new pg.Pool(config)
 async function connect() {
   try {
     logger.info(`[pgDatabase.ts] Connecting to db ${URL}`)
-    await pool.connect()
+    // Only checks that the database is reachable, the client must go back to the pool
+    const client = await pool.connect()
+    client.release()
   } catch (err) {
     setTimeout(() => {
       connect()
@@ -42,7 +44,10 @@ pool.once("connect", () => {
   logger.info(`[pgDatabase.ts] Connected to db ${URL}`)
   logger.info(`[pgDatabase.ts] Creating inital tables from "sql/init.sql" if they do not exist`)
   const initSql = readFileSync(resolve(__dirname, "sql/init.sql"), { encoding: "utf-8" })
-  return pool.query(initSql)
+  return pool.query(initSql).catch(err => {
+    logger.fatal(err, `[pgDatabase.ts] Failed to run "sql/init.sql"`)
+    process.exit(1)
+  })
 })
 
 connect()

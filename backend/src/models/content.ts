@@ -61,6 +61,23 @@ interface Content {
   config?: ConfigType
 }
 
+const SUMMARY_LENGTH = 280
+
+// Posts keep only a short summary in the database, the full text lives in git. It's the first
+// non empty paragraph (inline markup kept), or the plain text when the post has no paragraphs,
+// e.g. when it starts with a table or a chart.
+export function summarize(html: unknown): string {
+  if (typeof html !== "string")
+    return ""
+
+  const paragraph = [...html.matchAll(/<p(?:\s[^>]*)?>([\s\S]*?)<\/p>/g)]
+    .map(match => match[1].trim())
+    .find(text => text.length > 0)
+
+  const summary = paragraph ?? html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()
+  return summary.slice(0, SUMMARY_LENGTH)
+}
+
 async function validateUnique(value: string, field: keyof Content) {
   const query = {
     text: `SELECT ${field} FROM contents WHERE LOWER(${field}) = LOWER($1)`,
@@ -351,7 +368,7 @@ async function updateById(id: number, body: string, author_pid: string) {
       RETURNING
         *
       ;`,
-    values: [(<any>body)?.match("<p>(.*?)</p>")[1].slice(0, 280), id]
+    values: [summarize(body), id]
   }
 
   const result = await db.query(query)

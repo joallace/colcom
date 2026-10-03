@@ -1,7 +1,7 @@
 import { RequestHandler } from "express"
 
 import git from "@/gitDatabase"
-import Content, { ContentInsertRequest } from "@/models/content"
+import Content, { ContentInsertRequest, summarize } from "@/models/content"
 import Interactions from "@/models/interactions"
 import { ValidationError, NotFoundError, ForbiddenError } from "@/errors"
 
@@ -90,7 +90,7 @@ export const createContent: RequestHandler = async (req, res, next) => {
       title,
       author_pid,
       parent_id,
-      body: type === "post" ? (<any>body)?.match("<p>(.*?)</p>")[1].slice(0, 280) : body,
+      body: type === "post" ? summarize(body) : body,
       type,
       config
     }
@@ -300,6 +300,15 @@ export const updateContent: RequestHandler = async (req, res, next) => {
   const { message, body } = req.body
 
   try {
+    for (const [field, value] of Object.entries({ message, body }))
+      if (typeof value !== "string" || value.trim().length === 0)
+        throw new ValidationError({
+          message: `"${field}" é um campo obrigatório`,
+          stack: new Error().stack,
+          errorLocationCode: "CONTROLLER:CONTENT:UPDATE_CONTENT",
+          key: field
+        })
+
     const content = await Content.findById(content_id)
 
     if (!content)
