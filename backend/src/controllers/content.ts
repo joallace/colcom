@@ -17,20 +17,6 @@ const validateContent = (content: ContentInsertRequest) => {
       })
 }
 
-const getChildrenStats = (topic: any) => {
-  let upvotes = 0
-  let downvotes = 0
-  let votes = 0
-
-  for (const post of topic.children) {
-    upvotes += post.upvotes
-    downvotes += post.downvotes
-    votes += post.votes
-  }
-
-  return { upvotes, downvotes, votes, count: topic.children.length }
-}
-
 // Postgres and git can't share a transaction, so when the git write fails the row that was
 // just inserted is removed, instead of being left pointing to a missing branch or repo.
 const withRollback = async (gitWrite: () => Promise<unknown>, rollback: () => Promise<unknown>) => {
@@ -42,6 +28,9 @@ const withRollback = async (gitWrite: () => Promise<unknown>, rollback: () => Pr
     throw err
   }
 }
+
+// How many of a topic's posts lists show (the most voted); the topic's own page shows them all
+const TOPIC_PREVIEW_POSTS = 3
 
 const QUOTE_CONTEXT_LENGTH = 32
 const QUOTE_MAX_LENGTH = 5000
@@ -108,26 +97,13 @@ const findOwnedSuggestion = async (content_id: number, commit: string, author_pi
   return { content, suggestion }
 }
 
-// What a topic shows in a list: its first posts, the stats of all of them and the user's own votes
-const decorateTopics = async (topics: any[], author_pid?: string) => {
-  for (const topic of topics) {
-    topic.childrenStats = getChildrenStats(topic)
-    topic.children = topic.children.slice(0, 3)
-    if (author_pid) {
-      topic.userInteractions = (await Interactions.getUserContentInteractions({ author_pid, content_id: topic.id })).map(v => v.type)
-      topic.userVote = (await Interactions.getUserTopicVote(author_pid, topic.id))?.content_id
-    }
-  }
-  return topics
-}
-
 // Turns a page of mixed contents (a profile, the bookmarks) into what each type needs to be shown
 // on its own: topics with their posts, posts with the topic they answer, critiques with the post
 // they criticise. `contents` must come from findAll with includeParentTitle.
 const toFeed = async (contents: any[], author_pid?: string) => {
   const topicIds = contents.filter(content => content.type === "topic").map(content => content.id)
   const trees = topicIds.length > 0 ?
-    await decorateTopics(await Content.findTree({ where: "topics.id = ANY($1::int[])", values: [topicIds], pageSize: topicIds.length }), author_pid)
+    await Content.findTree({ where: "topics.id = ANY($1::int[])", values: [topicIds], pageSize: topicIds.length, childLimit: TOPIC_PREVIEW_POSTS, userPid: author_pid })
     :
     []
   const treeById = new Map(trees.map(tree => [tree.id, tree]))
@@ -220,17 +196,9 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
   const orderBy = req.query.orderBy ? String(req.query.orderBy) : "id"
   const author_pid = res.locals.user?.pid
   const getCount = "with_count" in req.query
-  const type = req.route.path.slice(1, -1)
 
   try {
-    const contents = await Content.findTree({ page, pageSize, orderBy })
-
-    // Probably doing this the dirtiest way possible, but right now I don't know another way
-    // to crop the number of each topic's posts to a certain limit and to count all stats.
-    // Should refactor in the future.
-    if (type === "topic")
-      await decorateTopics(contents, author_pid)
-
+    const contents = await Content.findTree({ page, pageSize, orderBy, childLimit: TOPIC_PREVIEW_POSTS, userPid: author_pid })
     res.status(200).json({ tree: contents, count: getCount ? (await Content.getCount("topic")) : undefined })
   }
   catch (err) {
@@ -243,13 +211,14 @@ export const getTopicTree: RequestHandler = async (req, res, next) => {
   const id = Number(req.params.id)
 
   try {
-    const topic = (await Content.findTree({ where: "topics.id = $1", values: [id], pageSize: 1 }))[0]
+    const [topic] = await Content.findTree({ where: "topics.id = $1 AND topics.type = 'topic'", values: [id], pageSize: 1, userPid: author_pid })
 
-    topic.childrenStats = getChildrenStats(topic)
-    if (author_pid) {
-      topic.userInteractions = (await Interactions.getUserContentInteractions({ author_pid, content_id: id })).map(v => v.type)
-      topic.userVote = (await Interactions.getUserTopicVote(author_pid, id))?.content_id
-    }
+    if (!topic)
+      throw new NotFoundError({
+        message: "Tópico não encontrado.",
+        action: 'Verifique se o "id" fornecido está correto.',
+        stack: new Error().stack
+      })
 
     res.status(200).json(topic)
   }

@@ -14,9 +14,10 @@ const contentOrderBy = {
   promotions: "promotions"
 }
 
+// Columns of findTree's topic_rows, where the topics are ranked
 const topicOrderBy = {
-  id: "topics.id",
-  created_at: "topics.created_at",
+  id: "id",
+  created_at: "created_at",
   upvotes: "upvotes",
   downvotes: "downvotes",
   promotions: "promotions"
@@ -210,146 +211,200 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
   return result.rows
 }
 
-const rowsToTree = (rows: Array<any>) => {
-  const tree: any = {}
+// pg's base64 breaks lines every 76 characters, which a data URL can't contain
+const AVATAR_BASE64 = "translate(encode(users.avatar, 'base64'), E'\\n', '')"
 
-  rows.forEach((row, i) => {
-    if (row.parent_id === null)
-      tree[row.id] = { ...row, children: tree[row.id]?.children || [], i }
-    else {
-      if (tree[row.parent_id])
-        tree[row.parent_id].children.push({ ...row })
-      else
-        tree[row.parent_id] = { children: [{ ...row }] }
-    }
-  })
-
-  const result = Object.values(tree).reverse().sort((a: any, b: any) => a.i - b.i)
-
-  for (const topic of result)
-    (<any>topic).children.reverse()
-
-  return result
+interface TreeOptions {
+  where?: string,
+  orderBy?: string,
+  page?: number,
+  pageSize?: number,
+  values?: any[],
+  // How many of each topic's posts to return, the most voted first; all of them when omitted.
+  // childrenStats always covers every post.
+  childLimit?: number,
+  // The user whose interactions with each topic and poll vote are included
+  userPid?: string
 }
 
+// A page of topics, each with its posts ranked by poll votes, stats over all its posts and, for a
+// logged in user, their interactions with it and the post they voted for. A single query: Postgres
+// ranks, crops and aggregates the posts, instead of every post being fetched to be cropped here.
+async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions", page = 1, pageSize = 10, values = [], childLimit, userPid }: TreeOptions): Promise<any[]> {
+  const userParam = `$${values.length + 1}::UUID`
+  const childLimitParam = `$${values.length + 2}::INT`
 
-async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions", page = 1, pageSize = 10, values = [] as any[] }): Promise<any[]> {
   const query = {
     text: `
-      WITH RECURSIVE content_tree AS (
-        (
-          SELECT
-            topics.id,
-            topics.title,
-            topics.parent_id,
-            topics.type,
-            topics.body,
-            topics.status,
-            topics.created_at,
-            topics.config,
-            users.pid as author_id,
-            users.name as author,
-            users.avatar as author_avatar,
-            (
-              SELECT COUNT(*) FROM
-                interactions as interaction
-              WHERE
-                interaction.content_id = topics.id
-              AND
-                interaction.type = 'up'
-            )::INT as upvotes,
-            (
-              SELECT COUNT(*) FROM
-                interactions as interaction
-              WHERE
-                interaction.content_id = topics.id
-              AND
-                interaction.type = 'down'
-            )::INT as downvotes,
-            NULL::INT as votes,
-            (
-              SELECT
-                COUNT(*)
-              FROM
-                interactions as interaction
-              WHERE
-                interaction.content_id = topics.id
-              AND
-                interaction.type = 'promote'
-              AND
-                (interaction.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
-            )::INT as promotions
-          FROM
-            contents as topics
-          INNER JOIN
-            users ON topics.author_id = users.id
-          WHERE ${where}
-          ORDER BY ${orderByColumn(orderBy, topicOrderBy)} DESC, topics.id DESC
-          ${limitOffset(page, pageSize)}
-        )
-    
-        UNION ALL
-    
-        (
-          SELECT
-            posts.id,
-            posts.title,
-            posts.parent_id,
-            posts.type,
-            posts.body,
-            posts.status,
-            posts.created_at,
-            posts.config,
-            users.pid as author_id,
-            users.name as author,
-            users.avatar as author_avatar,
-            (
-              SELECT COUNT(*) FROM
-                interactions as interaction
-              WHERE
-                interaction.content_id = posts.id
-              AND
-                interaction.type = 'up'
-            )::INT as upvotes,
-            (
-              SELECT COUNT(*) FROM
-                interactions as interaction
-              WHERE
-                interaction.content_id = posts.id
-              AND
-                interaction.type = 'down'
-            )::INT as downvotes,
-            (
-              SELECT COUNT(*) FROM
-                interactions as interaction
-              WHERE
-                interaction.content_id = posts.id
-              AND
-                interaction.type = 'vote'
-            )::INT as votes,
-            NULL as promotions
-          FROM
-            contents as posts
-          INNER JOIN
-            content_tree ON posts.parent_id = content_tree.id
-          INNER JOIN
-            users ON posts.author_id = users.id
-          WHERE
-            posts.type = 'post'
-          ORDER BY votes, upvotes DESC
-        )
+      WITH topic_rows AS (
+        SELECT
+          topics.id,
+          topics.title,
+          topics.parent_id,
+          topics.type,
+          topics.body,
+          topics.status,
+          topics.created_at,
+          topics.config,
+          users.pid AS author_id,
+          users.name AS author,
+          ${AVATAR_BASE64} AS author_avatar,
+          (
+            SELECT COUNT(*) FROM interactions
+            WHERE interactions.content_id = topics.id AND interactions.type = 'up'
+          )::INT AS upvotes,
+          (
+            SELECT COUNT(*) FROM interactions
+            WHERE interactions.content_id = topics.id AND interactions.type = 'down'
+          )::INT AS downvotes,
+          (
+            SELECT COUNT(*) FROM interactions
+            WHERE
+              interactions.content_id = topics.id
+            AND
+              interactions.type = 'promote'
+            AND
+              (interactions.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
+          )::INT AS promotions
+        FROM
+          contents AS topics
+        INNER JOIN
+          users ON topics.author_id = users.id
+        WHERE ${where}
+      ),
+      page_topics AS (
+        SELECT
+          *,
+          ROW_NUMBER() OVER (ORDER BY ${orderByColumn(orderBy, topicOrderBy)} DESC, id DESC) AS position
+        FROM
+          topic_rows
+        ORDER BY
+          position
+        ${limitOffset(page, pageSize)}
+      ),
+      -- Only the posts of this page's topics, their votes counted in one pass over interactions
+      ranked_posts AS (
+        SELECT
+          posts.id,
+          posts.title,
+          posts.parent_id,
+          posts.type,
+          posts.body,
+          posts.status,
+          posts.created_at,
+          posts.config,
+          users.pid AS author_id,
+          users.name AS author,
+          ${AVATAR_BASE64} AS author_avatar,
+          COUNT(interactions.id) FILTER (WHERE interactions.type = 'up')::INT AS upvotes,
+          COUNT(interactions.id) FILTER (WHERE interactions.type = 'down')::INT AS downvotes,
+          COUNT(interactions.id) FILTER (WHERE interactions.type = 'vote')::INT AS votes,
+          ROW_NUMBER() OVER (
+            PARTITION BY posts.parent_id
+            ORDER BY
+              COUNT(interactions.id) FILTER (WHERE interactions.type = 'vote') DESC,
+              COUNT(interactions.id) FILTER (WHERE interactions.type = 'up') DESC,
+              posts.id
+          ) AS rank
+        FROM
+          contents AS posts
+        INNER JOIN
+          page_topics ON posts.parent_id = page_topics.id
+        INNER JOIN
+          users ON posts.author_id = users.id
+        LEFT JOIN
+          interactions ON interactions.content_id = posts.id
+        WHERE
+          posts.type = 'post'
+        GROUP BY
+          posts.id, users.id
       )
       SELECT
-        *
+        page_topics.id,
+        page_topics.title,
+        page_topics.parent_id,
+        page_topics.type,
+        page_topics.body,
+        page_topics.status,
+        page_topics.created_at,
+        page_topics.config,
+        page_topics.author_id,
+        page_topics.author,
+        page_topics.author_avatar,
+        page_topics.upvotes,
+        page_topics.downvotes,
+        page_topics.promotions,
+        children.list AS children,
+        stats.summary AS "childrenStats",
+        CASE WHEN ${userParam} IS NULL THEN NULL ELSE ARRAY(
+          SELECT
+            interactions.type
+          FROM
+            interactions
+          INNER JOIN
+            users ON users.id = interactions.author_id
+          WHERE
+            users.pid = ${userParam}
+          AND
+            interactions.content_id = page_topics.id
+          AND (
+            interactions.config IS NULL
+            OR
+            interactions.config->>'valid_until' IS NULL
+            OR
+            (interactions.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
+          )
+        ) END AS "userInteractions",
+        (
+          SELECT
+            interactions.content_id
+          FROM
+            interactions
+          INNER JOIN
+            users ON users.id = interactions.author_id
+          INNER JOIN
+            contents AS voted ON voted.id = interactions.content_id
+          WHERE
+            interactions.type = 'vote'
+          AND
+            users.pid = ${userParam}
+          AND
+            voted.parent_id = page_topics.id
+          LIMIT 1
+        ) AS "userVote"
       FROM
-        content_tree
+        page_topics
+      LEFT JOIN LATERAL (
+        SELECT
+          COALESCE(json_agg(to_jsonb(ranked_posts) - 'rank' ORDER BY ranked_posts.rank), '[]'::json) AS list
+        FROM
+          ranked_posts
+        WHERE
+          ranked_posts.parent_id = page_topics.id
+        AND
+          (${childLimitParam} IS NULL OR ranked_posts.rank <= ${childLimitParam})
+      ) AS children ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT
+          json_build_object(
+            'count', COUNT(*),
+            'upvotes', COALESCE(SUM(ranked_posts.upvotes), 0),
+            'downvotes', COALESCE(SUM(ranked_posts.downvotes), 0),
+            'votes', COALESCE(SUM(ranked_posts.votes), 0)
+          ) AS summary
+        FROM
+          ranked_posts
+        WHERE
+          ranked_posts.parent_id = page_topics.id
+      ) AS stats ON TRUE
+      ORDER BY
+        page_topics.position
     ;`,
-    values
+    values: [...values, userPid ?? null, childLimit ?? null]
   }
 
   const results = await db.query(query)
-  avatarToBase64("author_avatar", results)
-  return rowsToTree(results.rows)
+  return results.rows
 }
 
 async function findById(id: number, options = {}): Promise<Content> {
