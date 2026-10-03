@@ -138,7 +138,25 @@ async function create({ title, author_pid, parent_id, body, type, config }: Cont
 }
 
 // paginate = false is only for internal queries already bounded by their WHERE, e.g. a post's critiques
-async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as any[], omitBody = false, includeParentTitle = false, paginate = true }): Promise<Content[]> {
+interface FindAllOptions {
+  where?: string,
+  orderBy?: string,
+  page?: number,
+  pageSize?: number,
+  values?: any[],
+  omitBody?: boolean,
+  includeParentTitle?: boolean,
+  paginate?: boolean,
+  // The user whose interactions with each content are included (userInteractions)
+  userPid?: string,
+  // Adds total_count, how many contents match `where` across all pages, so lists need no count query
+  withTotal?: boolean
+}
+
+async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [], omitBody = false, includeParentTitle = false, paginate = true, userPid, withTotal = false }: FindAllOptions): Promise<Content[]> {
+  // Postgres refuses parameters a query doesn't use, so the user's is only added when needed
+  const userParam = `$${values.length + 1}::UUID`
+
   const query = {
     text: `
       SELECT
@@ -189,6 +207,8 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
             ELSE NULL
           END
         )::INT as promotions
+        ${userPid ? `, ${userInteractionsSql("contents.id", userParam)} AS "userInteractions"` : ""}
+        ${withTotal ? ", COUNT(*) OVER ()::INT AS total_count" : ""}
       FROM
         contents
       INNER JOIN
@@ -203,13 +223,36 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
       ORDER BY ${orderByColumn(orderBy, contentOrderBy)} DESC, contents.id DESC
       ${paginate ? limitOffset(page, pageSize) : ""}
       ;`,
-    values
+    values: userPid ? [...values, userPid] : values
   }
 
   const result = await db.query(query)
   avatarToBase64("author_avatar", result)
   return result.rows
 }
+
+// A user's interactions with a content, as an array of their types. Promotions count only while
+// they last. Shared by every query returning contents to a logged in user.
+const userInteractionsSql = (contentId: string, userParam: string) => `
+  ARRAY(
+    SELECT
+      interactions.type
+    FROM
+      interactions
+    INNER JOIN
+      users AS viewer ON viewer.id = interactions.author_id
+    WHERE
+      viewer.pid = ${userParam}
+    AND
+      interactions.content_id = ${contentId}
+    AND (
+      interactions.config IS NULL
+      OR
+      interactions.config->>'valid_until' IS NULL
+      OR
+      (interactions.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
+    )
+  )`
 
 // pg's base64 breaks lines every 76 characters, which a data URL can't contain
 const AVATAR_BASE64 = "translate(encode(users.avatar, 'base64'), E'\\n', '')"
@@ -336,25 +379,7 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
         page_topics.promotions,
         children.list AS children,
         stats.summary AS "childrenStats",
-        CASE WHEN ${userParam} IS NULL THEN NULL ELSE ARRAY(
-          SELECT
-            interactions.type
-          FROM
-            interactions
-          INNER JOIN
-            users ON users.id = interactions.author_id
-          WHERE
-            users.pid = ${userParam}
-          AND
-            interactions.content_id = page_topics.id
-          AND (
-            interactions.config IS NULL
-            OR
-            interactions.config->>'valid_until' IS NULL
-            OR
-            (interactions.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
-          )
-        ) END AS "userInteractions",
+        CASE WHEN ${userParam} IS NULL THEN NULL ELSE ${userInteractionsSql("page_topics.id", userParam)} END AS "userInteractions",
         (
           SELECT
             interactions.content_id

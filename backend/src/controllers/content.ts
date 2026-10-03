@@ -108,23 +108,19 @@ const toFeed = async (contents: any[], author_pid?: string) => {
     []
   const treeById = new Map(trees.map(tree => [tree.id, tree]))
 
-  const feed = []
-  for (const { parent_title, grandparent_id, ...content } of contents) {
-    const userInteractions = author_pid ?
-      (await Interactions.getUserContentInteractions({ author_pid, content_id: content.id })).map(v => v.type)
-      :
-      undefined
-
+  return contents.map(({ parent_title, grandparent_id, total_count, ...content }) => {
     if (content.type === "topic")
-      feed.push({ ...(treeById.get(content.id) ?? content), userInteractions })
-    else if (content.type === "post")
-      feed.push({ ...content, userInteractions, topic: { id: content.parent_id, title: parent_title } })
-    else
-      feed.push({ ...content, userInteractions, post: { id: content.parent_id, title: parent_title }, topic: { id: grandparent_id } })
-  }
-
-  return feed
+      return treeById.get(content.id) ?? content
+    if (content.type === "post")
+      return { ...content, topic: { id: content.parent_id, title: parent_title } }
+    return { ...content, post: { id: content.parent_id, title: parent_title }, topic: { id: grandparent_id } }
+  })
 }
+
+// A list's total comes with its page (findAll's withTotal). Only a page past the end, which has no
+// rows to carry it, needs the count queried on its own.
+const totalOf = async (contents: any[], page: number, countAlone: () => Promise<number>) =>
+  contents[0]?.total_count ?? (page > 1 ? await countAlone() : 0)
 
 export const createContent: RequestHandler = async (req, res, next) => {
   const { title, parent_id, body, config } = req.body
@@ -182,8 +178,9 @@ export const getContents: RequestHandler = async (req, res, next) => {
   } : {}
 
   try {
-    const contents = await Content.findAll({ page, pageSize, orderBy, includeParentTitle: true, ...where })
-    res.status(200).json({ contents: await toFeed(contents, author_pid), count: await Content.count(where) })
+    const contents = await Content.findAll({ page, pageSize, orderBy, includeParentTitle: true, userPid: author_pid, withTotal: true, ...where })
+    const count = await totalOf(contents, page, () => Content.count(where))
+    res.status(200).json({ contents: await toFeed(contents, author_pid), count })
   }
   catch (err) {
     next(err)
@@ -289,10 +286,13 @@ export const getBookmarkedContent: RequestHandler = async (req, res, next) => {
       values: [author_pid],
       page,
       pageSize,
-      includeParentTitle: true
+      includeParentTitle: true,
+      userPid: author_pid,
+      withTotal: true
     })
 
-    const count = await Interactions.getCount(`interactions.type = 'bookmark' AND users.pid = $1`, [author_pid], "INNER JOIN users ON users.id = interactions.author_id")
+    const count = await totalOf(contents, page, () =>
+      Interactions.getCount(`interactions.type = 'bookmark' AND users.pid = $1`, [author_pid], "INNER JOIN users ON users.id = interactions.author_id"))
 
     res.status(200).json({ contents: await toFeed(contents, author_pid), count })
   }
@@ -331,16 +331,11 @@ export const getVersion: RequestHandler = async (req, res, next) => {
     const critiques = (await Content.findAll({
       where: "contents.parent_id = $1 AND contents.type = 'critique'",
       values: [content_id],
-      paginate: false
+      paginate: false,
+      userPid: author_pid
     }))
       .filter(critique => versionAncestors.has((<any>critique.config)?.commit))
       .reverse()
-
-    for (const critique of critiques)
-      (<any>critique).userInteractions = author_pid ?
-        (await Interactions.getUserContentInteractions({ author_pid, content_id: critique.id })).map(v => v.type)
-        :
-        undefined
 
     // The text of each earlier version critiques were made on, so the client can diff it against
     // this one and carry every critique to exactly where its passage went
