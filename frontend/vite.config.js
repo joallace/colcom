@@ -6,17 +6,9 @@ import react from "@vitejs/plugin-react-swc"
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    // eslint-disable-next-line no-undef
     alias: {
-      "@": path.resolve(__dirname, "src"),
-      "$fonts": path.resolve(__dirname, "src/assets/fonts")
-    }
-  },
-  css:{
-    preprocessorOptions:{
-      scss:{
-        api: "modern-compiler"
-      }
+      "@": path.resolve(import.meta.dirname, "src"),
+      "$fonts": path.resolve(import.meta.dirname, "src/assets/fonts")
     }
   }
 })

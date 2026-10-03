@@ -110,7 +110,7 @@ const findOwnedSuggestion = async (content_id: number, commit: string, author_pi
 
 export const createContent: RequestHandler = async (req, res, next) => {
   const { title, parent_id, body, config } = req.body
-  const author_pid = (<any>req.params.user).pid
+  const author_pid = res.locals.user.pid
 
   try {
     const parent = parent_id ? await Content.getDataById(parent_id, ["parent_id", "type"]) : null
@@ -142,7 +142,7 @@ export const createContent: RequestHandler = async (req, res, next) => {
 
     const result = await Content.create(content)
     result.body = body
-    await withRollback(() => git.create(result, req.params.user), () => Content.removeById(result.id))
+    await withRollback(() => git.create(result, res.locals.user), () => Content.removeById(result.id))
 
     res.status(201).json(result)
   }
@@ -175,7 +175,7 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
   const page = Number(req.query.page) || 1
   const pageSize = Number(req.query.pageSize) || 10
   const orderBy = req.query.orderBy ? String(req.query.orderBy) : "id"
-  const author_pid = (<any>req.params.user)?.pid
+  const author_pid = res.locals.user?.pid
   const getCount = "with_count" in req.query
   const type = req.route.path.slice(1, -1)
 
@@ -204,7 +204,7 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
 }
 
 export const getTopicTree: RequestHandler = async (req, res, next) => {
-  const author_pid = (<any>req.params.user)?.pid
+  const author_pid = res.locals.user?.pid
   const id = Number(req.params.id)
 
   try {
@@ -224,7 +224,7 @@ export const getTopicTree: RequestHandler = async (req, res, next) => {
 }
 
 export const getContent: RequestHandler = async (req, res, next) => {
-  const author_pid = (<any>req.params.user)?.pid
+  const author_pid = res.locals.user?.pid
   const content_id = Number(req.params.id)
   const omitBody = "omit_body" in req.query
   const includeParentTitle = "include_parent_title" in req.query
@@ -262,7 +262,7 @@ export const getContent: RequestHandler = async (req, res, next) => {
 }
 
 export const getBookmarkedContent: RequestHandler = async (req, res, next) => {
-  const author_pid = (<any>req.params.user)?.pid
+  const author_pid = res.locals.user?.pid
 
   try {
     const contents = await Content.findAll({
@@ -300,8 +300,8 @@ export const getBookmarkedContent: RequestHandler = async (req, res, next) => {
 
 export const getVersion: RequestHandler = async (req, res, next) => {
   const content_id = Number(req.params.id)
-  const author_pid = (<any>req.params.user)?.pid
-  const commit = req.params.hash
+  const author_pid = res.locals.user?.pid
+  const commit = String(req.params.hash)
 
   try {
     const content = await Content.findById(content_id)
@@ -347,7 +347,7 @@ export const getVersion: RequestHandler = async (req, res, next) => {
 }
 
 export const updateContent: RequestHandler = async (req, res, next) => {
-  const author_pid = (<any>req.params.user).pid
+  const author_pid = res.locals.user.pid
   const content_id = Number(req.params.id)
   const { message, body } = req.body
 
@@ -384,7 +384,7 @@ export const updateContent: RequestHandler = async (req, res, next) => {
 
     let commit
     try {
-      commit = await git.update(content, req.params.user, body, message, interactionId)
+      commit = await git.update(content, res.locals.user, body, message, interactionId)
     }
     catch (err) {
       if (interactionId !== undefined)
@@ -408,8 +408,8 @@ export const updateContent: RequestHandler = async (req, res, next) => {
 
 export const clonePost: RequestHandler = async (req, res, next) => {
   const content_id = Number(req.params.id)
-  const author_pid = (<any>req.params.user)?.pid
-  const commit = req.params.hash
+  const author_pid = res.locals.user?.pid
+  const commit = String(req.params.hash)
   const { title } = req.body
 
   try {
@@ -432,8 +432,8 @@ export const clonePost: RequestHandler = async (req, res, next) => {
 
 export const mergePost: RequestHandler = async (req, res, next) => {
   const content_id = Number(req.params.id)
-  const author_pid = (<any>req.params.user)?.pid
-  const commit = req.params.hash
+  const author_pid = res.locals.user?.pid
+  const commit = String(req.params.hash)
 
   try {
     const { content, suggestion } = await findOwnedSuggestion(content_id, commit, author_pid)
@@ -450,8 +450,8 @@ export const mergePost: RequestHandler = async (req, res, next) => {
 
 export const rejectSuggestion: RequestHandler = async (req, res, next) => {
   const content_id = Number(req.params.id)
-  const author_pid = (<any>req.params.user)?.pid
-  const commit = req.params.hash
+  const author_pid = res.locals.user?.pid
+  const commit = String(req.params.hash)
 
   try {
     const { suggestion } = await findOwnedSuggestion(content_id, commit, author_pid)

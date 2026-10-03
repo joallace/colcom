@@ -2,7 +2,7 @@ name: colcom
 
 services:
   db:
-    image: postgres:16.4-alpine3.20
+    image: postgres:18-alpine
     environment: &env
       POSTGRES_DB: colcom
       POSTGRES_USER: postgres
@@ -13,7 +13,8 @@ services:
     command: ["postgres", "-c", "listen_addresses=localhost"]
     network_mode: host
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # Since Postgres 18 the image keeps its data in a versioned folder under this path
+      - postgres_data:/var/lib/postgresql
 
   backend:
     build:

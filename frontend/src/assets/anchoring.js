@@ -87,7 +87,7 @@ export function quoteFromRange(doc, from, to) {
   }
 }
 
-function toRange({ text, positions }, start, end) {
+function toRange({ positions }, start, end) {
   // Matches may begin or end on a block separator, which has no position of its own
   while (start < end && positions[start] === null) start++
   while (end > start && positions[end - 1] === null) end--

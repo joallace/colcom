@@ -1,4 +1,4 @@
-import { v4 as uuid } from 'uuid'
+import { randomUUID } from 'node:crypto'
 
 
 interface BaseErrorType {
@@ -62,7 +62,7 @@ export class BaseError extends Error implements BaseErrorType {
     this.message = message
     this.action = action
     this.statusCode = statusCode || 500
-    this.errorId = errorId || uuid()
+    this.errorId = errorId || randomUUID()
     this.requestId = requestId
     this.context = context
     this.stack = stack

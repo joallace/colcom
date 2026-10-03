@@ -1,5 +1,5 @@
 import React from "react"
-import { useSearchParams } from "react-router-dom"
+import { useSearchParams } from "react-router"
 
 import env from "@/assets/enviroment"
 import useUser from "@/context/UserContext"

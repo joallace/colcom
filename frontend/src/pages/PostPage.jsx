@@ -1,5 +1,5 @@
 import React from "react"
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router'
 
 import Post from "@/components/content/Post"
 import CritiqueFrame from "@/components/content/Critique"
@@ -223,7 +223,7 @@ export default () => {
           list="commits"
           min={0}
           max={postData?.history?.length - 1 || 0}
-          value={currentCommit}
+          value={currentCommit ?? 0}
           disabled={showCritique || Number.isFinite(currentSuggestion)}
           onMouseDown={e => setStartCommit(Number(e.target.value))}
           onMouseUp={() => { if (startCommit !== currentCommit) { fetchCommitBody(); updateCommitQuery() } }}

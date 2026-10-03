@@ -81,7 +81,7 @@ export const loginUser: RequestHandler = async (req, res, next) => {
 }
 
 export const getCurrentUser: RequestHandler = async (req, res, next) => {
-  const public_id = (<any>req.params.user).pid
+  const public_id = res.locals.user.pid
   try {
     const user = await User.findByPid(public_id)
     const promoting = (await Interactions.getUserCurrentPromote(user.pid))?.content_id

@@ -1,10 +1,7 @@
-import Table from "@tiptap/extension-table"
-import TableCell from "@tiptap/extension-table-cell"
-import TableHeader from "@tiptap/extension-table-header"
-import TableRow from "@tiptap/extension-table-row"
+import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table"
 import Document from "@tiptap/extension-document"
 import Heading from "@tiptap/extension-heading"
-import Placeholder from "@tiptap/extension-placeholder"
+import { Placeholder } from "@tiptap/extensions"
 import StarterKit from "@tiptap/starter-kit"
 import CustomHighlight from "@/assets/highlight"
 
@@ -18,7 +15,12 @@ export default function getExtensions({ setShowCritique } = {}) {
     Document,
     StarterKit.configure({
       document: false,
-      heading: false
+      heading: false,
+      // Added to the starter kit in TipTap 3. Disabled to keep the document schema as it was:
+      // trailingNode would also append an empty paragraph to every document it loads.
+      link: false,
+      underline: false,
+      trailingNode: false
     }),
     Chart,
     Table,

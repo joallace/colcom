@@ -1,4 +1,4 @@
-FROM node:20-alpine3.20
+FROM node:24-alpine
 
 WORKDIR /app
 
@@ -10,8 +10,7 @@ RUN git config --global user.email "admin@colcom.com"
 RUN git config --global user.name "admin"
 
 COPY package*.json ./
-RUN npm install
-RUN npm install -g typescript
+RUN npm ci
 
 COPY . .
 RUN npm run build

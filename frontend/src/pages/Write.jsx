@@ -1,5 +1,5 @@
 import React from "react"
-import { Link, useNavigate, useLocation } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router"
 
 import { default as Editor } from "@/components/Editor"
 import Frame from "@/components/primitives/Frame"

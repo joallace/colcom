@@ -1,5 +1,5 @@
 import React from "react"
-import { useParams } from 'react-router-dom'
+import { useParams } from 'react-router'
 
 import env from "@/assets/enviroment"
 import Topic from "@/components/content/Topic"

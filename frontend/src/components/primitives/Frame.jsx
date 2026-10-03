@@ -1,5 +1,4 @@
 import React from "react"
-import { isEmptyObject } from "@tiptap/react"
 import { PiDotsThreeVerticalBold } from "react-icons/pi"
 
 import useBreakpoint from "@/hooks/useBreakpoint"
@@ -87,7 +86,7 @@ export default function Frame({
         >
           {title}
         </h1>
-        {!isEmptyObject(headerConfig) &&
+        {Object.keys(headerConfig ?? {}).length > 0 &&
           <div className="buttons">
             {isDesktop ?
               <>
@@ -147,7 +146,8 @@ export default function Frame({
       <div className="container">
         <div className={`bracket${error ? " error" : ""}`} />
         <div className={`body${justify ? " justify" : ""}`}>
-          {children.constructor === Array ?
+          {/* The header state is handed to a single child component; arrays and Fragments can't take props */}
+          {children.constructor === Array || children.type === React.Fragment ?
             children
             :
             React.cloneElement(children, { ...headerStatus, readOnly, saveInLocalStorage, alongsideCritique })

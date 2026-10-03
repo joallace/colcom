@@ -32,9 +32,8 @@ const tokenHandler = (optional = false): RequestHandler => async (req, res, next
       if (err)
         throw new UnauthorizedError({ message: "Token inválido" })
 
-      // Since the RequestHandler type doesn't count for direct changes in the Request object
-      // we will be injecting the decoded user into the req.params
-      req.params.user = (<any>decoded).user
+      // res.locals is express' place for data scoped to the current request
+      res.locals.user = (<any>decoded).user
       next()
     })
   }

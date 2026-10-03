@@ -1,4 +1,4 @@
-FROM node:20-alpine3.20 AS build
+FROM node:24-alpine AS build
 
 WORKDIR /app
 
@@ -6,12 +6,12 @@ ARG VITE_API_ADDRESS
 ENV VITE_API_ADDRESS=$VITE_API_ADDRESS
 
 COPY package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm ci
 
 COPY . .
 RUN npm run build
 
-FROM nginx:1.27.1-alpine3.20-slim AS production
+FROM nginx:1.30-alpine-slim AS production
 
 COPY --from=build /app/dist /usr/share/nginx/html
 

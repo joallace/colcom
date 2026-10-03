@@ -1,41 +1,48 @@
 import React from "react"
-import { BubbleMenu } from "@tiptap/react"
+import { BubbleMenu } from "@tiptap/react/menus"
 import { isTextSelection } from '@tiptap/core'
 import {
   PiListBulletsBold,
   PiListNumbersBold,
   PiQuotesFill
 } from "react-icons/pi"
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router"
 
 import useUser from "@/context/UserContext"
+import useActiveFormats from "@/components/Editor/useActiveFormats"
+
+
+const hasTextSelection = ({ state, from, to }) =>
+  !state.selection.empty && !(isTextSelection(state.selection) && !state.doc.textBetween(from, to).length)
+
+// TipTap's own rule for editable text: only while the editor, or the menu itself, has focus
+const hasFocus = ({ view, element }) => view.hasFocus() || element.contains(document.activeElement)
 
 
 export default ({ editor, shouldShow = true, readOnly, setShowCritique }) => {
-  if (!editor || !shouldShow)
-    return
-
+  // Hooks must run on every render, before the early return
   const navigate = useNavigate()
   const { user } = useUser()
+  const active = useActiveFormats(editor)
+
+  // TipTap's bubble menu leaves timers running after it unmounts (its 250 ms update debounce,
+  // focus and resize handlers). One firing later shows the menu's now empty element again, stuck
+  // over the text where it was. Refusing to show once the menu is no longer rendered stops that.
+  const isRendered = React.useRef(false)
+  React.useLayoutEffect(() => {
+    isRendered.current = Boolean(editor && shouldShow)
+    return () => { isRendered.current = false }
+  })
+
+  if (!editor || !shouldShow)
+    return
 
   return (
     <div>
       <BubbleMenu
-        className={`menu ${!readOnly && (editor.isActive("chart") || editor.isActive("table")) ? "hidden" : "bubble"}`}
-        tippyOptions={{ duration: 10 }}
+        className={`menu ${!readOnly && (active.chart || active.table) ? "hidden" : "bubble"}`}
         editor={editor}
-        shouldShow={readOnly ?
-          ({ state, from, to }) => {
-            const { doc, selection } = state
-            const { empty } = selection
-            const isEmptyTextBlock = !doc.textBetween(from, to).length && isTextSelection(state.selection)
-            if (empty || isEmptyTextBlock)
-              return false
-            return true
-          }
-          :
-          null
-        }
+        shouldShow={props => isRendered.current && hasTextSelection(props) && (readOnly || hasFocus(props))}
       >
         {readOnly ?
           <>
@@ -55,31 +62,31 @@ export default ({ editor, shouldShow = true, readOnly, setShowCritique }) => {
           :
           <>
             <button
-              className={editor.isActive("bold") ? "bold is-active" : "bold"}
+              className={active.bold ? "bold is-active" : "bold"}
               onClick={() => editor.chain().focus().toggleBold().run()}
             >
               negrito
             </button>
             <button
-              className={editor.isActive("italic") ? "italic is-active" : "italic"}
+              className={active.italic ? "italic is-active" : "italic"}
               onClick={() => editor.chain().focus().toggleItalic().run()}
             >
               itálico
             </button>
             <button
-              className={editor.isActive("heading", { level: 2 }) ? "h1 is-active" : "h1"}
+              className={active.heading2 ? "h1 is-active" : "h1"}
               onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             >
               cabeçalho 1
             </button>
             <button
-              className={editor.isActive("heading", { level: 3 }) ? "h2 is-active" : "h2"}
+              className={active.heading3 ? "h2 is-active" : "h2"}
               onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             >
               cabeçalho 2
             </button>
             <button
-              className={editor.isActive("bulletList") ? "icon is-active" : "icon"}
+              className={active.bulletList ? "icon is-active" : "icon"}
               onClick={() => {
                 editor.isActive("blockquote") && editor.chain().focus().toggleBlockquote().run()
                 editor.chain().focus().toggleBulletList().run()
@@ -88,7 +95,7 @@ export default ({ editor, shouldShow = true, readOnly, setShowCritique }) => {
               <PiListBulletsBold title="tópicos sem ordem" />
             </button>
             <button
-              className={editor.isActive("orderedList") ? "icon is-active" : "icon"}
+              className={active.orderedList ? "icon is-active" : "icon"}
               onClick={() => {
                 editor.isActive("blockquote") && editor.chain().focus().toggleBlockquote().run()
                 editor.chain().focus().toggleOrderedList().run()
@@ -97,7 +104,7 @@ export default ({ editor, shouldShow = true, readOnly, setShowCritique }) => {
               <PiListNumbersBold title="tópicos ordenados" />
             </button>
             <button
-              className={editor.isActive("blockquote") ? "icon is-active" : "icon"}
+              className={active.blockquote ? "icon is-active" : "icon"}
               onClick={() => {
                 editor.isActive("bulletList") && editor.chain().focus().toggleBulletList().run()
                 editor.isActive("orderedList") && editor.chain().focus().toggleOrderedList().run()

@@ -1,5 +1,5 @@
 import React from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router"
 
 import Input from "@/components/primitives/Input"
 import LoadingButton from "@/components/primitives/LoadingButton"

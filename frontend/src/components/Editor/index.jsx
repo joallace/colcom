@@ -43,8 +43,15 @@ export default function Editor({
     setMarkedBody(editor.getHTML())
   }
 
+  // TipTap compares extensions by identity on every render, and new instances make it reconfigure
+  // the editor, which re-renders this component again. Built once, they stay identical.
+  const extensions = React.useMemo(() => getExtensions({ setShowCritique }), [setShowCritique])
+
   const editor = useEditor({
-    extensions: getExtensions({ setShowCritique }),
+    extensions,
+    // Creating the editor after mounting, rather than while rendering, lets the React node views
+    // (charts) render without forcing a synchronous flush in the middle of a render
+    immediatelyRender: false,
     editorProps: {
       handleDOMEvents: {
         drop: (_, e) => { e.preventDefault(); },

@@ -15,7 +15,7 @@ export const getContentInteractions: RequestHandler = async (req, res, next) => 
 
 export const handleInteraction: RequestHandler = async (req, res, next) => {
   const { content_id, type } = req.body
-  const author_pid = (<any>req.params.user).pid
+  const author_pid = res.locals.user.pid
 
   try {
     const interaction: InteractionInsertRequest = { author_pid, content_id, type }
