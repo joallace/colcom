@@ -108,6 +108,48 @@ const findOwnedSuggestion = async (content_id: number, commit: string, author_pi
   return { content, suggestion }
 }
 
+// What a topic shows in a list: its first posts, the stats of all of them and the user's own votes
+const decorateTopics = async (topics: any[], author_pid?: string) => {
+  for (const topic of topics) {
+    topic.childrenStats = getChildrenStats(topic)
+    topic.children = topic.children.slice(0, 3)
+    if (author_pid) {
+      topic.userInteractions = (await Interactions.getUserContentInteractions({ author_pid, content_id: topic.id })).map(v => v.type)
+      topic.userVote = (await Interactions.getUserTopicVote(author_pid, topic.id))?.content_id
+    }
+  }
+  return topics
+}
+
+// Turns a page of mixed contents (a profile, the bookmarks) into what each type needs to be shown
+// on its own: topics with their posts, posts with the topic they answer, critiques with the post
+// they criticise. `contents` must come from findAll with includeParentTitle.
+const toFeed = async (contents: any[], author_pid?: string) => {
+  const topicIds = contents.filter(content => content.type === "topic").map(content => content.id)
+  const trees = topicIds.length > 0 ?
+    await decorateTopics(await Content.findTree({ where: "topics.id = ANY($1::int[])", values: [topicIds], pageSize: topicIds.length }), author_pid)
+    :
+    []
+  const treeById = new Map(trees.map(tree => [tree.id, tree]))
+
+  const feed = []
+  for (const { parent_title, grandparent_id, ...content } of contents) {
+    const userInteractions = author_pid ?
+      (await Interactions.getUserContentInteractions({ author_pid, content_id: content.id })).map(v => v.type)
+      :
+      undefined
+
+    if (content.type === "topic")
+      feed.push({ ...(treeById.get(content.id) ?? content), userInteractions })
+    else if (content.type === "post")
+      feed.push({ ...content, userInteractions, topic: { id: content.parent_id, title: parent_title } })
+    else
+      feed.push({ ...content, userInteractions, post: { id: content.parent_id, title: parent_title }, topic: { id: grandparent_id } })
+  }
+
+  return feed
+}
+
 export const createContent: RequestHandler = async (req, res, next) => {
   const { title, parent_id, body, config } = req.body
   const author_pid = res.locals.user.pid
@@ -155,6 +197,7 @@ export const getContents: RequestHandler = async (req, res, next) => {
   const page = Number(req.query.page) || 1
   const pageSize = Number(req.query.pageSize) || 10
   const authorId = req.query.authorId
+  const author_pid = res.locals.user?.pid
 
   const orderBy = req.query.orderBy ? String(req.query.orderBy) : "id"
   const where = authorId ? {
@@ -163,8 +206,8 @@ export const getContents: RequestHandler = async (req, res, next) => {
   } : {}
 
   try {
-    const contents = await Content.findAll({ page, pageSize, orderBy, ...where })
-    res.status(200).json(contents)
+    const contents = await Content.findAll({ page, pageSize, orderBy, includeParentTitle: true, ...where })
+    res.status(200).json({ contents: await toFeed(contents, author_pid), count: await Content.count(where) })
   }
   catch (err) {
     next(err)
@@ -185,16 +228,8 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
     // Probably doing this the dirtiest way possible, but right now I don't know another way
     // to crop the number of each topic's posts to a certain limit and to count all stats.
     // Should refactor in the future.
-    if (type === "topic") {
-      for (const topic of contents) {
-        topic.childrenStats = getChildrenStats(topic)
-        topic.children = topic.children.slice(0, 3)
-        if (author_pid) {
-          topic.userInteractions = (await Interactions.getUserContentInteractions({ author_pid, content_id: topic.id })).map(v => v.type)
-          topic.userVote = (await Interactions.getUserTopicVote(author_pid, topic.id))?.content_id
-        }
-      }
-    }
+    if (type === "topic")
+      await decorateTopics(contents, author_pid)
 
     res.status(200).json({ tree: contents, count: getCount ? (await Content.getCount("topic")) : undefined })
   }
@@ -262,6 +297,8 @@ export const getContent: RequestHandler = async (req, res, next) => {
 }
 
 export const getBookmarkedContent: RequestHandler = async (req, res, next) => {
+  const page = Number(req.query.page) || 1
+  const pageSize = Number(req.query.pageSize) || 10
   const author_pid = res.locals.user?.pid
 
   try {
@@ -280,18 +317,15 @@ export const getBookmarkedContent: RequestHandler = async (req, res, next) => {
           users.pid = $1
       )
       `,
-      values: [author_pid]
+      values: [author_pid],
+      page,
+      pageSize,
+      includeParentTitle: true
     })
-
-    for (const content of contents) {
-      (<any>content).userInteractions = (await Interactions.getUserContentInteractions({ author_pid, content_id: content.id })).map(v => v.type)
-      if (content.type === "post")
-        (<any>content).userVote = (await Interactions.getUserTopicVote(author_pid, content.id))?.content_id
-    }
 
     const count = await Interactions.getCount(`interactions.type = 'bookmark' AND users.pid = $1`, [author_pid], "INNER JOIN users ON users.id = interactions.author_id")
 
-    res.status(200).json({contents, count})
+    res.status(200).json({ contents: await toFeed(contents, author_pid), count })
   }
   catch (err) {
     next(err)

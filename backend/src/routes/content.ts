@@ -18,7 +18,7 @@ import {
 
 const router = Router()
 
-router.get("/contents", getContents)
+router.get("/contents", authHandler(true), getContents)
 
 router.get("/contents/bookmarked", authHandler(), getBookmarkedContent)
 

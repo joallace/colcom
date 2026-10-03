@@ -6,10 +6,9 @@ import useUser from "@/context/UserContext"
 import { relativeTime } from "@/assets/util"
 import Spinner from "@/components/primitives/Spinner"
 import Focus from "@/components/primitives/Focus"
-import Topic from "@/components/content/Topic"
+import NoResponse from "@/components/primitives/NoResponse"
 import Pagination from "@/components/primitives/Pagination"
-import Post from "@/components/content/Post"
-import Critique from "@/components/content/Critique"
+import ContentList from "@/components/content/ContentList"
 
 export default function Profile() {
   const [searchParams] = useSearchParams()
@@ -25,13 +24,13 @@ export default function Profile() {
       try {
         setIsLoading(true)
         const url = `${env.apiAddress}/contents?authorId=${user.pid}&page=${page + 1}&pageSize=${pageSize}`
-        const res = await fetch(url, { method: "get" })
+        const res = await fetch(url, { method: "get", headers: { "Authorization": `Bearer ${user.accessToken}` } })
         const data = await res.json()
 
         if (res.ok) {
-          setContents(data)
+          setContents(data.contents)
           if (maxIndex === undefined)
-            setMaxIndex(Math.floor(data.count / pageSize))
+            setMaxIndex(Math.ceil(data.count / pageSize) - 1)
         }
         else {
           setContents([])
@@ -72,24 +71,19 @@ export default function Profile() {
               </div>
             </div>
             <div>
-              {
-                contents?.length > 0 ?
-                  <>
-                    <hr className="separator"/>
-                    {contents?.map(content => {
-                      switch (content.type) {
-                        case "topic":
-                          return <Topic {...content} key={`t${content.id}`} />
-                        case "post":
-                          return <Post {...content} key={`p${content.id}`} />
-                        case "critique":
-                          return <Critique {...content} key={`c${content.id}`} />
-                      }
-                    })}
-                  </>
-                  : <Spinner />
+              <hr className="separator"/>
+              {contents?.length > 0 ?
+                <ContentList contents={contents} />
+                :
+                <NoResponse>você ainda não publicou nenhum conteúdo.</NoResponse>
               }
             </div>
+            <Pagination
+              path="/profile"
+              state={[page, setPage]}
+              isLoading={isLoading}
+              maxIndex={maxIndex}
+            />
           </>
           :
           <Spinner />

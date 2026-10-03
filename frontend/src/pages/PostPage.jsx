@@ -201,17 +201,47 @@ export default () => {
 
   const getPostFrame = React.useCallback(() => postTitleRef.current?.closest(".frame"), [])
 
-  // The element marking the open passage: the new critique's temporary highlight, the critiques'
-  // highlight, or for a removed passage its entry in the list below the post
-  const getCritiqueAnchor = React.useCallback(() => {
-    const post = getPostFrame()
+  // The element marking where critiques are open (`showCritique`'s value): their highlight, or for a
+  // removed passage its entry in the list below the post
+  const findCritiqueAnchor = React.useCallback(value =>
+    getPostFrame()?.querySelector(`mark[data-commit-index="${CSS.escape(String(value))}"]`)
+    ?? document.querySelector(`.removedCritiques [data-critique-index="${CSS.escape(String(value))}"]`),
+  [getPostFrame])
 
-    if (isNewCritique)
-      return post?.querySelector("mark.temporary")
+  const getCritiqueAnchor = React.useCallback(() =>
+    isNewCritique ? getPostFrame()?.querySelector("mark.temporary") : findCritiqueAnchor(showCritique),
+  [getPostFrame, findCritiqueAnchor, isNewCritique, showCritique])
 
-    return post?.querySelector(`mark[data-commit-index="${CSS.escape(String(showCritique))}"]`)
-      ?? document.querySelector(`.removedCritiques [data-critique-index="${CSS.escape(String(showCritique))}"]`)
-  }, [getPostFrame, isNewCritique, showCritique])
+  // A link can ask for a critique to be open (?critique=<id>), e.g. from a profile or the bookmarks.
+  // It opens once its version is shown and its highlight exists (the editor adds highlights just
+  // after mounting), together with the critiques overlapping it, which share that highlight.
+  const openedFromUrl = React.useRef(null)
+  React.useEffect(() => {
+    const critiqueId = Number(searchParams.get("critique"))
+    const index = critiques.findIndex(critique => critique.id === critiqueId)
+
+    if (!critiqueId || isLoading || index === -1 || openedFromUrl.current === critiqueId)
+      return
+
+    const group = groupedCritiques.find(({ index: indexes }) => indexes.includes(index))
+    const value = group && group.index.length > 1 ? JSON.stringify(group.index) : String(index)
+
+    let frame, attempts = 0
+    const open = () => {
+      const anchor = findCritiqueAnchor(value)
+      if (!anchor && attempts++ < 60) {
+        frame = requestAnimationFrame(open)
+        return
+      }
+
+      openedFromUrl.current = critiqueId
+      setShowCritique(value)
+      anchor?.scrollIntoView({ block: "center" })
+    }
+
+    open()
+    return () => cancelAnimationFrame(frame)
+  }, [searchParams, critiques, groupedCritiques, isLoading, findCritiqueAnchor])
 
   return (
     <div className="content">

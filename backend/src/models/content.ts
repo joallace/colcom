@@ -144,7 +144,7 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
         contents.id,
         contents.title,
         contents.parent_id,
-        ${includeParentTitle ? "parent.title as parent_title," : ""}
+        ${includeParentTitle ? "parent.title as parent_title, parent.parent_id as grandparent_id," : ""}
         ${omitBody ? "" : "contents.body,"}
         contents.type,
         contents.status,
@@ -416,6 +416,25 @@ export async function getDataById(id: number, data: (keyof Content)[]): Promise<
   return result.rows[0]
 }
 
+// Counts the contents matching a findAll `where`, which may filter on the author (users.*)
+async function count({ where = "", values = [] as any[] }): Promise<number> {
+  const query = {
+    text: `
+      SELECT
+        COUNT(*)::int
+      FROM
+        contents
+      INNER JOIN
+        users ON contents.author_id = users.id
+      ${where ? `WHERE ${where}` : ""}
+      ;`,
+    values
+  }
+
+  const result = await db.query(query)
+  return result.rows[0].count
+}
+
 export async function getCount(type: ContentType): Promise<any> {
   const query = {
     text: `
@@ -442,7 +461,8 @@ export default Object.freeze({
   updateById,
   removeById,
   getDataById,
-  getCount
+  getCount,
+  count
 })
 
 export { Content as IContent, ContentInsertRequest, ContentType }
