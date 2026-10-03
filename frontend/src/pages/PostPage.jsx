@@ -10,6 +10,7 @@ import useBreakpoint from "@/hooks/useBreakpoint"
 import env from "@/assets/enviroment"
 import useUser from "@/context/UserContext"
 import { relativeTime } from "@/assets/util"
+import { docFromHtml, projectCritiques, quoteFromRange } from "@/assets/anchoring"
 
 
 export default () => {
@@ -22,12 +23,13 @@ export default () => {
   const [currentSuggestion, setCurrentSuggestion] = React.useState()
   const [startCommit, setStartCommit] = React.useState()
   const [postBody, setPostBody] = React.useState("")
+  const [bodyCommit, setBodyCommit] = React.useState()
   const [postCritiques, setPostCritiques] = React.useState([])
   const [tempHighlight, setTempHighlight] = React.useState([])
   const [critiquesYOffset, setCritiquesYOffset] = React.useState(0)
   const postTitleRef = React.useRef()
   const [searchParams, setSearchParams] = useSearchParams();
-  const { tid, pid } = useParams()
+  const { pid } = useParams()
   const { user } = useUser()
   const isDesktop = useBreakpoint("md")
 
@@ -41,12 +43,13 @@ export default () => {
 
     try {
       setIsLoading(true)
-      const res = await fetch(`${env.apiAddress}/contents/${pid}/${commit}?parent_id=${tid}`, { headers })
+      const res = await fetch(`${env.apiAddress}/contents/${pid}/${commit}`, { headers })
       const data = await res.json()
 
       if (res.ok && data) {
         setPostBody(data.body)
-        setPostCritiques(data.children)
+        setBodyCommit(commit)
+        setPostCritiques(data.critiques)
       }
     }
     catch (err) {
@@ -57,32 +60,46 @@ export default () => {
     }
   }
 
-  function groupOverlappingMarks(marks) {
-    marks = marks.map((v, i) => ({ from: v.config.from, to: v.config.to, index: [i] }))
+  // Overlapping critiques are drawn as a single highlight that opens all of them. A group whose
+  // passage was edited since one of its critiques was made is drawn as "changed".
+  function groupOverlappingMarks(critiques) {
+    const marks = critiques
+      .map((critique, i) => ({ ...critique.anchor, index: [i] }))
+      .filter(mark => mark.match !== "removed")
       .sort((a, b) => a.from - b.from)
 
-    const groupedMarks = []
+    const groups = []
 
-    let currentMark = null
-    let previousMark = null
+    for (const mark of marks) {
+      const current = groups.at(-1)
 
-    marks.forEach(mark => {
-      if (!currentMark || mark.from >= previousMark.to) {
-        if (previousMark)
-          groupedMarks.push(previousMark)
-        currentMark = mark
-      } else {
-        currentMark.to = Math.max(currentMark.to, mark.to)
-        currentMark.index.push(mark.index[0])
+      if (current && mark.from < current.to) {
+        current.to = Math.max(current.to, mark.to)
+        current.index.push(mark.index[0])
+        current.changed ||= mark.match === "fuzzy"
       }
-      previousMark = currentMark
-    })
+      else
+        groups.push({ ...mark, index: [...mark.index], changed: mark.match === "fuzzy" })
+    }
 
-    if (currentMark)
-      groupedMarks.push(currentMark)
-
-    return groupedMarks
+    return groups.map(({ from, to, index, changed }) => ({ from, to, index, type: changed ? "changed" : "definitive" }))
   }
+
+  // Critiques made on earlier versions are carried onto the one being read by searching for their quote
+  const critiques = React.useMemo(
+    () => projectCritiques(postBody, postCritiques, bodyCommit),
+    [postBody, postCritiques, bodyCommit]
+  )
+  const groupedCritiques = React.useMemo(() => groupOverlappingMarks(critiques), [critiques])
+  const removedCritiques = critiques
+    .map((critique, index) => ({ critique, index }))
+    .filter(({ critique }) => critique.anchor.match === "removed")
+
+  // The quote a critique being written will store, taken from the selection on the version being read
+  const newCritiqueQuote = React.useMemo(
+    () => Array.isArray(showCritique) ? quoteFromRange(docFromHtml(postBody), ...showCritique) : undefined,
+    [showCritique, postBody]
+  )
 
   const updateCommitQuery = () => {
     if (currentCommit === postData?.history.length - 1) {
@@ -108,8 +125,7 @@ export default () => {
       return
 
     const commit = searchParams.get("commit")
-    // Prefix match keeps links shared before full hashes were adopted working
-    const index = commit ? history.findIndex(version => version.commit.startsWith(commit)) : -1
+    const index = history.findIndex(version => version.commit === commit)
 
     if (index > -1)
       setCurrentCommit(index)
@@ -162,7 +178,8 @@ export default () => {
       setTempHighlight={setHighlight}
       setOffset={setOffset}
       skipOffset={skipOffset}
-      {...postCritiques[index]}
+      quote={newCritiqueQuote}
+      {...critiques[index]}
     />
   )
 
@@ -226,6 +243,7 @@ export default () => {
           <Spinner/>
         </div>
         :
+        <>
         <div className="post">
           <Post
             {...postData}
@@ -235,8 +253,8 @@ export default () => {
             setCurrentSuggestion={setCurrentSuggestion}
             titleRef={postTitleRef}
             body={postBody}
-            critiques={postCritiques}
-            groupedCritiques={groupOverlappingMarks(postCritiques)}
+            critiques={critiques}
+            groupedCritiques={groupedCritiques}
             alongsideCritique={showCritique}
             setShowCritique={setShowCritique}
             setPostData={setPostData}
@@ -268,7 +286,8 @@ export default () => {
                     submitSignal={submitCritique}
                     setSubmitSignal={setSubmitCritique}
                     setCritiques={setPostCritiques}
-                    {...postCritiques[showCritique]}
+                    quote={newCritiqueQuote}
+                    {...critiques[showCritique]}
                   />
                   :
                   <Critiques />
@@ -284,6 +303,21 @@ export default () => {
             </Modal>
           }
         </div>
+
+        {removedCritiques.length > 0 &&
+          <section className="removedCritiques">
+            <h3>Críticas a trechos removidos do texto</h3>
+            <ul>
+              {removedCritiques.map(({ critique, index }) =>
+                <li key={critique.id}>
+                  <button onClick={() => setShowCritique(String(index))}>{critique.title}</button>
+                  <span>por {critique.author}</span>
+                </li>
+              )}
+            </ul>
+          </section>
+        }
+        </>
       }
     </div>
   )

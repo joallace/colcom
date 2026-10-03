@@ -162,12 +162,23 @@ async function merge(content: IContent, commit: string) {
   })
 }
 
-// Short hashes were stored before full ones were adopted, this expands them for the migration script
-async function resolveCommit(repo: number, commit: string): Promise<string> {
+// Whether a commit is part of a post's own history, i.e. a version readers can see on its timeline.
+// The topic's commits on main are ancestors of every post, but belong to none of them.
+async function isInHistory(content: IContent, commit: string): Promise<boolean> {
+  const { parent_id: repo, id } = content
   validateCommit(commit)
 
-  const output = await exec("git", ["-C", `${dbPath}/${repo}`, "rev-parse", "--verify", "--quiet", `${commit}^{commit}`])
-  return (<any>(output.stdout ?? output)).trimEnd()
+  const output = await exec("git", ["-C", `${dbPath}/${repo}`, "rev-list", `main..${id}`], { encoding: "utf-8" })
+  return String(output?.stdout ?? output).split("\n").includes(commit)
+}
+
+// Every commit a version descends from, itself included. Critiques made against any of them are
+// still relevant to that version, while those made against later versions are not.
+async function ancestors(repo: number, commit: string): Promise<Set<string>> {
+  validateCommit(commit)
+
+  const output = await exec("git", ["-C", `${dbPath}/${repo}`, "rev-list", commit], { encoding: "utf-8" })
+  return new Set(String(output?.stdout ?? output).split("\n").filter(Boolean))
 }
 
 async function log(content: IContent) {
@@ -194,6 +205,7 @@ export default Object.freeze({
   update,
   branch,
   merge,
-  resolveCommit,
+  isInHistory,
+  ancestors,
   log
 })

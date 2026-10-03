@@ -136,7 +136,8 @@ async function create({ title, author_pid, parent_id, body, type, config }: Cont
   return { ...result.rows[0], author: name, author_id: author_pid }
 }
 
-async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as any[], omitBody = false, includeParentTitle = false }): Promise<Content[]> {
+// paginate = false is only for internal queries already bounded by their WHERE, e.g. a post's critiques
+async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as any[], omitBody = false, includeParentTitle = false, paginate = true }): Promise<Content[]> {
   const query = {
     text: `
       SELECT
@@ -199,7 +200,7 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
       }
       ${where ? `WHERE ${where}` : ""}
       ORDER BY ${orderByColumn(orderBy, contentOrderBy)} DESC, contents.id DESC
-      ${limitOffset(page, pageSize)}
+      ${paginate ? limitOffset(page, pageSize) : ""}
       ;`,
     values
   }

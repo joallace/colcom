@@ -62,6 +62,44 @@
     }
 }
 
+.removedCritiques {
+    @include content-responsiveness(55vw, 60vw, 95vw);
+    margin: 0 auto 2rem;
+
+    h3 {
+        font-size: 1rem;
+        color: color.scale($default-font-color, $lightness: -33%);
+    }
+
+    ul {
+        display: grid;
+        gap: 0.5rem;
+        padding-left: 1rem;
+    }
+
+    li {
+        display: flex;
+        gap: 0.5rem;
+        align-items: baseline;
+
+        span {
+            font-size: 0.75rem;
+            color: color.scale($default-font-color, $lightness: -33%);
+        }
+    }
+
+    button {
+        all: unset;
+        cursor: pointer;
+        text-decoration: underline dotted;
+        text-decoration-color: $default-orange;
+
+        &:hover {
+            color: $default-orange;
+        }
+    }
+}
+
 .timerSlider {
     margin: 1rem 0;
     display: grid;

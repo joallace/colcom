@@ -25,8 +25,9 @@ function getSelectionHeight() {
       if (range.getBoundingClientRect) {
         // Sometimes, when selecting a whole paragraph, we can't get the selection rect
         // so we can just pick it from the starting container
-        const rect = range?.getBoundingClientRect()?.top ? range?.getBoundingClientRect() : range?.startContainer?.getBoundingClientRect()
-        return (rect.top + rect.bottom) / 2
+        const rect = range?.getBoundingClientRect()?.top ? range?.getBoundingClientRect() : range?.startContainer?.getBoundingClientRect?.()
+        // A critique opened from the list of removed passages has no selection in the post to align with
+        return rect && (rect.top + rect.bottom) / 2
       }
     }
   }
@@ -54,7 +55,9 @@ export default ({
   setTempHighlight,
   setOffset,
   skipOffset = false,
-  interval
+  interval,
+  anchor,
+  quote
 }) => {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const readOnly = !!body
@@ -69,6 +72,15 @@ export default ({
   const navigate = useNavigate()
   const { user } = useUser()
   const isDesktop = useBreakpoint("md")
+  // Where the critique lands on the version being read; none when its passage was removed
+  const range = anchor && anchor.match !== "removed" ? [anchor.from, anchor.to] : undefined
+  const isFromEarlierVersion = readOnly && config?.commit && config.commit !== commit
+
+  const originMessage = {
+    exact: "Crítica feita em uma versão anterior do post.",
+    fuzzy: "O trecho criticado foi alterado desde esta crítica.",
+    removed: "O trecho criticado foi removido do post."
+  }
 
   const headerConfig = {
     "save": {
@@ -104,7 +116,7 @@ export default ({
     const title = titleRef?.current.textContent
     const [from, to] = interval
 
-    if (!title || !content || !from || !to || !commit) {
+    if (!title || !content || !from || !to || !commit || !quote) {
       setError(true)
       return
     }
@@ -121,7 +133,7 @@ export default ({
       const res = await fetch(url, {
         method: "post",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.accessToken}` },
-        body: JSON.stringify({ title, body: content, config: { from, to, commit }, parent_id })
+        body: JSON.stringify({ title, body: content, config: { from, to, commit, quote }, parent_id })
       })
 
 
@@ -166,15 +178,15 @@ export default ({
       id={id}
       title={setTempHighlight ?
         <span
-          className={JSON.stringify(tempHighlight) === JSON.stringify([config.from, config.to]) ? "active" : undefined}
-          title="clique para marcar a crítica no texto"
-          onClick={() => { setTempHighlight([config.from, config.to]) }}
+          className={range && JSON.stringify(tempHighlight) === JSON.stringify(range) ? "active" : undefined}
+          title={range ? "clique para marcar a crítica no texto" : undefined}
+          onClick={() => { range && setTempHighlight(range) }}
         >
           {title}
         </span>
         :
         readOnly ?
-          <Link to={`/topics/${parent_id}/posts/${parent_id}?commit=${config.commit}`}>{title}</Link>
+          <Link to={`?commit=${config.commit}`}>{title}</Link>
           :
           title
       }
@@ -192,6 +204,16 @@ export default ({
       error={error}
       setError={setError}
     >
+      {isFromEarlierVersion &&
+        <div className="critiqueOrigin">
+          <span>{originMessage[anchor?.match ?? "removed"]}</span>
+          {anchor?.match !== "exact" && config.quote && <blockquote>{config.quote.exact}</blockquote>}
+          <Link to={`?commit=${config.commit}`} onClick={() => setShowCritique && setShowCritique(false)}>
+            ver a versão criticada
+          </Link>
+        </div>
+      }
+
       {isLoading ?
         <Spinner/>
         :

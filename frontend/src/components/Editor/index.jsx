@@ -4,17 +4,8 @@ import {
   EditorContent,
   useEditor,
 } from "@tiptap/react"
-import Table from "@tiptap/extension-table"
-import TableCell from "@tiptap/extension-table-cell"
-import TableHeader from "@tiptap/extension-table-header"
-import TableRow from "@tiptap/extension-table-row"
-import Document from "@tiptap/extension-document"
-import Heading from "@tiptap/extension-heading"
-import Placeholder from "@tiptap/extension-placeholder"
-import StarterKit from "@tiptap/starter-kit"
-import CustomHighlight from "@/assets/highlight"
 
-import Chart from "@/components/Editor/TipTapChart"
+import getExtensions from "@/components/Editor/extensions"
 import ChartModal from "@/components/Editor/ChartModal"
 import BubbleMenu from "@/components/Editor/BubbleMenu"
 import FloatingMenu from "@/components/Editor/FloatingMenu"
@@ -45,7 +36,7 @@ export default function Editor({
 
   const injectCritiques = ({ editor }) => {
     groupedCritiques.forEach((critique) => {
-      editor.chain().setTextSelection(critique).setHighlight({ type: "definitive", index: critique.index.length > 1 ? JSON.stringify(critique.index) : critique.index }).run()
+      editor.chain().setTextSelection(critique).setHighlight({ type: critique.type ?? "definitive", index: critique.index.length > 1 ? JSON.stringify(critique.index) : critique.index }).run()
     })
 
     editor.chain().setTextSelection(0).blur().run()
@@ -53,25 +44,7 @@ export default function Editor({
   }
 
   const editor = useEditor({
-    extensions: [
-      Document,
-      StarterKit.configure({
-        document: false,
-        heading: false
-      }),
-      Chart,
-      Table,
-      TableCell,
-      TableHeader,
-      TableRow,
-      Heading.configure({
-        levels: [2, 3],
-      }),
-      CustomHighlight.configure({ setShowCritique }),
-      Placeholder.configure({
-        placeholder: "O que tens a dizer?"
-      })
-    ],
+    extensions: getExtensions({ setShowCritique }),
     editorProps: {
       handleDOMEvents: {
         drop: (_, e) => { e.preventDefault(); },

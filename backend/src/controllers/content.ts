@@ -1,7 +1,7 @@
 import { RequestHandler } from "express"
 
 import git from "@/gitDatabase"
-import Content, { ContentInsertRequest, summarize } from "@/models/content"
+import Content, { ContentInsertRequest, IContent, summarize } from "@/models/content"
 import Interactions from "@/models/interactions"
 import { ValidationError, NotFoundError, ForbiddenError } from "@/errors"
 
@@ -43,6 +43,43 @@ const withRollback = async (gitWrite: () => Promise<unknown>, rollback: () => Pr
   }
 }
 
+const QUOTE_CONTEXT_LENGTH = 32
+const QUOTE_MAX_LENGTH = 5000
+
+// A critique is anchored to the exact version it criticised (commit + positions) and also carries the
+// quoted text with some context around it, which lets readers find the passage again in later
+// versions. Unknown keys are dropped, so the stored config is exactly this shape.
+const validateCritiqueConfig = async (config: any, post: IContent) => {
+  const { commit, from, to, quote } = config ?? {}
+  const isText = (value: unknown, maxLength: number) => typeof value === "string" && value.length <= maxLength
+  const isOffset = (value: unknown) => Number.isInteger(value) && <number>value >= 0
+
+  const isValid = typeof commit === "string"
+    && isOffset(from) && isOffset(to) && from < to
+    && isText(quote?.exact, QUOTE_MAX_LENGTH) && quote.exact.trim().length > 0
+    && isText(quote?.prefix, QUOTE_CONTEXT_LENGTH) && isText(quote?.suffix, QUOTE_CONTEXT_LENGTH)
+    && isOffset(quote?.start)
+
+  if (!isValid)
+    throw new ValidationError({
+      message: "O trecho criticado é inválido.",
+      action: "Selecione um trecho de texto do post e tente novamente.",
+      stack: new Error().stack,
+      errorLocationCode: "CONTROLLER:CONTENT:VALIDATE_CRITIQUE_CONFIG",
+      key: "config"
+    })
+
+  if (!(await git.isInHistory(post, commit)))
+    throw new ValidationError({
+      message: "A versão criticada não pertence a este post.",
+      stack: new Error().stack,
+      errorLocationCode: "CONTROLLER:CONTENT:VALIDATE_CRITIQUE_CONFIG:FOREIGN_COMMIT",
+      key: "config"
+    })
+
+  return { commit, from, to, quote: { exact: quote.exact, prefix: quote.prefix, suffix: quote.suffix, start: quote.start } }
+}
+
 const findOwnedSuggestion = async (content_id: number, commit: string, author_pid: string) => {
   const content = await Content.findById(content_id)
 
@@ -76,15 +113,21 @@ export const createContent: RequestHandler = async (req, res, next) => {
   const author_pid = (<any>req.params.user).pid
 
   try {
-    const grandparentId = parent_id ?
-      (await Content.getDataById(parent_id, ["parent_id"])).parent_id
-      :
-      null
+    const parent = parent_id ? await Content.getDataById(parent_id, ["parent_id", "type"]) : null
 
-    const type = !parent_id ?
+    const type = !parent ?
       "topic"
       :
-      grandparentId ? "critique" : "post"
+      parent.parent_id ? "critique" : "post"
+
+    // Answers to a critique belong to its lifecycle (address, rebut, dispute), not to nested critiques
+    if (type === "critique" && parent.type !== "post")
+      throw new ValidationError({
+        message: "Somente posts podem ser criticados.",
+        stack: new Error().stack,
+        errorLocationCode: "CONTROLLER:CONTENT:CREATE_CONTENT:CRITIQUE_PARENT",
+        key: "parent_id"
+      })
 
     const content: ContentInsertRequest = {
       title,
@@ -92,7 +135,7 @@ export const createContent: RequestHandler = async (req, res, next) => {
       parent_id,
       body: type === "post" ? summarize(body) : body,
       type,
-      config
+      config: type === "critique" ? await validateCritiqueConfig(config, await Content.findById(parent_id)) : config
     }
 
     validateContent(content)
@@ -259,35 +302,44 @@ export const getVersion: RequestHandler = async (req, res, next) => {
   const content_id = Number(req.params.id)
   const author_pid = (<any>req.params.user)?.pid
   const commit = req.params.hash
-  const queryParentId = req.query.parent_id
 
   try {
-    const content = queryParentId ? undefined : await Content.findById(content_id)
+    const content = await Content.findById(content_id)
 
-    if (!queryParentId) {
-      if (!content)
-        throw new NotFoundError({
-          message: "Conteúdo não encontrado.",
-          action: 'Verifique se o "id" fornecido está correto.',
-          stack: new Error().stack
-        })
+    if (!content)
+      throw new NotFoundError({
+        message: "Conteúdo não encontrado.",
+        action: 'Verifique se o "id" fornecido está correto.',
+        stack: new Error().stack
+      })
 
-      if (content.type !== "post")
-        throw new ValidationError({
-          message: `Conteúdos do tipo "${content.type}" não podem têm histórico.`,
-          action: 'Forneça um "id" de um "post".',
-          stack: new Error().stack
-        })
-    }
+    if (content.type !== "post")
+      throw new ValidationError({
+        message: `Conteúdos do tipo "${content.type}" não têm histórico.`,
+        action: 'Forneça um "id" de um "post".',
+        stack: new Error().stack
+      })
 
-    const parent_id = queryParentId || content?.parent_id
-    const body = await git.read(Number(parent_id), commit)
-    const children = (await Content.findAll({ where: "contents.config->>'commit' = $1", values: [commit] })).reverse()
+    const repo = Number(content.parent_id)
+    const body = await git.read(repo, commit)
 
-    for (const child of children)
-      (<any>child).userInteractions = (await Interactions.getUserContentInteractions({ author_pid, content_id: child.id })).map(v => v.type)
+    // The version may also be a pending suggestion, which descends from the post's history too
+    const versionAncestors = await git.ancestors(repo, commit)
+    const critiques = (await Content.findAll({
+      where: "contents.parent_id = $1 AND contents.type = 'critique'",
+      values: [content_id],
+      paginate: false
+    }))
+      .filter(critique => versionAncestors.has((<any>critique.config)?.commit))
+      .reverse()
 
-    res.status(200).json({ body, children })
+    for (const critique of critiques)
+      (<any>critique).userInteractions = author_pid ?
+        (await Interactions.getUserContentInteractions({ author_pid, content_id: critique.id })).map(v => v.type)
+        :
+        undefined
+
+    res.status(200).json({ body, critiques })
   }
   catch (err) {
     next(err)

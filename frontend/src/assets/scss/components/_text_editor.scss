@@ -184,6 +184,18 @@
             }
         }
 
+        // The criticised passage was edited after the critique was made
+        &.changed {
+            cursor: pointer;
+            background-color: color.scale($default-orange, $lightness: -10%, $alpha: -60%);
+            text-decoration: underline dashed $default-orange;
+            text-underline-offset: 0.2em;
+
+            &:hover {
+                background-color: color.scale($default-orange, $lightness: -15%, $alpha: -40%);
+            }
+        }
+
         &.temporary {
             color: black;
             background-color: color.scale($default-yellow, $lightness: -18%);

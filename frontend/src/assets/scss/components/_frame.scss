@@ -117,6 +117,27 @@
         .bracket {
             border-color: $default-orange;
         }
+
+        // Shown on critiques made against an earlier version of the post
+        .critiqueOrigin {
+            display: grid;
+            gap: 0.25rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.8rem;
+            color: color.scale($default-font-color, $lightness: -33%);
+
+            blockquote {
+                margin: 0;
+                padding-left: 0.5rem;
+                border-left: 2px solid $default-orange;
+                font-style: italic;
+            }
+
+            a {
+                color: $default-orange;
+                width: fit-content;
+            }
+        }
     }
 }
 

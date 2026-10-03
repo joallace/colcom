@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc && tsc-alias && node copySqlFiles.js",
-    "start": "node ./build/src/server.js",
-    "migrate:full-hashes": "node ./build/src/scripts/expandCommitHashes.js"
+    "start": "node ./build/src/server.js"
   },
   "devDependencies": {
     "@types/async-lock": "^1.4.2",
