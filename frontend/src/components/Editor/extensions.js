@@ -6,6 +6,7 @@ import StarterKit from "@tiptap/starter-kit"
 import CustomHighlight from "@/assets/highlight"
 
 import Chart from "@/components/Editor/TipTapChart"
+import DiffHighlight from "@/components/Editor/DiffHighlight"
 
 
 // Shared by the editor and by critique anchoring (assets/anchoring.js), which must parse a post's
@@ -31,6 +32,7 @@ export default function getExtensions({ setShowCritique } = {}) {
       levels: [2, 3],
     }),
     CustomHighlight.configure({ setShowCritique }),
+    DiffHighlight,
     Placeholder.configure({
       placeholder: "O que tens a dizer?"
     })

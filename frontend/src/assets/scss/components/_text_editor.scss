@@ -202,3 +202,32 @@
         }
     }
 }
+// Reviewing a suggestion: what it adds and removes relative to the version it was made on
+.diffInsert {
+    background-color: color.scale($default-green, $alpha: -65%);
+    text-decoration: underline $default-green;
+    text-underline-offset: 0.2em;
+}
+
+.diffDelete {
+    // Keeps a removed word apart from the one added in its place
+    margin-right: 0.25em;
+    background-color: color.scale($default-red, $alpha: -70%);
+    text-decoration: line-through $default-red;
+    color: color.scale($default-font-color, $lightness: -25%);
+}
+
+.diffLegend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: baseline;
+    margin-bottom: 0.75rem;
+    font-size: 0.8rem;
+    color: color.scale($default-font-color, $lightness: -33%);
+
+    span {
+        padding: 0 0.25rem;
+        color: $default-font-color;
+    }
+}

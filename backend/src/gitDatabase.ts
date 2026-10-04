@@ -172,6 +172,16 @@ async function isInHistory(content: IContent, commit: string): Promise<boolean> 
   return String(output?.stdout ?? output).split("\n").includes(commit)
 }
 
+// The commit a suggestion branched from: comparing the suggestion against it shows exactly what its
+// contributor changed, even if the post has moved on since
+async function mergeBase(content: IContent, commit: string): Promise<string> {
+  const { parent_id: repo, id } = content
+  validateCommit(commit)
+
+  const output = await exec("git", ["-C", `${dbPath}/${repo}`, "merge-base", String(id), commit], { encoding: "utf-8" })
+  return String(output?.stdout ?? output).trim()
+}
+
 // Every commit a version descends from, itself included. Critiques made against any of them are
 // still relevant to that version, while those made against later versions are not.
 async function ancestors(repo: number, commit: string): Promise<Set<string>> {
@@ -206,6 +216,7 @@ export default Object.freeze({
   branch,
   merge,
   isInHistory,
+  mergeBase,
   ancestors,
   log
 })

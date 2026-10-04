@@ -50,6 +50,7 @@ export default function Post({
   bubbleMenuShouldShow,
   resetState = [],
   tempHighlight,
+  diffBase,
   currentSuggestion,
   setCurrentSuggestion
 }) {
@@ -265,6 +266,7 @@ export default function Post({
           setShowCritique={setShowCritique}
           bubbleMenuShouldShow={bubbleMenuShouldShow}
           tempHighlight={tempHighlight}
+          diffBase={diffBase}
           reset={reset}
         />
       </Frame>
@@ -290,7 +292,7 @@ export default function Post({
           {
             suggestions?.map((suggestion, index) => {
               const Dot = () => <span className="dot"> • </span>
-              return <li>
+              return <li key={suggestion.id}>
                 <span
                   className="clickable"
                   title="visualizar sugestão"

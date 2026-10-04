@@ -344,7 +344,12 @@ export const getVersion: RequestHandler = async (req, res, next) => {
       if (critiqueCommit !== commit)
         versions[critiqueCommit] = await git.read(repo, critiqueCommit)
 
-    res.status(200).json({ body, critiques, versions })
+    // A pending suggestion also comes with the version it was made on, to show what it changes
+    const isSuggestion = Boolean(await Interactions.findPendingSuggestion(content_id, commit))
+    const baseCommit = isSuggestion ? await git.mergeBase(content, commit) : undefined
+    const base = baseCommit ? { commit: baseCommit, body: await git.read(repo, baseCommit) } : undefined
+
+    res.status(200).json({ body, critiques, versions, base })
   }
   catch (err) {
     next(err)

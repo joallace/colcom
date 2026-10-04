@@ -4,6 +4,7 @@ import search from "approx-string-match"
 import diff from "fast-diff"
 
 import getExtensions from "@/components/Editor/extensions"
+import textIndex from "@/assets/textIndex"
 
 
 // Critiques are anchored like W3C Web Annotations: the version they were made on (commit + ProseMirror
@@ -29,32 +30,6 @@ export function docFromHtml(html) {
   // (e.g. <img onerror>) from the user written HTML being parsed
   const dom = new window.DOMParser().parseFromString(html ?? "", "text/html")
   return SchemaParser.fromSchema(schema).parse(dom.body)
-}
-
-// The document's text, with blocks separated by "\n", and the ProseMirror position of each character
-// (null for the separators). Quotes are searched in this text and mapped back to positions.
-function textIndex(doc) {
-  let text = ""
-  const positions = []
-
-  const separate = () => {
-    if (text && !text.endsWith("\n")) {
-      text += "\n"
-      positions.push(null)
-    }
-  }
-
-  doc.descendants((node, pos) => {
-    if (node.isText) {
-      text += node.text
-      for (let i = 0; i < node.text.length; i++)
-        positions.push(pos + i)
-    }
-    else if (node.isBlock || node.type.name === "hardBreak")
-      separate()
-  })
-
-  return { text, positions }
 }
 
 const commonPrefixLength = (a, b) => {

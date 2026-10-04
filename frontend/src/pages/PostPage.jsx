@@ -27,6 +27,8 @@ export default () => {
   const [bodyCommit, setBodyCommit] = React.useState()
   const [postCritiques, setPostCritiques] = React.useState([])
   const [critiqueVersions, setCritiqueVersions] = React.useState({})
+  // For a suggestion, the text of the version it was made on, to highlight what it changes
+  const [diffBase, setDiffBase] = React.useState()
   const latestRequest = React.useRef(0)
   const [tempHighlight, setTempHighlight] = React.useState([])
   const postTitleRef = React.useRef()
@@ -66,6 +68,7 @@ export default () => {
         setBodyCommit(commit)
         setPostCritiques(data.critiques)
         setCritiqueVersions(data.versions ?? {})
+        setDiffBase(data.base?.body)
       }
     }
     catch (err) {
@@ -300,6 +303,7 @@ export default () => {
             }}
             bubbleMenuShouldShow={currentCommit === postData?.history?.length - 1 && !Number.isFinite(currentSuggestion)}
             tempHighlight={tempHighlight}
+            diffBase={diffBase}
             resetState={[reset, setReset]}
           />
           {showCritique &&

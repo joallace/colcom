@@ -28,6 +28,8 @@ export default function Editor({
   tableConfig = { maxRows: 20, maxColumns: 10 },
   bubbleMenuShouldShow = true,
   tempHighlight = [],
+  // The version this content is compared against, its changes highlighted (reviewing a suggestion)
+  diffBase,
   ...remainingProps
 }) {
   const [markedBody, setMarkedBody] = React.useState()
@@ -139,6 +141,13 @@ export default function Editor({
     editor?.commands.setContent(initialContent)
   }, [reset])
 
+  React.useEffect(() => {
+    if (!editor || editor.isDestroyed)
+      return
+
+    editor.commands.setDiffBase(diffBase ?? null)
+  }, [editor, diffBase])
+
   return (
     <>
       {!alongsideCritique &&
@@ -153,6 +162,14 @@ export default function Editor({
       />
 
       <ChartModal isOpen={modal} setIsOpen={setModal} editor={editor} />
+
+      {diffBase &&
+        <div className="diffLegend">
+          comparando com a versão em que a sugestão foi feita:
+          <span className="diffInsert">adicionado</span>
+          <span className="diffDelete">removido</span>
+        </div>
+      }
 
       <EditorContent editor={editor} style={{ width: "100%" }} />
     </>
