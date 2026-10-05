@@ -1,6 +1,6 @@
 import React from "react"
 
-export default React.forwardRef(({ id, type, label, options = {}, style = {}, errorMessage, className = "", ...remainingProps }, ref) => {
+export default React.forwardRef(function Input({ id, type, label, options = {}, style = {}, errorMessage, className = "", ...remainingProps }, ref) {
   return (
     <div className={`inputWrapper${errorMessage ? " error" : ""}`}>
       <div className={`${type === "checkbox" || type === "radio" ? "checkBox" : "inputBox"}${className && ` ${className}`}`} style={style}>
@@ -12,7 +12,7 @@ export default React.forwardRef(({ id, type, label, options = {}, style = {}, er
             {...remainingProps}
           >
             {Object.keys(options).map(option => {
-              return <option value={options[option]}>{option}</option>
+              return <option key={option} value={options[option]}>{option}</option>
             })}
           </select>
           :

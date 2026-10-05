@@ -2,7 +2,7 @@ import React from "react"
 import { sm, md, lg, xl, xxl } from "@/assets/scss/_export.module.scss"
 
 
-export default (screenSize = "sm") => {
+export default function useBreakpoint(screenSize = "sm") {
   // Object containing all screen sizes in px, imported from the scss file
   const sizes = Object.fromEntries(
     Object.entries({ sm, md, lg, xl, xxl })

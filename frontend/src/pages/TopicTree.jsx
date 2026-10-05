@@ -1,5 +1,4 @@
 import React from "react"
-import { useSearchParams } from "react-router"
 
 import NoResponse from "@/components/primitives/NoResponse"
 import env from "@/assets/enviroment"
@@ -7,30 +6,35 @@ import Topic from "@/components/content/Topic"
 import Pagination from "@/components/primitives/Pagination"
 import Spinner from "@/components/primitives/Spinner"
 import useUser from "@/context/UserContext"
+import usePageParam from "@/hooks/usePageParam"
 
+
+const PAGE_SIZE = 10
 
 export default function TopicTree({ orderBy, where }) {
-  const [searchParams] = useSearchParams();
   const [topics, setTopics] = React.useState([])
-  const [page, setPage] = React.useState(searchParams.has("p") ? searchParams.get("p") - 1 : 0)
-  const [pageSize, setPageSize] = React.useState(10)
+  const [page, setPage] = usePageParam()
   const [maxIndex, setMaxIndex] = React.useState()
-  const [isLoading, setIsLoading] = React.useState(true)
+  // What the shown topics were fetched for; it's loading until that's what is asked for
+  const [loaded, setLoaded] = React.useState({})
   const { user } = useUser()
+  const isLoading = loaded.user !== user || loaded.page !== page || loaded.orderBy !== orderBy || loaded.where !== where
+  // The total is only asked for once; changing pages doesn't change it
+  const needsCount = React.useEffectEvent(() => maxIndex === undefined)
 
   React.useEffect(() => {
+    const withCount = needsCount()
+
     const fetchPromoted = async () => {
       const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
       try {
-        setIsLoading(true)
-        const url = `${env.apiAddress}/topics?page=${page + 1}&pageSize=${pageSize}${where ? `&where=${where}` : ""}${orderBy ? `&orderBy=${orderBy}` : ""}${maxIndex === undefined ? "&with_count" : ""}`
+        const url = `${env.apiAddress}/topics?page=${page + 1}&pageSize=${PAGE_SIZE}${where ? `&where=${where}` : ""}${orderBy ? `&orderBy=${orderBy}` : ""}${withCount ? "&with_count" : ""}`
         const res = await fetch(url, { method: "get", headers })
         const data = await res.json()
 
         if (res.ok) {
           setTopics(data.tree)
-          if (maxIndex === undefined)
-            setMaxIndex(Math.ceil(data.count / pageSize) - 1)
+          setMaxIndex(prev => prev ?? Math.ceil(data.count / PAGE_SIZE) - 1)
         }
         else {
           setTopics([])
@@ -41,18 +45,13 @@ export default function TopicTree({ orderBy, where }) {
         console.error(err)
       }
       finally {
-        setIsLoading(false)
+        setLoaded({ user, page, orderBy, where })
       }
     }
 
     if (user !== undefined)
       fetchPromoted()
-  }, [user, page, orderBy])
-
-  React.useEffect(() => {
-    const pageQuery = searchParams.get("p")
-    setPage(pageQuery ? pageQuery - 1 : 0)
-  }, [searchParams])
+  }, [user, page, orderBy, where])
 
   React.useEffect(() => {
     document.title = "colcom: colaboração e competição na criação de ideias"

@@ -11,7 +11,7 @@ import { default as Editor } from "@/components/Editor"
 import Frame from "@/components/primitives/Frame"
 import Spinner from "@/components/primitives/Spinner"
 import Alert from "@/components/primitives/Alert"
-import { submitVote } from "@/components/primitives/VotingButtons"
+import { submitVote } from "@/assets/interactions"
 import { Author, Relevance } from "@/components/content/Metrics"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import env from "@/assets/enviroment"
@@ -19,7 +19,7 @@ import useUser from "@/context/UserContext"
 import { describe, validate } from "@/assets/validation"
 
 
-export default ({
+export default function Critique({
   id,
   commit,
   parent_id,
@@ -40,7 +40,7 @@ export default ({
   interval,
   anchor,
   quote
-}) => {
+}) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const readOnly = !!body
 
@@ -88,8 +88,8 @@ export default ({
 
   const getMetrics = () => {
     return [
-      <Author name={author} avatar={author_avatar} />,
-      <Relevance {...{ initialVoteState, relevanceVote, upvotes, downvotes }}/>
+      <Author key="author" name={author} avatar={author_avatar} />,
+      <Relevance key="relevance" {...{ initialVoteState, relevanceVote, upvotes, downvotes }}/>
     ]
   }
 
@@ -148,9 +148,11 @@ export default ({
   }
 
 
+  const onSubmitSignal = React.useEffectEvent(() => submit())
+
   React.useEffect(() => {
     if (submitSignal)
-      submit()
+      onSubmitSignal()
   }, [submitSignal])
 
 

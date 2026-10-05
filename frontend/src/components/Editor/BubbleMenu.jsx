@@ -19,7 +19,7 @@ const hasTextSelection = ({ state, from, to }) =>
 const hasFocus = ({ view, element }) => view.hasFocus() || element.contains(document.activeElement)
 
 
-export default ({ editor, shouldShow = true, readOnly, setShowCritique }) => {
+export default function EditorBubbleMenu({ editor, shouldShow = true, readOnly, setShowCritique }) {
   // Hooks must run on every render, before the early return
   const navigate = useNavigate()
   const { user } = useUser()

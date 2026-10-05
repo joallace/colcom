@@ -9,34 +9,34 @@ export const Author = ({ isDesktop, name, avatar }) => {
   )
 }
 
+const percentageToColorHSL = (pct) => `hsl(${pct * 120}, 100%, 50%)` // 0=red, 60=yellow, 120=green
+
+const Colored = ({ percentage, children }) => (
+  <Focus style={{ color: percentageToColorHSL(percentage) }}>
+    {children}
+  </Focus>
+)
+
 export const Relevance = ({ initialVoteState, relevanceVote, upvotes, downvotes }) => {
   const removeOrAddVote = initialVoteState ? -(relevanceVote === "") : +(relevanceVote === "up" || relevanceVote === "down")
   const allVotes = upvotes + downvotes + removeOrAddVote
   const upvotePercentage = (upvotes + getUserVote(initialVoteState, relevanceVote)) / allVotes
 
-  const percentageToColorHSL = (pct) => `hsl(${pct * 120}, 100%, 50%)` // 0=red, 60=yellow, 120=green
-
-  const Colored = ({ children }) => (
-    <Focus style={{ color: percentageToColorHSL(upvotePercentage) }}>
-      {children}
-    </Focus>
-  )
-
   return (
     allVotes ?
       allVotes === 1 ?
         <>
-          <Colored>1</Colored>{" "}votante {!upvotePercentage && "não"} achou relevante
+          <Colored percentage={upvotePercentage}>1</Colored>{" "}votante {!upvotePercentage && "não"} achou relevante
         </>
         :
         <>
-          <Colored>
+          <Colored percentage={upvotePercentage}>
             {toPercentageStr(upvotePercentage)}
           </Colored>
           {"  "} dos <Focus>{allVotes}</Focus> votantes achou relevante
         </>
       :
-      <><Colored>0</Colored> votos</>
+      <><Colored percentage={upvotePercentage}>0</Colored> votos</>
   )
 }
 

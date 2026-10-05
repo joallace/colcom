@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import PostPage from "@/pages/PostPage"
 import { UserContext } from "@/context/UserContext"
-import { ChartProvider } from "@/context/ChartContext"
+import ChartProvider from "@/context/ChartProvider"
 import { critiqueOn, p } from "../support/critiques"
 
 

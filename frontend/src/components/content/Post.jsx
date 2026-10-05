@@ -1,5 +1,5 @@
 import React from "react"
-import { useNavigate, Link } from "react-router"
+import { useNavigate } from "react-router"
 import {
   PiBookmarkSimple,
   PiBookmarkSimpleFill,
@@ -20,7 +20,7 @@ import Modal from "@/components/primitives/Modal"
 import { describe, limits, validate } from "@/assets/validation"
 import Input from "@/components/primitives/Input"
 import LoadingButton from "@/components/primitives/LoadingButton"
-import { submitVote } from "@/components/primitives/VotingButtons"
+import { submitVote } from "@/assets/interactions"
 import { Author, Interactions, Relevance } from "@/components/content/Metrics"
 import { UserContext } from "@/context/UserContext"
 import { relativeTime } from "@/assets/util"
@@ -29,7 +29,6 @@ import env from "@/assets/enviroment"
 
 export default function Post({
   id,
-  parent_id,
   author,
   author_avatar,
   author_id,
@@ -39,7 +38,6 @@ export default function Post({
   body,
   upvotes,
   downvotes,
-  critiques,
   suggestions,
   fetchCommit,
   groupedCritiques,
@@ -175,9 +173,9 @@ export default function Post({
     const allVotes = upvotes + downvotes + removeOrAddVote
     
     return [
-      <Author name={author} avatar={author_avatar} />,
-      <Relevance {...{ initialVoteState, relevanceVote, upvotes, downvotes }}/>,
-      <Interactions count={allVotes}/>
+      <Author key="author" name={author} avatar={author_avatar} />,
+      <Relevance key="relevance" {...{ initialVoteState, relevanceVote, upvotes, downvotes }}/>,
+      <Interactions key="interactions" count={allVotes}/>
     ]
   }
 
@@ -265,7 +263,6 @@ export default function Post({
       >
         <Editor
           initialContent={body}
-          critiques={critiques}
           groupedCritiques={groupedCritiques}
           content={content}
           setContent={setContent}

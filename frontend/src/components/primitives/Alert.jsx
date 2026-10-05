@@ -1,7 +1,6 @@
-import React from "react"
 import { PiX } from "react-icons/pi"
 
-export default ({ setter = () => { }, children }) => {
+export default function Alert({ setter = () => { }, children }) {
   if (!children) return
 
   const reset = () => { setter("") }

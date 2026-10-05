@@ -21,13 +21,11 @@ export default function Frame({
   hideVoteButtons = false,
   showDefinitiveVoteButton = false,
   definitiveVoteType,
-  initialVoteState = { vote: false, relevance: "" },
   alongsideCritique = false,
   isCritique = false,
   justify = false,
   error = false,
   setError = () => { },
-  setHeight = () => { },
   children,
   ...remainingProps
 }) {
@@ -42,7 +40,6 @@ export default function Frame({
   const ref = React.useRef()
   const dotsRef = React.useRef()
   const isDesktop = useBreakpoint()
-  const isMobile = useBreakpoint("sm")
 
   const toggle = (str, value = undefined) => {
     if (headerStatus[str] !== undefined || value !== undefined)
@@ -55,7 +52,6 @@ export default function Frame({
 
 
   React.useEffect(() => {
-    setHeight(ref?.current?.clientHeight || 0)
     setDropdownHeight((dotsRef?.current?.offsetTop + dotsRef?.current?.clientHeight) || 0)
   }, [])
 
@@ -75,8 +71,9 @@ export default function Frame({
             definitiveVoteType={definitiveVoteType}
           />
         }
+        {/* The error style only applies to an empty title (`:empty` in _frame.scss) */}
         <h1
-          className={`title${isCritique ? " critique" : ""}${error && !titleRef?.current?.textContent ? " error" : ""}`}
+          className={`title${isCritique ? " critique" : ""}${error ? " error" : ""}`}
           contentEditable={!readOnly}
           suppressContentEditableWarning={true}
           placeholder="Qual é o título?"

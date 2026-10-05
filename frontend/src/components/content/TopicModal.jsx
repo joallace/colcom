@@ -9,7 +9,7 @@ import env from "@/assets/enviroment"
 import { formErrors, limits, responseErrors } from "@/assets/validation"
 import useUser from "@/context/UserContext"
 
-export default ({ isOpen, setIsOpen }) => {
+export default function TopicModal({ isOpen, setIsOpen }) {
   const [title, setTitle] = React.useState("")
   const [allowMultipleAnswers, setAllowMultipleAnswers] = React.useState(false)
   const [answers, setAnswers] = React.useState([])
@@ -20,13 +20,23 @@ export default ({ isOpen, setIsOpen }) => {
   const navigate = useNavigate()
   const { user } = useUser()
 
+  // There's always one empty input for the next answer, and extra empty ones at the end are dropped
+  const withNextInput = list => {
+    const result = list.includes("") ? [...list] : [...list, ""]
+
+    while (result.length > 2 && result.at(-1) === "" && result.filter(v => v === "").length >= 2)
+      result.pop()
+
+    return result
+  }
+
   const handleAnswerChange = (index, value) => {
-    setAnswers(answers.map((answer, i) => {
+    setAnswers(withNextInput(answers.map((answer, i) => {
       if (index === i)
         return value
       else
         return answer
-    }))
+    })))
   }
 
   // The form keeps an empty input for the next answer, which isn't sent
@@ -97,17 +107,6 @@ export default ({ isOpen, setIsOpen }) => {
     }
   }
 
-  React.useEffect(() => {
-    if (!answers.length)
-      return
-
-    const empty = answers.filter(v => v === "").length
-    if (!empty)
-      setAnswers([...answers, ""])
-    else if (answers.length > 2 && empty >= 2 && answers[answers.length - 1] === "")
-      setAnswers(answers.slice(0, -1))
-  }, [answers])
-
   return (
     <Modal isOpen={isOpen} setIsOpen={setIsOpen} title="crie um tópico">
       <div className="topicModalBody">
@@ -145,6 +144,7 @@ export default ({ isOpen, setIsOpen }) => {
             {
               answers.map((answer, i) => (
                 <Input
+                  key={`answer-${i}`}
                   label={`${answer ? "" : "adicionar "}resposta ${i + 1}`}
                   value={answer}
                   maxLength={limits.answer.max}

@@ -68,7 +68,7 @@ const generateChartData = (type, numberColumns, numberRows) => {
   }
 }
 
-export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false, currentData, currentType = "line", setIsLegendOn, ...remainingProps }) => {
+export default function ChartModal({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false, currentData, currentType = "line", setIsLegendOn }) {
   const [chartType, setChartType] = React.useState(currentType)
   const [legend, setLegend] = React.useState(true)
   const [input1, setInput1] = React.useState(2)
@@ -255,7 +255,7 @@ export default ({ isOpen, setIsOpen, editor, setChartOutput, editionMode = false
                   setChartString({ type: chartType, legend, data: chartData })
                 }
                 else {
-                  const chartStr = `<chart type="${chartType}" isLegendOn="${legend}" data="${JSON.stringify(chartData).replace(/\"/g, "'")}"></chart>`
+                  const chartStr = `<chart type="${chartType}" isLegendOn="${legend}" data="${JSON.stringify(chartData).replace(/"/g, "'")}"></chart>`
                   editor.chain().focus().insertContent(chartStr).run()
                   setDataInputStage(false)
                 }

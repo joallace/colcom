@@ -3,14 +3,13 @@ import { Link, useNavigate } from "react-router"
 import {
   PiBookmarkSimple,
   PiBookmarkSimpleFill,
-  PiArrowBendUpLeft,
-  PiCaretDoubleUp
+  PiArrowBendUpLeft
 } from "react-icons/pi"
 
 import Frame from "@/components/primitives/Frame"
 import PostSummary from "@/components/content/PostSummary"
 import NoResponse from "@/components/primitives/NoResponse"
-import { submitVote } from "@/components/primitives/VotingButtons"
+import { submitVote } from "@/assets/interactions"
 import { Author, Interactions, PostCount, Promotions, Relevance } from "@/components/content/Metrics"
 import { UserContext } from "@/context/UserContext"
 
@@ -52,16 +51,17 @@ export default function Topic({
     const interactions = childrenStats?.upvotes + childrenStats?.downvotes
     
     return [
-      <Author name={author} avatar={author_avatar} />,
+      <Author key="author" name={author} avatar={author_avatar} />,
       <Promotions
+        key="promotions"
         userIsPromoting={userInteractions?.includes("promote")}
         userPromotingTopicId={user?.promoting}
         topicId={id}
         promotionCount={promotions}
       />,
-      <Relevance {...{ initialVoteState, relevanceVote, upvotes, downvotes }} />,
-      <PostCount count={childrenStats?.count} />,
-      <Interactions count={interactions} />
+      <Relevance key="relevance" {...{ initialVoteState, relevanceVote, upvotes, downvotes }} />,
+      <PostCount key="posts" count={childrenStats?.count} />,
+      <Interactions key="interactions" count={interactions} />
     ]
   }
 
@@ -85,6 +85,7 @@ export default function Topic({
               key={`p${id}-s${child.id}`}
               parent_id={id}
               id={child.id}
+              index={i}
               shortAnswer={`${i + 1}. ${child.title}`}
               summary={`${child.body}${child.body.length === 280 ? "..." : ""}`}
               percentage={child.votes / childrenStats?.votes}

@@ -1,5 +1,7 @@
-export default ({ children = "ainda não há repostas, que tal contribuir?" }) => (
-  <div className="noResponse">
-    {children}
-  </div>
-)
+export default function NoResponse({ children = "ainda não há repostas, que tal contribuir?" }) {
+  return (
+    <div className="noResponse">
+      {children}
+    </div>
+  )
+}

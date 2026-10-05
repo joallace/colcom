@@ -16,23 +16,12 @@ export default function Write() {
   const [answer, setAnswer] = React.useState("")
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState(false)
+  // Whether the title or body was empty when the error was raised; any edit clears `error`
+  const [isIncomplete, setIsIncomplete] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState(false)
   const navigate = useNavigate()
   const { state } = useLocation()
   const { user } = useUser()
-
-  const download = _ => {
-    let element = document.createElement("a")
-    element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(body))
-    element.setAttribute("download", `${title}.html`)
-
-    element.style.display = "none"
-    document.body.appendChild(element)
-
-    element.click()
-
-    document.body.removeChild(element)
-  }
 
   const clearLocalStorage = () => {
     localStorage.removeItem("editorContent")
@@ -41,6 +30,7 @@ export default function Write() {
 
   const submit = async () => {
     const title = titleRef?.current.textContent.trim()
+    setIsIncomplete(!title || !body)
 
     if (!title || !body || (state.config?.answers?.length !== 0 && !answer)) {
       setError(true)
@@ -90,11 +80,11 @@ export default function Write() {
 
   React.useEffect(() => {
     document.title = `respondendo a "${state.title}" · colcom`
-  }, [])
+  }, [state.title])
 
   return (
     <div className="content write">
-      <div className="topicName">respondendo ao tópico "<Link to={`/topics/${state.id}`}>{state.title}</Link>"</div>
+      <div className="topicName">respondendo ao tópico &quot;<Link to={`/topics/${state.id}`}>{state.title}</Link>&quot;</div>
 
       <Frame
         titleRef={titleRef}
@@ -103,7 +93,7 @@ export default function Write() {
         hideVoteButtons
         saveInLocalStorage
         justify
-        error={error && (!titleRef?.current.textContent || !body)}
+        error={error && isIncomplete}
         setError={setError}
       >
         <Editor content={body} setContent={(text) => { setBody(text); setError(false) }} />

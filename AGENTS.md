@@ -70,7 +70,7 @@ Beyond the suite, show changes work rather than assume they do:
 - **Database:** start a disposable cluster rather than touching the developer's: `/usr/lib/postgresql/16/bin/initdb -D <tmp>/pg -U postgres --auth=trust`, then `pg_ctl -o "-p 5499 -c listen_addresses=localhost" start`, then run the backend against it with its own `DB_PATH`. Add `-c log_statement=all` to count queries. The server's Postgres logs in Portuguese ("executar", not "execute").
 - **Browser:** `puppeteer-core` against the installed `/usr/bin/google-chrome` (headless), installed into a temp directory, never into the project.
 - **Behaviour changes:** run the previous commit in a `git worktree` next to the new code against the same database and compare responses.
-- **Lint:** `npm run lint` in `frontend/` reports hundreds of existing `react/prop-types` errors; compare against `HEAD` and only fix what you introduce.
+- **Lint:** `npm run lint` in `frontend/` is clean (no errors or warnings); keep it that way.
 
 ## Working conventions
 
@@ -87,8 +87,6 @@ Beyond the suite, show changes work rather than assume they do:
 - **Critique anchoring payload:** the version endpoint sends the text of every version between a critique's version and the one being read. Long histories will need the server-side `critique_anchors` cache planned for phase 3.
 - **Global title uniqueness:** content titles are unique across the whole site, critiques included.
 - **Frontend bugs:**
-  - `PostSummary` uses an undeclared `index` (throws for posts without `config.answer`).
-  - `Pagination` calls hooks conditionally.
   - `/write` crashes when opened directly (it needs the topic in router state).
   - `relativeTime` doesn't round years ("1.04… ano").
 - **Backend bugs:**

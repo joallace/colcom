@@ -16,7 +16,6 @@ import { CRITIQUE_LEVELS } from "@/assets/critiqueDensity"
 export default function Editor({
   content,
   setContent = () => { },
-  critiques = [],
   groupedCritiques = [],
   reset,
   initialContent,
@@ -30,10 +29,10 @@ export default function Editor({
   bubbleMenuShouldShow = true,
   tempHighlight = [],
   // The version this content is compared against, its changes highlighted (reviewing a suggestion)
-  diffBase,
-  ...remainingProps
+  diffBase
 }) {
-  const [markedBody, setMarkedBody] = React.useState()
+  // The content with the critiques highlighted; only effects read it, so changing it needn't re-render
+  const markedBody = React.useRef()
   const [modal, setModal] = React.useState(false)
   const { chartString, resetChartStr } = React.useContext(ChartContext)
 
@@ -48,7 +47,7 @@ export default function Editor({
     })
 
     editor.chain().setTextSelection(0).blur().run()
-    setMarkedBody(editor.getHTML())
+    markedBody.current = editor.getHTML()
   }
 
   // TipTap compares extensions by identity on every render, and new instances make it reconfigure
@@ -91,22 +90,32 @@ export default function Editor({
     return obj
   }
 
+  // Each effect below runs only when its trigger changes; the effect events it calls read the
+  // latest editor and props without becoming triggers themselves.
+
   // If there is a change in the chartData string, it is an edition of a chart by the modal.
   // So we need to delete the old chart and insert the new string
+  const replaceChart = React.useEffectEvent(() => {
+    editor.commands.deleteNode('chart')
+    editor.chain().focus().insertContent(chartString).run()
+    resetChartStr()
+  })
+
   React.useEffect(() => {
-    if (chartString.length !== 0) {
-      editor.commands.deleteNode('chart')
-      editor.chain().focus().insertContent(chartString).run()
-      resetChartStr()
-    }
+    if (chartString.length !== 0)
+      replaceChart()
   }, [chartString])
+
+  const showTempHighlight = React.useEffectEvent(() => {
+    editor.chain().setContent(markedBody.current).setTextSelection({ from: tempHighlight[0], to: tempHighlight[1] }).setHighlight({ type: "temporary" }).run()
+  })
 
   React.useEffect(() => {
     if (tempHighlight.length === 2)
-      editor.chain().setContent(markedBody).setTextSelection({ from: tempHighlight[0], to: tempHighlight[1] }).setHighlight({ type: "temporary" }).run()
+      showTempHighlight()
   }, [tempHighlight])
 
-  React.useEffect(() => {
+  const applyEditable = React.useEffectEvent(() => {
     if (editor) {
       editor.setEditable(isEditable)
 
@@ -115,18 +124,26 @@ export default function Editor({
       else
         editor.commands.setContent(editor.getHTML().replace(/<chart readonly="false"/g, '<chart readonly="true"'))
     }
-  }, [isEditable]);
+  })
 
   React.useEffect(() => {
+    applyEditable()
+  }, [isEditable])
+
+  const applyCritiquesVisible = React.useEffectEvent(() => {
     if (editor) {
       if (critiquesVisible)
-        editor.commands.setContent(markedBody)
+        editor.commands.setContent(markedBody.current)
       else
         editor.commands.setContent(initialContent)
     }
-  }, [critiquesVisible])
+  })
 
   React.useEffect(() => {
+    applyCritiquesVisible()
+  }, [critiquesVisible])
+
+  const remarkCritiques = React.useEffectEvent(() => {
     if (editor && !alongsideCritique) {
       injectCritiques({ editor })
       let newContent = editor.getJSON()
@@ -134,17 +151,25 @@ export default function Editor({
       for (let i = 0; i < newContent.content.length; i++)
         newContent.content[i] = removeTempHighlight(newContent.content[i])
 
-      setMarkedBody(newContent)
+      markedBody.current = newContent
 
       if (!critiquesVisible)
         editor.commands.setContent(initialContent)
       else
         editor.commands.setContent(newContent)
     }
-  }, [alongsideCritique])
+  })
 
   React.useEffect(() => {
+    remarkCritiques()
+  }, [alongsideCritique])
+
+  const resetContent = React.useEffectEvent(() => {
     editor?.commands.setContent(initialContent)
+  })
+
+  React.useEffect(() => {
+    resetContent()
   }, [reset])
 
   React.useEffect(() => {

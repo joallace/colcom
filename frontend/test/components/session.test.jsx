@@ -5,9 +5,11 @@ import React from "react"
 import { MemoryRouter, Route, Routes } from "react-router"
 import { describe, expect, it, vi } from "vitest"
 
-import useUser, { UserContext, UserProvider } from "@/context/UserContext"
+import useUser, { UserContext } from "@/context/UserContext"
+import UserProvider from "@/context/UserProvider"
 import Login from "@/pages/Login"
-import VotingButtons, { submitVote } from "@/components/primitives/VotingButtons"
+import VotingButtons from "@/components/primitives/VotingButtons"
+import { submitVote } from "@/assets/interactions"
 
 
 const API = "http://api.test"

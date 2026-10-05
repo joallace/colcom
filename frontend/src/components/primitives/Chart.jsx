@@ -41,7 +41,7 @@ const mobileMargin = {
   bottom: 5
 }
 
-export default ({ type, data = [{}], width, height, isLegendOn = true, ...remainingProps }) => {
+export default function Chart({ type, data = [{}], width, height, isLegendOn = true, ...remainingProps }) {
   const isDesktop = useBreakpoint()
 
   const COLORS = [defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultFontColor]
@@ -52,7 +52,7 @@ export default ({ type, data = [{}], width, height, isLegendOn = true, ...remain
     border: "1px solid #737373"
   }
 
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5
     const x = cx + radius * Math.cos(-midAngle * RADIAN)
     const y = cy + radius * Math.sin(-midAngle * RADIAN)

@@ -1,5 +1,4 @@
 import React from "react"
-import { useSearchParams } from "react-router"
 
 import NoResponse from "@/components/primitives/NoResponse"
 import Spinner from "@/components/primitives/Spinner"
@@ -7,30 +6,31 @@ import env from "@/assets/enviroment"
 import Pagination from "@/components/primitives/Pagination"
 import ContentList from "@/components/content/ContentList"
 import useUser from "@/context/UserContext"
+import usePageParam from "@/hooks/usePageParam"
 
+
+const PAGE_SIZE = 5
 
 export default function Bookmarked() {
-  const [searchParams] = useSearchParams();
   const [contents, setContents] = React.useState([])
-  const [page, setPage] = React.useState(searchParams.get("p") ? searchParams.get("p") - 1 : 0)
-  const [pageSize, setPageSize] = React.useState(5)
+  const [page, setPage] = usePageParam()
   const [maxIndex, setMaxIndex] = React.useState()
-  const [isLoading, setIsLoading] = React.useState(true)
+  // What the shown contents were fetched for; it's loading until that's what is asked for
+  const [loaded, setLoaded] = React.useState({})
   const { user } = useUser()
+  const isLoading = loaded.user !== user || loaded.page !== page
 
   React.useEffect(() => {
     const fetchBookmarked = async () => {
       const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
       try {
-        setIsLoading(true)
-        const url = `${env.apiAddress}/contents/bookmarked?page=${page + 1}&pageSize=${pageSize}`
+        const url = `${env.apiAddress}/contents/bookmarked?page=${page + 1}&pageSize=${PAGE_SIZE}`
         const res = await fetch(url, { method: "get", headers })
         const data = await res.json()
 
         if (res.ok) {
           setContents(data.contents)
-          if (maxIndex === undefined)
-            setMaxIndex(Math.ceil(data.count / pageSize) - 1)
+          setMaxIndex(prev => prev ?? Math.ceil(data.count / PAGE_SIZE) - 1)
         }
         else {
           setContents([])
@@ -41,18 +41,13 @@ export default function Bookmarked() {
         console.error(err)
       }
       finally {
-        setIsLoading(false)
+        setLoaded({ user, page })
       }
     }
 
     if(user)
       fetchBookmarked()
   }, [user, page])
-
-  React.useEffect(() => {
-    const pageQuery = searchParams.get("p")
-    setPage(pageQuery ? pageQuery - 1 : 0)
-  }, [searchParams])
 
   React.useEffect(() => {
     document.title = "colcom: conteúdos salvos"

@@ -1,14 +1,6 @@
-import React from "react"
 import { PiXBold } from "react-icons/pi"
 
-export default function Modal({ isOpen = false, setIsOpen = () => { }, children, title, footer, ...remainingProps }) {
-  const handleClickOutside = (e) => {
-    const { target, currentTarget } = e
-    e.preventDefault()
-    if (target === currentTarget)
-      setIsOpen(false)
-  }
-
+export default function Modal({ isOpen = false, setIsOpen = () => { }, children, title, ...remainingProps }) {
   if (!isOpen)
     return
 

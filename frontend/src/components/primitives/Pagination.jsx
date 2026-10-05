@@ -1,4 +1,3 @@
-import React from "react"
 import {
   PiCaretRight,
   PiCaretDoubleRight,
@@ -8,12 +7,26 @@ import {
 import { Link } from "react-router"
 
 
+// Up to 5 page indexes, centred on the current one when it isn't near either end
+function visiblePages(index, maxIndex) {
+  const count = Math.min(maxIndex + 1, 5)
+  let first = 0
+
+  if (count === 5) {
+    if (index >= 2 && index <= maxIndex - 2)
+      first = index - 2
+    else if (index >= 4)
+      first = maxIndex - 4
+  }
+
+  return Array.from({ length: count }, (_, k) => first + k)
+}
+
 export default function Pagination({ path = "", state, isLoading, maxIndex = -1 }) {
   if (maxIndex < 1) return
 
   const [index, setIndex] = state
-  const [pages, setPages] = React.useState([...Array(maxIndex >= 0 ? Math.min(maxIndex + 1, 5) : 5).keys()])
-  const refs = pages.map(_ => React.useRef(null))
+  const pages = visiblePages(index, maxIndex)
 
   const nextPage = () => {
     setIndex(index + 1)
@@ -22,18 +35,6 @@ export default function Pagination({ path = "", state, isLoading, maxIndex = -1 
   const previousPage = () => {
     setIndex(index - 1)
   }
-
-  React.useEffect(() => {
-    if (pages.length !== 5)
-      return
-
-    if (index >= 2 && (maxIndex <= 0 || index <= maxIndex - 2))
-      setPages(Array.from({ length: 5 }, (_, k) => k + index - 2))
-    else if (index < 4)
-      setPages(Array.from({ length: 5 }, (_, k) => k))
-    else
-      setPages(Array.from({ length: 5 }, (_, k) => maxIndex + k - 4))
-  }, [index, maxIndex])
 
   return (
     <>
@@ -65,9 +66,8 @@ export default function Pagination({ path = "", state, isLoading, maxIndex = -1 
               disabled={maxIndex >= 0 && page > maxIndex}
               active={String(index === page)}
               onClick={() => { index !== page && setIndex(page) }}
-              ref={refs[i]}
-              onBlur={_ => {
-                refs[i].current.innerHTML = page + 1
+              onBlur={e => {
+                e.target.textContent = page + 1
               }}
               onKeyDown={e => {
                 const content = e.target.textContent

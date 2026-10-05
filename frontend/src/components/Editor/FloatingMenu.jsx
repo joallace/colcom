@@ -11,7 +11,7 @@ import {
 import useActiveFormats from "@/components/Editor/useActiveFormats"
 
 
-export default ({ editor, tableConfig, modal, setModal }) => {
+export default function EditorFloatingMenu({ editor, tableConfig, modal, setModal }) {
   const [numberRows, setNumberRows] = React.useState(0)
   const [numberColumns, setNumberColumns] = React.useState(0)
   const [isTableInput, setIsTableInput] = React.useState(false)

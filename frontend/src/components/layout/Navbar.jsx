@@ -1,11 +1,9 @@
 import React from "react"
 import { NavLink, Link, useNavigate } from "react-router"
 import {
-  PiUser,
   PiUserFill,
   PiPlusBold,
   PiMedalFill,
-  PiCoinsFill,
   PiBookmarkSimpleFill,
   PiSignOutFill,
   PiSignInFill

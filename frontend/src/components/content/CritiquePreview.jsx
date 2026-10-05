@@ -4,7 +4,7 @@ import { PiBookmarkSimple, PiBookmarkSimpleFill } from "react-icons/pi"
 
 import { default as Editor } from "@/components/Editor"
 import Frame from "@/components/primitives/Frame"
-import { submitVote } from "@/components/primitives/VotingButtons"
+import { submitVote } from "@/assets/interactions"
 import { Author, Relevance } from "@/components/content/Metrics"
 
 
@@ -27,8 +27,8 @@ export default function CritiquePreview({ id, title, body, author, author_avatar
   }
 
   const getMetrics = () => [
-    <Author name={author} avatar={author_avatar} />,
-    <Relevance {...{ initialVoteState, relevanceVote, upvotes, downvotes }} />
+    <Author key="author" name={author} avatar={author_avatar} />,
+    <Relevance key="relevance" {...{ initialVoteState, relevanceVote, upvotes, downvotes }} />
   ]
 
   return (

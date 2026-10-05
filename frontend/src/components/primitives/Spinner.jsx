@@ -1,1 +1,3 @@
-export default ({size}) => <div className="spinner" style={size && { width: size, height: size }} />
+export default function Spinner({ size }) {
+  return <div className="spinner" style={size && { width: size, height: size }} />
+}

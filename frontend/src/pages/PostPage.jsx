@@ -15,7 +15,7 @@ import { docFromHtml, projectCritiques, quoteFromRange } from "@/assets/anchorin
 import { groupOverlappingMarks } from "@/assets/critiqueDensity"
 
 
-export default () => {
+export default function PostPage() {
   const [postData, setPostData] = React.useState({ parent_title: "..." })
   const [reset, setReset] = React.useState(false)
   const [showCritique, setShowCritique] = React.useState(false)
@@ -116,7 +116,7 @@ export default () => {
     })
   }
 
-  React.useEffect(() => {
+  const showVersionFromUrl = React.useEffectEvent(() => {
     const history = postData?.history
 
     if (!history)
@@ -127,6 +127,13 @@ export default () => {
 
     if (user !== undefined)
       fetchCommitBody(commit)
+  })
+
+  React.useEffect(() => {
+    // Moves the slider to the URL's version and starts loading it; the loading state is shared with
+    // the suggestion buttons, which load commits the URL doesn't name, so it can't be derived from it
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    showVersionFromUrl()
   }, [user, searchParams, postData.history])
 
   React.useEffect(() => {
@@ -228,8 +235,8 @@ export default () => {
     <div className="content">
       <div className="topicName">
         respondendo ao tópico
-        "<Link to={postData.parent_id && `/topics/${postData.parent_id}`}>{postData.parent_title}</Link>"
-        {postData?.config?.answer && <> com "<strong style={{ color: "white" }}>{postData.config.answer}</strong>"</>}
+        &quot;<Link to={postData.parent_id && `/topics/${postData.parent_id}`}>{postData.parent_title}</Link>&quot;
+        {postData?.config?.answer && <> com &quot;<strong style={{ color: "white" }}>{postData.config.answer}</strong>&quot;</>}
       </div>
 
       <div className="timerSlider">

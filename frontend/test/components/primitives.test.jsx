@@ -118,9 +118,9 @@ describe("PostSummary", () => {
     expect(container.querySelector("script")).toBeNull()
   })
 
-  // Known bug: without an answer it numbers the post with an undeclared `index`. Drop `.fails` once fixed.
-  it.fails("renders a post without an answer", () => {
-    renderSummary({ summary: "Resumo" })
+  it("numbers a post without an answer by its position", () => {
+    renderSummary({ summary: "Resumo", index: 2 })
+    expect(screen.getByText("3.")).toBeInTheDocument()
   })
 })
 

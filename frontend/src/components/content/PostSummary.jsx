@@ -1,4 +1,3 @@
-import React from "react"
 import { Link } from "react-router"
 import { PiStarFill, PiPencilSimpleLineFill } from "react-icons/pi"
 import DOMPurify from "dompurify"
@@ -6,7 +5,7 @@ import DOMPurify from "dompurify"
 import { toPercentageStr } from "@/assets/util"
 
 
-export default ({ parent_id, id, summary, percentage, shortAnswer, chosen, isAuthor }) => {
+export default function PostSummary({ parent_id, id, index = 0, summary, percentage, shortAnswer, chosen, isAuthor }) {
   const path = `/topics/${parent_id}/posts/${id}`
 
   return (

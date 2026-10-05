@@ -11,7 +11,7 @@ React 19 + React Router 7 + TipTap 3, built with Vite 8. Read the root [`AGENTS.
 | `src/components/Editor/` | The TipTap editor, its extensions, menus and the chart node |
 | `src/components/primitives/` | `Frame` (the card every content is drawn in), `Modal`, `Pagination`, voting buttons… |
 | `src/assets/` | Logic shared across components: `anchoring.js`, `textDiff.js`, `textIndex.js`, the custom `highlight.js` mark, `validation.js`, and `scss/` |
-| `src/context/` | `UserContext` (the logged-in user and token, from `localStorage`) |
+| `src/context/` | `UserContext`/`UserProvider` (the logged-in user and token, from `localStorage`) and `ChartContext`/`ChartProvider` |
 
 `@/` is an alias for `src/`. The API address is `import.meta.env.VITE_API_ADDRESS` (`assets/enviroment.js`).
 
@@ -67,7 +67,11 @@ Forms validate with the schemas the API uses (`shared/`, see the root `AGENTS.md
 - **`Frame` props.** `Frame` passes its header state to a *single* child through `cloneElement`; arrays and Fragments are rendered as they are. Wrapping an `Editor` together with something else changes which props it receives.
 - **Rendering HTML.** User-written HTML is only rendered through the editor or `DOMPurify.sanitize`. To parse HTML outside the editor, use `new DOMParser().parseFromString(...)`, which never runs handlers like `<img onerror>`; never assign it to `innerHTML`.
 - **Styles.** SCSS partials are imported by `assets/scss/main.scss`; colors come from `abstracts/_variables.scss` (`$default-orange`, `$default-green`, …) and widths from the `content-responsiveness` mixin.
-- **Lint.** `npm run lint` already reports many errors, mostly `react/prop-types`, plus React Compiler advisories from `eslint-plugin-react-hooks` 7. Don't add new ones. ESLint stays on v9 until `eslint-plugin-react` supports v10.
+- **Lint.** `npm run lint` is clean; keep it so. `react/prop-types` is off (React 19 ignores `propTypes`). `eslint-plugin-react-hooks` 7 includes the React Compiler rules:
+  - An effect that should run only when one value changes, but reads others, calls a `React.useEffectEvent` rather than leaving dependencies out.
+  - Don't set state synchronously in an effect. Derive the value (list pages compare what they loaded with what's asked for), or adjust it during render (`hooks/usePageParam.js`).
+  - Files export either components or other things, never both (fast refresh). Contexts live apart from their providers (`context/UserContext.jsx` and `UserProvider.jsx`), and helpers live in `src/assets/` (`interactions.js`, `pixelArt.js`).
+  - ESLint stays on v9 until `eslint-plugin-react` supports v10.
 
 ## Tests
 

@@ -38,7 +38,7 @@ export default function TopicPage() {
 
     if (user !== undefined)
       fetchTopic()
-  }, [user])
+  }, [user, id])
 
   return (
     <div className={`content ${isLoading ? "centered" : "tree"}`}>

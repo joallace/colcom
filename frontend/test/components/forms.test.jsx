@@ -10,9 +10,11 @@ import TopicModal from "@/components/content/TopicModal"
 
 
 // jsdom has no canvas to draw the avatar's PNG with: drawing sets one pixel, serializing gives a 1x1 PNG
-vi.mock("@/components/primitives/PixelArtEditor", () => ({
+vi.mock("@/assets/pixelArt", () => ({
   blankGrid: [[""]],
-  serializeGridToBase64png: () => "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+  serializeGridToBase64png: () => "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+}))
+vi.mock("@/components/primitives/PixelArtEditor", () => ({
   default: ({ gridState: [, setGrid], error }) => (
     <>
       <button type="button" onClick={() => setGrid([["#000"]])}>desenhar</button>
@@ -118,6 +120,7 @@ describe("creating a topic", () => {
       title: textInputs()[0],
       enableAnswers: () => userEvent.click(screen.getByLabelText("definir opções de resposta")),
       answer: index => textInputs()[index + 1],
+      answerCount: () => textInputs().length - 1,
       submit: () => userEvent.click(screen.getByRole("button", { name: "publicar" }))
     }
   }
@@ -143,6 +146,22 @@ describe("creating a topic", () => {
 
     expect(screen.getByText("respostas: defina ao menos 2 respostas, ou nenhuma")).toBeInTheDocument()
     expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it("keeps one empty input for the next answer", async () => {
+    const form = renderModal()
+
+    await form.enableAnswers()
+    expect(form.answerCount()).toBe(2)
+
+    await userEvent.type(form.answer(0), "sim")
+    expect(form.answerCount()).toBe(2)
+
+    await userEvent.type(form.answer(1), "não")
+    expect(form.answerCount()).toBe(3)
+
+    await userEvent.clear(form.answer(1))
+    expect(form.answerCount()).toBe(2)
   })
 
   it("sends trimmed answers, leaving out the empty input", async () => {

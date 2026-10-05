@@ -29,17 +29,12 @@ export default [
       ...react.configs['jsx-runtime'].rules,
       ...reactHooks.configs.recommended.rules,
       'react/jsx-no-target-blank': 'off',
+      // React 19 no longer checks propTypes, so declaring them would be dead code
+      'react/prop-types': 'off',
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },
       ],
-    },
-  },
-  {
-    // Components defined inside tests are fixtures, not part of the app's API
-    files: ['test/**/*.{js,jsx}'],
-    rules: {
-      'react/prop-types': 'off',
     },
   },
 ]
