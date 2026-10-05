@@ -1,5 +1,32 @@
 @use "sass:color";
 
+// Critique highlights by how many critiques cover the text (assets/critiqueDensity.js): from a
+// faint orange to a solid one, then into red, with the most disputed passages a vivid red
+$critique-density: (
+    1: color.scale($default-orange, $lightness: -10%, $alpha: -70%),
+    2: color.scale($default-orange, $lightness: -10%, $alpha: -45%),
+    3: color.scale($default-orange, $lightness: -10%),
+    4: $default-red,
+    5: #e3150c,
+);
+
+@mixin critique-density {
+    @each $level, $color in $critique-density {
+        &[data-level="#{$level}"] {
+            background-color: $color;
+
+            &:hover {
+                background-color: color.scale($color, $lightness: -15%, $alpha: 15%);
+            }
+        }
+    }
+
+    // Keeps the text readable on the brightest red
+    &[data-level="5"] {
+        color: white;
+    }
+}
+
 .menu {
     display: flex;
     min-width: min-content;
@@ -173,27 +200,17 @@
     mark {
         color: inherit;
 
-        &.definitive {
+        &.definitive,
+        &.changed {
             transition: all 0.15s ease;
             cursor: pointer;
-            background-color: color.scale($default-orange, $lightness: -10%);
-
-            &:hover {
-                background-color: color.scale($default-orange, $lightness: -15%);
-
-            }
+            @include critique-density;
         }
 
         // The criticised passage was edited after the critique was made
         &.changed {
-            cursor: pointer;
-            background-color: color.scale($default-orange, $lightness: -10%, $alpha: -60%);
-            text-decoration: underline dashed $default-orange;
+            text-decoration: underline dashed color.scale($default-orange, $lightness: 25%);
             text-underline-offset: 0.2em;
-
-            &:hover {
-                background-color: color.scale($default-orange, $lightness: -15%, $alpha: -40%);
-            }
         }
 
         &.temporary {
@@ -229,5 +246,21 @@
     span {
         padding: 0 0.25rem;
         color: $default-font-color;
+    }
+}
+
+.critiqueLegend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    align-items: baseline;
+    margin-bottom: 0.75rem;
+    font-size: 0.8rem;
+    color: color.scale($default-font-color, $lightness: -33%);
+
+    span {
+        padding: 0 0.4rem;
+        color: $default-font-color;
+        @include critique-density;
     }
 }

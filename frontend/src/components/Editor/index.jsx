@@ -10,6 +10,7 @@ import ChartModal from "@/components/Editor/ChartModal"
 import BubbleMenu from "@/components/Editor/BubbleMenu"
 import FloatingMenu from "@/components/Editor/FloatingMenu"
 import { ChartContext } from "@/context/ChartContext"
+import { CRITIQUE_LEVELS } from "@/assets/critiqueDensity"
 
 
 export default function Editor({
@@ -37,8 +38,13 @@ export default function Editor({
   const { chartString, resetChartStr } = React.useContext(ChartContext)
 
   const injectCritiques = ({ editor }) => {
-    groupedCritiques.forEach((critique) => {
-      editor.chain().setTextSelection(critique).setHighlight({ type: critique.type ?? "definitive", index: critique.index.length > 1 ? JSON.stringify(critique.index) : critique.index }).run()
+    groupedCritiques.forEach(({ index, segments }) => {
+      // Every segment opens the whole group
+      const groupIndex = index.length > 1 ? JSON.stringify(index) : index[0]
+
+      segments.forEach(({ from, to, type, level }) => {
+        editor.chain().setTextSelection({ from, to }).setHighlight({ type, index: groupIndex, level }).run()
+      })
     })
 
     editor.chain().setTextSelection(0).blur().run()
@@ -168,6 +174,13 @@ export default function Editor({
           comparando com a versão em que a sugestão foi feita:
           <span className="diffInsert">adicionado</span>
           <span className="diffDelete">removido</span>
+        </div>
+      }
+
+      {critiquesVisible && !isEditable && groupedCritiques.some(({ segments }) => segments.some(({ level }) => level > 1)) &&
+        <div className="critiqueLegend">
+          críticas por trecho:
+          {CRITIQUE_LEVELS.map((label, i) => <span key={label} data-level={i + 1}>{label}</span>)}
         </div>
       }
 

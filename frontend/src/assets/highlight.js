@@ -32,6 +32,18 @@ export default Mark.create({
             "data-commit-index": attributes.index
           }
         },
+      },
+      // How many critiques cover this piece of text, as a step of a coarse scale (critiqueLevel)
+      level: {
+        parseHTML: element => element.getAttribute("data-level"),
+        renderHTML: attributes => {
+          if (attributes.level === undefined) {
+            return {}
+          }
+          return {
+            "data-level": attributes.level
+          }
+        },
       }
     }
   },

@@ -27,6 +27,8 @@ React 19 + React Router 7 + TipTap 3, built with Vite 8. Read the root [`AGENTS.
   - Menus come from `@tiptap/react/menus` and position themselves with Floating UI (`@floating-ui/dom` is a required peer dependency).
 - **Highlights.**
   - Critique highlights are a custom `highlight` mark (`assets/highlight.js`). Its `data-commit-index` holds the critique's index, or a JSON list for overlapping critiques shown as one group.
+    - Each group is split into segments by how many of its critiques cover them (`densitySegments` in `assets/critiqueDensity.js`, called by `groupOverlappingMarks` in `PostPage.jsx`). Every segment carries the group's `data-commit-index`, so clicking any of them opens the whole group, and the popover anchors to the first one.
+    - A segment's `data-level` (1–5) puts its count on a doubling scale (1, 2, 3–4, 5–8, 9+; `CRITIQUE_LEVELS`), shaded from faint orange to vivid red by the `critique-density` mixin in `_text_editor.scss`. When some segment has 2 + critiques, a legend above the post (`.critiqueLegend`) shows the scale; its swatches are `<span>`s, not `<mark>`s, so highlight selectors never match them. "Changed" segments keep their shade and add a dashed underline.
   - Suggestion changes are drawn by `DiffHighlight.js` as decorations (never document changes), set through `editor.commands.setDiffBase(html)`.
 
 ## Critique anchoring (`assets/anchoring.js`)
