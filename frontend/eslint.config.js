@@ -35,4 +35,11 @@ export default [
       ],
     },
   },
+  {
+    // Components defined inside tests are fixtures, not part of the app's API
+    files: ['test/**/*.{js,jsx}'],
+    rules: {
+      'react/prop-types': 'off',
+    },
+  },
 ]

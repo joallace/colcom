@@ -17,6 +17,8 @@
       "@/*": ["./src/*"]
     }
   },
+  // Tests run through Vitest and aren't part of the build
+  "include": ["src"],
   "tsc-alias": {
     "resolveFullPaths": true,
   }

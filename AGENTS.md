@@ -47,11 +47,16 @@ Competition flow: a critique quotes a passage of a specific version. Later versi
 
 ## Testing and verifying
 
-There is no automated test suite yet. Changes so far were verified with throwaway setups, and that remains the expected bar: show it works, don't assume.
+Both packages have a Vitest suite; run `npm test` in `backend/` and in `frontend/` (also `npm run test:watch` and `npm run coverage`). GitHub Actions runs both on every push (`.github/workflows/tests.yml`). Add or update tests with every change, and keep them green: a bug the suite can't catch yet deserves a test.
+
+- **Backend** (`backend/test/`): `unit/` tests pure modules; `integration/` drives the real app through HTTP (supertest) against a real Postgres and real git repos. Its global setup starts a throwaway Postgres cluster from the local binaries (`initdb`, found on `PATH`, in `PG_BIN` or under `/usr/lib/postgresql`), or uses a running server when `TEST_POSTGRES_HOST` is set (as CI does). Each test file gets its own database, cloned from a template with the schema, and its own `DB_PATH`, so files run in parallel and see none of each other's data. Tests isolate git from the developer's config (`GIT_CONFIG_GLOBAL=/dev/null`).
+- **Frontend** (`frontend/test/`): jsdom + Testing Library. `assets/` covers anchoring, diffing and density; `editor/` runs the real TipTap extensions; `components/` and `pages/` render components with `fetch` stubbed (`vi.stubGlobal`). `test/support/critiques.js` makes critiques the way the post page does, from a selected text.
+- **Known bugs** are recorded as `it.fails` tests with a comment; when one is fixed its test starts failing, and `.fails` must be dropped.
+
+Beyond the suite, show changes work rather than assume they do:
 
 - **Database:** start a disposable cluster rather than touching the developer's: `/usr/lib/postgresql/16/bin/initdb -D <tmp>/pg -U postgres --auth=trust`, then `pg_ctl -o "-p 5499 -c listen_addresses=localhost" start`, then run the backend against it with its own `DB_PATH`. Add `-c log_statement=all` to count queries. The server's Postgres logs in Portuguese ("executar", not "execute").
 - **Browser:** `puppeteer-core` against the installed `/usr/bin/google-chrome` (headless), installed into a temp directory, never into the project.
-- **Frontend logic in isolation:** Bun with `jsdom` can import `frontend/src/assets/*.js` and the real TipTap schema, but needs a preload plugin that stubs `.scss` imports (the chart component imports SCSS modules).
 - **Behaviour changes:** run the previous commit in a `git worktree` next to the new code against the same database and compare responses.
 - **Lint:** `npm run lint` in `frontend/` reports hundreds of existing `react/prop-types` errors; compare against `HEAD` and only fix what you introduce.
 
@@ -73,5 +78,9 @@ There is no automated test suite yet. Changes so far were verified with throwawa
   - `PostSummary` uses an undeclared `index` (throws for posts without `config.answer`).
   - `Pagination` calls hooks conditionally.
   - `/write` crashes when opened directly (it needs the topic in router state).
+  - `relativeTime` doesn't round years ("1.04… ano").
+- **Backend bugs:**
+  - `GET /contents/:id/interactions` is unreachable: `GET /contents/:id/:hash` is registered first and takes "interactions" as a hash. `GET /users/:id/interactions` passes a user id as a content id. Nothing calls either yet.
+  - An `up`, `down` or `bookmark` on a content that doesn't exist is a 500 (foreign key violation), not a 404.
 - **Unfinished features:** tags, colcoins (the promote cost check is commented out) and prestige exist in the schema but aren't implemented. The README's to-do list is outdated.
 - **Server defaults:** unknown API routes return Express's HTML 404, not JSON.

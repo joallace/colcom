@@ -12,6 +12,6 @@ Uma plataforma git-like de colaboração e competição na criação de ideias.
 - [ ] Implementar sistema para permitir temas customizados;
 - [ ] Implementar checagens de segurança mais robustas;
 - [ ] Implementar buscador por texto;
-- [ ] Implementar testes unitários;
+- [x] Implementar testes unitários;
 - [ ] Implementar testes de carga.
 

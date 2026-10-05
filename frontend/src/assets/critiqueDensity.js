@@ -28,3 +28,34 @@ export function densitySegments(marks) {
 
   return segments
 }
+
+// Overlapping critiques are drawn as a single highlight that opens all of them. Each group is
+// split into segments shaded by how many of its critiques cover them; a segment whose passage was
+// edited since one of its critiques was made is drawn as "changed".
+export function groupOverlappingMarks(critiques) {
+  const marks = critiques
+    .map((critique, i) => ({ ...critique.anchor, index: i }))
+    .filter(mark => mark.match !== "removed")
+    .sort((a, b) => a.from - b.from)
+
+  const groups = []
+
+  for (const mark of marks) {
+    const current = groups.at(-1)
+
+    if (current && mark.from < current.to) {
+      current.to = Math.max(current.to, mark.to)
+      current.index.push(mark.index)
+      current.marks.push(mark)
+    }
+    else
+      groups.push({ from: mark.from, to: mark.to, index: [mark.index], marks: [mark] })
+  }
+
+  return groups.map(({ from, to, index, marks }) => ({
+    from,
+    to,
+    index,
+    segments: densitySegments(marks).map(({ changed, ...segment }) => ({ ...segment, type: changed ? "changed" : "definitive" }))
+  }))
+}

@@ -12,7 +12,7 @@ import env from "@/assets/enviroment"
 import useUser from "@/context/UserContext"
 import { relativeTime } from "@/assets/util"
 import { docFromHtml, projectCritiques, quoteFromRange } from "@/assets/anchoring"
-import { densitySegments } from "@/assets/critiqueDensity"
+import { groupOverlappingMarks } from "@/assets/critiqueDensity"
 
 
 export default () => {
@@ -81,37 +81,6 @@ export default () => {
       if (request === latestRequest.current)
         setIsLoading(false)
     }
-  }
-
-  // Overlapping critiques are drawn as a single highlight that opens all of them. Each group is
-  // split into segments shaded by how many of its critiques cover them; a segment whose passage was
-  // edited since one of its critiques was made is drawn as "changed".
-  function groupOverlappingMarks(critiques) {
-    const marks = critiques
-      .map((critique, i) => ({ ...critique.anchor, index: i }))
-      .filter(mark => mark.match !== "removed")
-      .sort((a, b) => a.from - b.from)
-
-    const groups = []
-
-    for (const mark of marks) {
-      const current = groups.at(-1)
-
-      if (current && mark.from < current.to) {
-        current.to = Math.max(current.to, mark.to)
-        current.index.push(mark.index)
-        current.marks.push(mark)
-      }
-      else
-        groups.push({ from: mark.from, to: mark.to, index: [mark.index], marks: [mark] })
-    }
-
-    return groups.map(({ from, to, index, marks }) => ({
-      from,
-      to,
-      index,
-      segments: densitySegments(marks).map(({ changed, ...segment }) => ({ ...segment, type: changed ? "changed" : "definitive" }))
-    }))
   }
 
   // Critiques made on earlier versions are carried onto the one being read by searching for their quote

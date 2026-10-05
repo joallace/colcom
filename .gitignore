@@ -36,3 +36,6 @@ build
 .env.local
 
 db
+
+# Test coverage reports
+coverage

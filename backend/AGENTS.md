@@ -6,7 +6,8 @@ Express 5 + TypeScript 7 API over PostgreSQL and per-topic git repositories. Rea
 
 | Path | What it holds |
 |---|---|
-| `src/server.ts` | App setup: CORS, JSON body parser, routers, error handler |
+| `src/app.ts` | App setup: CORS, JSON body parser, routers, error handler |
+| `src/server.ts` | Starts listening; kept apart so tests import the app without binding a port |
 | `src/routes/*.ts` | Route → middleware → controller wiring |
 | `src/controllers/*.ts` | Request handling, validation, orchestration of models and git |
 | `src/models/*.ts` | All SQL. `content.ts` has `findAll`, `findTree`, `summarize`; `interactions.ts` has votes, bookmarks and suggestions |
@@ -69,3 +70,11 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 `lineages` maps each earlier version that critiques were made on to the list of commits from it to the requested one, along the post's first-parent history. `versions` holds the text of every commit in those lists. The frontend follows each critiqued passage through those edits (see `frontend/AGENTS.md`).
 
 Lists that include topics (`toFeed`) return topics with their posts, posts with `topic: { id, title }`, and critiques with `post: { id, title }` and `topic: { id }`.
+
+## Tests
+
+`npm test` runs both Vitest projects; `npm run test:unit` and `npm run test:integration` run one. See the root `AGENTS.md` for how the database is provided.
+
+- **Integration tests go through the API** with the helpers in `test/support/api.ts` (`signUp`, `createTopic`, `createPost`, `edit`, `critique`, `interact`…), never through models directly, so routing, auth, SQL and git are exercised together.
+- **Data is per file, not per test.** Tests in a file share a database, so make what each test needs (helpers generate unique names and titles) and don't assume a table is empty; a test that counts everything goes in its own file (e.g. `topics.test.ts`).
+- **Unit tests import modules directly.** Mock `@/pgDatabase` (`vi.mock`) when a module under test imports it, or the pool will try to connect.

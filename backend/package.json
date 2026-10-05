@@ -5,7 +5,12 @@
   "type": "module",
   "scripts": {
     "build": "tsc && tsc-alias && node copySqlFiles.js",
-    "start": "node ./build/src/server.js"
+    "start": "node ./build/src/server.js",
+    "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@types/async-lock": "^1.4.2",
@@ -13,8 +18,12 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.23.1",
+    "@types/supertest": "^7.2.1",
+    "@vitest/coverage-v8": "^5.0.3",
+    "supertest": "^7.3.1",
     "tsc-alias": "^1.9.7",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
   },
   "dependencies": {
     "async-lock": "^1.4.1",

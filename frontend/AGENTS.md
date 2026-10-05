@@ -27,7 +27,7 @@ React 19 + React Router 7 + TipTap 3, built with Vite 8. Read the root [`AGENTS.
   - Menus come from `@tiptap/react/menus` and position themselves with Floating UI (`@floating-ui/dom` is a required peer dependency).
 - **Highlights.**
   - Critique highlights are a custom `highlight` mark (`assets/highlight.js`). Its `data-commit-index` holds the critique's index, or a JSON list for overlapping critiques shown as one group.
-    - Each group is split into segments by how many of its critiques cover them (`densitySegments` in `assets/critiqueDensity.js`, called by `groupOverlappingMarks` in `PostPage.jsx`). Every segment carries the group's `data-commit-index`, so clicking any of them opens the whole group, and the popover anchors to the first one.
+    - Each group is split into segments by how many of its critiques cover them (`densitySegments`, called by `groupOverlappingMarks`, both in `assets/critiqueDensity.js`). Every segment carries the group's `data-commit-index`, so clicking any of them opens the whole group, and the popover anchors to the first one.
     - A segment's `data-level` (1–5) puts its count on a doubling scale (1, 2, 3–4, 5–8, 9+; `CRITIQUE_LEVELS`), shaded from faint orange to vivid red by the `critique-density` mixin in `_text_editor.scss`. When some segment has 2 + critiques, a legend above the post (`.critiqueLegend`) shows the scale; its swatches are `<span>`s, not `<mark>`s, so highlight selectors never match them. "Changed" segments keep their shade and add a dashed underline.
   - Suggestion changes are drawn by `DiffHighlight.js` as decorations (never document changes), set through `editor.commands.setDiffBase(html)`.
 
@@ -43,7 +43,7 @@ A critique stores `{ commit, from, to }` (ProseMirror positions in that version)
    - Repeated text makes diffs ambiguous: deleting a copy right after the passage looks the same as cutting the passage's end. So when the quote still appears word for word near the followed range, the passage snaps to it (`snapToQuote`).
 3. **Without the versions in between:** the quote is searched for instead (`findQuote`: exact text scored by its context, then the text between the context, then approximate matches with `approx-string-match`).
 
-"Fuzzy" means the passage's words changed; it's drawn with a dashed underline. Removed critiques are listed below the post. When changing any of this, test with repetitive text (Lorem Ipsum repeated), passages spanning paragraphs, and passages removed and then followed by similar text.
+"Fuzzy" means the passage's words changed; it's drawn with a dashed underline. Removed critiques are listed below the post. When changing any of this, test with repetitive text (Lorem Ipsum repeated), passages spanning paragraphs, and passages removed and then followed by similar text; `test/assets/anchoring.test.js` has cases of each, and new ones belong there.
 
 ## Post page state (`pages/PostPage.jsx`)
 
@@ -60,3 +60,12 @@ A critique stores `{ commit, from, to }` (ProseMirror positions in that version)
 - **Rendering HTML.** User-written HTML is only rendered through the editor or `DOMPurify.sanitize`. To parse HTML outside the editor, use `new DOMParser().parseFromString(...)`, which never runs handlers like `<img onerror>`; never assign it to `innerHTML`.
 - **Styles.** SCSS partials are imported by `assets/scss/main.scss`; colors come from `abstracts/_variables.scss` (`$default-orange`, `$default-green`, …) and widths from the `content-responsiveness` mixin.
 - **Lint.** `npm run lint` already reports many errors, mostly `react/prop-types`, plus React Compiler advisories from `eslint-plugin-react-hooks` 7. Don't add new ones. ESLint stays on v9 until `eslint-plugin-react` supports v10.
+
+## Tests
+
+`npm test` runs Vitest with jsdom (`vitest.config.js` extends `vite.config.js`, so `@/` works). Tests live in `test/`, mirroring `src/`.
+
+- **Logic first.** Keep logic that can be tested without React in `src/assets/` (as `groupOverlappingMarks` is), and test it there.
+- **The real editor works in jsdom.** `new Editor({ extensions: getExtensions(), … })` renders marks and decorations; `test/editor/` does this.
+- **API calls are stubbed** with `vi.stubGlobal("fetch", …)`; `test/setup.js` restores globals and clears `localStorage` after each test. The API address in tests is `http://api.test`.
+- **Pages need their providers:** `UserContext`, `ChartProvider` (charts) and a `MemoryRouter` with the page's route, as in `test/pages/PostPage.test.jsx`.
