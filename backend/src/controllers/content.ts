@@ -337,19 +337,32 @@ export const getVersion: RequestHandler = async (req, res, next) => {
       .filter(critique => versionAncestors.has((<any>critique.config)?.commit))
       .reverse()
 
-    // The text of each earlier version critiques were made on, so the client can diff it against
-    // this one and carry every critique to exactly where its passage went
+    // For each earlier version critiques were made on, the versions from it to this one, along the
+    // post's line of history, and their texts. The client follows each passage through every edit
+    // in order, so a passage removed at some point stays removed, whatever text comes later.
+    const history = (await git.firstParentHistory(repo, commit)).reverse()
+    const lineages: Record<string, string[]> = {}
     const versions: Record<string, string> = {}
-    for (const critiqueCommit of new Set(critiques.map(critique => String((<any>critique.config).commit))))
-      if (critiqueCommit !== commit)
-        versions[critiqueCommit] = await git.read(repo, critiqueCommit)
+
+    for (const critiqueCommit of new Set(critiques.map(critique => String((<any>critique.config).commit)))) {
+      if (critiqueCommit === commit)
+        continue
+
+      // A critique made off this line (e.g. on a merged suggestion's own commit) is compared directly
+      const start = history.indexOf(critiqueCommit)
+      lineages[critiqueCommit] = start === -1 ? [critiqueCommit, commit] : history.slice(start)
+
+      for (const version of lineages[critiqueCommit])
+        if (version !== commit && versions[version] === undefined)
+          versions[version] = await git.read(repo, version)
+    }
 
     // A pending suggestion also comes with the version it was made on, to show what it changes
     const isSuggestion = Boolean(await Interactions.findPendingSuggestion(content_id, commit))
     const baseCommit = isSuggestion ? await git.mergeBase(content, commit) : undefined
     const base = baseCommit ? { commit: baseCommit, body: await git.read(repo, baseCommit) } : undefined
 
-    res.status(200).json({ body, critiques, versions, base })
+    res.status(200).json({ body, critiques, versions, lineages, base })
   }
   catch (err) {
     next(err)

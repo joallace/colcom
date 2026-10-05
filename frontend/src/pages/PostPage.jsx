@@ -26,7 +26,9 @@ export default () => {
   const [postBody, setPostBody] = React.useState("")
   const [bodyCommit, setBodyCommit] = React.useState()
   const [postCritiques, setPostCritiques] = React.useState([])
-  const [critiqueVersions, setCritiqueVersions] = React.useState({})
+  // What critiques from earlier versions need to be followed here: each one's chain of versions
+  // (lineages) and their texts (versions)
+  const [critiqueHistory, setCritiqueHistory] = React.useState({ versions: {}, lineages: {} })
   // For a suggestion, the text of the version it was made on, to highlight what it changes
   const [diffBase, setDiffBase] = React.useState()
   const latestRequest = React.useRef(0)
@@ -67,7 +69,7 @@ export default () => {
         setPostBody(data.body)
         setBodyCommit(commit)
         setPostCritiques(data.critiques)
-        setCritiqueVersions(data.versions ?? {})
+        setCritiqueHistory({ versions: data.versions ?? {}, lineages: data.lineages ?? {} })
         setDiffBase(data.base?.body)
       }
     }
@@ -107,8 +109,8 @@ export default () => {
 
   // Critiques made on earlier versions are carried onto the one being read by searching for their quote
   const critiques = React.useMemo(
-    () => projectCritiques(postBody, postCritiques, bodyCommit, critiqueVersions),
-    [postBody, postCritiques, bodyCommit, critiqueVersions]
+    () => projectCritiques(postBody, postCritiques, bodyCommit, critiqueHistory.versions, critiqueHistory.lineages),
+    [postBody, postCritiques, bodyCommit, critiqueHistory]
   )
   const groupedCritiques = React.useMemo(() => groupOverlappingMarks(critiques), [critiques])
   const removedCritiques = critiques

@@ -182,6 +182,15 @@ async function mergeBase(content: IContent, commit: string): Promise<string> {
   return String(output?.stdout ?? output).trim()
 }
 
+// A version and its ancestors along the post's own line of history (first parents), newest first:
+// a merged suggestion counts as one step, through its merge commit
+async function firstParentHistory(repo: number, commit: string): Promise<string[]> {
+  validateCommit(commit)
+
+  const output = await exec("git", ["-C", `${dbPath}/${repo}`, "rev-list", "--first-parent", commit], { encoding: "utf-8" })
+  return String(output?.stdout ?? output).split("\n").filter(Boolean)
+}
+
 // Every commit a version descends from, itself included. Critiques made against any of them are
 // still relevant to that version, while those made against later versions are not.
 async function ancestors(repo: number, commit: string): Promise<Set<string>> {
@@ -217,6 +226,7 @@ export default Object.freeze({
   merge,
   isInHistory,
   mergeBase,
+  firstParentHistory,
   ancestors,
   log
 })
