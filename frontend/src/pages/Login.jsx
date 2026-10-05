@@ -7,22 +7,15 @@ import PixelArtEditor, { blankGrid, serializeGridToBase64png } from "@/component
 import Alert from "@/components/primitives/Alert"
 import { UserContext } from "@/context/UserContext"
 import env from "@/assets/enviroment"
+import { formErrors, limits, responseErrors } from "@/assets/validation"
 
-export const ERROR_CODES = {
-  MISSING_FIELD: 0,
-  MISMATCHING_PASS: 1,
-  INVALID_EMAIL: 2,
-  DUPLICATED_NAME: 3,
-  DUPLICATED_EMAIL: 4
-}
+const MISMATCHING_PASS = "senhas não estão iguais"
+const MISSING_FIELD = "campo obrigatório"
+// The API checks uniqueness outside the schemas, naming the field in `key`
+const ALREADY_USED = { name: "nome de usuário já utilizado", email: "email já utilizado" }
 
-const ERROR_MSGS = [
-  "campo obrigatório!",
-  "senhas não estão iguais!",
-  "email inválido!",
-  "nome de usuário já utilizado!",
-  "email já utilizado!"
-]
+// The API names the sign up's username "name"; the form's field is "login" in both modes
+const toFormKey = key => key === "name" ? "login" : key
 
 export default function Login() {
   const loginRef = React.useRef()
@@ -32,54 +25,63 @@ export default function Login() {
   const [profilePicture, setProfilePicture] = React.useState(blankGrid)
   const [isLoading, setIsLoading] = React.useState(false)
   const [isSignUp, setIsSignUp] = React.useState(false)
-  const [errors, setErrors] = React.useState([])
+  // A message for each invalid field, e.g. { login: "campo obrigatório" }
+  const [errors, setErrors] = React.useState({})
   const [formErrorMessage, setFormErrorMessage] = React.useState(false)
   const { fetchUser } = React.useContext(UserContext)
   const navigate = useNavigate()
-  const isPfpEmpty = React.useCallback(() => profilePicture.flat().every(pixel => pixel === ""), [profilePicture, errors])
+  const isPfpEmpty = React.useCallback(() => profilePicture.flat().every(pixel => pixel === ""), [profilePicture])
 
-  const pushError = (errorCode) => {
-    if (!errors.includes(errorCode))
-      setErrors([...errors, errorCode])
-  }
-  const popError = (errorCode) => {
-    const index = errors.indexOf(errorCode)
-    if (index >= 0)
-      setErrors(errors.toSpliced(index, 1))
+  const clearError = (...fields) =>
+    setErrors(prev => fields.some(field => prev[field]) ? Object.fromEntries(Object.entries(prev).filter(([field]) => !fields.includes(field))) : prev)
+
+  const addError = (field, message) => setErrors(prev => ({ ...prev, [field]: message }))
+
+  const errorMessage = field => errors[field] && `${errors[field]}!`
+
+  const values = () => isSignUp ?
+    { name: loginRef.current.value, email: emailRef.current?.value, pass: passRef.current.value, avatar: serializeGridToBase64png(profilePicture) }
+    :
+    { login: loginRef.current.value, pass: passRef.current.value }
+
+  const validateForm = () => {
+    const found = Object.fromEntries(Object.entries(formErrors(isSignUp ? "signUp" : "login", values())).map(([key, message]) => [toFormKey(key), message]))
+
+    if (isSignUp) {
+      if (!confirmPassRef.current?.value)
+        found.confirmPass = MISSING_FIELD
+      else if (confirmPassRef.current.value !== passRef.current.value)
+        found.confirmPass = MISMATCHING_PASS
+
+      // A blank grid is still a valid PNG
+      if (isPfpEmpty())
+        found.avatar = "a foto de perfil é obrigatória"
+    }
+
+    return found
   }
 
   const testPasswords = () => {
     if (confirmPassRef.current?.value.length && (confirmPassRef.current?.value !== passRef.current?.value))
-      pushError(ERROR_CODES.MISMATCHING_PASS)
-    else
-      popError(ERROR_CODES.MISMATCHING_PASS)
+      addError("confirmPass", MISMATCHING_PASS)
+    else if (errors.confirmPass === MISMATCHING_PASS)
+      clearError("confirmPass")
   }
 
-  const passErrorMsg = (ref) => (
-    (
-      errors.includes(ERROR_CODES.MISSING_FIELD)
-      && !ref.current.value.length
-      && ERROR_MSGS[ERROR_CODES.MISSING_FIELD]
-    )
-    ||
-    (
-      errors.includes(ERROR_CODES.MISMATCHING_PASS)
-      && confirmPassRef.current?.value.length
-      && (passRef.current?.value !== confirmPassRef.current?.value)
-      && ERROR_MSGS[ERROR_CODES.MISMATCHING_PASS]
-    )
-  )
+  // Checks one field as soon as it's left, without flagging the ones not filled in yet
+  const testField = field => {
+    const message = validateForm()[field]
+    if (message && message !== MISSING_FIELD)
+      addError(field, message)
+  }
 
   const send = async () => {
-    if (errors.length)
+    if (Object.keys(errors).length)
       return
 
-    const login = loginRef.current.value
-    const email = emailRef.current?.value
-    const pass = passRef.current.value
-
-    if (!login || !pass || (isSignUp && (!email || isPfpEmpty()))) {
-      pushError(ERROR_CODES.MISSING_FIELD)
+    const found = validateForm()
+    if (Object.keys(found).length) {
+      setErrors(found)
       return
     }
 
@@ -87,25 +89,19 @@ export default function Login() {
       setIsLoading(true)
       setFormErrorMessage("")
       const url = `${env.apiAddress}/${isSignUp ? "users" : "login"}`
-      const body = isSignUp ?
-        JSON.stringify({ name: login, email, pass, avatar: serializeGridToBase64png(profilePicture) })
-        :
-        JSON.stringify({ login, pass })
 
       const res = await fetch(url, {
         method: "post",
         headers: { "Content-Type": "application/json" },
-        body
+        body: JSON.stringify(values())
       })
 
       const data = await res.json()
 
       if (res.status >= 400) {
         if (data.name === "ValidationError") {
-          if (data.key === "name")
-            pushError(ERROR_CODES.DUPLICATED_NAME)
-          if (data.key === "email")
-            pushError(ERROR_CODES.DUPLICATED_EMAIL)
+          const found = data.errors ? responseErrors(data) : ALREADY_USED[data.key] ? { [data.key]: ALREADY_USED[data.key] } : {}
+          setErrors(Object.fromEntries(Object.entries(found).map(([key, message]) => [toFormKey(key), message])))
         }
         setFormErrorMessage(data.message.toLowerCase())
         return
@@ -158,11 +154,11 @@ export default function Login() {
               {
                 isSignUp &&
                 <div className="profilePictureCanvas">
-                  <h2 className={errors.includes(ERROR_CODES.MISSING_FIELD) && isPfpEmpty() ? "error" : ""}>foto de perfil</h2>
+                  <h2 className={errors.avatar ? "error" : ""}>foto de perfil</h2>
                   <PixelArtEditor
                     gridState={[profilePicture, setProfilePicture]}
-                    error={(errors.includes(ERROR_CODES.MISSING_FIELD) && isPfpEmpty())}
-                    popError={popError}
+                    error={errors.avatar}
+                    popError={() => clearError("avatar")}
                   />
                   <hr />
                 </div>
@@ -171,19 +167,10 @@ export default function Login() {
                 label={`nome do usuário${isSignUp ? "" : " ou email"}`}
                 ref={loginRef}
                 disabled={isLoading}
-                onChange={() => { popError(ERROR_CODES.MISSING_FIELD); popError(ERROR_CODES.DUPLICATED_NAME) }}
-                errorMessage={
-                  (
-                    errors.includes(ERROR_CODES.MISSING_FIELD)
-                    && !loginRef.current.value.length
-                    && ERROR_MSGS[ERROR_CODES.MISSING_FIELD]
-                  )
-                  ||
-                  (
-                    errors.includes(ERROR_CODES.DUPLICATED_NAME)
-                    && ERROR_MSGS[ERROR_CODES.DUPLICATED_NAME]
-                  )
-                }
+                maxLength={isSignUp ? limits.username.max : undefined}
+                onChange={() => clearError("login")}
+                onBlur={() => isSignUp && testField("login")}
+                errorMessage={errorMessage("login")}
               />
               {isSignUp &&
                 <Input
@@ -191,30 +178,10 @@ export default function Login() {
                   label="email"
                   ref={emailRef}
                   disabled={isLoading}
-                  onChange={() => { popError(ERROR_CODES.MISSING_FIELD); popError(ERROR_CODES.INVALID_EMAIL); popError(ERROR_CODES.DUPLICATED_EMAIL) }}
-                  errorMessage={(
-                    (
-                      errors.includes(ERROR_CODES.MISSING_FIELD)
-                      && !emailRef.current?.value.length
-                      && ERROR_MSGS[ERROR_CODES.MISSING_FIELD]
-                    )
-                    ||
-                    (
-                      errors.includes(ERROR_CODES.INVALID_EMAIL)
-                      && !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(emailRef.current?.value.length)
-                      && ERROR_MSGS[ERROR_CODES.INVALID_EMAIL]
-                    )
-                    ||
-                    (
-                      errors.includes(ERROR_CODES.DUPLICATED_EMAIL)
-                      && ERROR_MSGS[ERROR_CODES.DUPLICATED_EMAIL]
-                    )
-                  )}
-                  onBlur={() => {
-                    const value = emailRef.current.value
-                    if (value.length && !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value))
-                      pushError(ERROR_CODES.INVALID_EMAIL)
-                  }}
+                  maxLength={limits.email.max}
+                  onChange={() => clearError("email")}
+                  errorMessage={errorMessage("email")}
+                  onBlur={() => testField("email")}
                 />
               }
               <Input
@@ -222,9 +189,9 @@ export default function Login() {
                 label="senha"
                 ref={passRef}
                 disabled={isLoading}
-                onChange={() => { popError(ERROR_CODES.MISSING_FIELD); popError(ERROR_CODES.MISMATCHING_PASS) }}
-                errorMessage={passErrorMsg(passRef)}
-                onBlur={testPasswords}
+                onChange={() => clearError("pass", "confirmPass")}
+                errorMessage={errorMessage("pass")}
+                onBlur={() => { testPasswords(); isSignUp && testField("pass") }}
               />
               {isSignUp &&
                 <Input
@@ -232,15 +199,15 @@ export default function Login() {
                   label="confime a senha"
                   ref={confirmPassRef}
                   disabled={isLoading}
-                  onChange={() => { popError(ERROR_CODES.MISSING_FIELD); popError(ERROR_CODES.MISMATCHING_PASS) }}
-                  errorMessage={passErrorMsg(confirmPassRef)}
+                  onChange={() => clearError("confirmPass")}
+                  errorMessage={errorMessage("confirmPass")}
                   onBlur={testPasswords}
                 />
               }
             </div>
             <span className="createAccount">
               {isSignUp ? "" : "não "}tem uma conta?
-              <a onClick={() => { setIsSignUp(!isSignUp); setErrors([]); setFormErrorMessage("") }}>
+              <a onClick={() => { setIsSignUp(!isSignUp); setErrors({}); setFormErrorMessage("") }}>
                 {isSignUp ? " entre" : " crie uma"} agora!
               </a>
             </span>
@@ -252,7 +219,7 @@ export default function Login() {
         <div className="spaced">
           <div className="bottom bracket" />
           <div className="buttonRow">
-            <LoadingButton type="submit" isLoading={isLoading} onClick={send} disabled={errors.length}>
+            <LoadingButton type="submit" isLoading={isLoading} onClick={send} disabled={Object.keys(errors).length}>
               {isLoading ?
                 isSignUp ? "cadastrando..." : "entrando..."
                 :

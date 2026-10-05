@@ -7,7 +7,7 @@ import { api, AVATAR, signUp, unique } from "../support/api"
 describe("POST /users", () => {
   it("creates a user and returns its public data only", async () => {
     const name = unique("alice").replace(" ", "_")
-    const res = await api().post("/users").send({ name, email: `${name}@colcom.test`, pass: "secret", avatar: AVATAR })
+    const res = await api().post("/users").send({ name, email: `${name}@colcom.test`, pass: "a long enough secret", avatar: AVATAR })
 
     expect(res.status).toBe(201)
     expect(res.body).toEqual({ pid: expect.any(String), name, created_at: expect.any(String) })
@@ -15,21 +15,22 @@ describe("POST /users", () => {
   })
 
   it.each(["name", "pass", "email", "avatar"])("requires %s", async field => {
-    const user = { name: unique("bob").replace(" ", "_"), email: `${unique("bob").replace(" ", "_")}@colcom.test`, pass: "secret", avatar: AVATAR }
+    const user = { name: unique("bob").replace(" ", "_"), email: `${unique("bob").replace(" ", "_")}@colcom.test`, pass: "a long enough secret", avatar: AVATAR }
     const res = await api().post("/users").send({ ...user, [field]: undefined })
 
     expect(res.status).toBe(400)
-    expect(res.body).toMatchObject({ name: "ValidationError", message: `"${field}" é um campo obrigatório` })
+    expect(res.body).toMatchObject({ name: "ValidationError", key: field })
+    expect(res.body.message).toMatch(/: campo obrigatório\.$/)
   })
 
   it("refuses a name or email already in use, ignoring case", async () => {
     const existing = await signUp()
 
-    const sameName = await api().post("/users").send({ name: existing.name.toUpperCase(), email: "other@colcom.test", pass: "x", avatar: AVATAR })
+    const sameName = await api().post("/users").send({ name: existing.name.toUpperCase(), email: "other@colcom.test", pass: "a long enough secret", avatar: AVATAR })
     expect(sameName.status).toBe(400)
     expect(sameName.body).toMatchObject({ key: "name" })
 
-    const sameEmail = await api().post("/users").send({ name: unique("carol").replace(" ", "_"), email: existing.email.toUpperCase(), pass: "x", avatar: AVATAR })
+    const sameEmail = await api().post("/users").send({ name: unique("carol").replace(" ", "_"), email: existing.email.toUpperCase(), pass: "a long enough secret", avatar: AVATAR })
     expect(sameEmail.status).toBe(400)
     expect(sameEmail.body).toMatchObject({ key: "email" })
   })
@@ -108,5 +109,39 @@ describe("GET /users", () => {
     const res = await api().get("/users").query({ orderBy: "id; DROP TABLE users" })
     expect(res.status).toBe(400)
     expect(res.body.key).toBe("orderBy")
+  })
+})
+
+describe("sign up validation", () => {
+  const newUser = (fields: object = {}) => {
+    const name = unique("dave").replace(" ", "_")
+    return { name, email: `${name}@colcom.test`, pass: "a long enough secret", avatar: AVATAR, ...fields }
+  }
+
+  it("reports every invalid field, with messages for the form", async () => {
+    const res = await api().post("/users").send(newUser({ name: "a@b", pass: "short", avatar: "not a png" }))
+
+    expect(res.status).toBe(400)
+    expect(res.body).toMatchObject({ key: "name", message: 'Nome de usuário: não pode conter "@".' })
+    expect(res.body.errors).toEqual([
+      { key: "name", label: "nome de usuário", message: 'não pode conter "@"' },
+      { key: "pass", label: "senha", message: "mínimo de 8 caracteres" },
+      { key: "avatar", label: "foto de perfil", message: "imagem inválida" }
+    ])
+  })
+
+  it("refuses a password longer than bcrypt reads", async () => {
+    const res = await api().post("/users").send(newUser({ pass: "x".repeat(73) }))
+    expect(res.status).toBe(400)
+    expect(res.body.key).toBe("pass")
+  })
+
+  it("lets users log in by any valid email, not only short top-level domains", async () => {
+    const user = newUser()
+    user.email = `${user.name}@colcom.museum`
+    expect((await api().post("/users").send(user)).status).toBe(201)
+
+    const res = await api().post("/login").send({ login: user.email, pass: user.pass })
+    expect(res.status).toBe(200)
   })
 })

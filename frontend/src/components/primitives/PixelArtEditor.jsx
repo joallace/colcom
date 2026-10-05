@@ -13,7 +13,6 @@ import {
 
 import Input from "@/components/primitives/Input"
 import { defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultFontColor } from "@/assets/scss/_export.module.scss"
-import { ERROR_CODES } from "@/pages/Login"
 import useBreakpoint from "@/hooks/useBreakpoint"
 
 const GRID_SIZE = 16
@@ -50,7 +49,7 @@ export const serializeGridToBase64png = (grid) => {
   return canvas.toDataURL().split(",")[1]
 }
 
-export default function PixelArtEditor({ gridState, error, popError = (err) => { } }) {
+export default function PixelArtEditor({ gridState, error, popError = () => { } }) {
   const [internalGrid, setInternalGrid] = React.useState(blankGrid)
   const [grid, setGrid] = gridState.length ? gridState : [internalGrid, setInternalGrid]
   const [selectedColor, setSelectedColor] = React.useState(defaultFontColor)
@@ -199,7 +198,7 @@ export default function PixelArtEditor({ gridState, error, popError = (err) => {
     setIsDrawing(true)
     setLastCell([x, y])
     handleCellAction(x, y)
-    popError(ERROR_CODES.MISSING_FIELD)
+    popError()
   }
 
   const handleMouseEnter = (x, y) => {
@@ -296,7 +295,7 @@ export default function PixelArtEditor({ gridState, error, popError = (err) => {
         </div>
       </div>
 
-      {error && <span className="error">a foto de perfil é obrigatória!</span>}
+      {error && <span className="error">{error}!</span>}
 
       <div className="palette">
         <div className="color-picker" style={{ backgroundColor: selectedColor }}>

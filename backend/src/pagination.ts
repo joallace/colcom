@@ -1,9 +1,12 @@
 import { ValidationError } from "@/errors"
+import { limits } from "@/validation"
 
 
-const DEFAULT_PAGE_SIZE = 10
-const MAX_PAGE_SIZE = 100
-const MAX_PAGE = 1_000_000
+// Requests are already validated against these limits (shared/); clamping again keeps every query
+// bounded whoever calls it
+const DEFAULT_PAGE_SIZE = limits.pageSize.default
+const MAX_PAGE_SIZE = limits.pageSize.max
+const MAX_PAGE = limits.page.max
 
 // ORDER BY cannot be parameterized, so user supplied keys are translated through a
 // whitelist of known SQL expressions instead of being interpolated into the query.

@@ -27,7 +27,7 @@ describe("creating a topic", () => {
   it("requires a title", async () => {
     const res = await api().post("/contents").set(alice.auth).send({ body: "<p>x</p>" })
     expect(res.status).toBe(400)
-    expect(res.body.message).toBe('"title" é um campo obrigatório')
+    expect(res.body).toMatchObject({ key: "title", message: "Título: campo obrigatório." })
   })
 
   it("requires the user to be logged in", async () => {
@@ -80,7 +80,7 @@ describe("creating a post", () => {
     const res = await api().post("/contents").set(alice.auth).send({ title: unique("Empty"), parent_id: topic.id, body: "" })
 
     expect(res.status).toBe(400)
-    expect(res.body.message).toBe('"body" é um campo obrigatório')
+    expect(res.body).toMatchObject({ key: "body", message: "Texto: campo obrigatório." })
   })
 
   it("answers 404 for a parent that doesn't exist", async () => {
@@ -104,7 +104,7 @@ describe("creating a post", () => {
     rmSync(repo(topic.id), { recursive: true })
     const title = unique("Doomed")
 
-    const failed = await api().post("/contents").set(alice.auth).send({ title, parent_id: topic.id, body: "<p>x</p>" })
+    const failed = await api().post("/contents").set(alice.auth).send({ title, parent_id: topic.id, body: "<p>x</p>", config: { answer: "sim" } })
     expect(failed.status).toBe(500)
 
     const profile = await api().get("/contents").query({ authorId: alice.pid, pageSize: 100 })
@@ -113,6 +113,42 @@ describe("creating a post", () => {
 
     const retried = await api().post("/contents").set(alice.auth).send({ title })
     expect(retried.status).toBe(201)
+  })
+})
+
+describe("a post's answer", () => {
+  it("must be one of the topic's answers", async () => {
+    const topic = await createTopic(alice, { answers: ["sim", "não"] })
+    const res = await api().post("/contents").set(alice.auth).send({ title: unique("Maybe"), parent_id: topic.id, body: "<p>x</p>", config: { answer: "talvez" } })
+
+    expect(res.status).toBe(400)
+    expect(res.body).toMatchObject({ key: "config.answer", message: "Resposta: escolha uma das respostas do tópico." })
+  })
+
+  it("is free when the topic leaves answers open", async () => {
+    const topic = await createTopic(alice, { answers: [] })
+    await createPost(alice, topic.id, { answer: "" })
+  })
+})
+
+describe("request validation", () => {
+  it("refuses a topic with a single answer", async () => {
+    const res = await api().post("/contents").set(alice.auth).send({ title: unique("Lonely"), config: { answers: ["sim"] } })
+    expect(res.status).toBe(400)
+    expect(res.body.key).toBe("config.answers")
+  })
+
+  it("refuses ids that aren't positive integers", async () => {
+    for (const id of ["abc", "0", "1.5", "99999999999"]) {
+      const res = await api().get(`/contents/${id}`)
+      expect(res.status, id).toBe(400)
+      expect(res.body.key).toBe("id")
+    }
+  })
+
+  it("answers 404 when cloning a post that doesn't exist", async () => {
+    const res = await api().post("/contents/999999/abc1234/clone").set(alice.auth).send({ title: unique("Clone") })
+    expect(res.status).toBe(404)
   })
 })
 
@@ -152,7 +188,8 @@ describe("creating a critique", () => {
     const res = await critique(bob, post.id, config as object)
 
     expect(res.status).toBe(400)
-    expect(res.body).toMatchObject({ key: "config", message: "O trecho criticado é inválido." })
+    expect(res.body.key).toMatch(/^config(\.|$)/)
+    expect(res.body.action).toBe("Selecione um trecho de texto do post e tente novamente.")
   })
 
   it("refuses a version that isn't in the post's own history", async () => {
@@ -162,7 +199,7 @@ describe("creating a critique", () => {
     const res = await critique(bob, post.id, critiqueConfig(await latestCommit(other.id)))
 
     expect(res.status).toBe(400)
-    expect(res.body.errorLocationCode).toBe("CONTROLLER:CONTENT:VALIDATE_CRITIQUE_CONFIG:FOREIGN_COMMIT")
+    expect(res.body).toMatchObject({ key: "config.commit", errorLocationCode: "CONTROLLER:CONTENT:VALIDATE_CRITIQUE_COMMIT:FOREIGN_COMMIT" })
   })
 
   it("refuses a hash that git would read as an option", async () => {
@@ -172,7 +209,7 @@ describe("creating a critique", () => {
     const res = await critique(bob, post.id, critiqueConfig("--output=/tmp/pwned"))
 
     expect(res.status).toBe(400)
-    expect(res.body).toMatchObject({ key: "hash", message: "Hash de commit inválido." })
+    expect(res.body).toMatchObject({ key: "config.commit", message: "Versão criticada: versão inválida." })
   })
 
   it("refuses critiques of critiques", async () => {

@@ -1,0 +1,16 @@
+{
+  "name": "@colcom/shared",
+  "private": true,
+  "version": "0.0.0",
+  "license": "AGPL-3.0-only",
+  "description": "Validation schemas and limits shared by colcom's frontend and backend",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "files": ["src", "index.d.ts"]
+}

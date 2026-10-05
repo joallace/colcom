@@ -19,6 +19,9 @@ services:
   backend:
     build:
       context: ./backend
+      # The validation schemas shared with the frontend (installed as file:../shared)
+      additional_contexts:
+        shared: ./shared
       args:
         TZ: America/Recife
     environment:
@@ -37,6 +40,8 @@ services:
   frontend_nginx:
     build:
       context: ./frontend
+      additional_contexts:
+        shared: ./shared
       args:
         VITE_API_ADDRESS: http://localhost/api
     environment:

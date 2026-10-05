@@ -9,6 +9,8 @@ RUN apk add --no-cache git tzdata
 RUN git config --global user.email "admin@colcom.com"
 RUN git config --global user.name "admin"
 
+# package.json installs the shared schemas from ../shared (compose's "shared" build context)
+COPY --from=shared . /shared
 COPY package*.json ./
 RUN npm ci
 

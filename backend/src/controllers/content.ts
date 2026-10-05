@@ -4,18 +4,8 @@ import git from "@/gitDatabase"
 import Content, { ContentInsertRequest, IContent, summarize } from "@/models/content"
 import Interactions from "@/models/interactions"
 import { ValidationError, NotFoundError, ForbiddenError } from "@/errors"
+import { validate } from "@/validation"
 
-
-const validateContent = (content: ContentInsertRequest) => {
-  const mandatory = ["title", "author_pid", ...(content.type === "topic" ? [] : ["parent_id", "body"])]
-
-  for (const field of mandatory)
-    if (!content[field])
-      throw new ValidationError({
-        message: `"${field}" é um campo obrigatório`,
-        errorLocationCode: "CONTROLLER:CONTENT:VALIDADE_CONTENT"
-      })
-}
 
 // Postgres and git can't share a transaction, so when the git write fails the row that was
 // just inserted is removed, instead of being left pointing to a missing branch or repo.
@@ -32,41 +22,30 @@ const withRollback = async (gitWrite: () => Promise<unknown>, rollback: () => Pr
 // How many of a topic's posts lists show (the most voted); the topic's own page shows them all
 const TOPIC_PREVIEW_POSTS = 3
 
-const QUOTE_CONTEXT_LENGTH = 32
-const QUOTE_MAX_LENGTH = 5000
-
-// A critique is anchored to the exact version it criticised (commit + positions) and also carries the
-// quoted text with some context around it, which lets readers find the passage again in later
-// versions. Unknown keys are dropped, so the stored config is exactly this shape.
-const validateCritiqueConfig = async (config: any, post: IContent) => {
-  const { commit, from, to, quote } = config ?? {}
-  const isText = (value: unknown, maxLength: number) => typeof value === "string" && value.length <= maxLength
-  const isOffset = (value: unknown) => Number.isInteger(value) && <number>value >= 0
-
-  const isValid = typeof commit === "string"
-    && isOffset(from) && isOffset(to) && from < to
-    && isText(quote?.exact, QUOTE_MAX_LENGTH) && quote.exact.trim().length > 0
-    && isText(quote?.prefix, QUOTE_CONTEXT_LENGTH) && isText(quote?.suffix, QUOTE_CONTEXT_LENGTH)
-    && isOffset(quote?.start)
-
-  if (!isValid)
-    throw new ValidationError({
-      message: "O trecho criticado é inválido.",
-      action: "Selecione um trecho de texto do post e tente novamente.",
-      stack: new Error().stack,
-      errorLocationCode: "CONTROLLER:CONTENT:VALIDATE_CRITIQUE_CONFIG",
-      key: "config"
-    })
-
+// The schemas check a critique's shape (shared/); only git knows whether the version it quotes is
+// part of the post's own history
+const validateCritiqueCommit = async (post: IContent, commit: string) => {
   if (!(await git.isInHistory(post, commit)))
     throw new ValidationError({
       message: "A versão criticada não pertence a este post.",
       stack: new Error().stack,
-      errorLocationCode: "CONTROLLER:CONTENT:VALIDATE_CRITIQUE_CONFIG:FOREIGN_COMMIT",
-      key: "config"
+      errorLocationCode: "CONTROLLER:CONTENT:VALIDATE_CRITIQUE_COMMIT:FOREIGN_COMMIT",
+      key: "config.commit"
     })
+}
 
-  return { commit, from, to, quote: { exact: quote.exact, prefix: quote.prefix, suffix: quote.suffix, start: quote.start } }
+// A post defends one of its topic's answers; a topic without answers leaves them open
+const validateAnswer = (topicConfig: any, answer: string | undefined) => {
+  const answers: string[] = topicConfig?.answers ?? []
+
+  if (answers.length > 0 && !answers.includes(answer ?? ""))
+    throw new ValidationError({
+      message: "Resposta: escolha uma das respostas do tópico.",
+      action: `Utilize um dos valores: ${answers.join(", ")}.`,
+      stack: new Error().stack,
+      errorLocationCode: "CONTROLLER:CONTENT:VALIDATE_ANSWER",
+      key: "config.answer"
+    })
 }
 
 const findOwnedSuggestion = async (content_id: number, commit: string, author_pid: string) => {
@@ -123,11 +102,11 @@ const totalOf = async (contents: any[], page: number, countAlone: () => Promise<
   contents[0]?.total_count ?? (page > 1 ? await countAlone() : 0)
 
 export const createContent: RequestHandler = async (req, res, next) => {
-  const { title, parent_id, body, config } = req.body
   const author_pid = res.locals.user.pid
 
   try {
-    const parent = parent_id ? await Content.getDataById(parent_id, ["parent_id", "type"]) : null
+    const { parent_id } = validate("content", req.body)
+    const parent = parent_id ? await Content.getDataById(parent_id, ["parent_id", "type", "config"]) : null
 
     const type = !parent ?
       "topic"
@@ -143,16 +122,22 @@ export const createContent: RequestHandler = async (req, res, next) => {
         key: "parent_id"
       })
 
+    const { title, body, config } = validate(type, req.body)
+
+    if (type === "post")
+      validateAnswer(parent.config, (<any>config).answer)
+
+    if (type === "critique")
+      await validateCritiqueCommit(<IContent>await Content.findById(<number>parent_id), (<any>config).commit)
+
     const content: ContentInsertRequest = {
       title,
       author_pid,
       parent_id,
-      body: type === "post" ? summarize(body) : body,
+      body: type === "post" ? summarize(<string>body) : body,
       type,
-      config: type === "critique" ? await validateCritiqueConfig(config, await Content.findById(parent_id)) : config
+      config
     }
-
-    validateContent(content)
 
     const result = await Content.create(content)
     result.body = body
@@ -166,18 +151,15 @@ export const createContent: RequestHandler = async (req, res, next) => {
 }
 
 export const getContents: RequestHandler = async (req, res, next) => {
-  const page = Number(req.query.page) || 1
-  const pageSize = Number(req.query.pageSize) || 10
-  const authorId = req.query.authorId
   const author_pid = res.locals.user?.pid
 
-  const orderBy = req.query.orderBy ? String(req.query.orderBy) : "id"
-  const where = authorId ? {
-    where: "users.pid = $1",
-    values: [authorId]
-  } : {}
-
   try {
+    const { page, pageSize, orderBy, authorId } = validate("list", req.query)
+    const where = authorId ? {
+      where: "users.pid = $1",
+      values: [authorId]
+    } : {}
+
     const contents = await Content.findAll({ page, pageSize, orderBy, includeParentTitle: true, userPid: author_pid, withTotal: true, ...where })
     const count = await totalOf(contents, page, () => Content.count(where))
     res.status(200).json({ contents: await toFeed(contents, author_pid), count })
@@ -188,13 +170,11 @@ export const getContents: RequestHandler = async (req, res, next) => {
 }
 
 export const getContentTree: RequestHandler = async (req, res, next) => {
-  const page = Number(req.query.page) || 1
-  const pageSize = Number(req.query.pageSize) || 10
-  const orderBy = req.query.orderBy ? String(req.query.orderBy) : "id"
   const author_pid = res.locals.user?.pid
   const getCount = "with_count" in req.query
 
   try {
+    const { page, pageSize, orderBy } = validate("list", req.query)
     const contents = await Content.findTree({ page, pageSize, orderBy, childLimit: TOPIC_PREVIEW_POSTS, userPid: author_pid })
     res.status(200).json({ tree: contents, count: getCount ? (await Content.getCount("topic")) : undefined })
   }
@@ -205,9 +185,9 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
 
 export const getTopicTree: RequestHandler = async (req, res, next) => {
   const author_pid = res.locals.user?.pid
-  const id = Number(req.params.id)
 
   try {
+    const { id } = validate("contentParams", req.params)
     const [topic] = await Content.findTree({ where: "topics.id = $1 AND topics.type = 'topic'", values: [id], pageSize: 1, userPid: author_pid })
 
     if (!topic)
@@ -226,11 +206,11 @@ export const getTopicTree: RequestHandler = async (req, res, next) => {
 
 export const getContent: RequestHandler = async (req, res, next) => {
   const author_pid = res.locals.user?.pid
-  const content_id = Number(req.params.id)
   const omitBody = "omit_body" in req.query
   const includeParentTitle = "include_parent_title" in req.query
 
   try {
+    const { id: content_id } = validate("contentParams", req.params)
     const content = await Content.findById(content_id, { omitBody, includeParentTitle })
 
     if (!content)
@@ -263,11 +243,10 @@ export const getContent: RequestHandler = async (req, res, next) => {
 }
 
 export const getBookmarkedContent: RequestHandler = async (req, res, next) => {
-  const page = Number(req.query.page) || 1
-  const pageSize = Number(req.query.pageSize) || 10
   const author_pid = res.locals.user?.pid
 
   try {
+    const { page, pageSize } = validate("list", req.query)
     const contents = await Content.findAll({
       where: `
       contents.id IN (
@@ -302,11 +281,10 @@ export const getBookmarkedContent: RequestHandler = async (req, res, next) => {
 }
 
 export const getVersion: RequestHandler = async (req, res, next) => {
-  const content_id = Number(req.params.id)
   const author_pid = res.locals.user?.pid
-  const commit = String(req.params.hash)
 
   try {
+    const { id: content_id, hash: commit } = validate("versionParams", req.params)
     const content = await Content.findById(content_id)
 
     if (!content)
@@ -371,19 +349,10 @@ export const getVersion: RequestHandler = async (req, res, next) => {
 
 export const updateContent: RequestHandler = async (req, res, next) => {
   const author_pid = res.locals.user.pid
-  const content_id = Number(req.params.id)
-  const { message, body } = req.body
 
   try {
-    for (const [field, value] of Object.entries({ message, body }))
-      if (typeof value !== "string" || value.trim().length === 0)
-        throw new ValidationError({
-          message: `"${field}" é um campo obrigatório`,
-          stack: new Error().stack,
-          errorLocationCode: "CONTROLLER:CONTENT:UPDATE_CONTENT",
-          key: field
-        })
-
+    const { id: content_id } = validate("contentParams", req.params)
+    const { message, body } = validate("edit", req.body)
     const content = await Content.findById(content_id)
 
     if (!content)
@@ -430,19 +399,20 @@ export const updateContent: RequestHandler = async (req, res, next) => {
 }
 
 export const clonePost: RequestHandler = async (req, res, next) => {
-  const content_id = Number(req.params.id)
   const author_pid = res.locals.user?.pid
-  const commit = String(req.params.hash)
-  const { title } = req.body
 
   try {
-    if (!title)
-      throw new ValidationError({
-        action: 'Forneça um título para o "post".',
+    const { id: content_id, hash: commit } = validate("versionParams", req.params)
+    const { title } = validate("clone", req.body)
+    const content = await Content.findById(content_id)
+
+    if (!content || content.type !== "post")
+      throw new NotFoundError({
+        message: "Post não encontrado.",
+        action: 'Verifique se o "id" fornecido está correto.',
         stack: new Error().stack
       })
 
-    const content = await Content.findById(content_id)
     const result = await Content.create({ ...(<any>content), author_pid, title })
     await withRollback(() => git.branch(result, commit), () => Content.removeById(result.id))
 
@@ -454,11 +424,10 @@ export const clonePost: RequestHandler = async (req, res, next) => {
 }
 
 export const mergePost: RequestHandler = async (req, res, next) => {
-  const content_id = Number(req.params.id)
   const author_pid = res.locals.user?.pid
-  const commit = String(req.params.hash)
 
   try {
+    const { id: content_id, hash: commit } = validate("versionParams", req.params)
     const { content, suggestion } = await findOwnedSuggestion(content_id, commit, author_pid)
 
     await git.merge(content, commit)
@@ -472,11 +441,10 @@ export const mergePost: RequestHandler = async (req, res, next) => {
 }
 
 export const rejectSuggestion: RequestHandler = async (req, res, next) => {
-  const content_id = Number(req.params.id)
   const author_pid = res.locals.user?.pid
-  const commit = String(req.params.hash)
 
   try {
+    const { id: content_id, hash: commit } = validate("versionParams", req.params)
     const { suggestion } = await findOwnedSuggestion(content_id, commit, author_pid)
     const result = await Interactions.setSuggestionAccepted(suggestion.id, false, author_pid)
 

@@ -1,6 +1,14 @@
 import { randomUUID } from 'node:crypto'
 
 
+// One problem of a request, for forms to show next to the field (see src/validation.ts)
+export interface FieldError {
+  key: string,
+  label: string,
+  message: string
+}
+
+
 interface BaseErrorType {
   message: string,
   stack?: string,
@@ -12,7 +20,8 @@ interface BaseErrorType {
   errorLocationCode?: string,
   key?: string,
   type?: string,
-  databaseErrorCode?: string
+  databaseErrorCode?: string,
+  errors?: FieldError[]
 }
 
 
@@ -27,7 +36,8 @@ interface BaseErrorParams {
   errorLocationCode?: string,
   key?: string,
   type?: string,
-  databaseErrorCode?: string
+  databaseErrorCode?: string,
+  errors?: FieldError[]
 }
 
 
@@ -43,7 +53,8 @@ export class BaseError extends Error implements BaseErrorType {
   key?: string
   type?: string
   databaseErrorCode?: string
-  
+  errors?: FieldError[]
+
   constructor({
     message,
     stack,
@@ -56,6 +67,7 @@ export class BaseError extends Error implements BaseErrorType {
     key,
     type,
     databaseErrorCode,
+    errors,
   }: BaseErrorType) {
     super()
     this.name = this.constructor.name
@@ -70,6 +82,7 @@ export class BaseError extends Error implements BaseErrorType {
     this.key = key
     this.type = type
     this.databaseErrorCode = databaseErrorCode
+    this.errors = errors
   }
 }
 
@@ -117,7 +130,7 @@ export class ServiceError extends BaseError {
 }
 
 export class ValidationError extends BaseError {
-  constructor({ message, action, stack, statusCode, context, errorLocationCode, key, type }: BaseErrorParams) {
+  constructor({ message, action, stack, statusCode, context, errorLocationCode, key, type, errors }: BaseErrorParams) {
     super({
       message: message || 'Um erro de validação ocorreu.',
       action: action || 'Ajuste os dados enviados e tente novamente.',
@@ -127,6 +140,7 @@ export class ValidationError extends BaseError {
       errorLocationCode: errorLocationCode,
       key: key,
       type: type,
+      errors: errors,
     })
   }
 }

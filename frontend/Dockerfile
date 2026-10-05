@@ -5,6 +5,8 @@ WORKDIR /app
 ARG VITE_API_ADDRESS
 ENV VITE_API_ADDRESS=$VITE_API_ADDRESS
 
+# package.json installs the shared schemas from ../shared (compose's "shared" build context)
+COPY --from=shared . /shared
 COPY package*.json ./
 RUN npm ci
 

@@ -8,6 +8,7 @@ import env from "@/assets/enviroment"
 import useUser from "@/context/UserContext"
 import Alert from "@/components/primitives/Alert"
 import LoadingButton from "@/components/primitives/LoadingButton"
+import { describe, validate } from "@/assets/validation"
 
 export default function Write() {
   const titleRef = React.useRef()
@@ -39,7 +40,7 @@ export default function Write() {
   }
 
   const submit = async () => {
-    const title = titleRef?.current.textContent
+    const title = titleRef?.current.textContent.trim()
 
     if (!title || !body || (state.config?.answers?.length !== 0 && !answer)) {
       setError(true)
@@ -51,6 +52,14 @@ export default function Write() {
       return
     }
 
+    const values = { title, body, config: { answer }, parent_id: state.id }
+    const [invalid] = validate("post", values).errors
+    if (invalid) {
+      setError(true)
+      setErrorMessage(describe(invalid).toLowerCase())
+      return
+    }
+
     try {
       setIsLoading(true)
       const url = `${env.apiAddress}/contents`
@@ -58,7 +67,7 @@ export default function Write() {
       const res = await fetch(url, {
         method: "post",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.accessToken}` },
-        body: JSON.stringify({ title, body, config: { answer }, parent_id: state.id })
+        body: JSON.stringify(values)
       })
 
       const data = await res.json()

@@ -14,6 +14,7 @@ Express 5 + TypeScript 7 API over PostgreSQL and per-topic git repositories. Rea
 | `src/gitDatabase.ts` | Every git command (the only place that runs git) |
 | `src/pgDatabase.ts` | Connection pool; runs `sql/init.sql` on first connect (exits if it fails) |
 | `src/config.ts` | Required settings; the server refuses to start without `ACCESS_TOKEN_SECRET` (32+ chars) |
+| `src/validation.ts` | `validate(schema, data)`: checks a request's body, query or params against the shared schemas (`shared/`) and returns the validated copy |
 | `src/pagination.ts` | `orderByColumn` whitelist and `limitOffset` clamping |
 | `src/errors.ts` | Error classes; messages and `action` hints in Portuguese |
 
@@ -47,7 +48,8 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 - **Auth:** `authHandler()` (required) or `authHandler(true)` (optional) verifies the JWT and puts the user in `res.locals.user` (`{ username, email, pid }`). Never read the user from `req.params`.
 - **Ownership:** only a post's author merges or rejects its suggestions (`findOwnedSuggestion` checks the post, the author and that the hash is a *pending* suggestion of that post). State-changing routes use POST/PATCH, never GET.
 - **Errors:** throw the classes from `errors.ts`. `errorHandler` returns only `BaseError`s (without stack); anything else (e.g. a pg error with table names) becomes a generic 500 with an `errorId`, and the full error is logged.
-- **Critique anchors:** `validateCritiqueConfig` checks the shape, strips unknown keys, and requires the commit to be in the post's own history.
+- **Validate every input.** Controllers pass `req.body`, `req.query` and `req.params` through `validate` (`src/validation.ts`) before using them, and use what it returns: Express 5 parses `req.query` again on each access, so changes to it are lost. A failure is a 400 `ValidationError` whose `message` and `key` name the first problem and whose `errors` list all of them (`{ key, label, message }`), which the forms show by field.
+- **Critique anchors:** the `critique` schema checks the shape and strips unknown keys; `validateCritiqueCommit` requires the commit to be in the post's own history.
 
 ## API
 

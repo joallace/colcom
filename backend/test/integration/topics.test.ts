@@ -37,10 +37,10 @@ describe("GET /topics", () => {
     expect(second.body.count).toBeUndefined()
   })
 
-  it("clamps absurd page sizes", async () => {
+  it("refuses absurd page sizes, naming every problem", async () => {
     const res = await api().get("/topics").query({ pageSize: 1e9, page: -5 })
-    expect(res.status).toBe(200)
-    expect(res.body.tree.length).toBeLessThanOrEqual(100)
+    expect(res.status).toBe(400)
+    expect(res.body.errors.map((error: any) => error.key).sort()).toEqual(["page", "pageSize"])
   })
 
   it("refuses unknown sort keys", async () => {

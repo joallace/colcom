@@ -18,7 +18,8 @@ export const submitVote = async (navigate, content_id, type, colcoins = undefine
   }
   const url = `${env.apiAddress}/interactions`
   const body = JSON.stringify({
-    content_id,
+    // Ids from the URL are strings; the API takes numbers
+    content_id: Number(content_id),
     type,
     colcoins
   })

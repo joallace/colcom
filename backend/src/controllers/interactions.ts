@@ -1,6 +1,7 @@
 import { RequestHandler } from "express"
 
 import Interactions, { InteractionInsertRequest } from "@/models/interactions"
+import { validate } from "@/validation"
 
 export const getContentInteractions: RequestHandler = async (req, res, next) => {
   const content_id = req.params.id
@@ -14,10 +15,10 @@ export const getContentInteractions: RequestHandler = async (req, res, next) => 
 }
 
 export const handleInteraction: RequestHandler = async (req, res, next) => {
-  const { content_id, type } = req.body
   const author_pid = res.locals.user.pid
 
   try {
+    const { content_id, type } = validate("interaction", req.body)
     const interaction: InteractionInsertRequest = { author_pid, content_id, type }
 
     const [status, result] = await Interactions.handleChange(interaction)

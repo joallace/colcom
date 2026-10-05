@@ -16,6 +16,7 @@ More specific guides: [`backend/AGENTS.md`](backend/AGENTS.md) and [`frontend/AG
 | Backend | Express 5, TypeScript 7 (built with `tsc` + `tsc-alias`), `pg`, pino | `backend/` |
 | Relational data | PostgreSQL 18 (Docker); schema in `backend/src/sql/init.sql`, applied on every start | — |
 | Content and history | git, one repo per topic under `DB_PATH` | `backend/src/gitDatabase.ts` |
+| Validation | JSON Schemas checked with Ajv 8, the same in the forms and the API | `shared/` |
 | Serving | nginx serves the built frontend and proxies `/api/` to the backend | `nginx/`, `docker-compose.yml` |
 
 ### How data is split between git and Postgres
@@ -38,6 +39,17 @@ Interactions (`interactions.type`): `up`/`down` (relevance, mutually exclusive),
 Collaboration flow: a non-author editing a post creates a `suggestion` and a branch `<postId>_<interactionId>`; the author sees what it changes (highlighted against the version it branched from, `git merge-base`) and accepts (git merge into the post branch) or rejects it. Anyone can clone a post at any version into a new post (a branch from that commit).
 
 Competition flow: a critique quotes a passage of a specific version. Later versions show it where that passage went (followed through every edit), mark it "changed" when the passage was edited, and list it under "removed" when the passage is gone. A commit can never make a critique disappear; in phase 2 only people will close critiques.
+
+### Validation (`shared/`)
+
+Every request's shape and size is described once, in `shared/` (the `@colcom/shared` package, plain ESM JavaScript with no dependencies), and checked with the same schemas by the forms and by the API. Both packages install it as `"file:../shared"`; Docker gets it through compose's `additional_contexts`.
+
+- **Limits** (`shared/src/limits.js`): every size (title, username, password, answers, bodies, quote, page size…) is a value in `DEFAULT_LIMITS`, and every schema is built from them, so changing a limit there changes it everywhere. `createValidators(Ajv, { limits: { title: { max: 200 } } })` overrides some for one instance. `users.name` and `users.email` are also sized in `init.sql`: keep them in step.
+- **Schemas** (`shared/src/schemas.js`): request bodies (`signUp`, `login`, `topic`, `post`, `critique`, `edit`, `clone`, `interaction`) and, with type coercion, query strings and route parameters (`list`, `contentParams`, `versionParams`). Unknown keys are removed and defaults filled in.
+- **Messages** (`shared/src/errors.js`): each error has the field's `key` (its path, like `config.answers.1`), its `label` and a short Portuguese `message` for the form ("máximo de 150 caracteres"); `describe` makes the API's sentence ("Título: máximo de 150 caracteres."). Labels, per-keyword `messages` and an `action` hint are annotations inside the schemas.
+- **Custom rules:** `trimmed`, `notBlank` and `maxBytes` (UTF-8 bytes, because bcrypt reads only the first 72 bytes of a password); formats `email`, `commit`, `uuid` and `png` (base64). A username can't contain "@", since logging in tells names from emails by it.
+- **What schemas can't check** stays in the backend: a critique's commit must be in the post's history, a post's answer must be one of its topic's, names and emails must be unused.
+- `shared/index.d.ts` types the package for the backend; keep it in step with `limits.js` and `schemas.js`.
 
 ## Running it
 

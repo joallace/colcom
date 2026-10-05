@@ -28,7 +28,7 @@ interface TopicConfig {
 }
 
 interface PostConfig {
-  answer: string
+  answer?: string
 }
 
 interface CritiqueConfig {
@@ -488,8 +488,8 @@ export async function getDataById(id: number, data: (keyof Content)[]): Promise<
 
   if (result.rowCount === 0) {
     throw new NotFoundError({
-      message: `O usuário com "public_id" de valor "${id}" não foi encontrado no sistema.`,
-      action: 'Verifique se o "public_id" do usuário está digitado corretamente.',
+      message: `O conteúdo com "id" de valor "${id}" não foi encontrado no sistema.`,
+      action: 'Verifique se o "id" do conteúdo está digitado corretamente.',
       stack: new Error().stack,
     })
   }

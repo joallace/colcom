@@ -17,6 +17,7 @@ import {
 import { default as Editor } from "@/components/Editor"
 import Frame from "@/components/primitives/Frame"
 import Modal from "@/components/primitives/Modal"
+import { describe, limits, validate } from "@/assets/validation"
 import Input from "@/components/primitives/Input"
 import LoadingButton from "@/components/primitives/LoadingButton"
 import { submitVote } from "@/components/primitives/VotingButtons"
@@ -62,6 +63,8 @@ export default function Post({
   const [isLoading, setIsLoading] = React.useState(false)
   const [reset, setReset] = resetState
   const commitMessageRef = React.useRef()
+  // What's wrong with the edit or clone being sent, shown in its modal
+  const [modalError, setModalError] = React.useState("")
   const { user } = React.useContext(UserContext)
   const navigate = useNavigate()
 
@@ -70,7 +73,7 @@ export default function Post({
       description: "clonar post",
       icons: PiGitBranch,
       hide: author_id === user?.pid,
-      onClick: () => { if (!user) navigate("/login"); setModal(3) }
+      onClick: () => { if (!user) navigate("/login"); setModalError(""); setModal(3) }
     },
     "merge": {
       description: "incorporar sugestões",
@@ -99,8 +102,10 @@ export default function Post({
       onClick: (submit) => {
         if (!user)
           navigate("/login")
-        if (submit && content !== body)
+        if (submit && content !== body) {
+          setModalError("")
           setModal(1)
+        }
         if (!submit)
           return { "critiquesVisible": false }
       }
@@ -176,67 +181,68 @@ export default function Post({
     ]
   }
 
-  const submitEdition = async () => {
-    const message = commitMessageRef?.current?.value
+  // The modal's input is named by `field`; problems with anything else are described in full
+  const invalidMessage = (schema, values, field) => {
+    const [invalid] = validate(schema, values).errors
+    return invalid && (invalid.key === field ? invalid.message : describe(invalid).toLowerCase())
+  }
 
-    if (!message) {
-      // setError(true)
-      return
-    }
-
+  // Sends an edit or a clone, keeping the modal open with the API's message when it's refused
+  const sendFromModal = async (url, method, values, onSuccess) => {
     try {
       setIsLoading(true)
 
-      const url = `${env.apiAddress}/contents/${id}`
       const res = await fetch(url, {
-        method: "PATCH",
+        method,
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.accessToken}` },
-        body: JSON.stringify({ message, body: content })
+        body: JSON.stringify(values)
       })
 
       const data = await res.json()
 
-      if (res.ok && user?.pid === author_id)
-        updatePostData(data)
+      if (!res.ok) {
+        setModalError(data.message?.toLowerCase())
+        return
+      }
+
+      onSuccess(data)
+      setModal(false)
     }
     catch (err) {
       console.error(err)
+      setModal(false)
     }
     finally {
       setIsLoading(false)
-      setModal(false)
     }
   }
 
-  const submitClone = async () => {
-    const title = commitMessageRef?.current?.value
+  const submitEdition = async () => {
+    const values = { message: commitMessageRef?.current?.value.trim(), body: content }
+    const invalid = invalidMessage("edit", values, "message")
 
-    if (!title) {
+    if (invalid) {
+      setModalError(invalid)
       return
     }
 
-    try {
-      setIsLoading(true)
+    await sendFromModal(`${env.apiAddress}/contents/${id}`, "PATCH", values, data => {
+      if (user?.pid === author_id)
+        updatePostData(data)
+    })
+  }
 
-      const url = `${env.apiAddress}/contents/${id}/${commit}/clone`
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.accessToken}` },
-        body: JSON.stringify({ title })
-      })
+  const submitClone = async () => {
+    const values = { title: commitMessageRef?.current?.value.trim() }
+    const invalid = invalidMessage("clone", values, "title")
 
-      const data = await res.json()
+    if (invalid) {
+      setModalError(invalid)
+      return
+    }
 
-      if (res.ok && data)
-        navigate(`/topics/${data.parent_id}/posts/${data.id}`)
-    }
-    catch (err) {
-      console.error(err)
-    }
-    finally {
-      setIsLoading(false)
-      setModal(false)
-    }
+    await sendFromModal(`${env.apiAddress}/contents/${id}/${commit}/clone`, "POST", values, data =>
+      navigate(`/topics/${data.parent_id}/posts/${data.id}`))
   }
 
 
@@ -277,6 +283,9 @@ export default function Post({
             ref={commitMessageRef}
             label="título da cópia"
             type="area"
+            maxLength={limits.title.max}
+            onChange={() => setModalError("")}
+            errorMessage={modalError && `${modalError}!`}
           />
         </div>
         <div className="footer center">
@@ -313,6 +322,9 @@ export default function Post({
             ref={commitMessageRef}
             label="resumo das alterações"
             type="area"
+            maxLength={limits.message.max}
+            onChange={() => setModalError("")}
+            errorMessage={modalError && `${modalError}!`}
           />
         </div>
         <div className="footer center">

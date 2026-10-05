@@ -4,14 +4,17 @@ import { useNavigate } from "react-router"
 import Modal from "@/components/primitives/Modal"
 import Input from "@/components/primitives/Input"
 import LoadingButton from "@/components/primitives/LoadingButton"
+import Alert from "@/components/primitives/Alert"
 import env from "@/assets/enviroment"
+import { formErrors, limits, responseErrors } from "@/assets/validation"
 import useUser from "@/context/UserContext"
 
 export default ({ isOpen, setIsOpen }) => {
   const [title, setTitle] = React.useState("")
   const [allowMultipleAnswers, setAllowMultipleAnswers] = React.useState(false)
   const [answers, setAnswers] = React.useState([])
-  const [error, setError] = React.useState(false)
+  // A message for each invalid field: "title", or "answer.<index>" for an answer's input
+  const [errors, setErrors] = React.useState({})
   const [errorMessage, setErrorMessage] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
   const navigate = useNavigate()
@@ -26,9 +29,37 @@ export default ({ isOpen, setIsOpen }) => {
     }))
   }
 
+  // The form keeps an empty input for the next answer, which isn't sent
+  const filledAnswers = () => answers.map((answer, index) => [index, answer.trim()]).filter(([, answer]) => answer !== "")
+
+  // Shows each error next to its input; those about the answers as a whole go above them
+  const showErrors = (found, filled) => {
+    const byInput = {}
+    let general = ""
+
+    for (const [key, message] of Object.entries(found)) {
+      const answer = key.match(/^config\.answers\.(\d+)$/)
+      if (key === "title")
+        byInput.title = message
+      else if (answer && filled[answer[1]])
+        byInput[`answer.${filled[answer[1]][0]}`] = message
+      else
+        general ||= key === "config.answers" ? `respostas: ${message}` : message
+    }
+
+    setErrors(byInput)
+    setErrorMessage(general)
+  }
+
+  const clearError = key => setErrors(prev => ({ ...prev, [key]: undefined }))
+
   const submit = async () => {
-    if (!title) {
-      setError(true)
+    const filled = filledAnswers()
+    const values = { title: title.trim(), config: { allowMultipleAnswers, answers: filled.map(([, answer]) => answer) } }
+    const found = formErrors("topic", values)
+
+    if (Object.keys(found).length) {
+      showErrors(found, filled)
       return
     }
 
@@ -40,13 +71,16 @@ export default ({ isOpen, setIsOpen }) => {
       const res = await fetch(url, {
         method: "post",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.accessToken}` },
-        body: JSON.stringify({ title, config: { allowMultipleAnswers, answers: answers.filter(v => v !== "") } })
+        body: JSON.stringify(values)
       })
 
       const data = await res.json()
 
       if (res.status >= 400) {
-        setErrorMessage(data.message.toLowerCase())
+        if (data.errors)
+          showErrors(responseErrors(data), filled)
+        else
+          setErrorMessage(data.message.toLowerCase())
         return
       }
       setIsOpen(false)
@@ -77,11 +111,15 @@ export default ({ isOpen, setIsOpen }) => {
   return (
     <Modal isOpen={isOpen} setIsOpen={setIsOpen} title="crie um tópico">
       <div className="topicModalBody">
+        <Alert setter={setErrorMessage}>
+          {errorMessage}
+        </Alert>
         <Input
           label="título"
           value={title}
-          onChange={e => { setTitle(e.target.value); setError(false) }}
-          errorMessage={(error && !title) && "campo obrigatório!"}
+          maxLength={limits.title.max}
+          onChange={e => { setTitle(e.target.value); clearError("title") }}
+          errorMessage={errors.title && `${errors.title}!`}
         />
         <Input
           id="allowMultipleAnswers"
@@ -109,7 +147,9 @@ export default ({ isOpen, setIsOpen }) => {
                 <Input
                   label={`${answer ? "" : "adicionar "}resposta ${i + 1}`}
                   value={answer}
-                  onChange={e => handleAnswerChange(i, e.target.value)}
+                  maxLength={limits.answer.max}
+                  onChange={e => { handleAnswerChange(i, e.target.value); clearError(`answer.${i}`) }}
+                  errorMessage={errors[`answer.${i}`] && `${errors[`answer.${i}`]}!`}
                 />
               ))
             }

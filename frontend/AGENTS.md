@@ -10,7 +10,7 @@ React 19 + React Router 7 + TipTap 3, built with Vite 8. Read the root [`AGENTS.
 | `src/components/content/` | Topic, Post and Critique, their compact previews for the profile and bookmarks (`ContentList`, `PostPreview`, `CritiquePreview`), and `CritiquePopover` |
 | `src/components/Editor/` | The TipTap editor, its extensions, menus and the chart node |
 | `src/components/primitives/` | `Frame` (the card every content is drawn in), `Modal`, `Pagination`, voting buttons… |
-| `src/assets/` | Logic shared across components: `anchoring.js`, `textDiff.js`, `textIndex.js`, the custom `highlight.js` mark, and `scss/` |
+| `src/assets/` | Logic shared across components: `anchoring.js`, `textDiff.js`, `textIndex.js`, the custom `highlight.js` mark, `validation.js`, and `scss/` |
 | `src/context/` | `UserContext` (the logged-in user and token, from `localStorage`) |
 
 `@/` is an alias for `src/`. The API address is `import.meta.env.VITE_API_ADDRESS` (`assets/enviroment.js`).
@@ -53,6 +53,14 @@ A critique stores `{ commit, from, to }` (ProseMirror positions in that version)
 - **`showCritique`** holds what's open: a new critique's `[from, to]` selection, a critique's index as a string, or a JSON list of indexes (a group).
 - **Critique placement (desktop).** `CritiquePopover` places the open critiques beside the post, level with the passage, using Floating UI (`autoUpdate`, `shift` bounded by the post frame so they never cover the timeline). The `.critiques` column only reserves width. On phones, critiques open in a `Modal`.
 - **Reviewing a suggestion.** It loads the suggestion's commit; the response's `base` (the version it branched from) is passed to the editor as `diffBase`.
+
+## Forms
+
+Forms validate with the schemas the API uses (`shared/`, see the root `AGENTS.md`) through `assets/validation.js`, before sending anything:
+
+- `formErrors(schema, values)` returns `{ field: message }`, treating an empty field as missing; `validate` and `describe` give the full errors and the API's sentence; `limits` sets inputs' `maxLength`.
+- `responseErrors(data)` reads the API's `errors` list (or its single `key`), so the same messages appear next to the fields whatever found them.
+- Messages are short and lowercase ("campo obrigatório"); inputs show them with a "!", as the rest of the UI does.
 
 ## Other things to know
 

@@ -120,7 +120,7 @@ describe("POST /interactions", () => {
     const res = await interact(bob, topic.id, "suggestion")
 
     expect(res.status).toBe(400)
-    expect(res.body.message).toBe('O tipo de interação "suggestion" não é válido.')
+    expect(res.body).toMatchObject({ key: "type", message: "Tipo de interação: deve ser um destes: up, down, vote, bookmark, promote." })
   })
 
   it("requires the user to be logged in", async () => {

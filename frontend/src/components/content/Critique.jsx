@@ -10,11 +10,13 @@ import {
 import { default as Editor } from "@/components/Editor"
 import Frame from "@/components/primitives/Frame"
 import Spinner from "@/components/primitives/Spinner"
+import Alert from "@/components/primitives/Alert"
 import { submitVote } from "@/components/primitives/VotingButtons"
 import { Author, Relevance } from "@/components/content/Metrics"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import env from "@/assets/enviroment"
 import useUser from "@/context/UserContext"
+import { describe, validate } from "@/assets/validation"
 
 
 export default ({
@@ -46,6 +48,7 @@ export default ({
   const [content, setContent] = React.useState(body)
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState(false)
+  const [errorMessage, setErrorMessage] = React.useState("")
   const titleRef = React.useRef()
   const navigate = useNavigate()
   const { user } = useUser()
@@ -91,7 +94,7 @@ export default ({
   }
 
   const submit = async () => {
-    const title = titleRef?.current.textContent
+    const title = titleRef?.current.textContent.trim()
     const [from, to] = interval
 
     if (!title || !content || !from || !to || !commit || !quote) {
@@ -104,24 +107,36 @@ export default ({
       return
     }
 
+    const values = { title, body: content, config: { from, to, commit, quote }, parent_id }
+    const [invalid] = validate("critique", values).errors
+    if (invalid) {
+      setError(true)
+      setErrorMessage(describe(invalid).toLowerCase())
+      setSubmitSignal(false)
+      return
+    }
+
     try {
       setIsLoading(true)
+      setErrorMessage("")
       const url = `${env.apiAddress}/contents`
 
       const res = await fetch(url, {
         method: "post",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.accessToken}` },
-        body: JSON.stringify({ title, body: content, config: { from, to, commit, quote }, parent_id })
+        body: JSON.stringify(values)
       })
 
+      const data = await res.json()
 
       if (res.ok) {
-        const data = await res.json()
         setCritiques(prev => [...prev, {...data, author_avatar: user.avatar}])
         setShowCritique(false)
       }
-      else
+      else {
         setError(true)
+        setErrorMessage(data.message?.toLowerCase())
+      }
     }
     catch (err) {
       console.error(err)
@@ -191,6 +206,9 @@ export default ({
           bubbleMenuShouldShow={!readOnly}
         />
       }
+      <Alert setter={setErrorMessage}>
+        {errorMessage}
+      </Alert>
     </Frame>
   )
 }
