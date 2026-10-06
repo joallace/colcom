@@ -1,8 +1,10 @@
+@use "../abstracts/variables";
+
 @use "sass:color";
 
 .metrics {
   list-style: none;
-  color: $default-green;
+  color: variables.$default-green;
   font-size: 12px;
   text-align: center;
   padding: 0;
@@ -11,21 +13,21 @@
   gap: 0.5rem;
 
   >li {
-    color: color.scale($default-font-color, $lightness: -15%);
+    color: color.scale(variables.$default-font-color, $lightness: -15%);
   }
 
-  @media screen and (max-width: $screen-sm) {
+  @media screen and (max-width: variables.$screen-sm) {
     display: grid;
     justify-items: left;
-    border-left: 2px solid $default-green;
+    border-left: 2px solid variables.$default-green;
     padding-left: 0.5rem;
 
     &.critique{
-      border-color: $default-orange;
+      border-color: variables.$default-orange;
     }
   }
 
-  @media screen and (max-width: $screen-lg) {
+  @media screen and (max-width: variables.$screen-lg) {
     gap: 0.25rem;
   }
 }
@@ -35,10 +37,10 @@
   place-items: center;
   font-size: 13px;
   font-weight: bold;
-  color: $default-font-color;
+  color: variables.$default-font-color;
 
   img {
-    border: 1px solid $default-green;
+    border: 1px solid variables.$default-green;
     border-radius: 1px;
     image-rendering: pixelated;
     width: 16px;

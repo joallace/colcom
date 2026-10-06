@@ -1,3 +1,5 @@
+@use "../abstracts/variables";
+
 .pixel-art-editor {
     display: grid;
     place-items: center;
@@ -53,15 +55,15 @@
             width: 4.25rem;
             font-size: 12px;
 
-            @media screen and (min-width: 0px) and (max-width: $screen-md) {
+            @media screen and (min-width: 0px) and (max-width: variables.$screen-md) {
                 width: min-content;
                 height: min-content;
             }
 
 
             &.selected {
-                background: $default-orange;
-                border-color: $default-orange;
+                background: variables.$default-orange;
+                border-color: variables.$default-orange;
             }
 
             svg {
@@ -71,7 +73,7 @@
         }
 
         .discard {
-            border-color: $default-red;
+            border-color: variables.$default-red;
         }
     }
 
@@ -79,14 +81,14 @@
         display: grid;
         width: min-content;
         grid-template-columns: repeat(16, 16px);
-        border: 2px solid $default-green;
+        border: 2px solid variables.$default-green;
         border-radius: 0.25rem;
         cursor: crosshair;
         touch-action: none;
         overscroll-behavior: none;
         -webkit-overflow-scrolling: touch;
 
-        @media screen and (min-width: 0px) and (max-width: $screen-md) {
+        @media screen and (min-width: 0px) and (max-width: variables.$screen-md) {
             grid-template-columns: repeat(16, 12px);
         }
 
@@ -99,7 +101,7 @@
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
 
-            @media screen and (min-width: 0px) and (max-width: $screen-md) {
+            @media screen and (min-width: 0px) and (max-width: variables.$screen-md) {
                 width: 11px;
                 height: 11px;
             }
@@ -115,7 +117,7 @@
                 height: 16px;
                 border: none;
 
-                @media screen and (min-width: 0px) and (max-width: $screen-md) {
+                @media screen and (min-width: 0px) and (max-width: variables.$screen-md) {
                     width: 12px;
                     height: 12px;
                 }
@@ -123,7 +125,7 @@
         }
 
         &.error {
-            border-color: $default-red;
+            border-color: variables.$default-red;
         }
     }
 }

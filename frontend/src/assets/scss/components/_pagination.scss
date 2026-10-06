@@ -1,3 +1,5 @@
+@use "../abstracts/variables";
+
 .pagination {
     display: flex;
     gap: 1.5rem;
@@ -19,7 +21,7 @@
         }
 
         >a.active {
-            border-bottom: 2px $default-green;
+            border-bottom: 2px variables.$default-green;
             cursor: text;
         }
     }

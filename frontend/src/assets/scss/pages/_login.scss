@@ -1,9 +1,11 @@
+@use "../abstracts/variables";
+
 .loginContainer {
     display: grid;
     height: min-content;
     width: min-content;
 
-    @media screen and (min-width: $screen-md) {
+    @media screen and (min-width: variables.$screen-md) {
         min-width: 25rem
     }
 
@@ -14,10 +16,10 @@
 
     .header {
         span {
-            color: $default-green;
+            color: variables.$default-green;
 
             &>span {
-                color: $default-orange;
+                color: variables.$default-orange;
             }
         }
     }
@@ -60,7 +62,7 @@
 
                 &:not(:placeholder-shown)+label,
                 &:focus+label {
-                    background-color: $default-bg;
+                    background-color: variables.$default-bg;
                 }
             }
         }

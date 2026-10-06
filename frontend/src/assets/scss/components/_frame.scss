@@ -1,3 +1,6 @@
+@use "../abstracts/mixins";
+@use "../abstracts/variables";
+
 @use "sass:color";
 
 .frame {
@@ -6,9 +9,9 @@
     height: min-content;
     transition: all 0.5s ease;
     font-family: 'Lato', sans-serif;
-    @include content-responsiveness;
+    @include mixins.content-responsiveness;
 
-    @media screen and (max-width: $screen-sm) {
+    @media screen and (max-width: variables.$screen-sm) {
         line-height: 1.25;
     }
 
@@ -39,20 +42,20 @@
 
         >.title {
             width: 100%;
-            color: $default-green;
+            color: variables.$default-green;
             align-self: center;
             text-align: left;
             word-wrap: anywhere;
 
             a {
-                color: $default-green;
+                color: variables.$default-green;
             }
 
             span {
                 cursor: pointer;
 
                 &.active {
-                    color: color.scale($default-yellow, $lightness: -8%);
+                    color: color.scale(variables.$default-yellow, $lightness: -8%);
                 }
             }
 
@@ -64,19 +67,19 @@
                     font-size: 2rem;
 
                     &:empty:before {
-                        color: color.scale($default-orange, $lightness: -15%);
+                        color: color.scale(variables.$default-orange, $lightness: -15%);
                     }
                 }
 
                 &.error {
                     &:empty:before {
-                        color: color.scale($default-red, $lightness: -15%);
+                        color: color.scale(variables.$default-red, $lightness: -15%);
                     }
                 }
 
                 &:empty:before {
                     content: attr(placeholder);
-                    color: color.scale($default-green, $lightness: -15%);
+                    color: color.scale(variables.$default-green, $lightness: -15%);
                 }
             }
         }
@@ -106,19 +109,19 @@
     // Maybe the critique color will be accordingly to the user's vote.
     &.critique {
         .title {
-            color: $default-orange;
+            color: variables.$default-orange;
 
             a {
-                color: $default-orange;
+                color: variables.$default-orange;
             }
 
             textarea {
-                color: $default-orange;
+                color: variables.$default-orange;
             }
         }
 
         .bracket {
-            border-color: $default-orange;
+            border-color: variables.$default-orange;
         }
 
         // Shown on critiques made against an earlier version of the post
@@ -127,17 +130,17 @@
             gap: 0.25rem;
             margin-bottom: 0.75rem;
             font-size: 0.8rem;
-            color: color.scale($default-font-color, $lightness: -33%);
+            color: color.scale(variables.$default-font-color, $lightness: -33%);
 
             blockquote {
                 margin: 0;
                 padding-left: 0.5rem;
-                border-left: 2px solid $default-orange;
+                border-left: 2px solid variables.$default-orange;
                 font-style: italic;
             }
 
             a {
-                color: $default-orange;
+                color: variables.$default-orange;
                 width: fit-content;
             }
         }
@@ -152,9 +155,9 @@
 
     border-style: solid;
     border-width: 0 0 0px 2px;
-    border-color: $default-green;
+    border-color: variables.$default-green;
 
-    @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+    @media screen and (min-width: 0px) and (max-width: variables.$screen-sm) {
         margin-right: 0.25rem;
         width: 0.5rem;
     }
@@ -167,7 +170,7 @@
         border-width: 2px 0 0 2px;
         border-radius: 0.75rem 0 0 0;
 
-        @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+        @media screen and (min-width: 0px) and (max-width: variables.$screen-sm) {
             border-radius: 0.5rem 0 0 0;
         }
     }
@@ -178,7 +181,7 @@
         margin-bottom: 0;
         border-width: 0 0 2px 2px;
 
-        @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+        @media screen and (min-width: 0px) and (max-width: variables.$screen-sm) {
             margin-right: 0;
             width: 1.5rem;
 
@@ -189,11 +192,11 @@
     }
 
     &.critique {
-        border-color: $default-orange;
+        border-color: variables.$default-orange;
     }
 
     &.error {
-        border-color: $default-red !important;
+        border-color: variables.$default-red !important;
     }
 
     &.reverse {

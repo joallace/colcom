@@ -1,3 +1,5 @@
+@use "../abstracts/variables";
+
 .postSummary {
     // A title or summary with no spaces would otherwise set the min-content width
     // (`anywhere`, unlike `break-word`, also shrinks it) and widen the whole page
@@ -12,7 +14,7 @@
         &:hover {
             .percentageBar {
                 transition: all 0.15s ease;
-                background-color: $default-orange;
+                background-color: variables.$default-orange;
             }
         }
     }
@@ -23,7 +25,7 @@
         min-height: 2.5rem;
         height: min-content;
         justify-content: space-between;
-        background-color: $default-font-color;
+        background-color: variables.$default-font-color;
         padding: 0 1rem 0 0.5rem;
         align-content: center;
         border-radius: 0 0.75rem 0.75rem 0;
@@ -41,13 +43,13 @@
                 min-width: 16px;
             }
 
-            color: $default-bg;
+            color: variables.$default-bg;
             display: flex;
             align-items: center;
         }
 
         &.chosen{
-            background-color: $default-green;
+            background-color: variables.$default-green;
         }
     }
 

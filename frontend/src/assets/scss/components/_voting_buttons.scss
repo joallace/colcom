@@ -1,3 +1,5 @@
+@use "../abstracts/variables";
+
 @use "sass:color";
 
 .votingButtons {
@@ -13,7 +15,7 @@
         min-height: 1.25rem;
     }
 
-    @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+    @media screen and (min-width: 0px) and (max-width: variables.$screen-sm) {
         input {
             min-width: 1.75rem;
             min-height: 1.75rem;
@@ -38,7 +40,7 @@
         border-radius: 50%;
 
         &:hover {
-            background-color: color.scale($default-bg, $lightness: 8%);
+            background-color: color.scale(variables.$default-bg, $lightness: 8%);
         }
     }
 

@@ -1,5 +1,7 @@
+@use "../abstracts/variables";
+
 .alert {
-  background-color: $default-red;
+  background-color: variables.$default-red;
   padding: 1rem;
   border-radius: 0.25rem;
   display: grid;

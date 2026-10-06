@@ -1,20 +1,22 @@
+@use "../abstracts/variables";
+
 .colcom {
     display: flex;
     line-height: 1rem;
     width: min-content;
-    color: $default-green;
+    color: variables.$default-green;
     font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
     font-size: 1.25rem;
 
-    @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+    @media screen and (min-width: 0px) and (max-width: variables.$screen-sm) {
         flex-wrap: wrap;
     }
 
     .dot {
-        color: $default-font-color;
+        color: variables.$default-font-color;
     }
 
     .com {
-        color: $default-orange;
+        color: variables.$default-orange;
     }
 }

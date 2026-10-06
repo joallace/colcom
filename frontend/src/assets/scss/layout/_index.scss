@@ -1,8 +1,10 @@
+@use "../abstracts/variables";
+
 @use "sass:color";
 
 :root {
-    background-color: $default-bg;
-    color: $default-font-color;
+    background-color: variables.$default-bg;
+    color: variables.$default-font-color;
 }
 
 #root {
@@ -25,7 +27,7 @@
     }
 
     &.login {
-        height: calc(100vh - $navbar-height);
+        height: calc(100vh - variables.$navbar-height);
         min-height: min-content;
     }
 
@@ -35,13 +37,13 @@
 }
 
 .avatar {
-    border: 2px solid $default-green;
+    border: 2px solid variables.$default-green;
     border-radius: 0.25rem;
     image-rendering: pixelated;
 }
 
 .focus {
-    color: $default-font-color;
+    color: variables.$default-font-color;
     font-weight: bold;
 }
 
@@ -50,7 +52,7 @@
     transition: all 0.15s ease;
 
     &:hover {
-        color: $default-orange !important;
+        color: variables.$default-orange !important;
     }
 }
 
@@ -64,6 +66,6 @@
 
 .disabled {
     cursor: default !important;
-    color: color.scale($default-font-color, $lightness: -50%) !important;
+    color: color.scale(variables.$default-font-color, $lightness: -50%) !important;
     pointer-events: none;
 }

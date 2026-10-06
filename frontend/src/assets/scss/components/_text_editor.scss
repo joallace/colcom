@@ -1,12 +1,15 @@
+@use "../abstracts/mixins";
+@use "../abstracts/variables";
+
 @use "sass:color";
 
 // Critique highlights by how many critiques cover the text (assets/critiqueDensity.js): from a
 // faint orange to a solid one, then into red, with the most disputed passages a vivid red
 $critique-density: (
-    1: color.scale($default-orange, $lightness: -10%, $alpha: -70%),
-    2: color.scale($default-orange, $lightness: -10%, $alpha: -45%),
-    3: color.scale($default-orange, $lightness: -10%),
-    4: $default-red,
+    1: color.scale(variables.$default-orange, $lightness: -10%, $alpha: -70%),
+    2: color.scale(variables.$default-orange, $lightness: -10%, $alpha: -45%),
+    3: color.scale(variables.$default-orange, $lightness: -10%),
+    4: variables.$default-red,
     5: #e3150c,
 );
 
@@ -30,13 +33,13 @@ $critique-density: (
 .menu {
     display: flex;
     min-width: min-content;
-    background-color: $default-orange;
+    background-color: variables.$default-orange;
     padding: 0.2rem;
     border-radius: 0.5rem;
     gap: 0.25rem;
 
     &.bubble {
-        @media screen and (max-width: $screen-sm) {
+        @media screen and (max-width: variables.$screen-sm) {
             position: relative;
             top: 5rem;
         }
@@ -87,8 +90,8 @@ $critique-density: (
     input {
         width: 5rem;
         font-size: 0.75rem;
-        color: $default-font-color;
-        background-color: $default-input-bg;
+        color: variables.$default-font-color;
+        background-color: variables.$default-input-bg;
         border: none;
         border-radius: 0.4rem;
 
@@ -104,13 +107,13 @@ $critique-density: (
 
 .text-editor {
     display: flex;
-    @include content-responsiveness;
+    @include mixins.content-responsiveness;
 
     .text {
         width: 100%;
 
         .title {
-            color: $default-green;
+            color: variables.$default-green;
             word-wrap: anywhere;
             cursor: text;
 
@@ -119,10 +122,10 @@ $critique-density: (
                 resize: none;
                 overflow-y: hidden;
                 width: 100%;
-                background-color: $default-bg;
+                background-color: variables.$default-bg;
                 outline: none;
                 border: none;
-                color: $default-green;
+                color: variables.$default-green;
                 font-size: 2rem;
                 font-weight: bolder;
             }
@@ -142,7 +145,7 @@ $critique-density: (
     }
 
     h1 {
-        color: $default-green;
+        color: variables.$default-green;
     }
 
     ul,
@@ -151,7 +154,7 @@ $critique-density: (
     }
 
     blockquote {
-        border-left: 2px solid $default-orange;
+        border-left: 2px solid variables.$default-orange;
         margin: 1.5rem 1rem;
         padding: 0.5rem 1rem;
 
@@ -165,7 +168,7 @@ $critique-density: (
         }
 
         &:before {
-            color: $default-orange;
+            color: variables.$default-orange;
             content: open-quote;
             font-size: 2.5rem;
             line-height: 0.1rem;
@@ -174,7 +177,7 @@ $critique-density: (
         }
 
         &:after {
-            color: $default-orange;
+            color: variables.$default-orange;
             content: close-quote;
             font-size: 2.5rem;
             line-height: 0.1rem;
@@ -192,7 +195,7 @@ $critique-density: (
     .is-editor-empty:first-child::before {
         content: attr(data-placeholder);
         float: left;
-        color: color.scale($default-font-color, $lightness: -40%);
+        color: color.scale(variables.$default-font-color, $lightness: -40%);
         pointer-events: none;
         height: 0;
     }
@@ -209,29 +212,29 @@ $critique-density: (
 
         // The criticised passage was edited after the critique was made
         &.changed {
-            text-decoration: underline dashed color.scale($default-orange, $lightness: 25%);
+            text-decoration: underline dashed color.scale(variables.$default-orange, $lightness: 25%);
             text-underline-offset: 0.2em;
         }
 
         &.temporary {
             color: black;
-            background-color: color.scale($default-yellow, $lightness: -18%);
+            background-color: color.scale(variables.$default-yellow, $lightness: -18%);
         }
     }
 }
 // Reviewing a suggestion: what it adds and removes relative to the version it was made on
 .diffInsert {
-    background-color: color.scale($default-green, $alpha: -65%);
-    text-decoration: underline $default-green;
+    background-color: color.scale(variables.$default-green, $alpha: -65%);
+    text-decoration: underline variables.$default-green;
     text-underline-offset: 0.2em;
 }
 
 .diffDelete {
     // Keeps a removed word apart from the one added in its place
     margin-right: 0.25em;
-    background-color: color.scale($default-red, $alpha: -70%);
-    text-decoration: line-through $default-red;
-    color: color.scale($default-font-color, $lightness: -25%);
+    background-color: color.scale(variables.$default-red, $alpha: -70%);
+    text-decoration: line-through variables.$default-red;
+    color: color.scale(variables.$default-font-color, $lightness: -25%);
 }
 
 .diffLegend {
@@ -241,11 +244,11 @@ $critique-density: (
     align-items: baseline;
     margin-bottom: 0.75rem;
     font-size: 0.8rem;
-    color: color.scale($default-font-color, $lightness: -33%);
+    color: color.scale(variables.$default-font-color, $lightness: -33%);
 
     span {
         padding: 0 0.25rem;
-        color: $default-font-color;
+        color: variables.$default-font-color;
     }
 }
 
@@ -256,11 +259,11 @@ $critique-density: (
     align-items: baseline;
     margin-bottom: 0.75rem;
     font-size: 0.8rem;
-    color: color.scale($default-font-color, $lightness: -33%);
+    color: color.scale(variables.$default-font-color, $lightness: -33%);
 
     span {
         padding: 0 0.4rem;
-        color: $default-font-color;
+        color: variables.$default-font-color;
         @include critique-density;
     }
 }

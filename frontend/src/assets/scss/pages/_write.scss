@@ -1,3 +1,5 @@
+@use "../abstracts/variables";
+
 .content.write {
     >.buttons {
         display: flex;
@@ -31,7 +33,7 @@
     place-items: center;
     width: 100%;
 
-    @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+    @media screen and (min-width: 0px) and (max-width: variables.$screen-sm) {
         flex-direction: column;
     }
 
@@ -45,7 +47,7 @@
             width: 100%;
         }
 
-        @media screen and (min-width: 0px) and (max-width: $screen-sm) {
+        @media screen and (min-width: 0px) and (max-width: variables.$screen-sm) {
             width: 90%;
         }
     }

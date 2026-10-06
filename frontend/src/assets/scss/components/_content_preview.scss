@@ -1,20 +1,22 @@
+@use "../abstracts/variables";
+
 @use "sass:color";
 
 // Where a post or critique shown outside its page belongs (profile, bookmarks)
 .contentContext {
     margin-bottom: 0.75rem;
     font-size: 0.85rem;
-    color: color.scale($default-font-color, $lightness: -33%);
+    color: color.scale(variables.$default-font-color, $lightness: -33%);
 
     strong {
-        color: $default-font-color;
+        color: variables.$default-font-color;
     }
 }
 
 .criticisedPassage {
     margin: 0 0 0.75rem;
     padding-left: 0.5rem;
-    border-left: 2px solid $default-orange;
+    border-left: 2px solid variables.$default-orange;
     font-style: italic;
-    color: color.scale($default-font-color, $lightness: -20%);
+    color: color.scale(variables.$default-font-color, $lightness: -20%);
 }

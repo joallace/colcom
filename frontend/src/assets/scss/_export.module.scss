@@ -1,15 +1,15 @@
-@import "abstracts/variables";
+@use "abstracts/variables";
 
 :export {
-    sm: $screen-sm;
-    md: $screen-md;
-    lg: $screen-lg;
-    xl: $screen-xl;
-    xxl: $screen-2xl;
-    defaultGreen: $default-green;
-    defaultOrange: $default-orange;
-    defaultYellow: $default-yellow;
-    defaultBlue: $default-blue;
-    defaultInputBg: $default-input-bg;
-    defaultFontColor: $default-font-color;
+    sm: variables.$screen-sm;
+    md: variables.$screen-md;
+    lg: variables.$screen-lg;
+    xl: variables.$screen-xl;
+    xxl: variables.$screen-2xl;
+    defaultGreen: variables.$default-green;
+    defaultOrange: variables.$default-orange;
+    defaultYellow: variables.$default-yellow;
+    defaultBlue: variables.$default-blue;
+    defaultInputBg: variables.$default-input-bg;
+    defaultFontColor: variables.$default-font-color;
 }

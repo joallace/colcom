@@ -1,3 +1,5 @@
+@use "../abstracts/variables";
+
 @use "sass:color";
 
 .inputBox {
@@ -8,9 +10,9 @@
         min-width: min-content;
         width: 100%;
         height: 2.25rem;
-        color: $default-font-color;
+        color: variables.$default-font-color;
         background: transparent;
-        border: 2px solid $default-green;
+        border: 2px solid variables.$default-green;
         border-radius: 0.25rem;
         outline: none;
         transition: .3s;
@@ -23,21 +25,21 @@
         &:focus+label {
             top: 0;
             font-size: .75rem;
-            color: $default-green;
-            background: $navbar-bg;
+            color: variables.$default-green;
+            background: variables.$navbar-bg;
             padding: 0.2rem;
         }
 
         &:focus {
-            border: 2px solid $default-orange;
+            border: 2px solid variables.$default-orange;
         }
 
         &:focus+label {
-            color: $default-orange;
+            color: variables.$default-orange;
         }
 
         &.error {
-            border-color: $default-red;
+            border-color: variables.$default-red;
         }
     }
 
@@ -47,7 +49,7 @@
         top: 50%;
         pointer-events: none;
         transform: translateY(-50%);
-        color: color.scale($default-font-color, $lightness: -40%);
+        color: color.scale(variables.$default-font-color, $lightness: -40%);
         transition: .3s;
         font-weight: bold;
         white-space: nowrap;

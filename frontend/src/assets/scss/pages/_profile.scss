@@ -1,12 +1,15 @@
+@use "../abstracts/mixins";
+@use "../abstracts/variables";
+
 @use "sass:color";
 
 .profileCard {
     display: flex;
     margin: 2rem 0;
     gap: 2rem;
-    @include content-responsiveness;
+    @include mixins.content-responsiveness;
 
-    @media screen and (max-width: $screen-sm) {
+    @media screen and (max-width: variables.$screen-sm) {
         gap: 0.5rem;
 
         display: grid;
@@ -19,7 +22,7 @@
     }
 
     .profileInfo {
-        color: color.scale($default-font-color, $lightness: -15%);
+        color: color.scale(variables.$default-font-color, $lightness: -15%);
         display: grid;
         place-content: start;
 
@@ -27,7 +30,7 @@
             margin-bottom: 1.5rem;
             font-size: 32px;
 
-            @media screen and (max-width: $screen-sm) {
+            @media screen and (max-width: variables.$screen-sm) {
                 font-size: 24px;
                 text-align: center;
 
@@ -37,5 +40,5 @@
 }
 
 .separator{
-    color: $default-green;
+    color: variables.$default-green;
 }

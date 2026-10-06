@@ -1,3 +1,6 @@
+@use "../abstracts/mixins";
+@use "../abstracts/variables";
+
 @use "sass:color";
 
 .post {
@@ -10,11 +13,11 @@
 
     .frame {
         &.original {
-            @include content-responsiveness(55vw, 60vw, 95vw);
+            @include mixins.content-responsiveness(55vw, 60vw, 95vw);
         }
 
         &.critique {
-            @include content-responsiveness(30vw, 30vw, 0);
+            @include mixins.content-responsiveness(30vw, 30vw, 0);
         }
     }
 
@@ -28,7 +31,7 @@
                 align-items: center;
 
                 textarea {
-                    background-color: $navbar-bg;
+                    background-color: variables.$navbar-bg;
                 }
             }
         }
@@ -48,11 +51,11 @@
                 display: flex;
                 place-items: center;
                 gap: 0.25rem;
-                color: color.scale($default-font-color, $lightness: -33%);
+                color: color.scale(variables.$default-font-color, $lightness: -33%);
                 font-size: 0.75rem;
 
                 .dot {
-                    color: $default-green;
+                    color: variables.$default-green;
                 }
             }
         }
@@ -61,7 +64,7 @@
     // Reserves the critiques' width beside the post; the popover inside is placed by Floating UI
     >.critiques {
         transition: all 0.5 ease;
-        @include content-responsiveness(30vw, 30vw, 0);
+        @include mixins.content-responsiveness(30vw, 30vw, 0);
         flex-shrink: 0;
     }
 
@@ -78,12 +81,12 @@
 }
 
 .removedCritiques {
-    @include content-responsiveness(55vw, 60vw, 95vw);
+    @include mixins.content-responsiveness(55vw, 60vw, 95vw);
     margin-top: 2rem;
 
     h3 {
         font-size: 1rem;
-        color: color.scale($default-font-color, $lightness: -33%);
+        color: color.scale(variables.$default-font-color, $lightness: -33%);
     }
 
     ul {
@@ -99,7 +102,7 @@
 
         span {
             font-size: 0.75rem;
-            color: color.scale($default-font-color, $lightness: -33%);
+            color: color.scale(variables.$default-font-color, $lightness: -33%);
         }
     }
 
@@ -107,10 +110,10 @@
         all: unset;
         cursor: pointer;
         text-decoration: underline dotted;
-        text-decoration-color: $default-orange;
+        text-decoration-color: variables.$default-orange;
 
         &:hover {
-            color: $default-orange;
+            color: variables.$default-orange;
         }
     }
 }
@@ -122,7 +125,7 @@
 
     input,
     datalist {
-        @include content-responsiveness(50vw, 60vw, 80vw);
+        @include mixins.content-responsiveness(50vw, 60vw, 80vw);
     }
 }
 
@@ -134,7 +137,7 @@
         cursor: pointer;
         color: white;
         position: absolute;
-        background-color: $default-orange;
+        background-color: variables.$default-orange;
         width: 1.15rem;
         height: 1.15rem;
         font-size: 0.75rem;
