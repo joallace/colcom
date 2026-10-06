@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router"
 import { describe, expect, it, vi } from "vitest"
@@ -7,6 +7,7 @@ import Modal from "@/components/primitives/Modal"
 import Alert from "@/components/primitives/Alert"
 import LoadingButton from "@/components/primitives/LoadingButton"
 import Pagination from "@/components/primitives/Pagination"
+import Frame from "@/components/primitives/Frame"
 import PostSummary from "@/components/content/PostSummary"
 import { Interactions, PostCount, Promotions, Relevance } from "@/components/content/Metrics"
 
@@ -121,6 +122,32 @@ describe("PostSummary", () => {
   it("numbers a post without an answer by its position", () => {
     renderSummary({ summary: "Resumo", index: 2 })
     expect(screen.getByText("3.")).toBeInTheDocument()
+  })
+})
+
+describe("Frame", () => {
+  it("pastes only plain text, on one line, into an editable title", () => {
+    render(<Frame readOnly={false} hideVoteButtons><div /></Frame>)
+    const title = screen.getByRole("heading")
+    expect(title).toHaveAttribute("contenteditable", "plaintext-only")
+
+    // jsdom has no editing commands; in the browser `insertText` places the text
+    document.execCommand = vi.fn()
+    try {
+      const clipboard = { "text/html": "<h1>Título</h1><p>copiado</p>", "text/plain": "Título\n  copiado" }
+      const notCancelled = fireEvent.paste(title, { clipboardData: { getData: type => clipboard[type] } })
+
+      expect(notCancelled).toBe(false)
+      expect(document.execCommand).toHaveBeenCalledWith("insertText", false, "Título copiado")
+    }
+    finally {
+      delete document.execCommand
+    }
+  })
+
+  it("keeps a read-only title from being edited", () => {
+    render(<Frame hideVoteButtons title="Título"><div /></Frame>)
+    expect(screen.getByRole("heading")).toHaveAttribute("contenteditable", "false")
   })
 })
 

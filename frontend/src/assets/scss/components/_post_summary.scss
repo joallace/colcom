@@ -1,7 +1,13 @@
 .postSummary {
+    // A title or summary with no spaces would otherwise set the min-content width
+    // (`anywhere`, unlike `break-word`, also shrinks it) and widen the whole page
+    overflow-wrap: anywhere;
+
     a {
         display: flex;
-        min-width: min-content;
+        // Not `min-content`: that is the longest word, however long. This keeps
+        // low-voted bars wide enough that ordinary words aren't split on phones
+        min-width: min(12rem, 100%);
 
         &:hover {
             .percentageBar {
@@ -26,6 +32,9 @@
         a {
             &:first-child {
                 margin-right: 0.5rem;
+            }
+            &:last-child {
+                white-space: nowrap;
             }
             svg{
                 margin-right: 0.5rem;

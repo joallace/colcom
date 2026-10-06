@@ -74,10 +74,19 @@ export default function Frame({
         {/* The error style only applies to an empty title (`:empty` in _frame.scss) */}
         <h1
           className={`title${isCritique ? " critique" : ""}${error ? " error" : ""}`}
-          contentEditable={!readOnly}
+          // Plain text only: pasting or dropping copied HTML would nest headings and styles in the title
+          contentEditable={readOnly ? false : "plaintext-only"}
           suppressContentEditableWarning={true}
           placeholder="Qual é o título?"
           onKeyDown={e => { e.key === "Enter" && e.preventDefault(); setError(false) }}
+          onPaste={e => {
+            if (readOnly)
+              return
+            e.preventDefault()
+            // A title is one line; `insertText` keeps the paste undoable
+            document.execCommand("insertText", false, e.clipboardData.getData("text/plain").replace(/\s+/g, " "))
+            setError(false)
+          }}
           onBlur={() => saveInLocalStorage && localStorage.setItem("postTitle", titleRef?.current?.textContent)}
           ref={titleRef}
         >
