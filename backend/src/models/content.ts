@@ -415,7 +415,27 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
             'count', COUNT(*),
             'upvotes', COALESCE(SUM(ranked_posts.upvotes), 0),
             'downvotes', COALESCE(SUM(ranked_posts.downvotes), 0),
-            'votes', COALESCE(SUM(ranked_posts.votes), 0)
+            'votes', COALESCE(SUM(ranked_posts.votes), 0),
+            'answers', (
+              -- Over all posts, not only the cropped children, so the list's grouped view
+              -- shows each answer's real share of the poll
+              SELECT
+                COALESCE(json_object_agg(by_answer.answer, json_build_object('count', by_answer.count, 'votes', by_answer.votes)), '{}'::json)
+              FROM (
+                SELECT
+                  answered.config->>'answer' AS answer,
+                  COUNT(*) AS count,
+                  SUM(answered.votes) AS votes
+                FROM
+                  ranked_posts AS answered
+                WHERE
+                  answered.parent_id = page_topics.id
+                AND
+                  answered.config->>'answer' IS NOT NULL
+                GROUP BY
+                  answered.config->>'answer'
+              ) AS by_answer
+            )
           ) AS summary
         FROM
           ranked_posts

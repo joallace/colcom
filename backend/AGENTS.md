@@ -36,7 +36,7 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 
 ## Query patterns
 
-- **No N+1 queries.** `findTree` returns a page of topics with their posts ranked (most poll votes, then up votes, then oldest), cropped to `childLimit`, statistics over all posts, and the viewer's interactions and poll vote, in one query. `findAll` takes `userPid` (adds `userInteractions`) and `withTotal` (adds `COUNT(*) OVER ()` as `total_count`). The shared `userInteractionsSql` fragment keeps both consistent; reuse it rather than querying per row.
+- **No N+1 queries.** `findTree` returns a page of topics with their posts ranked (most poll votes, then up votes, then oldest), cropped to `childLimit`, statistics over all posts (`childrenStats`, with each answer's post `count` and poll `votes` under `answers`, which the grouped view needs since lists only send the top posts), and the viewer's interactions and poll vote, in one query. `findAll` takes `userPid` (adds `userInteractions`) and `withTotal` (adds `COUNT(*) OVER ()` as `total_count`). The shared `userInteractionsSql` fragment keeps both consistent; reuse it rather than querying per row.
 - **Always parameterize.** `ORDER BY` can't be parameterized, so sort keys go through `orderByColumn` with a per-query whitelist. `page`/`pageSize` go through `limitOffset`.
 - **Count parameters exactly.** Postgres refuses a parameter the query doesn't use, so optional parameters (like `userPid`) are only added when the SQL uses them.
 - **Avatars:** `bytea`, sent as base64. Inside JSON built by SQL, use `AVATAR_BASE64` (strips the line breaks `encode` adds).

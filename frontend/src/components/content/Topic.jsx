@@ -3,13 +3,17 @@ import { Link, useNavigate } from "react-router"
 import {
   PiBookmarkSimple,
   PiBookmarkSimpleFill,
-  PiArrowBendUpLeft
+  PiArrowBendUpLeft,
+  PiStack,
+  PiRanking
 } from "react-icons/pi"
 
 import Frame from "@/components/primitives/Frame"
 import PostSummary from "@/components/content/PostSummary"
 import NoResponse from "@/components/primitives/NoResponse"
 import { submitVote } from "@/assets/interactions"
+import { GROUPED, RANKED, groupByAnswer, loadTopicView, saveTopicView } from "@/assets/topicView"
+import { toPercentageStr } from "@/assets/util"
 import { Author, Interactions, PostCount, Promotions, Relevance } from "@/components/content/Metrics"
 import { UserContext } from "@/context/UserContext"
 
@@ -30,10 +34,27 @@ export default function Topic({
 }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
+  const [view, setView] = React.useState(loadTopicView)
   const { user, updatePromoted } = React.useContext(UserContext)
   const navigate = useNavigate()
 
+  // Open topics (no answers) have nothing to group by
+  const hasAnswers = config?.answers?.length > 0
+  const grouped = hasAnswers && view === GROUPED
+
+  const changeView = newView => {
+    setView(newView)
+    saveTopicView(newView)
+  }
+
   const headerConfig = {
+    "view": {
+      description: ["agrupar por resposta", "ordenar por votos"],
+      icons: [PiStack, PiRanking],
+      initialValue: grouped,
+      hide: !hasAnswers,
+      onClick: isGrouped => changeView(isGrouped ? RANKED : GROUPED)
+    },
     "answer": {
       description: "responder ao tópico",
       icons: PiArrowBendUpLeft,
@@ -65,6 +86,20 @@ export default function Topic({
     ]
   }
 
+  const renderPost = (post, rank) => (
+    <PostSummary
+      key={`p${id}-s${post.id}`}
+      parent_id={id}
+      id={post.id}
+      index={rank}
+      shortAnswer={`${rank + 1}. ${post.title}`}
+      summary={`${post.body}${post.body.length === 280 ? "..." : ""}`}
+      percentage={post.votes / childrenStats?.votes}
+      isAuthor={user?.pid === post.author_id}
+      chosen={userVote === post.id}
+    />
+  )
+
   return (
     <Frame
       id={id}
@@ -78,27 +113,39 @@ export default function Topic({
       showDefinitiveVoteButton
       metrics={getMetrics}
     >
-      {children?.length > 0 ?
+      {grouped ?
+        // In a Fragment: a single element child would receive the header state as DOM attributes
         <>
-          {children.map((child, i) => (
-            <PostSummary
-              key={`p${id}-s${child.id}`}
-              parent_id={id}
-              id={child.id}
-              index={i}
-              shortAnswer={`${i + 1}. ${child.title}`}
-              summary={`${child.body}${child.body.length === 280 ? "..." : ""}`}
-              percentage={child.votes / childrenStats?.votes}
-              isAuthor={user?.pid === child.author_id}
-              chosen={userVote === child.id}
-            />
-          ))}
-          {childrenStats?.count > children.length &&
-            <Link to={`/topics/${id}`} style={{ width: "min-content", whiteSpace: "nowrap", fontWeight: "bolder", fontSize: "1.5rem" }}>. . .</Link>
-          }
+          <div className="answerGroups">
+            {groupByAnswer(config.answers, children, childrenStats).map(group => (
+              <section className="answerGroup" key={`t${id}-a${group.answer}`}>
+                <div className="answerHeader">
+                  <div>
+                    <h2>{group.answer}</h2>
+                    <span>{group.count} post{group.count === 1 ? "" : "s"} • {toPercentageStr(group.percentage)}</span>
+                  </div>
+                  <div className="answerBar" role="meter" aria-label={group.answer} aria-valuenow={Math.round(group.percentage * 100)} aria-valuemin={0} aria-valuemax={100}>
+                    <div style={{ width: `${group.percentage * 100}%` }} />
+                  </div>
+                </div>
+                {group.posts.map(({ post, rank }) => renderPost(post, rank))}
+                {group.count > group.posts.length &&
+                  <Link to={`/topics/${id}`} className="morePosts">. . .</Link>
+                }
+              </section>
+            ))}
+          </div>
         </>
         :
-        <NoResponse />
+        children?.length > 0 ?
+          <>
+            {children.map((child, i) => renderPost(child, i))}
+            {childrenStats?.count > children.length &&
+              <Link to={`/topics/${id}`} className="morePosts">. . .</Link>
+            }
+          </>
+          :
+          <NoResponse />
       }
     </Frame>
   )

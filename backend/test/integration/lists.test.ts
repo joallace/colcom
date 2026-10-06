@@ -30,7 +30,10 @@ describe("GET /topics/:id", () => {
     expect(res.status).toBe(200)
     expect(res.body.children.map((post: any) => post.id)).toEqual([mostVoted.id, voted.id, upvoted.id, oldest.id])
     expect(res.body.children[0]).toMatchObject({ votes: 2, upvotes: 0, downvotes: 0, author: author.name, author_avatar: AVATAR, config: { answer: "não" } })
-    expect(res.body.childrenStats).toEqual({ count: 4, upvotes: 1, downvotes: 1, votes: 3 })
+    expect(res.body.childrenStats).toEqual({
+      count: 4, upvotes: 1, downvotes: 1, votes: 3,
+      answers: { "sim": { count: 3, votes: 1 }, "não": { count: 1, votes: 2 } }
+    })
   })
 
   it("includes the viewer's interactions and vote only for a logged in viewer", async () => {
@@ -58,7 +61,24 @@ describe("GET /topics/:id", () => {
     const topic = await createTopic(author)
     const res = await api().get(`/topics/${topic.id}`)
 
-    expect(res.body).toMatchObject({ children: [], childrenStats: { count: 0, upvotes: 0, downvotes: 0, votes: 0 } })
+    expect(res.body).toMatchObject({ children: [], childrenStats: { count: 0, upvotes: 0, downvotes: 0, votes: 0, answers: {} } })
+  })
+})
+
+describe("GET /topics (answer totals)", () => {
+  it("totals each answer over all posts, not only the 3 the list shows", async () => {
+    const [author, voter] = await Promise.all([signUp(), signUp()])
+    const topic = await createTopic(author)
+    for (let i = 0; i < 4; i++)
+      await createPost(author, topic.id)
+    const voted = await createPost(author, topic.id, { answer: "não" })
+    await interact(voter, voted.id, "vote")
+
+    const res = await api().get("/topics").query({ orderBy: "id", pageSize: 100 })
+    const listed = res.body.tree.find((item: any) => item.id === topic.id)
+
+    expect(listed.children).toHaveLength(3)
+    expect(listed.childrenStats.answers).toEqual({ "sim": { count: 4, votes: 0 }, "não": { count: 1, votes: 1 } })
   })
 })
 

@@ -78,3 +78,61 @@
     font-size: 1.25rem;
     white-space:break;
 }
+
+.morePosts {
+    width: min-content;
+    white-space: nowrap;
+    font-weight: bolder;
+    font-size: 1.5rem;
+}
+
+// A topic's posts grouped by the answer they defend
+.answerGroups {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.answerGroup {
+    display: flex;
+    flex-direction: column;
+    // As far apart as the ranked view's posts (`.tree .frame .body`)
+    gap: 2rem;
+    overflow-wrap: anywhere;
+
+    .answerHeader {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        > div:first-child {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 1rem;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        span {
+            white-space: nowrap;
+            font-weight: bold;
+        }
+    }
+
+    // The answer's share of the poll, full width so answers compare at a glance
+    .answerBar {
+        height: 0.5rem;
+        border-radius: 0.25rem;
+        background-color: rgba(variables.$default-font-color, 0.15);
+        overflow: hidden;
+
+        div {
+            height: 100%;
+            background-color: variables.$default-orange;
+        }
+    }
+}
