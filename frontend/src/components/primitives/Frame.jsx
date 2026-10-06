@@ -55,6 +55,21 @@ export default function Frame({
     setDropdownHeight((dotsRef?.current?.offsetTop + dotsRef?.current?.clientHeight) || 0)
   }, [])
 
+  // The title is plain text: dropped HTML or formatting shortcuts (Ctrl+B…) would nest tags and
+  // styles in it. Pasting is handled by `onPaste`. React's `onBeforeInput` has no `inputType`
+  React.useEffect(() => {
+    const title = titleRef?.current
+    if (readOnly || !title)
+      return
+
+    const keepPlainText = e => {
+      if (e.inputType === "insertFromDrop" || e.inputType.startsWith("format"))
+        e.preventDefault()
+    }
+    title.addEventListener("beforeinput", keepPlainText)
+    return () => title.removeEventListener("beforeinput", keepPlainText)
+  }, [readOnly, titleRef])
+
 
   return (
     <div className={`frame${alongsideCritique ? " original" : ""}${isCritique ? " critique" : ""}`} ref={ref} {...remainingProps}>
@@ -74,8 +89,8 @@ export default function Frame({
         {/* The error style only applies to an empty title (`:empty` in _frame.scss) */}
         <h1
           className={`title${isCritique ? " critique" : ""}${error ? " error" : ""}`}
-          // Plain text only: pasting or dropping copied HTML would nest headings and styles in the title
-          contentEditable={readOnly ? false : "plaintext-only"}
+          // Not "plaintext-only": Firefox before 136 doesn't know it and leaves the title uneditable
+          contentEditable={!readOnly}
           suppressContentEditableWarning={true}
           placeholder="Qual é o título?"
           onKeyDown={e => { e.key === "Enter" && e.preventDefault(); setError(false) }}

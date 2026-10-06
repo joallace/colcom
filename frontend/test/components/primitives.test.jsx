@@ -129,7 +129,8 @@ describe("Frame", () => {
   it("pastes only plain text, on one line, into an editable title", () => {
     render(<Frame readOnly={false} hideVoteButtons><div /></Frame>)
     const title = screen.getByRole("heading")
-    expect(title).toHaveAttribute("contenteditable", "plaintext-only")
+    // "plaintext-only" would leave it uneditable in Firefox before 136
+    expect(title).toHaveAttribute("contenteditable", "true")
 
     // jsdom has no editing commands; in the browser `insertText` places the text
     document.execCommand = vi.fn()
@@ -143,6 +144,16 @@ describe("Frame", () => {
     finally {
       delete document.execCommand
     }
+  })
+
+  it("refuses drops and formatting in an editable title, but not typing", () => {
+    const titleRef = { current: null }
+    render(<Frame readOnly={false} titleRef={titleRef} hideVoteButtons><div /></Frame>)
+
+    const input = inputType => titleRef.current.dispatchEvent(new InputEvent("beforeinput", { inputType, cancelable: true }))
+    expect(input("insertFromDrop")).toBe(false)
+    expect(input("formatBold")).toBe(false)
+    expect(input("insertText")).toBe(true)
   })
 
   it("keeps a read-only title from being edited", () => {
