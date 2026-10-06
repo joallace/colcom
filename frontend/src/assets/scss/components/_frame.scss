@@ -22,6 +22,9 @@
 
             width: 100%;
             height: min-content;
+            // A word with no spaces (in a preview's summary, say) would otherwise set the
+            // flex item's min-content width and widen the whole page; `break-word` doesn't shrink it
+            overflow-wrap: anywhere;
         }
     }
 
