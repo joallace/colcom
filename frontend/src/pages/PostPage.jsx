@@ -180,8 +180,8 @@ export default function PostPage() {
       setSubmitSignal={setSubmitCritique}
       setCritiques={setPostCritiques}
       tempHighlight={tempHighlight}
-      // Only a group offers highlighting each critique's own passage
-      setTempHighlight={isCritiqueGroup ? setTempHighlight : undefined}
+      setTempHighlight={isLoading? null : setTempHighlight}
+      isInGroup={isCritiqueGroup}
       quote={newCritiqueQuote}
       {...critiques[index]}
     />

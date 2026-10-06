@@ -111,7 +111,7 @@ export default function Editor({
   })
 
   React.useEffect(() => {
-    if (tempHighlight.length === 2)
+    if (editor && tempHighlight.length === 2)
       showTempHighlight()
   }, [tempHighlight])
 

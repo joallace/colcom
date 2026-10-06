@@ -39,6 +39,7 @@ export default function Critique({
   setTempHighlight,
   interval,
   anchor,
+  isInGroup,
   quote
 }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
@@ -89,7 +90,7 @@ export default function Critique({
   const getMetrics = () => {
     return [
       <Author key="author" name={author} avatar={author_avatar} />,
-      <Relevance key="relevance" {...{ initialVoteState, relevanceVote, upvotes, downvotes }}/>
+      <Relevance key="relevance" {...{ initialVoteState, relevanceVote, upvotes, downvotes }} />
     ]
   }
 
@@ -130,7 +131,7 @@ export default function Critique({
       const data = await res.json()
 
       if (res.ok) {
-        setCritiques(prev => [...prev, {...data, author_avatar: user.avatar}])
+        setCritiques(prev => [...prev, { ...data, author_avatar: user.avatar }])
         setShowCritique(false)
       }
       else {
@@ -155,11 +156,15 @@ export default function Critique({
       onSubmitSignal()
   }, [submitSignal])
 
+  React.useEffect(() => {
+    if (setTempHighlight && range)
+      setTempHighlight(range)
+  }, [setTempHighlight])
 
   return (
     <Frame
       id={id}
-      title={setTempHighlight ?
+      title={isInGroup ?
         <span
           className={range && JSON.stringify(tempHighlight) === JSON.stringify(range) ? "active" : undefined}
           title={range ? "clique para marcar a crítica no texto" : undefined}
@@ -197,7 +202,7 @@ export default function Critique({
       }
 
       {isLoading ?
-        <Spinner/>
+        <Spinner />
         :
         <Editor
           initialContent={body}
