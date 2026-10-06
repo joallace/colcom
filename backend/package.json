@@ -10,7 +10,8 @@
     "test:unit": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
     "test:watch": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "seed": "node scripts/seed.mjs"
   },
   "devDependencies": {
     "@types/async-lock": "^1.4.2",
