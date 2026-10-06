@@ -266,31 +266,47 @@ export default function PostPage() {
           <Spinner/>
         </div>
         :
-        <>
         <div className="post">
-          <Post
-            {...postData}
-            fetchCommit={fetchCommitBody}
-            commit={postData?.history && postData?.history[currentCommit].commit}
-            currentSuggestion={currentSuggestion}
-            setCurrentSuggestion={setCurrentSuggestion}
-            titleRef={postTitleRef}
-            body={postBody}
-            critiques={critiques}
-            groupedCritiques={groupedCritiques}
-            alongsideCritique={showCritique}
-            setShowCritique={setShowCritique}
-            setPostData={setPostData}
-            updatePostData={(data) => {
-              const history = [...postData.history, { commit: data.commit, date: new Date().getTime() }]
-              setPostData({ ...postData, ...data, history, commit: undefined })
-              setCurrentCommit(history.length - 1)
-            }}
-            bubbleMenuShouldShow={currentCommit === postData?.history?.length - 1 && !Number.isFinite(currentSuggestion)}
-            tempHighlight={tempHighlight}
-            diffBase={diffBase}
-            resetState={[reset, setReset]}
-          />
+          {/* The list of removed passages stays under the post, beside the critiques however long they get */}
+          <div className="postColumn">
+            <Post
+              {...postData}
+              fetchCommit={fetchCommitBody}
+              commit={postData?.history && postData?.history[currentCommit].commit}
+              currentSuggestion={currentSuggestion}
+              setCurrentSuggestion={setCurrentSuggestion}
+              titleRef={postTitleRef}
+              body={postBody}
+              critiques={critiques}
+              groupedCritiques={groupedCritiques}
+              alongsideCritique={showCritique}
+              setShowCritique={setShowCritique}
+              setPostData={setPostData}
+              updatePostData={(data) => {
+                const history = [...postData.history, { commit: data.commit, date: new Date().getTime() }]
+                setPostData({ ...postData, ...data, history, commit: undefined })
+                setCurrentCommit(history.length - 1)
+              }}
+              bubbleMenuShouldShow={currentCommit === postData?.history?.length - 1 && !Number.isFinite(currentSuggestion)}
+              tempHighlight={tempHighlight}
+              diffBase={diffBase}
+              resetState={[reset, setReset]}
+            />
+
+            {removedCritiques.length > 0 &&
+              <section className="removedCritiques">
+                <h3>Críticas a trechos removidos do texto</h3>
+                <ul>
+                  {removedCritiques.map(({ critique, index }) =>
+                    <li key={critique.id}>
+                      <button data-critique-index={index} onClick={() => setShowCritique(String(index))}>{critique.title}</button>
+                      <span>por {critique.author}</span>
+                    </li>
+                  )}
+                </ul>
+              </section>
+            }
+          </div>
           {showCritique &&
             isDesktop ?
             // Holds the critiques' width in the layout; the popover itself is positioned beside the post
@@ -317,21 +333,6 @@ export default function PostPage() {
             </Modal>
           }
         </div>
-
-        {removedCritiques.length > 0 &&
-          <section className="removedCritiques">
-            <h3>Críticas a trechos removidos do texto</h3>
-            <ul>
-              {removedCritiques.map(({ critique, index }) =>
-                <li key={critique.id}>
-                  <button data-critique-index={index} onClick={() => setShowCritique(String(index))}>{critique.title}</button>
-                  <span>por {critique.author}</span>
-                </li>
-              )}
-            </ul>
-          </section>
-        }
-        </>
       }
     </div>
   )

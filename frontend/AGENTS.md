@@ -51,7 +51,7 @@ A critique stores `{ commit, from, to }` (ProseMirror positions in that version)
 - **Opening a critique from a link.** `?critique=<id>` (used by profile and bookmark links) opens that critique once its highlight exists, together with any overlapping critiques, and scrolls to it.
 - **Projection is derived.** `critiques` is computed with `useMemo` from the fetched body, critiques, `versions` and `lineages`; it's never stored.
 - **`showCritique`** holds what's open: a new critique's `[from, to]` selection, a critique's index as a string, or a JSON list of indexes (a group).
-- **Critique placement (desktop).** `CritiquePopover` places the open critiques beside the post, level with the passage, using Floating UI (`autoUpdate`, `shift` bounded by the post frame so they never cover the timeline). The `.critiques` column only reserves width. On phones, critiques open in a `Modal`.
+- **Critique placement (desktop).** `CritiquePopover` places the open critiques beside the post, level with the passage, using Floating UI (`autoUpdate`, `shift` bounded by the post frame so they never cover the timeline). Being absolutely positioned, the popover takes no room in the page, so it reports where it ends (its `reservedHeight` middleware) and its column is stretched to that height, pushing the footer below a long stack; the list of removed passages sits in the post's column, under the post. On phones, critiques open in a `Modal`.
 - **Reviewing a suggestion.** It loads the suggestion's commit; the response's `base` (the version it branched from) is passed to the editor as `diffBase`.
 
 ## Forms

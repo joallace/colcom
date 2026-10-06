@@ -1,6 +1,8 @@
 import React from "react"
 import { useFloating, autoUpdate, offset, shift, limitShift } from "@floating-ui/react-dom"
 
+import { reservedHeight } from "@/assets/reservedHeight"
+
 
 const GAP = 24
 const VIEWPORT_PADDING = 16
@@ -34,7 +36,7 @@ export default function CritiquePopover({ getPost, getAnchor, children }) {
     }
   }), [getPost, getAnchor])
 
-  const { floatingStyles } = useFloating({
+  const { floatingStyles, middlewareData } = useFloating({
     placement: "right-start",
     elements: { reference, floating },
     middleware: [
@@ -42,14 +44,20 @@ export default function CritiquePopover({ getPost, getAnchor, children }) {
       // Slides along the post to stay in view, but never past the passage it belongs to, nor beyond
       // the post itself (e.g. over the timeline above it). A stack taller than the visible part of
       // the post stays at the post's top and extends downwards, where it can be scrolled to.
-      shift(() => ({ boundary: getPost(), padding: VIEWPORT_PADDING, limiter: limitShift() }))
+      shift(() => ({ boundary: getPost(), padding: VIEWPORT_PADDING, limiter: limitShift() })),
+      reservedHeight
     ],
     whileElementsMounted: autoUpdate
   })
 
+  // Positioned absolutely, the popover takes no room in the page, so a long stack would run over
+  // what follows the post (the footer). Its column, which is its offset parent, is stretched down
+  // to where it ends.
   return (
-    <div ref={setFloating} className="critiquePopover" style={floatingStyles}>
-      {children}
+    <div className="critiquePopoverColumn" style={{ minHeight: middlewareData.reservedHeight?.bottom }}>
+      <div ref={setFloating} className="critiquePopover" style={floatingStyles}>
+        {children}
+      </div>
     </div>
   )
 }

@@ -4,6 +4,8 @@
     display: flex;
     gap: 1.5rem;
     justify-content: center;
+    // The critiques' column grows as tall as the open critiques; the post keeps its own height
+    align-items: flex-start;
     margin-bottom: 2rem;
 
     .frame {
@@ -63,6 +65,11 @@
         flex-shrink: 0;
     }
 
+    // The popover's offset parent, so the height it reserves is measured from the column's top
+    .critiquePopoverColumn {
+        position: relative;
+    }
+
     .critiquePopover {
         z-index: 1;
         display: grid;
@@ -72,7 +79,7 @@
 
 .removedCritiques {
     @include content-responsiveness(55vw, 60vw, 95vw);
-    margin: 0 auto 2rem;
+    margin-top: 2rem;
 
     h3 {
         font-size: 1rem;
