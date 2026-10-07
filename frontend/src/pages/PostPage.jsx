@@ -172,7 +172,7 @@ export default function PostPage() {
   const renderCritique = index => (
     <CritiqueFrame
       key={isNewCritique ? "new-critique" : `critique-${index}`}
-      parent_id={pid}
+      parent_id={Number(pid)}
       interval={index}
       setShowCritique={setShowCritique}
       commit={postData?.history && postData?.history[currentCommit].commit}
@@ -189,15 +189,16 @@ export default function PostPage() {
 
   const getPostFrame = React.useCallback(() => postTitleRef.current?.closest(".frame"), [])
 
-  // The element marking where critiques are open (`showCritique`'s value): their highlight, or for a
-  // removed passage its entry in the list below the post
-  const findCritiqueAnchor = React.useCallback(value =>
-    getPostFrame()?.querySelector(`mark[data-commit-index="${CSS.escape(String(value))}"]`)
-    ?? document.querySelector(`.removedCritiques [data-critique-index="${CSS.escape(String(value))}"]`),
-  [getPostFrame])
+  // The element marking where critiques are open (`showCritique`'s value): their highlight (a mark,
+  // or a chart, which carries it as attributes), or for a removed passage its entry in the list below the post
+  const findCritiqueAnchor = React.useCallback(value => {
+    const index = CSS.escape(String(value))
+    return getPostFrame()?.querySelector(`mark[data-commit-index="${index}"], .chart[data-commit-index="${index}"]`)
+      ?? document.querySelector(`.removedCritiques [data-critique-index="${index}"]`)
+  }, [getPostFrame])
 
   const getCritiqueAnchor = React.useCallback(() =>
-    isNewCritique ? getPostFrame()?.querySelector("mark.temporary") : findCritiqueAnchor(showCritique),
+    isNewCritique ? getPostFrame()?.querySelector("mark.temporary, .chart[data-highlight=\"temporary\"]") : findCritiqueAnchor(showCritique),
   [getPostFrame, findCritiqueAnchor, isNewCritique, showCritique])
 
   // A link can ask for a critique to be open (?critique=<id>), e.g. from a profile or the bookmarks.

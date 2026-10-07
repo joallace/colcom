@@ -17,6 +17,7 @@ import useBreakpoint from "@/hooks/useBreakpoint"
 import env from "@/assets/enviroment"
 import useUser from "@/context/UserContext"
 import { describe, validate } from "@/assets/validation"
+import { readableText } from "@/assets/textIndex"
 
 
 export default function Critique({
@@ -98,7 +99,8 @@ export default function Critique({
     const title = titleRef?.current.textContent.trim()
     const [from, to] = interval
 
-    if (!title || !content || !from || !to || !commit || !quote) {
+    // A chart at the very start of the post is at position 0
+    if (!title || !content || !Number.isInteger(from) || !to || !commit || !quote) {
       setError(true)
       return
     }
@@ -201,7 +203,7 @@ export default function Critique({
       {isFromEarlierVersion &&
         <div className="critiqueOrigin">
           <span>{originMessage[anchor?.match ?? "removed"]}</span>
-          {anchor?.match !== "exact" && config.quote && <blockquote>{config.quote.exact}</blockquote>}
+          {anchor?.match !== "exact" && config.quote && <blockquote>{readableText(config.quote.exact)}</blockquote>}
           <Link to={`?commit=${config.commit}`} onClick={() => setShowCritique && setShowCritique(false)}>
             ver a versão criticada
           </Link>

@@ -42,7 +42,7 @@ export default function Editor({
       const groupIndex = index.length > 1 ? JSON.stringify(index) : index[0]
 
       segments.forEach(({ from, to, type, level }) => {
-        editor.chain().setTextSelection({ from, to }).setHighlight({ type, index: groupIndex, level }).run()
+        editor.commands.highlightRange({ from, to }, { type, index: groupIndex, level })
       })
     })
 
@@ -78,6 +78,10 @@ export default function Editor({
   })
 
   const removeTempHighlight = obj => {
+    // A chart carries its highlight as attributes, since marks only cover text
+    if (obj.type === "chart" && obj.attrs?.highlight === "temporary")
+      obj.attrs = { ...obj.attrs, highlight: null, highlightIndex: null, highlightLevel: null }
+
     if (obj.marks)
       for (let i = 0; i < obj.marks.length; i++)
         if (obj.marks[i].type === "highlight" && obj.marks[i].attrs.type === "temporary")
@@ -107,7 +111,7 @@ export default function Editor({
   }, [chartString])
 
   const showTempHighlight = React.useEffectEvent(() => {
-    editor.chain().setContent(markedBody.current).setTextSelection({ from: tempHighlight[0], to: tempHighlight[1] }).setHighlight({ type: "temporary" }).run()
+    editor.chain().setContent(markedBody.current).highlightRange({ from: tempHighlight[0], to: tempHighlight[1] }, { type: "temporary" }).run()
   })
 
   React.useEffect(() => {

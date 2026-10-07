@@ -52,8 +52,10 @@ export default function EditorBubbleMenu({ editor, shouldShow = true, readOnly, 
                   navigate("/login")
                   return
                 }
-                editor.chain().focus().toggleHighlight({ type: "temporary" }).run()
-                setShowCritique([editor.view.state.selection.ranges[0]["$from"].pos, editor.view.state.selection.ranges[0]["$to"].pos])
+                // The selection may be a chart (a node selection), which a mark alone can't highlight
+                const { from, to } = editor.state.selection
+                editor.chain().focus().highlightRange({ from, to }, { type: "temporary" }).run()
+                setShowCritique([from, to])
               }}
             >
               criticar

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 
 import { docFromHtml, projectCritiques, quoteFromRange } from "@/assets/anchoring"
-import textIndex from "@/assets/textIndex"
-import { critiqueOn, offsetOf, p, textAt } from "../support/critiques"
+import textIndex, { CHART_TEXT } from "@/assets/textIndex"
+import { chart, critiqueOn, offsetOf, p, textAt } from "../support/critiques"
 
 
 const LOREM = "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
@@ -281,5 +281,60 @@ describe("projectCritiques", () => {
       expect(projected.anchor.match).toBe("exact")
       expect(textAt(v3, projected.anchor)).toBe("beta")
     })
+  })
+})
+
+describe("critiques on charts", () => {
+  const nodeAt = (html, { from }) => docFromHtml(html).nodeAt(from)
+
+  it("quotes a chart as its stand-in character, with the text around it as context", () => {
+    const html = p("Spending grew every year.") + chart() + p("As the chart shows.")
+    const critique = critiqueOn(html, "v1", CHART_TEXT)
+
+    expect(critique.config.quote).toMatchObject({ exact: CHART_TEXT, prefix: "Spending grew every year.\n", suffix: "\nAs the chart shows." })
+    expect(critique.config.to - critique.config.from).toBe(1)
+    expect(nodeAt(html, critique.config).type.name).toBe("chart")
+  })
+
+  it("quotes a chart at the very start of the post", () => {
+    const html = chart() + p("After it.")
+    const critique = critiqueOn(html, "v1", CHART_TEXT)
+
+    expect(critique.config.from).toBe(0)
+    expect(critique.config.quote.exact).toBe(CHART_TEXT)
+  })
+
+  it("follows a chart when text is added around it", () => {
+    const v1 = p("Spending grew every year.") + chart() + p("As the chart shows.")
+    const v2 = p("A new opening paragraph.", "Spending grew every single year.") + chart() + p("As the chart clearly shows.")
+    const [projected] = projectThrough([["v1", v1], ["v2", v2]], [critiqueOn(v1, "v1", CHART_TEXT)])
+
+    expect(projected.anchor.match).toBe("exact")
+    expect(nodeAt(v2, projected.anchor).type.name).toBe("chart")
+  })
+
+  it("follows the criticised chart, not another one, when an earlier chart is removed", () => {
+    const v1 = p("First data.") + chart("A") + p("Second data.") + chart("B") + p("End.")
+    const v2 = p("First data.", "Second data.") + chart("B") + p("End.")
+    const [projected] = projectThrough([["v1", v1], ["v2", v2]], [critiqueOn(v1, "v1", CHART_TEXT, 1)])
+
+    expect(nodeAt(v2, projected.anchor).attrs.data).toContain("'B'")
+  })
+
+  it("marks a critique as removed when its chart is removed", () => {
+    const v1 = p("Spending grew every year.") + chart() + p("As the chart shows.")
+    const v2 = p("Spending grew every year.", "As the chart shows.")
+    const [projected] = projectThrough([["v1", v1], ["v2", v2]], [critiqueOn(v1, "v1", CHART_TEXT)])
+
+    expect(projected.anchor).toEqual({ match: "removed" })
+  })
+
+  it("finds the chart by its context without the versions in between", () => {
+    const v1 = p("Spending grew every year.") + chart() + p("As the chart shows.")
+    const v2 = p("Something new.", "Spending grew every year.") + chart() + p("As the chart shows.")
+    const [projected] = projectCritiques(v2, [critiqueOn(v1, "v1", CHART_TEXT)], "v2")
+
+    expect(projected.anchor.match).toBe("exact")
+    expect(nodeAt(v2, projected.anchor).type.name).toBe("chart")
   })
 })

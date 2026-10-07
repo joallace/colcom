@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import getExtensions from "@/components/Editor/extensions"
 import { docFromHtml } from "@/assets/anchoring"
+import { chart } from "../support/critiques"
 
 
 let editor
@@ -77,6 +78,62 @@ describe("the critique highlight mark", () => {
 
     editor.chain().selectAll().unsetHighlight().run()
     expect(editor.getHTML()).toBe("<p>text</p>")
+  })
+})
+
+describe("highlightRange", () => {
+  const chartNode = () => editor.state.doc.content.content.find(node => node.type.name === "chart")
+
+  it("highlights text without moving the selection", () => {
+    createEditor("<p>some text</p>")
+    editor.commands.setTextSelection(1)
+    editor.commands.highlightRange({ from: 6, to: 10 }, { index: "2", level: 1 })
+
+    expect(editor.getHTML()).toBe('<p>some <mark class="definitive" data-commit-index="2" data-level="1">text</mark></p>')
+    expect(editor.state.selection.from).toBe(1)
+  })
+
+  it("highlights a chart, which marks can't cover, through its attributes", () => {
+    createEditor(`<p>Before.</p>${chart()}`)
+    const pos = 9
+    expect(editor.state.doc.nodeAt(pos).type.name).toBe("chart")
+
+    editor.commands.highlightRange({ from: pos, to: pos + 1 }, { type: "changed", index: "[0,1]", level: 2 })
+
+    expect(chartNode().attrs).toMatchObject({ highlight: "changed", highlightIndex: "[0,1]", highlightLevel: 2 })
+    expect(editor.getHTML()).not.toContain("<mark")
+  })
+
+  it("keeps a chart's highlight through its HTML, as content is reloaded with it", () => {
+    createEditor(`<p>Before.</p>${chart()}`)
+    editor.commands.highlightRange({ from: 9, to: 10 }, { index: "4", level: 1 })
+    editor.commands.setContent(editor.getHTML())
+
+    expect(chartNode().attrs).toMatchObject({ highlight: "definitive", highlightIndex: "4", highlightLevel: "1" })
+  })
+
+  it("covers both the text and the charts of a range", () => {
+    createEditor(`<p>Before.</p>${chart()}<p>After.</p>`)
+    editor.commands.highlightRange({ from: 0, to: editor.state.doc.content.size }, { type: "temporary" })
+
+    expect(editor.view.dom.querySelectorAll("mark.temporary")).toHaveLength(2)
+    expect(chartNode().attrs.highlight).toBe("temporary")
+  })
+
+  // The critique popover finds an opened critique's passage by its index
+  it("keeps the index and level of a passage it turns temporary", () => {
+    createEditor(`<p><mark class="definitive" data-commit-index="3" data-level="2">criticised</mark></p>${chart()}`)
+    editor.commands.highlightRange({ from: 12, to: 13 }, { index: "4", level: 1 })
+
+    editor.commands.highlightRange({ from: 0, to: editor.state.doc.content.size }, { type: "temporary" })
+
+    expect(editor.getHTML()).toContain('<mark class="temporary" data-commit-index="3" data-level="2">criticised</mark>')
+    expect(chartNode().attrs).toMatchObject({ highlight: "temporary", highlightIndex: "4", highlightLevel: 1 })
+  })
+
+  it("leaves charts without a highlight unchanged in the HTML", () => {
+    createEditor(chart())
+    expect(editor.getHTML()).not.toMatch(/data-highlight|data-commit-index|data-level/)
   })
 })
 

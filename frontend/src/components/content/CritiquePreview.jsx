@@ -6,6 +6,7 @@ import { default as Editor } from "@/components/Editor"
 import Frame from "@/components/primitives/Frame"
 import { submitVote } from "@/assets/interactions"
 import { Author, Relevance } from "@/components/content/Metrics"
+import { readableText } from "@/assets/textIndex"
 
 
 // A critique outside its post (profile, bookmarks): the post and passage it criticises. Its title
@@ -45,7 +46,7 @@ export default function CritiquePreview({ id, title, body, author, author_avatar
       <div className="contentContext">
         criticando o post <Link to={postPath}>{post.title}</Link>
       </div>
-      {config?.quote && <blockquote className="criticisedPassage">{config.quote.exact}</blockquote>}
+      {config?.quote && <blockquote className="criticisedPassage">{readableText(config.quote.exact)}</blockquote>}
       <Editor initialContent={body} content={body} reset={body} bubbleMenuShouldShow={false} />
     </Frame>
   )

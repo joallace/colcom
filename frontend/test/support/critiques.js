@@ -33,3 +33,6 @@ export function offsetOf(html, str, n = 0) {
 }
 
 export const p = (...paragraphs) => paragraphs.map(text => `<p>${text}</p>`).join("")
+
+// A chart as the chart modal writes it
+export const chart = (label = "A") => `<chart type="bar" isLegendOn="true" data="[{'name':'${label}','valor':1}]"></chart>`

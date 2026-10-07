@@ -23,7 +23,7 @@ export default function getExtensions({ setShowCritique } = {}) {
       underline: false,
       trailingNode: false
     }),
-    Chart,
+    Chart.configure({ setShowCritique }),
     Table,
     TableCell,
     TableHeader,

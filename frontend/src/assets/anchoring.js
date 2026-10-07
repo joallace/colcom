@@ -44,7 +44,8 @@ const commonSuffixLength = (a, b) => {
 }
 
 // The quote a new critique stores for the selection [from, to) of the version being read.
-// Returns null when the selection holds no text (e.g. only a chart), which can't be quoted.
+// Returns null when the selection holds no text (e.g. an empty paragraph), which can't be quoted.
+// A chart is quoted as its stand-in character (textIndex's CHART_TEXT).
 export function quoteFromRange(doc, from, to) {
   const { text, positions } = textIndex(doc)
   const inRange = p => p !== null && p >= from && p < to

@@ -30,6 +30,19 @@ $critique-density: (
     }
 }
 
+// The same scale for a criticised chart, which is outlined rather than shaded so it stays legible
+@mixin critique-outline {
+    @each $level, $color in $critique-density {
+        &[data-level="#{$level}"] {
+            outline-color: $color;
+
+            &:hover {
+                outline-color: color.scale($color, $lightness: -15%, $alpha: 15%);
+            }
+        }
+    }
+}
+
 // The editor's toolbars: formatting over a selection (bubble), and blocks on an empty line (floating)
 .editorMenu {
     display: flex;
@@ -268,6 +281,28 @@ $critique-density: (
         display: flex;
         place-content: center;
         margin: var(--space-4) 0;
+    }
+
+    // Marks only cover text, so a chart carries its critique highlight as data attributes
+    .chart[data-highlight] {
+        border-radius: var(--radius-md);
+        outline: 3px solid transparent;
+        outline-offset: var(--space-2);
+
+        &[data-highlight="definitive"],
+        &[data-highlight="changed"] {
+            cursor: pointer;
+            @include mixins.transition((outline-color));
+            @include critique-outline;
+        }
+
+        &[data-highlight="changed"] {
+            outline-style: dashed;
+        }
+
+        &[data-highlight="temporary"] {
+            outline-color: color.scale(variables.$yellow, $lightness: -18%);
+        }
     }
 
     .is-editor-empty:first-child::before {

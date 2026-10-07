@@ -1,12 +1,13 @@
 // The post page against a mocked API: the real editor, anchoring and highlights together
-import { render, screen, waitFor } from "@testing-library/react"
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { MemoryRouter, Route, Routes } from "react-router"
 import { describe, expect, it, vi } from "vitest"
 
 import PostPage from "@/pages/PostPage"
 import { UserContext } from "@/context/UserContext"
 import ChartProvider from "@/context/ChartProvider"
-import { critiqueOn, p } from "../support/critiques"
+import { CHART_TEXT } from "@/assets/textIndex"
+import { chart, critiqueOn, p } from "../support/critiques"
 
 
 const V1 = "1".repeat(40)
@@ -54,11 +55,11 @@ const VERSIONS = {
   }
 }
 
-function mockApi() {
+function mockApi(versions = VERSIONS) {
   const fetch = vi.fn(async url => {
     const path = new URL(url).pathname
     const version = path.match(/^\/contents\/2\/([0-9a-f]{40})$/)?.[1]
-    const body = path === "/contents/2" ? POST : VERSIONS[version]
+    const body = path === "/contents/2" ? POST : versions[version]
     return { ok: Boolean(body), status: body ? 200 : 404, json: async () => body ?? { message: "Não encontrado" } }
   })
   vi.stubGlobal("fetch", fetch)
@@ -122,5 +123,69 @@ describe("PostPage", () => {
     renderPage(`/topics/1/posts/2?commit=${"f".repeat(40)}`)
 
     await waitFor(() => expect(fetch).toHaveBeenCalledWith(`http://api.test/contents/2/${V2}`, expect.anything()))
+  })
+
+  it("outlines a criticised chart and opens its critique when the chart is clicked", async () => {
+    const html = p("Taxes should fall for everyone.") + chart() + p("Public spending must be reviewed.")
+    mockApi({ [V2]: { body: html, critiques: [critique(20, html, V2, CHART_TEXT)], versions: {}, lineages: {} } })
+    const { container } = renderPage()
+
+    await waitFor(() => expect(container.querySelector('.ProseMirror .chart[data-commit-index="0"]')).not.toBeNull())
+    const criticised = container.querySelector(".ProseMirror .chart")
+    expect(criticised).toHaveAttribute("data-highlight", "definitive")
+    expect(criticised).toHaveAttribute("data-level", "1")
+    expect(marks(container)).toEqual([])
+
+    fireEvent.click(criticised)
+    expect(await screen.findByText("Critique 20")).toBeInTheDocument()
+  })
+
+  it("publishes a critique of a chart and highlights the chart", async () => {
+    const html = p("Taxes should fall for everyone.") + chart() + p("Public spending must be reviewed.")
+    const fetch = mockApi({ [V2]: { body: html, critiques: [], versions: {}, lineages: {} } })
+    const get = fetch.getMockImplementation()
+    fetch.mockImplementation(async (url, options) => {
+      if (options?.method !== "post")
+        return get(url, options)
+      const sent = JSON.parse(options.body)
+      const created = { ...sent, id: 30, author: "bob", upvotes: 0, downvotes: 0, created_at: new Date().toISOString() }
+      return { ok: true, status: 201, json: async () => created }
+    })
+    const { container } = render(
+      <UserContext.Provider value={{ user: { accessToken: "token", pid: "b", name: "bob" } }}>
+        <ChartProvider>
+          <MemoryRouter initialEntries={["/topics/1/posts/2"]}>
+            <Routes>
+              <Route path="/topics/:tid/posts/:pid" element={<PostPage />} />
+            </Routes>
+          </MemoryRouter>
+        </ChartProvider>
+      </UserContext.Provider>
+    )
+
+    await waitFor(() => expect(container.querySelector(".ProseMirror .chart")).not.toBeNull())
+    const post = container.querySelector(".ProseMirror").editor
+    let chartPos
+    post.state.doc.forEach((node, pos) => { if (node.type.name === "chart") chartPos = pos })
+    act(() => { post.commands.setNodeSelection(chartPos) })
+
+    fireEvent.click(await screen.findByRole("button", { name: "criticar" }))
+    const publish = await screen.findByRole("button", { name: "publicar" })
+    expect(container.querySelector(".ProseMirror .chart")).toHaveAttribute("data-highlight", "temporary")
+
+    // The critique's title and body, as the reader writes them
+    const modal = publish.closest(".modal") ?? document.body
+    const [title] = modal.querySelectorAll(".frame [contenteditable='true']")
+    title.textContent = "Missing inflation"
+    const body = [...modal.querySelectorAll(".ProseMirror")].at(-1)
+    act(() => { body.editor.commands.setContent("<p>The values are nominal.</p>") })
+    fireEvent.blur(body)
+    fireEvent.click(publish)
+
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith("http://api.test/contents", expect.objectContaining({ method: "post" })))
+    const sent = JSON.parse(fetch.mock.calls.find(([, options]) => options?.method === "post")[1].body)
+    expect(sent).toMatchObject({ parent_id: 2, config: { commit: V2, from: chartPos, to: chartPos + 1, quote: { exact: CHART_TEXT } } })
+    await waitFor(() => expect(container.querySelector(".ProseMirror .chart")).toHaveAttribute("data-highlight", "definitive"))
+    expect(container.querySelector(".ProseMirror .chart")).toHaveAttribute("data-commit-index", "0")
   })
 })

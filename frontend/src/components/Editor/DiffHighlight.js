@@ -3,7 +3,7 @@ import { Plugin, PluginKey } from "@tiptap/pm/state"
 import { Decoration, DecorationSet } from "@tiptap/pm/view"
 import { DOMParser as SchemaParser } from "@tiptap/pm/model"
 
-import textIndex from "@/assets/textIndex"
+import textIndex, { readableText } from "@/assets/textIndex"
 import { diffWords, diff } from "@/assets/textDiff"
 
 
@@ -44,7 +44,7 @@ function removed(text) {
   const element = document.createElement("span")
   element.className = "diffDelete"
   // Removed block breaks are shown as pilcrows, since the blocks themselves aren't there anymore
-  element.textContent = text.replace(/\n+/g, " ¶ ")
+  element.textContent = readableText(text).replace(/\n+/g, " ¶ ")
   return element
 }
 

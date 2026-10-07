@@ -78,6 +78,28 @@ export default Mark.create({
       unsetHighlight: () => ({ commands }) => {
         return commands.unsetMark(this.name)
       },
+      // Highlights [from, to) without moving the selection. Marks only cover text, so the charts in
+      // the range carry the highlight as their own attributes instead (see TipTapChart). As setMark
+      // does, attributes left out are kept: an opened critique's passage turns temporary but keeps
+      // its index, which the critique popover is anchored by.
+      highlightRange: ({ from, to }, attributes = {}) => ({ tr, dispatch }) => {
+        if (dispatch)
+          // Neither change moves any position, so the original document can be walked while changing it
+          tr.doc.nodesBetween(from, to, (node, pos) => {
+            if (node.isText) {
+              const current = this.type.isInSet(node.marks)?.attrs
+              tr.addMark(Math.max(pos, from), Math.min(pos + node.nodeSize, to), this.type.create({ ...current, ...attributes }))
+            }
+            else if (node.type.name === "chart")
+              tr.setNodeMarkup(pos, undefined, {
+                ...node.attrs,
+                highlight: attributes.type ?? node.attrs.highlight ?? "definitive",
+                highlightIndex: attributes.index ?? node.attrs.highlightIndex,
+                highlightLevel: attributes.level ?? node.attrs.highlightLevel
+              })
+          })
+        return true
+      },
     }
   }
 })
