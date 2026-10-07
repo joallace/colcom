@@ -90,14 +90,74 @@ describe("PostPage", () => {
     expect(fetch).toHaveBeenCalledWith(`http://api.test/contents/2/${V2}`, expect.anything())
     expect(screen.getByText("Should taxes fall?")).toBeInTheDocument()
 
-    // Critique 10 (made on v1) and 12 (on v2) overlap on "fall": one group, shaded where both apply
+    // Critique 10 (made on v1) and 12 (on v2) overlap on "fall": one group, shaded where both apply.
+    // Each piece opens the group starting with the critiques covering it.
     await waitFor(() => expect(marks(container).length).toBeGreaterThan(0))
     const highlighted = marks(container).map(mark => [mark.textContent, mark.dataset.commitIndex, mark.dataset.level])
     expect(highlighted).toEqual([
       ["Taxes should ", "[2,0]", "1"],
       ["fall", "[2,0]", "2"],
-      [" for everyone", "[2,0]", "1"],
+      [" for everyone", "[0,2]", "1"],
     ])
+  })
+
+  // The open critiques' titles, in the order they're shown, and the passage marked in the post
+  const openTitles = () => [...document.querySelectorAll(".frame.critique .title")].map(title => title.textContent)
+  const markedPassage = container => [...container.querySelectorAll(".ProseMirror mark.temporary")].map(mark => mark.textContent).join("")
+
+  it.each([
+    ["Taxes should ", ["Critique 12", "Critique 10"], "Taxes should fall"],
+    [" for everyone", ["Critique 10", "Critique 12"], "fall for everyone"],
+  ])("opens a group from %j with a critique of the clicked words first, its passage marked", async (clicked, titles, passage) => {
+    mockApi()
+    const { container } = renderPage()
+
+    await waitFor(() => expect(marks(container).length).toBe(3))
+    fireEvent.click(marks(container).find(mark => mark.textContent === clicked))
+
+    await waitFor(() => expect(openTitles()).toEqual(titles))
+    await waitFor(() => expect(markedPassage(container)).toBe(passage))
+  })
+
+  it("opens a group from words all its critiques cover with the most relevant first", async () => {
+    const [ten, eleven, twelve] = VERSIONS[V2].critiques
+    mockApi({ ...VERSIONS, [V2]: { ...VERSIONS[V2], critiques: [{ ...ten, upvotes: 5 }, eleven, twelve] } })
+    const { container } = renderPage()
+
+    await waitFor(() => expect(marks(container).length).toBe(3))
+    expect(marks(container).map(mark => mark.dataset.commitIndex)).toEqual(["[2,0]", "[0,2]", "[0,2]"])
+    fireEvent.click(marks(container).find(mark => mark.textContent === "fall"))
+
+    await waitFor(() => expect(openTitles()).toEqual(["Critique 10", "Critique 12"]))
+    await waitFor(() => expect(markedPassage(container)).toBe("fall for everyone"))
+  })
+
+  it("opens a linked critique first among those overlapping it", async () => {
+    mockApi()
+    // jsdom doesn't scroll
+    const scrollIntoView = vi.fn()
+    Element.prototype.scrollIntoView = scrollIntoView
+    renderPage("/topics/1/posts/2?critique=10")
+
+    await waitFor(() => expect(openTitles()).toEqual(["Critique 10", "Critique 12"]))
+    // Anchored where the group opens in that order: words only the linked critique covers
+    expect(scrollIntoView.mock.contexts[0]).toHaveTextContent("for everyone")
+    delete Element.prototype.scrollIntoView
+  })
+
+  it("opens a linked critique first even where no words open it first", async () => {
+    // Critique 13 criticises only "fall", inside the more relevant critique 10's passage
+    const [ten] = VERSIONS[V2].critiques
+    mockApi({ ...VERSIONS, [V2]: { ...VERSIONS[V2], critiques: [{ ...ten, upvotes: 5 }, critique(13, V2_HTML, V2, "fall")] } })
+    const scrollIntoView = vi.fn()
+    Element.prototype.scrollIntoView = scrollIntoView
+    const { container } = renderPage("/topics/1/posts/2?critique=13")
+
+    await waitFor(() => expect(openTitles()).toEqual(["Critique 13", "Critique 10"]))
+    expect(marks(container).map(mark => mark.dataset.commitIndex)).toEqual(["[0,1]", "[0,1]"])
+    expect(scrollIntoView.mock.contexts[0]).toHaveTextContent("fall")
+    await waitFor(() => expect(markedPassage(container)).toBe("fall"))
+    delete Element.prototype.scrollIntoView
   })
 
   it("lists critiques whose passage was removed below the post", async () => {

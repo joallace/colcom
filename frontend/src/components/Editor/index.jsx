@@ -41,12 +41,10 @@ export default function Editor({
   const { chartString, resetChartStr } = React.useContext(ChartContext)
 
   const injectCritiques = ({ editor }) => {
-    groupedCritiques.forEach(({ index, segments }) => {
-      // Every segment opens the whole group
-      const groupIndex = index.length > 1 ? JSON.stringify(index) : index[0]
-
-      segments.forEach(({ from, to, type, level }) => {
-        editor.commands.highlightRange({ from, to }, { type, index: groupIndex, level })
+    groupedCritiques.forEach(({ segments }) => {
+      // Every segment opens the whole group, starting with the critiques covering it
+      segments.forEach(({ from, to, type, level, index }) => {
+        editor.commands.highlightRange({ from, to }, { type, index: index.length > 1 ? JSON.stringify(index) : index[0], level })
       })
     })
 

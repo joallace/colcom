@@ -166,12 +166,13 @@ export default function PostPage() {
   }, [pid, user])
 
   // showCritique holds what is open: a new critique's [from, to] selection, the index of one
-  // critique, or the JSON list of overlapping critiques opened together from one highlight
+  // critique, or the JSON list of overlapping critiques opened together from one highlight, in the
+  // order they're shown. Only the first marks its passage as it opens.
   const isNewCritique = Array.isArray(showCritique)
   const isCritiqueGroup = typeof showCritique === "string" && showCritique.startsWith("[")
   const openCritiques = !showCritique ? [] : isCritiqueGroup ? JSON.parse(showCritique) : [showCritique]
 
-  const renderCritique = index => (
+  const renderCritique = (index, position) => (
     <CritiqueFrame
       key={isNewCritique ? "new-critique" : `critique-${index}`}
       parent_id={Number(pid)}
@@ -184,6 +185,7 @@ export default function PostPage() {
       tempHighlight={tempHighlight}
       setTempHighlight={isLoading? null : setTempHighlight}
       isInGroup={isCritiqueGroup}
+      highlightOnOpen={position === 0}
       quote={newCritiqueQuote}
       {...critiques[index]}
     />
@@ -192,10 +194,23 @@ export default function PostPage() {
   const getPostFrame = React.useCallback(() => postTitleRef.current?.closest(".frame"), [])
 
   // The element marking where critiques are open (`showCritique`'s value): their highlight (a mark,
-  // or a chart, which carries it as attributes), or for a removed passage its entry in the list below the post
+  // or a chart, which carries it as attributes), or for a removed passage its entry in the list below the post.
+  // Each segment of a group lists the group in its own order, so a group opened in another order
+  // (from a link) is anchored at its first segment.
   const findCritiqueAnchor = React.useCallback(value => {
     const index = CSS.escape(String(value))
-    return getPostFrame()?.querySelector(`mark[data-commit-index="${index}"], .chart[data-commit-index="${index}"]`)
+    const post = getPostFrame()
+
+    const sameGroup = () => {
+      const group = JSON.parse(value)
+      return [...post.querySelectorAll(`mark[data-commit-index^="["], .chart[data-commit-index^="["]`)].find(element => {
+        const indexes = JSON.parse(element.dataset.commitIndex)
+        return indexes.length === group.length && group.every(i => indexes.includes(i))
+      })
+    }
+
+    return post?.querySelector(`mark[data-commit-index="${index}"], .chart[data-commit-index="${index}"]`)
+      ?? (post && String(value).startsWith("[") ? sameGroup() : undefined)
       ?? document.querySelector(`.removedCritiques [data-critique-index="${index}"]`)
   }, [getPostFrame])
 
@@ -205,7 +220,7 @@ export default function PostPage() {
 
   // A link can ask for a critique to be open (?critique=<id>), e.g. from a profile or the bookmarks.
   // It opens once its version is shown and its highlight exists (the editor adds highlights just
-  // after mounting), together with the critiques overlapping it, which share that highlight.
+  // after mounting), first, followed by the critiques overlapping it, which share that highlight.
   const openedFromUrl = React.useRef(null)
   React.useEffect(() => {
     const critiqueId = Number(searchParams.get("critique"))
@@ -215,7 +230,7 @@ export default function PostPage() {
       return
 
     const group = groupedCritiques.find(({ index: indexes }) => indexes.includes(index))
-    const value = group && group.index.length > 1 ? JSON.stringify(group.index) : String(index)
+    const value = group && group.index.length > 1 ? JSON.stringify([index, ...group.index.filter(i => i !== index)]) : String(index)
 
     let frame, attempts = 0
     const open = () => {

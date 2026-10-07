@@ -41,6 +41,7 @@ export default function Critique({
   interval,
   anchor,
   isInGroup,
+  highlightOnOpen = true,
   quote
 }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
@@ -158,17 +159,19 @@ export default function Critique({
       onSubmitSignal()
   }, [submitSignal])
 
-  // Marks the critique's passage when it opens. `range` is rebuilt on every render, so it's read
-  // through an effect event: as a dependency, setting the highlight would re-run the effect forever
+  // Marks the critique's passage when it opens, or when it becomes the first of the open group (the
+  // others would each replace the mark, leaving the last one's). `range` is rebuilt on every render,
+  // so it's read through an effect event: as a dependency, setting the highlight would re-run the
+  // effect forever
   const highlightPassage = React.useEffectEvent(() => {
     if (range)
       setTempHighlight(range)
   })
 
   React.useEffect(() => {
-    if (setTempHighlight)
+    if (setTempHighlight && highlightOnOpen)
       highlightPassage()
-  }, [setTempHighlight])
+  }, [setTempHighlight, highlightOnOpen])
 
   return (
     <Frame
