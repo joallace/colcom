@@ -1,8 +1,11 @@
+// A list of contents (topics, and on the profile and bookmarks also posts and critiques)
 .tree {
-    .frame {
-        .body {
-            display: grid;
-            gap: 2rem;
-        }
+    display: grid;
+    gap: var(--space-7);
+
+    // A topic's posts, each a poll bar and its summary
+    .frame .body:has(> .postSummary) {
+        display: grid;
+        gap: var(--space-5);
     }
 }

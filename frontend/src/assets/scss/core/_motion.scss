@@ -1,0 +1,46 @@
+// Entrance animations. Each is short, moves only a few pixels and animates only `opacity` and
+// `transform`, which the browser composites without laying the page out again. Their durations
+// come from the motion tokens, which are zero when the system asks for reduced motion.
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+}
+
+// Menus and popovers: they grow from where they're anchored (set `transform-origin`)
+@keyframes pop-in {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(-4px);
+    }
+}
+
+// Dialogs and banners
+@keyframes rise-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+}
+
+// The critiques beside a post, arriving from the post's side
+@keyframes slide-in-left {
+    from {
+        opacity: 0;
+        transform: translateX(-12px);
+    }
+}
+
+// Bars filling up to their value (set `transform-origin` to where they start)
+@keyframes grow-x {
+    from {
+        transform: scaleX(0);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

@@ -1,28 +1,36 @@
+@use "../abstracts/mixins";
 @use "../abstracts/variables";
 
 .pixel-art-editor {
     display: grid;
     place-items: center;
+    gap: var(--space-2);
 
     .canvas {
         display: flex;
-        gap: 0.5rem;
+        gap: var(--space-2);
     }
 
     .palette {
         display: flex;
-        gap: 5px;
-        margin: 0.5rem 0;
+        gap: var(--space-2);
+        margin: var(--space-2) 0;
         align-items: center;
 
         .color-picker {
             width: 3rem;
             height: 3rem;
             padding: 0;
-            border: 2px solid #333;
+            border: var(--stroke) solid var(--border-strong);
             border-radius: 50%;
-            margin-right: 1rem;
+            margin-right: var(--space-3);
             cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            @include mixins.transition((border-color, transform));
+
+            &:hover {
+                border-color: var(--text-secondary);
+            }
 
             input {
                 opacity: 0;
@@ -32,14 +40,19 @@
         .palette-color {
             width: 2rem;
             height: 2rem;
-            border: 2px solid #333;
-            border-radius: 0.25rem;
+            border: var(--stroke) solid var(--border-strong);
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            transition: transform 0.1s;
+            @include mixins.transition((transform, border-color, box-shadow), var(--duration-base), var(--ease-spring));
+
+            &:hover {
+                transform: scale(1.08);
+            }
 
             &.selected {
-                border-color: #ff0;
-                transform: scale(1.1);
+                border-color: var(--text);
+                box-shadow: 0 0 0 2px var(--orange-text);
+                transform: scale(1.12);
             }
         }
     }
@@ -48,32 +61,37 @@
         display: grid;
         margin: 0;
         place-items: center;
-        gap: 0;
+        align-content: center;
+        gap: var(--space-1);
 
         button {
-            padding: 0.25rem 0.5rem;
-            width: 4.25rem;
-            font-size: 12px;
+            flex-direction: column;
+            gap: 0.125rem;
+            padding: var(--space-1) var(--space-2);
+            width: 4.5rem;
+            font-size: var(--text-xs);
+            border-width: 1px;
+            border-color: var(--border-strong);
 
             @media screen and (min-width: 0px) and (max-width: variables.$screen-md) {
                 width: min-content;
                 height: min-content;
             }
 
-
             &.selected {
-                background: variables.$default-orange;
-                border-color: variables.$default-orange;
+                background: var(--orange);
+                border-color: var(--orange);
+                color: var(--text-on-fill);
+            }
+
+            &.error:not(:disabled) {
+                border-color: var(--red);
             }
 
             svg {
-                width: 24px;
-                height: 24px;
+                width: 1.25rem;
+                height: 1.25rem;
             }
-        }
-
-        .discard {
-            border-color: variables.$default-red;
         }
     }
 
@@ -81,21 +99,25 @@
         display: grid;
         width: min-content;
         grid-template-columns: repeat(16, 16px);
-        border: 2px solid variables.$default-green;
-        border-radius: 0.25rem;
+        border: var(--stroke) solid var(--green);
+        border-radius: var(--radius-sm);
+        overflow: hidden;
         cursor: crosshair;
         touch-action: none;
         overscroll-behavior: none;
         -webkit-overflow-scrolling: touch;
+        background-color: var(--bg);
 
         @media screen and (min-width: 0px) and (max-width: variables.$screen-md) {
             grid-template-columns: repeat(16, 12px);
         }
 
         .canvas-cell {
+            // Sized by their content and grid lines (16px each), not the global border-box
+            box-sizing: content-box;
             width: 15px;
             height: 15px;
-            border: 1px solid #333;
+            border: 1px solid var(--border);
             border-width: 0 1px 1px 0;
             touch-action: none;
             -webkit-tap-highlight-color: transparent;
@@ -125,7 +147,7 @@
         }
 
         &.error {
-            border-color: variables.$default-red;
+            border-color: var(--red);
         }
     }
 }

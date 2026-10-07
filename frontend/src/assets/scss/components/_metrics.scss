@@ -1,55 +1,56 @@
 @use "../abstracts/variables";
 
-@use "sass:color";
-
 .metrics {
-  list-style: none;
-  color: variables.$default-green;
-  font-size: 12px;
-  text-align: center;
-  padding: 0;
-  display: flex;
-  place-items: center;
-  gap: 0.5rem;
+    list-style: none;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    text-align: center;
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    place-items: center;
+    gap: var(--space-1) var(--space-2);
 
-  >li {
-    color: color.scale(variables.$default-font-color, $lightness: -15%);
-  }
-
-  @media screen and (max-width: variables.$screen-sm) {
-    display: grid;
-    justify-items: left;
-    border-left: 2px solid variables.$default-green;
-    padding-left: 0.5rem;
-
-    &.critique{
-      border-color: variables.$default-orange;
+    >li {
+        color: var(--text-muted);
     }
-  }
 
-  @media screen and (max-width: variables.$screen-lg) {
-    gap: 0.25rem;
-  }
+    @media screen and (max-width: variables.$screen-sm) {
+        display: grid;
+        justify-items: left;
+        border-left: var(--stroke) solid var(--green);
+        padding-left: var(--space-2);
+
+        &.critique {
+            border-color: var(--orange);
+        }
+    }
 }
 
 .startedBy {
-  display: flex;
-  place-items: center;
-  font-size: 13px;
-  font-weight: bold;
-  color: variables.$default-font-color;
+    display: flex;
+    place-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-xs);
+    font-weight: bold;
+    color: var(--text);
 
-  img {
-    border: 1px solid variables.$default-green;
-    border-radius: 1px;
-    image-rendering: pixelated;
-    width: 16px;
-    height: 16px;
-    margin-right: 0.25rem;
-    transition: transform 0.25s cubic-bezier(.68, -0.22, .37, 1.32);
+    img {
+        border: 1px solid var(--green);
+        border-radius: 2px;
+        image-rendering: pixelated;
+        width: 16px;
+        height: 16px;
+        // Hovering an avatar shows it large, over what's around it
+        position: relative;
+        transition: transform var(--duration-slow) var(--ease-spring);
 
-    &:hover {
-      transform: scale(6);
+        &:hover {
+            z-index: 1;
+            transform: scale(6);
+            box-shadow: var(--shadow-md);
+        }
     }
-  }
 }

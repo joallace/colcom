@@ -2,11 +2,12 @@
 
 .loginContainer {
     display: grid;
+    justify-self: center;
     height: min-content;
     width: min-content;
 
     @media screen and (min-width: variables.$screen-md) {
-        min-width: 25rem
+        min-width: 26rem;
     }
 
     .spaced {
@@ -16,10 +17,12 @@
 
     .header {
         span {
-            color: variables.$default-green;
+            font-size: var(--text-title);
+            font-weight: 900;
+            color: var(--green-text);
 
             &>span {
-                color: variables.$default-orange;
+                color: var(--orange-text);
             }
         }
     }
@@ -28,43 +31,45 @@
         .loginForm {
             width: 100%;
             display: grid;
-            margin-top: 1rem;
-            gap: 2.5rem;
+            margin-top: var(--space-4);
+            gap: var(--space-6);
 
             .userData {
                 width: 100%;
                 display: grid;
-                gap: 1rem;
+                gap: var(--space-4);
             }
 
             .createAccount {
                 text-align: center;
-                margin-bottom: 1.5rem;
+                margin-bottom: var(--space-5);
                 white-space: nowrap;
+                color: var(--text-secondary);
 
                 a {
                     white-space: nowrap;
                     font-weight: bold;
+                    color: var(--green-text);
+
+                    &:hover {
+                        color: var(--orange-text);
+                    }
                 }
             }
         }
 
-        .profilePictureCanvas{
-            h2{
+        .profilePictureCanvas {
+            h2 {
                 text-align: center;
-                margin: 0 0 0.5rem 0;
+                font-size: var(--text-lg);
+                margin: 0 0 var(--space-2) 0;
             }
         }
+    }
 
-        .inputBox {
-            input {
-                height: 2.5rem;
-
-                &:not(:placeholder-shown)+label,
-                &:focus+label {
-                    background-color: variables.$default-bg;
-                }
-            }
-        }
+    .buttonRow {
+        display: flex;
+        justify-content: center;
+        gap: var(--space-3);
     }
 }

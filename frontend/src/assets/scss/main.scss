@@ -1,5 +1,11 @@
-@use "abstracts/variables";
-@use "abstracts/mixins";
+// Base first (tokens, then element defaults), so components and pages override it
+@use "core/tokens";
+@use "core/motion";
+@use "core/fonts";
+@use "core/tags";
+
+@use "layout/index";
+@use "layout/navbar";
 
 @use "components/alert";
 @use "components/brand_icon";
@@ -17,12 +23,6 @@
 @use "components/text_editor";
 @use "components/topic_modal";
 @use "components/voting_buttons";
-
-@use "core/fonts";
-@use "core/tags";
-
-@use "layout/index";
-@use "layout/navbar";
 
 @use "pages/login";
 @use "pages/post";

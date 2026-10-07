@@ -1,13 +1,24 @@
-@use "variables";
+@use "sass:list";
 
-@mixin content-responsiveness($default: 60vw, $medium: 80vw, $small: 95vw) {
-    width: $default;
+// A column as wide as its container, up to `$max` (a reading width by default). The page's
+// gutter comes from `.content`'s padding, so phones keep a margin without per-size widths.
+@mixin content-width($max: var(--measure)) {
+    width: min(100%, #{$max});
+}
 
-    @media screen and (min-width: variables.$screen-sm) and (max-width: variables.$screen-xl) {
-        width: $medium;
+// Transitions the given properties only. `transition: all` animates layout properties too
+// (width, padding…), which costs a layout per frame and makes unrelated changes drift.
+@mixin transition($properties, $duration: var(--duration-fast), $easing: var(--ease-out)) {
+    $list: ();
+
+    @each $property in $properties {
+        $list: list.append($list, $property $duration $easing, $separator: comma);
     }
 
-    @media screen and (min-width: 0px) and (max-width: variables.$screen-sm) {
-        width: $small;
-    }
+    transition: $list;
+}
+
+@mixin focus-ring($offset: 2px) {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: $offset;
 }

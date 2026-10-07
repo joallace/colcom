@@ -1,62 +1,68 @@
-@use "../abstracts/variables";
-
-@use "sass:color";
+@use "../abstracts/mixins";
 
 .dropdownMenu {
-    transition: all 0.3s ease;
+    // The menu is placed against its trigger, wherever the trigger is
+    position: relative;
 
     div.menu {
-        z-index: 999;
-        font-size: 1rem;
         position: absolute;
-        top: 3.5rem;
-        right: 20px;
-        background-color: color.scale(variables.$default-bg, $lightness: 10%);
-        border-radius: 0.25rem;
-        padding: 0.5rem;
-
-        // @include content-responsiveness;
+        top: calc(100% + var(--space-2));
+        right: 0;
+        z-index: var(--z-dropdown);
+        min-width: 12rem;
+        padding: var(--space-1);
+        font-size: var(--text-sm);
+        font-weight: 400;
+        line-height: var(--leading-normal);
+        white-space: nowrap;
+        color: var(--text);
+        background-color: var(--surface-raised);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+        transform-origin: top right;
+        animation: pop-in var(--duration-base) var(--ease-out);
 
         ul {
             display: grid;
             margin: 0;
             padding: 0;
-            gap: 0.5rem;
+            gap: 0.125rem;
 
             li {
                 display: flex;
-                gap: 0.5rem;
-                align-content: center;
-                padding: 0.5rem;
+                gap: var(--space-3);
+                align-items: center;
+                padding: var(--space-2) var(--space-3);
                 list-style: none;
-                transition: all 0.15s ease;
+                border-radius: var(--radius-sm);
                 cursor: pointer;
+                @include mixins.transition((background-color, color));
 
                 .icon {
-                    font-size: 1.25rem;
+                    flex-shrink: 0;
+                    font-size: var(--text-lg);
+                    color: var(--text-secondary);
+                    @include mixins.transition(color);
                 }
 
-                &:not(.unclickable):hover {
-                    background-color: color.scale(variables.$default-bg, $lightness: 5%);
+                &:not(.unclickable):not(.disabled):hover {
+                    background-color: var(--hover);
+
+                    .icon {
+                        color: var(--orange-text);
+                    }
                 }
 
-                &.disabled:hover {
-                    background-color: color.scale(variables.$default-bg, $lightness: 10%);
+                &:not(.unclickable):not(.disabled):active {
+                    background-color: var(--pressed);
                 }
 
                 &.unclickable {
                     cursor: default;
-                }
-
-                &:first-child{
-                    border-radius: 0.25rem 0.25rem 0 0;
-                }
-
-                &:last-child{
-                    border-radius: 0 0 0.25rem 0.25rem;
+                    color: var(--text-secondary);
                 }
             }
-
         }
     }
 }

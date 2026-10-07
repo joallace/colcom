@@ -12,7 +12,7 @@
     html {
       margin: 0;
       padding: 0;
-      background-color: #1F0D00;
+      background-color: #1a0e06;
     }
 
     .loading-container {
@@ -24,7 +24,9 @@
 
     .navbar-mock {
       flex: 0 0 3.5rem;
-      background-color: #462500;
+      box-sizing: border-box;
+      background-color: #2b1708;
+      border-bottom: 1px solid rgba(239, 230, 220, 0.12);
     }
 
     .container-mock {
@@ -38,14 +40,10 @@
     }
 
     .footer-mock {
-      flex: 0 0 3.25rem;
-      width: 60vw;
-      border-top: 2px solid #669100;
+      flex: 0 0 4.5rem;
+      width: min(100% - 4rem, 48rem);
+      border-top: 1px solid rgba(239, 230, 220, 0.12);
       place-self: center;
-
-      @media screen and (min-width: 0px) and (max-width: 1280px) {
-        width: 80vw;
-      }
     }
 
     .spinner {
@@ -53,7 +51,7 @@
       height: 5rem;
       border-radius: 100%;
       border: 0.25rem solid transparent;
-      border-top-color: #669100;
+      border-top-color: #8db43a;
       background: transparent;
       animation: spinner 1s linear infinite;
     }

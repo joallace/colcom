@@ -1,13 +1,13 @@
+@use "../abstracts/mixins";
 @use "../abstracts/variables";
-
-@use "sass:color";
 
 .votingButtons {
     display: flex;
     flex-direction: column;
-    font-size: 1.5rem;
-    gap: 0.5rem;
-    margin-right: 0.5rem;
+    align-items: center;
+    font-size: var(--text-2xl);
+    gap: var(--space-1);
+    margin-right: var(--space-2);
     justify-content: center;
 
     input {
@@ -21,40 +21,47 @@
             min-height: 1.75rem;
         }
 
-        font-size: 2rem;
+        font-size: var(--text-title);
     }
 
     &.withDefVote {
-        gap: 0.25rem;
+        gap: 0.125rem;
 
         input {
             margin: 0;
         }
     }
 
-
     .up,
     .down {
         cursor: pointer;
         display: flex;
+        padding: 0.125rem;
         border-radius: 50%;
+        @include mixins.transition((background-color, color, transform));
 
         &:hover {
-            background-color: color.scale(variables.$default-bg, $lightness: 8%);
+            background-color: var(--hover);
         }
-    }
 
-    .down {
-        color: #e65000;
-        &:hover{
-            color: color.scale(#e65000, $lightness: 10%);
+        &:active {
+            transform: scale(0.88);
         }
     }
 
     .up {
-        color: #479024;
-        &:hover{
-            color: color.scale(#479024, $lightness: 10%);
+        color: var(--green-text);
+
+        &:hover {
+            color: #a4cc4c;
+        }
+    }
+
+    .down {
+        color: var(--orange-text);
+
+        &:hover {
+            color: #f08f45;
         }
     }
 }

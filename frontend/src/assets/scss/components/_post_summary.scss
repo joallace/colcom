@@ -1,55 +1,84 @@
-@use "../abstracts/variables";
+@use "../abstracts/mixins";
 
 .postSummary {
     // A title or summary with no spaces would otherwise set the min-content width
     // (`anywhere`, unlike `break-word`, also shrinks it) and widen the whole page
     overflow-wrap: anywhere;
+    display: grid;
+    gap: var(--space-2);
+
+    >div {
+        color: var(--text-secondary);
+        padding-left: var(--space-3);
+    }
 
     a {
         display: flex;
         // Not `min-content`: that is the longest word, however long. This keeps
         // low-voted bars wide enough that ordinary words aren't split on phones
         min-width: min(12rem, 100%);
+        font-weight: 400;
 
-        &:hover {
-            .percentageBar {
-                transition: all 0.15s ease;
-                background-color: variables.$default-orange;
-            }
+        &:hover .percentageBar {
+            background-color: var(--orange-tint);
+            border-left-color: var(--orange-text);
+            transform: translateX(2px);
+        }
+
+        &:active .percentageBar {
+            transform: translateX(2px) scale(0.99);
         }
     }
 
+    // The post's share of the topic's poll, as long as the share: a tinted bar rather than a solid
+    // one, so a page of them doesn't outweigh the text they introduce
     .percentageBar {
         display: flex;
         width: 100%;
         min-height: 2.5rem;
         height: min-content;
         justify-content: space-between;
-        background-color: variables.$default-font-color;
-        padding: 0 1rem 0 0.5rem;
-        align-content: center;
-        border-radius: 0 0.75rem 0.75rem 0;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-2) var(--space-4) var(--space-2) var(--space-3);
+        background-color: var(--surface-raised);
+        border-left: 3px solid var(--border-strong);
+        border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+        color: var(--text);
+        line-height: var(--leading-tight);
+        @include mixins.transition((background-color, border-color, transform), var(--duration-base));
 
         span,
         a {
-            &:first-child {
-                margin-right: 0.5rem;
-            }
-            &:last-child {
-                white-space: nowrap;
-            }
-            svg{
-                margin-right: 0.5rem;
-                min-width: 16px;
-            }
-
-            color: variables.$default-bg;
+            color: inherit;
             display: flex;
             align-items: center;
+
+            &:first-child {
+                font-weight: 700;
+            }
+
+            &:last-child {
+                white-space: nowrap;
+                font-variant-numeric: tabular-nums;
+                color: var(--text-secondary);
+            }
+
+            svg {
+                margin-right: var(--space-2);
+                min-width: 16px;
+            }
         }
 
-        &.chosen{
-            background-color: variables.$default-green;
+        // The post the user voted for
+        &.chosen {
+            background-color: var(--green-tint);
+            border-left-color: var(--green-text);
+
+            span:last-child {
+                color: var(--green-text);
+                font-weight: 700;
+            }
         }
     }
 
@@ -60,79 +89,89 @@
         color: inherit;
         margin-left: auto;
         font-weight: bold;
-        margin-bottom: 1rem;
+        margin-bottom: var(--space-4);
 
         &:hover {
             text-decoration: underline;
         }
     }
-
 }
 
 .noResponse {
-    height: 5rem;
+    min-height: 5rem;
     display: flex;
     justify-content: center;
     text-align: center;
     align-items: center;
-    font-size: 1.25rem;
-    white-space:break;
+    padding: var(--space-5);
+    font-size: var(--text-lg);
+    color: var(--text-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-lg);
 }
 
 .morePosts {
     width: min-content;
+    padding: 0 var(--space-2);
     white-space: nowrap;
     font-weight: bolder;
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
+    line-height: 1;
+    color: var(--text-secondary);
 }
 
 // A topic's posts grouped by the answer they defend
 .answerGroups {
     display: flex;
     flex-direction: column;
-    gap: 3rem;
+    gap: var(--space-7);
 }
 
 .answerGroup {
     display: flex;
     flex-direction: column;
     // As far apart as the ranked view's posts (`.tree .frame .body`)
-    gap: 2rem;
+    gap: var(--space-5);
     overflow-wrap: anywhere;
 
     .answerHeader {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: var(--space-2);
 
         > div:first-child {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            gap: 1rem;
+            gap: var(--space-4);
         }
 
         h2 {
             margin: 0;
-            font-size: 1.25rem;
+            font-size: var(--text-xl);
         }
 
         span {
             white-space: nowrap;
             font-weight: bold;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-secondary);
         }
     }
 
     // The answer's share of the poll, full width so answers compare at a glance
     .answerBar {
         height: 0.5rem;
-        border-radius: 0.25rem;
-        background-color: rgba(variables.$default-font-color, 0.15);
+        border-radius: var(--radius-full);
+        background-color: var(--border);
         overflow: hidden;
 
         div {
             height: 100%;
-            background-color: variables.$default-orange;
+            border-radius: inherit;
+            background-color: var(--orange);
+            transform-origin: left;
+            animation: grow-x var(--duration-slow) var(--ease-out);
         }
     }
 }

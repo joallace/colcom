@@ -1,0 +1,112 @@
+@use "sass:color";
+@use "../abstracts/variables" as v;
+
+// Design tokens. Components use these custom properties rather than Sass colors or literal sizes,
+// so a value is decided once and every part of the interface agrees on it.
+:root {
+    color-scheme: dark;
+
+    // Surfaces, by elevation
+    --bg: #{v.$bg};
+    --surface: #{v.$surface};
+    --surface-raised: #{v.$surface-raised};
+    --navbar-bg: #{rgba(v.$navbar-bg, 0.92)};
+    // Hovered and pressed rows, icons and buttons, over whichever surface they're on
+    --hover: #{rgba(v.$text, 0.07)};
+    --pressed: #{rgba(v.$text, 0.12)};
+    --border: #{rgba(v.$text, 0.12)};
+    --border-strong: #{rgba(v.$text, 0.24)};
+
+    // Text
+    --text: #{v.$text};
+    --text-secondary: #{v.$text-secondary};
+    --text-muted: #{v.$text-muted};
+    --text-disabled: #{rgba(v.$text, 0.38)};
+    // On the strong brand fills
+    --text-on-fill: #fff;
+    --text-on-light: #{v.$bg};
+
+    // Brand and status
+    --green: #{v.$green};
+    --green-text: #{v.$green-light};
+    --green-tint: #{rgba(v.$green, 0.22)};
+    --orange: #{v.$orange};
+    --orange-hover: #{color.adjust(v.$orange, $lightness: 6%)};
+    --orange-pressed: #{color.adjust(v.$orange, $lightness: -6%)};
+    --orange-text: #{v.$orange-light};
+    --orange-tint: #{rgba(v.$orange, 0.22)};
+    --red: #{v.$red};
+    --red-hover: #{color.adjust(v.$red, $lightness: 6%)};
+    --red-text: #{v.$red-light};
+    --red-tint: #{rgba(v.$red, 0.2)};
+    --yellow: #{v.$yellow};
+    --blue: #{v.$blue};
+    --focus-ring: #{v.$orange-light};
+
+    // Spacing, on a 4px grid
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    --space-7: 3rem;
+    --space-8: 4rem;
+    // Space between the page's edge and its content
+    --gutter: clamp(1rem, 4vw, 2rem);
+
+    // Content widths: a reading column, and the post with its critiques beside it
+    --measure: 48rem;
+    --measure-wide: 80rem;
+
+    // Typography
+    --font-sans: "Lato", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-brand: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-title: clamp(1.5rem, 1.15rem + 1.4vw, 2rem);
+    --leading-tight: 1.2;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.65;
+
+    // Shapes
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-full: 999px;
+    --stroke: 2px;
+
+    // Elevation: dark interfaces show depth with lighter surfaces and deep, soft shadows
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 12px rgb(0 0 0 / 0.35), 0 1px 3px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 16px 40px rgb(0 0 0 / 0.45), 0 4px 12px rgb(0 0 0 / 0.3);
+
+    // Motion. Feedback on hover and press is quick; elements entering take a little longer and
+    // decelerate ("out"), so they arrive fast and settle softly
+    --duration-fast: 120ms;
+    --duration-base: 200ms;
+    --duration-slow: 320ms;
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    // Stacking
+    --z-sticky: 100;
+    --z-dropdown: 200;
+    --z-modal: 1000;
+
+    // The background behind a floating input label: the surface the input sits on
+    --input-label-bg: var(--bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --duration-fast: 0ms;
+        --duration-base: 0ms;
+        --duration-slow: 0ms;
+    }
+}

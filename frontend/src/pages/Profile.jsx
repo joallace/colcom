@@ -65,7 +65,7 @@ export default function Profile() {
                 <span>se juntou em <Focus>{new Date(user?.created_at).toLocaleDateString('pt-BR')}</Focus>, há <Focus>{relativeTime(user?.created_at)}</Focus></span>
               </div>
             </div>
-            <div>
+            <div className="tree">
               <hr className="separator"/>
               {contents?.length > 0 ?
                 <ContentList contents={contents} />

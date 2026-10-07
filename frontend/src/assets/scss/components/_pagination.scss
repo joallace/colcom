@@ -1,27 +1,38 @@
-@use "../abstracts/variables";
+@use "../abstracts/mixins";
 
 .pagination {
     display: flex;
-    gap: 1.5rem;
+    align-items: center;
+    gap: var(--space-1);
     place-content: center;
-    margin-top: 1rem;
-    font-size: 1.25rem;
+    margin-top: var(--space-4);
+    font-size: var(--text-base);
 
-    >a {
-        display: flex;
+    a {
+        display: grid;
+        place-items: center;
+        min-width: 2.25rem;
+        height: 2.25rem;
+        padding: 0 var(--space-2);
+        border-radius: var(--radius-md);
+        color: var(--text-secondary);
+        font-weight: 700;
+        @include mixins.transition((color, background-color));
+
+        &:hover {
+            background-color: var(--hover);
+        }
     }
-
 
     >.pages {
         display: flex;
-        gap: 1rem;
+        gap: var(--space-1);
+        margin: 0 var(--space-2);
 
-        >span {
-            cursor: pointer;
-        }
-
+        // The current page: its number can be typed over to jump to another
         >a.active {
-            border-bottom: 2px variables.$default-green;
+            color: var(--text-on-light);
+            background-color: var(--green-text);
             cursor: text;
         }
     }

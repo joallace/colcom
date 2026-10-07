@@ -1,22 +1,26 @@
-@use "../abstracts/variables";
-
-@use "sass:color";
-
 // Where a post or critique shown outside its page belongs (profile, bookmarks)
 .contentContext {
-    margin-bottom: 0.75rem;
-    font-size: 0.85rem;
-    color: color.scale(variables.$default-font-color, $lightness: -33%);
+    margin-bottom: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
 
-    strong {
-        color: variables.$default-font-color;
+    strong,
+    a {
+        color: var(--text-secondary);
+        font-weight: 700;
+    }
+
+    a:hover {
+        color: var(--orange-text);
     }
 }
 
 .criticisedPassage {
-    margin: 0 0 0.75rem;
-    padding-left: 0.5rem;
-    border-left: 2px solid variables.$default-orange;
+    margin: 0 0 var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border-left: var(--stroke) solid var(--orange);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    background-color: var(--orange-tint);
     font-style: italic;
-    color: color.scale(variables.$default-font-color, $lightness: -20%);
+    color: var(--text-secondary);
 }

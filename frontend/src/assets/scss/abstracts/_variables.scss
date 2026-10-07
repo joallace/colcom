@@ -1,18 +1,30 @@
-@use "sass:color";
+// Sass constants: the source the design tokens (core/_tokens.scss) are built from, and what
+// _export.module.scss hands to JavaScript (charts, the pixel editor, breakpoints). Components
+// should use the CSS custom properties instead.
 
-// Layout
-$default-bg: #1F0D00;
-$default-font-color: #d9d9d9;
-$navbar-bg: #462500;
-$default-input-bg: color.scale($navbar-bg, $lightness: -5%);
+// Surfaces, from the page's background up to what floats over it (menus, modals)
+$bg: #1a0e06;
+$surface: #25150a;
+$surface-raised: #33200f;
+$navbar-bg: #2b1708;
+
+// Text, each at least 4.5:1 against every surface above
+$text: #efe6dc;
+$text-secondary: #c4b5a5;
+$text-muted: #9a8a7a;
+
+// Brand: the strong tones fill and outline (white text on them is at least 4.5:1); the light ones
+// are for text and icons on the dark surfaces, where the strong ones lack contrast
+$green: #669100;
+$green-light: #8db43a;
+$orange: #bc5200;
+$orange-light: #e07a2e;
+$red: #be2400;
+$red-light: #ff6a4d;
+$yellow: #cdcd00;
+$blue: #4da8c1;
+
 $navbar-height: 3.5rem;
-
-// Default theme colors
-$default-green: #669100;
-$default-orange: #BC5200;
-$default-red: #be2400;
-$default-yellow: #cdcd00;
-$default-blue: #4da8c1;
 
 // Screen sizes
 $screen-sm: 639px;

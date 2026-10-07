@@ -1,67 +1,83 @@
+@use "../abstracts/mixins";
 @use "../abstracts/variables";
 
-@use "sass:color";
-
-.backdrop{
-    min-width: 100%;
-    min-height: 100%;
+// Covers the page and centers the dialog in it
+.backdrop {
     position: fixed;
-    top: 0;
-    left: 0;
-    background-color: rgba(0, 0, 0, 0.33);
-    z-index: 9999;
+    inset: 0;
+    z-index: var(--z-modal);
+    display: grid;
+    place-items: center;
+    padding: var(--space-4);
+    background-color: rgb(0 0 0 / 0.55);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    animation: fade-in var(--duration-base) var(--ease-out);
 }
 
-.modal{
-    background-color: variables.$navbar-bg;
+.modal {
+    --input-label-bg: var(--surface-raised);
+
     display: grid;
-    gap: 1rem;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    min-height: min-content;
-    min-width: min-content;  
-    padding: 1.25rem;
-    border-radius: 0.75rem;
+    gap: var(--space-4);
+    min-width: min(100%, 22rem);
+    max-width: 100%;
+    max-height: calc(100dvh - 2 * var(--space-4));
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-5);
+    background-color: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    animation: rise-in var(--duration-slow) var(--ease-out);
 
     @media screen and (min-width: 0px) and (max-width: variables.$screen-sm) {
-        max-height: 80%;
+        width: 100%;
         min-width: 0;
-        width: 90%;
-        overflow: scroll;
+        max-height: 85dvh;
+        padding: var(--space-4);
     }
 
-    >.header{
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin-bottom: 1.5rem;
+    >.header {
         display: flex;
-        color: variables.$default-green;
-        align-content: center;
+        align-items: flex-start;
         justify-content: space-between;
+        gap: var(--space-4);
+        margin-bottom: var(--space-2);
+        font-size: var(--text-xl);
+        font-weight: 900;
+        line-height: var(--leading-tight);
+        color: var(--green-text);
 
-        .icon{
-            align-self: top;
-            font-size: 1.25rem;
-            color: variables.$default-font-color;
-            margin-left: 2rem;
+        .icon {
+            flex-shrink: 0;
+            box-sizing: content-box;
+            padding: var(--space-1);
+            margin: calc(-1 * var(--space-1)) calc(-1 * var(--space-1)) 0 0;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xl);
+            color: var(--text-secondary);
+
+            &:hover {
+                background-color: var(--hover);
+            }
         }
     }
 
-    >.footer{
+    >.footer {
         display: flex;
         place-content: end;
-        gap: 1rem;
-        &.center{
+        gap: var(--space-3);
+        margin-top: var(--space-2);
+
+        &.center {
             place-content: center;
             text-align: center;
         }
     }
 
-    hr{
-        margin: 1rem -1rem 0.5rem -1rem;
-        color: color.scale(variables.$navbar-bg, $lightness: 10%);
-        
+    hr {
+        margin: var(--space-4) calc(-1 * var(--space-5)) var(--space-2);
     }
 }

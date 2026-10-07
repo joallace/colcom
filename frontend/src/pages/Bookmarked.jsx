@@ -54,7 +54,7 @@ export default function Bookmarked() {
   }, [])
 
   return (
-    <div className={`content${contents?.length === 0 ? " centered" : ""}`}>
+    <div className={`content${contents?.length === 0 ? " centered" : " tree"}`}>
       {
         isLoading ?
           <Spinner/>

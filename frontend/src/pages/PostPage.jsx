@@ -232,11 +232,11 @@ export default function PostPage() {
   }, [searchParams, critiques, groupedCritiques, isLoading, findCritiqueAnchor])
 
   return (
-    <div className="content">
+    <div className="content wide">
       <div className="topicName">
         respondendo ao tópico
         &quot;<Link to={postData.parent_id && `/topics/${postData.parent_id}`}>{postData.parent_title}</Link>&quot;
-        {postData?.config?.answer && <> com &quot;<strong style={{ color: "white" }}>{postData.config.answer}</strong>&quot;</>}
+        {postData?.config?.answer && <> com &quot;<strong>{postData.config.answer}</strong>&quot;</>}
       </div>
 
       <div className="timerSlider">

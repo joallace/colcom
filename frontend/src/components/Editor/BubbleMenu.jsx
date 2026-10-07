@@ -40,7 +40,7 @@ export default function EditorBubbleMenu({ editor, shouldShow = true, readOnly, 
   return (
     <div>
       <BubbleMenu
-        className={`menu ${!readOnly && (active.chart || active.table) ? "hidden" : "bubble"}`}
+        className={`menu editorMenu ${!readOnly && (active.chart || active.table) ? "hidden" : "bubble"}`}
         editor={editor}
         shouldShow={props => isRendered.current && hasTextSelection(props) && (readOnly || hasFocus(props))}
       >

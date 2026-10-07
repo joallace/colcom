@@ -1,10 +1,14 @@
 @use "../abstracts/variables";
 
 .content.write {
+    gap: var(--space-5);
+
     >.buttons {
         display: flex;
-        gap: 1rem;
+        flex-wrap: wrap;
+        gap: var(--space-4);
         justify-content: center;
+        align-items: center;
 
         button {
             height: min-content;
@@ -14,16 +18,23 @@
     .tiptap {
         min-height: 8rem;
     }
-
-    gap: 1rem;
 }
 
+// What a post answers, above it
 .topicName {
     text-align: center;
-    margin-top: 1rem;
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
 
-    a {
+    a,
+    strong {
         font-weight: bold;
+        color: var(--text);
+    }
+
+    a:hover {
+        color: var(--orange-text);
     }
 }
 
@@ -31,6 +42,7 @@
     display: flex;
     place-content: space-around;
     place-items: center;
+    gap: var(--space-5);
     width: 100%;
 
     @media screen and (min-width: 0px) and (max-width: variables.$screen-sm) {
@@ -41,7 +53,7 @@
         display: flex;
         flex-direction: column;
         place-items: center;
-        gap: 1rem;
+        gap: var(--space-4);
 
         .inputWrapper {
             width: 100%;

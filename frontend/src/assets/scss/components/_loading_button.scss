@@ -1,6 +1,6 @@
-.loadingButton {
-    padding: 0.25rem;
+@use "../abstracts/mixins";
 
+.loadingButton {
     >.wrapper {
         display: flex;
         align-items: center;
@@ -8,20 +8,21 @@
 
         >.spinnerWrapper {
             display: flex;
+            opacity: 0;
             transform: scale(0);
-            transition: all 0.5s ease;
+            @include mixins.transition((transform, opacity), var(--duration-slow));
         }
 
+        // Centered while there's no spinner (which still takes its room), then slides to its side
         >.children {
-            transform: translateX(-15px);
-            transition: transform 0.5s ease;
+            transform: translateX(-12px);
+            @include mixins.transition(transform, var(--duration-slow));
         }
     }
 
     &.loading {
-        padding: 0.25rem 0.5rem;
-
         .spinnerWrapper {
+            opacity: 1;
             transform: scale(1);
         }
 

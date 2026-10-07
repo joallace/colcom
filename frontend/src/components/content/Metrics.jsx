@@ -9,7 +9,8 @@ export const Author = ({ isDesktop, name, avatar }) => {
   )
 }
 
-const percentageToColorHSL = (pct) => `hsl(${pct * 120}, 100%, 50%)` // 0=red, 60=yellow, 120=green
+// 0 = red, 0.5 = yellow, 1 = green; muted enough to sit in a line of small grey text
+const percentageToColorHSL = (pct) => `hsl(${pct * 110}, 55%, 62%)`
 
 const Colored = ({ percentage, children }) => (
   <Focus style={{ color: percentageToColorHSL(percentage) }}>

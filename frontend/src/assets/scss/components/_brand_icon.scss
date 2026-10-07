@@ -4,19 +4,20 @@
     display: flex;
     line-height: 1rem;
     width: min-content;
-    color: variables.$default-green;
-    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
-    font-size: 1.25rem;
+    color: var(--green-text);
+    font-family: var(--font-brand);
+    font-size: var(--text-xl);
+    letter-spacing: 0.02em;
 
     @media screen and (min-width: 0px) and (max-width: variables.$screen-sm) {
         flex-wrap: wrap;
     }
 
     .dot {
-        color: variables.$default-font-color;
+        color: var(--text);
     }
 
     .com {
-        color: variables.$default-orange;
+        color: var(--orange-text);
     }
 }

@@ -1,99 +1,170 @@
 @use "../abstracts/mixins";
-@use "../abstracts/variables";
 
-@use "sass:color";
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
 
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+// Form controls don't inherit the page's font by default
+button,
 input,
-div,
-span {
-    font-family: "Lato", sans-serif;
+select,
+textarea {
+    font: inherit;
+    color: inherit;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    line-height: var(--leading-tight);
+    text-wrap: balance;
+}
+
+p {
+    text-wrap: pretty;
+}
+
+img {
+    max-width: 100%;
+}
+
+::selection {
+    background-color: var(--orange-tint);
+    color: var(--text);
+}
+
+// Keyboard users see where they are; mouse clicks don't draw a ring
+:focus-visible {
+    @include mixins.focus-ring;
 }
 
 span.error,
 label.error,
 h2.error {
-    color: variables.$default-red !important;
+    color: var(--red-text) !important;
+}
+
+span.error {
+    display: block;
+    margin-top: var(--space-1);
+    font-size: var(--text-sm);
 }
 
 button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
     min-width: min-content;
+    min-height: 2.25rem;
+    padding: var(--space-2) var(--space-4);
     background: transparent;
-    color: variables.$default-font-color;
-    border: 2px solid variables.$default-green;
-    border-radius: 0.25rem;
-    padding: 0.25rem 1rem;
-    transition: all 0.15s ease;
+    color: var(--text);
+    border: var(--stroke) solid var(--green);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1;
     cursor: pointer;
-    font-family: "Lato", sans-serif;
+    @include mixins.transition((background-color, border-color, color, transform, box-shadow));
 
     &:hover {
-        border-color: variables.$default-orange;
-        background-color: variables.$default-orange;
+        border-color: var(--orange);
+        background-color: var(--orange);
+        color: var(--text-on-fill);
     }
 
     &:active {
-        border-color: color.scale(variables.$default-orange, $lightness: -10%);
-        background-color: color.scale(variables.$default-orange, $lightness: -10%);
+        border-color: var(--orange-pressed);
+        background-color: var(--orange-pressed);
+        transform: scale(0.97);
     }
 
     &.error {
-        border-color: variables.$default-red;
+        border-color: var(--red);
 
         &:hover {
-            border-color: variables.$default-red;
-            background-color: variables.$default-red;
+            border-color: var(--red);
+            background-color: var(--red);
         }
 
         &:active {
-            border-color: color.scale(variables.$default-red, $lightness: -10%);
-            background-color: color.scale(variables.$default-red, $lightness: -10%);
+            border-color: var(--red);
+            background-color: var(--red);
         }
     }
 
     &:disabled {
-        border-color: color.scale(variables.$default-font-color, $lightness: -40%);
-        color: color.scale(variables.$default-font-color, $lightness: -40%);
+        border-color: var(--border-strong);
+        color: var(--text-disabled);
         cursor: default;
         background-color: transparent;
+        transform: none;
 
-        &:hover{
+        &:hover {
             background-color: transparent;
-            border-color: color.scale(variables.$default-font-color, $lightness: -40%);
+            border-color: var(--border-strong);
         }
     }
 }
 
 a {
     cursor: pointer;
-    color: white;
+    color: var(--text);
     text-decoration: none;
-    transition: all 0.1s ease;
-    font-family: "Lato", sans-serif;
+    border-radius: var(--radius-sm);
+    @include mixins.transition(color);
 
     &:hover {
-        color: variables.$default-orange;
+        color: var(--orange-text);
     }
 
     &:active {
-        color: color.scale(variables.$default-orange, $lightness: -10%);
+        color: var(--orange);
     }
+}
+
+hr {
+    border: none;
+    height: 1px;
+    background-color: var(--border);
 }
 
 table {
     border-collapse: collapse;
     table-layout: fixed;
     width: 95%;
-    margin: 1rem 2.5%;
+    margin: var(--space-4) 2.5%;
     overflow: hidden;
     text-align: center;
 
     td,
     th {
         min-width: 1em;
-        border: 2px solid variables.$default-orange;
-        padding: 3px 5px;
+        border: 1px solid var(--border-strong);
+        padding: var(--space-1) var(--space-2);
         vertical-align: top;
-        box-sizing: border-box;
         position: relative;
 
         >* {
@@ -103,13 +174,14 @@ table {
 
     th {
         font-weight: bold;
-        background-color: variables.$default-orange;
+        background-color: var(--orange-tint);
+        border-color: var(--orange);
     }
 
     input {
         background-color: transparent;
         border: none;
-        color: variables.$default-font-color;
+        color: var(--text);
         width: 100%;
     }
 
@@ -117,28 +189,30 @@ table {
         z-index: 2;
         position: absolute;
         content: "";
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        background: rgba(255, 200, 200, 0.4);
+        inset: 0;
+        background: var(--orange-tint);
         pointer-events: none;
     }
 }
 
 input[type=checkbox],
 input[type=radio] {
-    accent-color: variables.$default-orange;
+    accent-color: var(--orange);
     cursor: pointer;
     width: 1rem;
     height: 1rem;
+    @include mixins.transition((border-color, transform));
+
+    &:active {
+        transform: scale(0.9);
+    }
 
     &:not(:checked) {
         appearance: none;
-        border: 2px solid variables.$default-green;
+        border: var(--stroke) solid var(--green);
 
         &[type=checkbox] {
-            border-radius: 0.1rem;
+            border-radius: 0.2rem;
         }
 
         &[type=radio] {
@@ -146,7 +220,7 @@ input[type=radio] {
         }
 
         &:hover {
-            border-color: variables.$default-orange;
+            border-color: var(--orange-text);
         }
     }
 }
@@ -162,61 +236,69 @@ input[type=range] {
     }
 
     &::-moz-range-track {
-        background-color: color.scale(variables.$default-font-color, $lightness: -20%);
-        border-radius: 0.5rem;
-        height: 0.5rem;
+        background-color: var(--border-strong);
+        border-radius: var(--radius-full);
+        height: 0.375rem;
     }
 
     &::-webkit-slider-runnable-track {
-        background-color: color.scale(variables.$default-font-color, $lightness: -20%);
-        border-radius: 0.5rem;
-        height: 0.5rem;
+        background-color: var(--border-strong);
+        border-radius: var(--radius-full);
+        height: 0.375rem;
     }
 
     &::-webkit-slider-thumb {
-        transition: all 125ms ease;
         -webkit-appearance: none;
         appearance: none;
-        margin-top: -4px;
-        background-color: variables.$default-green;
+        margin-top: -0.3125rem;
+        background-color: var(--green-text);
         border-radius: 50%;
         height: 1rem;
         width: 1rem;
         border: none;
+        box-shadow: var(--shadow-sm);
+        @include mixins.transition((background-color, transform, box-shadow));
     }
 
     &::-moz-range-thumb {
-        transition: all 125ms ease;
-        background-color: variables.$default-green;
+        background-color: var(--green-text);
         border-radius: 50%;
         height: 1rem;
         width: 1rem;
         border: none;
+        box-shadow: var(--shadow-sm);
+        @include mixins.transition((background-color, transform, box-shadow));
     }
 
-    &:not(:disabled):active::-webkit-slider-thumb {
-        background-color: variables.$default-orange;
-
-        outline: 3px solid variables.$default-orange;
-        outline-offset: 0.125rem;
+    &:not(:disabled):hover::-webkit-slider-thumb {
+        transform: scale(1.15);
     }
 
-    &:not(:disabled):active::-moz-range-thumb {
-        background-color: variables.$default-orange;
+    &:not(:disabled):hover::-moz-range-thumb {
+        transform: scale(1.15);
+    }
 
-        outline: 3px solid variables.$default-orange;
-        outline-offset: 0.125rem;
+    &:not(:disabled):active::-webkit-slider-thumb,
+    &:focus-visible::-webkit-slider-thumb {
+        background-color: var(--orange-text);
+        box-shadow: 0 0 0 0.375rem var(--orange-tint);
+    }
+
+    &:not(:disabled):active::-moz-range-thumb,
+    &:focus-visible::-moz-range-thumb {
+        background-color: var(--orange-text);
+        box-shadow: 0 0 0 0.375rem var(--orange-tint);
     }
 
     &:disabled {
         cursor: default;
 
         &::-webkit-slider-thumb {
-            background-color: color.scale(variables.$default-font-color, $lightness: -50%);
+            background-color: var(--text-disabled);
         }
 
         &::-moz-range-thumb {
-            background-color: color.scale(variables.$default-font-color, $lightness: -50%);
+            background-color: var(--text-disabled);
         }
     }
 }
@@ -226,38 +308,46 @@ datalist {
     flex-direction: column;
     justify-content: space-between;
     writing-mode: vertical-lr;
-    font-family: "Lato", sans-serif;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
 }
 
-
 fieldset {
-    font-family: "Lato", sans-serif;
+    border: var(--stroke) solid var(--green);
+    border-radius: var(--radius-lg) var(--radius-sm) var(--radius-sm) var(--radius-sm);
+    padding: var(--space-2) var(--space-4) var(--space-3);
+    @include mixins.transition(border-color);
 
     legend {
-        color: variables.$default-green;
+        padding: 0 var(--space-1);
+        color: var(--green-text);
+        font-weight: 700;
+        font-size: var(--text-sm);
     }
 
-    border: 2px solid variables.$default-green;
-    border-radius: 0.75rem 0.25rem 0.25rem 0.25rem;
-
     &.error {
-        legend {
-            color: variables.$default-red;
-        }
+        border-color: var(--red);
 
-        border-color: variables.$default-red;
+        legend {
+            color: var(--red-text);
+        }
     }
 }
 
 footer {
     display: flex;
     place-content: center;
-    padding: 1rem 0;
-    margin: 2rem auto 0 auto;
-    border-top: 2px solid color.scale(variables.$default-green, $lightness: -10%);
-    @include mixins.content-responsiveness(60vw, 80vw, 80vw);
+    padding: var(--space-5) 0;
+    margin: var(--space-7) auto 0;
+    border-top: 1px solid var(--border);
+    width: min(100% - 2 * var(--gutter), var(--measure));
 
     a {
-        color: color.scale(variables.$default-font-color, $lightness: -10%);
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-weight: 400;
+        font-size: var(--text-sm);
+        color: var(--text-muted);
     }
 }

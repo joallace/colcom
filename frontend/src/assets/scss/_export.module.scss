@@ -6,10 +6,10 @@
     lg: variables.$screen-lg;
     xl: variables.$screen-xl;
     xxl: variables.$screen-2xl;
-    defaultGreen: variables.$default-green;
-    defaultOrange: variables.$default-orange;
-    defaultYellow: variables.$default-yellow;
-    defaultBlue: variables.$default-blue;
-    defaultInputBg: variables.$default-input-bg;
-    defaultFontColor: variables.$default-font-color;
+    defaultGreen: variables.$green;
+    defaultOrange: variables.$orange;
+    defaultYellow: variables.$yellow;
+    defaultBlue: variables.$blue;
+    defaultInputBg: variables.$surface-raised;
+    defaultFontColor: variables.$text;
 }

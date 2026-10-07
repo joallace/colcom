@@ -29,7 +29,7 @@ export default function EditorFloatingMenu({ editor, tableConfig, modal, setModa
   return (
     <div>
       <FloatingMenu
-        className={`menu${(modal || !visible) ? " hidden" : ""}`}
+        className={`menu editorMenu${(modal || !visible) ? " hidden" : ""}`}
         editor={editor}
         shouldShow={({ view, state }) => {
           const { selection } = state;

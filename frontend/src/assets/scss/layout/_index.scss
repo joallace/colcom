@@ -1,71 +1,65 @@
-@use "../abstracts/variables";
-
-@use "sass:color";
-
-:root {
-    background-color: variables.$default-bg;
-    color: variables.$default-font-color;
-}
+@use "../abstracts/mixins";
 
 #root {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
 }
 
+// A page's content: one centered column, a reading width wide, inside the page's gutter. Its
+// children stretch to the column; `.wide` makes room for a post with critiques beside it
 .content {
     display: grid;
+    grid-template-columns: minmax(0, var(--measure));
     grid-auto-rows: min-content;
     justify-content: center;
-    padding: 1rem 0;
+    align-content: start;
+    gap: var(--space-4);
+    padding: var(--space-6) var(--gutter) var(--space-4);
     flex: 1;
 
-
-    &.tree {
-        gap: 1.5rem;
-        padding: 1.5rem 0;
-    }
-
-    &.login {
-        height: calc(100vh - variables.$navbar-height);
-        min-height: min-content;
+    &.wide {
+        grid-template-columns: minmax(0, var(--measure-wide));
     }
 
     &.centered {
         align-content: center;
     }
+
+    >.spinner {
+        justify-self: center;
+    }
 }
 
 .avatar {
-    border: 2px solid variables.$default-green;
-    border-radius: 0.25rem;
+    border: var(--stroke) solid var(--green);
+    border-radius: var(--radius-md);
     image-rendering: pixelated;
+    @include mixins.transition((border-color, transform));
 }
 
 .focus {
-    color: variables.$default-font-color;
+    color: var(--text);
     font-weight: bold;
 }
 
 .clickable {
     cursor: pointer;
-    transition: all 0.15s ease;
+    @include mixins.transition((color, background-color, transform));
 
     &:hover {
-        color: variables.$default-orange !important;
+        color: var(--orange-text) !important;
     }
 }
 
 .unselectable {
     -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
     user-select: none;
 }
 
 .disabled {
     cursor: default !important;
-    color: color.scale(variables.$default-font-color, $lightness: -50%) !important;
+    color: var(--text-disabled) !important;
     pointer-events: none;
 }
