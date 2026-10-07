@@ -14,25 +14,29 @@
 
     a {
         display: flex;
-        // Not `min-content`: that is the longest word, however long. This keeps
-        // low-voted bars wide enough that ordinary words aren't split on phones
-        min-width: min(12rem, 100%);
         font-weight: 400;
 
         &:hover .percentageBar {
-            background-color: var(--orange-tint);
             border-left-color: var(--orange-text);
-            transform: translateX(2px);
+
+            &::before {
+                background-color: var(--orange-fill);
+            }
         }
 
         &:active .percentageBar {
-            transform: translateX(2px) scale(0.99);
+            transform: scale(0.99);
         }
     }
 
-    // The post's share of the topic's poll, as long as the share: a tinted bar rather than a solid
-    // one, so a page of them doesn't outweigh the text they introduce
+    // The post's share of the topic's poll: a track as wide as the row, filled up to the share.
+    // The fill is the data and the track keeps every title the same room, so a long title never
+    // looks like a large share (as it did when the bar's own width was the share)
     .percentageBar {
+        // Its fill sits behind the text without escaping the bar
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
         display: flex;
         width: 100%;
         min-height: 2.5rem;
@@ -41,12 +45,25 @@
         align-items: center;
         gap: var(--space-3);
         padding: var(--space-2) var(--space-4) var(--space-2) var(--space-3);
-        background-color: var(--surface-raised);
+        background-color: var(--surface);
         border-left: 3px solid var(--border-strong);
         border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
         color: var(--text);
         line-height: var(--leading-tight);
-        @include mixins.transition((background-color, border-color, transform), var(--duration-base));
+        @include mixins.transition((border-color, transform), var(--duration-base));
+
+        // Scaled rather than sized, so it fills up on the compositor
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background-color: var(--fill-neutral);
+            transform-origin: left;
+            transform: scaleX(var(--share, 0));
+            animation: grow-x var(--duration-slow) var(--ease-out);
+            @include mixins.transition((background-color, transform), var(--duration-base));
+        }
 
         span,
         a {
@@ -72,8 +89,11 @@
 
         // The post the user voted for
         &.chosen {
-            background-color: var(--green-tint);
             border-left-color: var(--green-text);
+
+            &::before {
+                background-color: var(--green-fill);
+            }
 
             span:last-child {
                 color: var(--green-text);

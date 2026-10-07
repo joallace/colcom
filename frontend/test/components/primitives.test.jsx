@@ -119,6 +119,15 @@ describe("PostSummary", () => {
     expect(container.querySelector("script")).toBeNull()
   })
 
+  it("fills its bar up to the post's share, with an empty bar for a post without votes", () => {
+    const { container, unmount } = renderSummary({ percentage: 0.25 })
+    expect(container.querySelector(".percentageBar").style.getPropertyValue("--share")).toBe("0.25")
+    unmount()
+
+    const { container: noVotes } = renderSummary({ percentage: NaN })
+    expect(noVotes.querySelector(".percentageBar").style.getPropertyValue("--share")).toBe("0")
+  })
+
   it("numbers a post without an answer by its position", () => {
     renderSummary({ summary: "Resumo", index: 2 })
     expect(screen.getByText("3.")).toBeInTheDocument()

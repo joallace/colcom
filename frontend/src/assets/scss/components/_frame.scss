@@ -202,16 +202,26 @@
         width: 0.5rem;
     }
 
+    // Starts level with the middle of its header, whatever the header's height or alignment: the
+    // element stretches to the header and draws the corner over its lower half
     &.top {
         position: relative;
-        height: 50%;
-        top: 50%;
+        align-self: stretch;
         margin-bottom: 0;
-        border-width: var(--stroke) 0 0 var(--stroke);
-        border-radius: var(--radius-lg) 0 0 0;
+        border-width: 0;
 
-        @media screen and (min-width: 0px) and (max-width: variables.$screen-sm) {
-            border-radius: var(--radius-md) 0 0 0;
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 50% 0 0 0;
+            border-style: solid;
+            border-color: inherit;
+            border-width: var(--stroke) 0 0 var(--stroke);
+            border-radius: var(--radius-lg) 0 0 0;
+
+            @media screen and (min-width: 0px) and (max-width: variables.$screen-sm) {
+                border-radius: var(--radius-md) 0 0 0;
+            }
         }
     }
 

@@ -10,8 +10,10 @@ export default function PostSummary({ parent_id, id, index = 0, summary, percent
 
   return (
     <div className="postSummary">
-      <Link to={path} style={{ width: `${(30 + percentage * 70) || 30}%` }}>
-        <div className={`percentageBar${chosen ? " chosen" : ""}`}>
+      <Link to={path}>
+        {/* Every bar spans the whole row and is filled up to the post's share (`--share`, 0–1), so
+            shares compare at any width, however long the titles they hold */}
+        <div className={`percentageBar${chosen ? " chosen" : ""}`} style={{ "--share": percentage || 0 }}>
           <span>{chosen && <PiStarFill />}{isAuthor && <PiPencilSimpleLineFill />}{shortAnswer ? shortAnswer : `${index + 1}.`}</span>
           <span>{toPercentageStr(percentage)}</span>
         </div>

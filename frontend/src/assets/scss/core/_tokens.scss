@@ -15,6 +15,10 @@
     --hover: #{rgba(v.$text, 0.07)};
     --pressed: #{rgba(v.$text, 0.12)};
     --border: #{rgba(v.$text, 0.12)};
+    // Data drawn under text (a poll share): strong enough to compare, faint enough to read over
+    --fill-neutral: #{rgba(v.$text, 0.16)};
+    --orange-fill: #{rgba(v.$orange, 0.5)};
+    --green-fill: #{rgba(v.$green, 0.55)};
     --border-strong: #{rgba(v.$text, 0.24)};
 
     // Text
