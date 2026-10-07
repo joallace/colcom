@@ -156,9 +156,16 @@ export default function Critique({
       onSubmitSignal()
   }, [submitSignal])
 
-  React.useEffect(() => {
-    if (setTempHighlight && range)
+  // Marks the critique's passage when it opens. `range` is rebuilt on every render, so it's read
+  // through an effect event: as a dependency, setting the highlight would re-run the effect forever
+  const highlightPassage = React.useEffectEvent(() => {
+    if (range)
       setTempHighlight(range)
+  })
+
+  React.useEffect(() => {
+    if (setTempHighlight)
+      highlightPassage()
   }, [setTempHighlight])
 
   return (

@@ -113,7 +113,8 @@ export default function Editor({
   React.useEffect(() => {
     if (editor && tempHighlight.length === 2)
       showTempHighlight()
-  }, [tempHighlight])
+  // `editor` is null until it's created after mounting; a highlight asked for before then is shown once it exists
+  }, [editor, tempHighlight])
 
   const applyEditable = React.useEffectEvent(() => {
     if (editor) {
