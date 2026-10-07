@@ -31,6 +31,7 @@ interface User {
   name: string,
   pass: string,
   email: string,
+  avatar: string, // base64
   colcoins: number,
   prestige: number,
   permissions: string[],
@@ -156,6 +157,26 @@ export async function findByPid(pid: string, options = {}): Promise<User> {
   return result[0]
 }
 
+export async function findByName(name: string): Promise<User> {
+  const result = await findAll({
+    where: `LOWER(name) = LOWER($1)`,
+    values: [name],
+    pageSize: 1
+  })
+
+  if (result.length === 0) {
+    throw new NotFoundError({
+      message: `Usuário não encontrado.`,
+      action: `Verifique se o nome de usuário foi digitado corretamente.`,
+      stack: new Error().stack,
+      errorLocationCode: 'MODEL:USER:FIND_BY_NAME:NOT_FOUND',
+      key: "name",
+    })
+  }
+
+  return result[0]
+}
+
 export async function removeFeatures(userPid: string, features: string[]): Promise<User> {
   let lastUpdatedUser
 
@@ -253,6 +274,7 @@ export default Object.freeze({
   findAll,
   findByLogin,
   findByPid,
+  findByName,
   removeFeatures,
   addFeatures,
   getDataByPublicId

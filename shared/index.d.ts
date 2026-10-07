@@ -42,6 +42,7 @@ export interface SchemaData {
   list: { page: number, pageSize: number, orderBy: string, authorId?: string, [key: string]: unknown }
   contentParams: { id: number }
   versionParams: { id: number, hash: string }
+  userParams: { name: string }
 }
 
 export type SchemaName = keyof SchemaData

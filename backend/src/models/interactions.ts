@@ -1,5 +1,5 @@
 import db from "@/pgDatabase"
-import { getDataByPublicId } from "@/models/user"
+import { avatarToBase64, getDataByPublicId } from "@/models/user"
 import { ValidationError } from "@/errors"
 import Content from "@/models/content"
 
@@ -54,7 +54,8 @@ async function findAll({ where = "", values = [] as any[], orderBy = "" }): Prom
         i.config,
         i.created_at,
         users.name as author,
-        users.pid as author_id
+        users.pid as author_id,
+        users.avatar as author_avatar
       FROM
         interactions i
       INNER JOIN
@@ -66,6 +67,7 @@ async function findAll({ where = "", values = [] as any[], orderBy = "" }): Prom
   }
 
   const result = await db.query(query)
+  avatarToBase64("author_avatar", result)
   return result.rows
 }
 

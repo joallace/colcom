@@ -21,22 +21,25 @@ export function createSchemas(limits) {
   const title = { type: "string", label: "título", minLength: limits.title.min, maxLength: limits.title.max, trimmed: true }
   const postBody = { type: "string", label: "texto", minLength: 1, maxLength: limits.postBody.max, notBlank: true }
   const commit = label => ({ type: "string", label, format: "commit" })
+  const username = {
+    type: "string",
+    label: "nome de usuário",
+    minLength: limits.username.min,
+    maxLength: limits.username.max,
+    trimmed: true,
+    // Logging in takes a name or an email, told apart by the "@"
+    pattern: "^[^@]*$",
+    // GET /users/self is the logged in user, so a user named "self" couldn't have a public profile
+    not: { const: "self" },
+    messages: { pattern: 'não pode conter "@"', not: "nome reservado" }
+  }
 
   const signUp = {
     type: "object",
     required: ["name", "email", "pass", "avatar"],
     additionalProperties: false,
     properties: {
-      name: {
-        type: "string",
-        label: "nome de usuário",
-        minLength: limits.username.min,
-        maxLength: limits.username.max,
-        trimmed: true,
-        // Logging in takes a name or an email, told apart by the "@"
-        pattern: "^[^@]*$",
-        messages: { pattern: 'não pode conter "@"' }
-      },
+      name: username,
       email: { type: "string", label: "email", maxLength: limits.email.max, format: "email" },
       pass: { type: "string", label: "senha", minLength: limits.password.min, maxBytes: limits.password.maxBytes },
       avatar: { type: "string", label: "foto de perfil", maxLength: base64Length(limits.avatar.maxBytes), format: "png" }
@@ -196,8 +199,14 @@ export function createSchemas(limits) {
     properties: { id: id("id"), hash: commit("versão") }
   }
 
+  const userParams = {
+    type: "object",
+    required: ["name"],
+    properties: { name: username }
+  }
+
   return {
     body: { signUp, login, content, topic, post, critique, critiqueConfig, edit, clone, interaction },
-    query: { list, contentParams, versionParams }
+    query: { list, contentParams, versionParams, userParams }
   }
 }

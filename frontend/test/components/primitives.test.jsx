@@ -9,7 +9,7 @@ import LoadingButton from "@/components/primitives/LoadingButton"
 import Pagination from "@/components/primitives/Pagination"
 import Frame from "@/components/primitives/Frame"
 import PostSummary from "@/components/content/PostSummary"
-import { Interactions, PostCount, Promotions, Relevance } from "@/components/content/Metrics"
+import { Author, Interactions, PostCount, Promotions, Relevance } from "@/components/content/Metrics"
 
 
 describe("Modal", () => {
@@ -89,6 +89,15 @@ describe("Metrics", () => {
   ])("Promotions %o reads %j", (props, expected) => {
     const { container } = render(<Promotions {...props} />)
     expect(container.textContent.replace(/\s+/g, " ").trim()).toBe(expected)
+  })
+
+  it("Author links the name to the profile and leaves the avatar out of the link, to zoom it", () => {
+    const { container } = render(<MemoryRouter><Author isDesktop name="ana maria" avatar="AAAA" /></MemoryRouter>)
+
+    expect(screen.getByRole("link", { name: "ana maria" })).toHaveAttribute("href", "/users/ana%20maria")
+    const avatar = container.querySelector("img")
+    expect(avatar).toHaveAttribute("src", "data:image/png;base64,AAAA")
+    expect(avatar.closest("a")).toBeNull()
   })
 
   it("pluralizes counts", () => {

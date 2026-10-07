@@ -31,6 +31,7 @@ function App() {
         <Route path="/topics/:tid/posts/:pid" element={<PostPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/users/:name" element={<Profile />} />
       </Routes>
       <Footer />
     </BrowserRouter>

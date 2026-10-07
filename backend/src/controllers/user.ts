@@ -61,6 +61,18 @@ export const loginUser: RequestHandler = async (req, res, next) => {
   }
 }
 
+// Anyone's public profile; their contents come from GET /contents?authorId=<pid>
+export const getUser: RequestHandler = async (req, res, next) => {
+  try {
+    const { name } = validate("userParams", req.params)
+    const { pid, name: userName, avatar, created_at } = await User.findByName(name)
+    res.status(200).json({ pid, name: userName, avatar, created_at })
+  }
+  catch (err) {
+    next(err)
+  }
+}
+
 export const getCurrentUser: RequestHandler = async (req, res, next) => {
   const public_id = res.locals.user.pid
   try {

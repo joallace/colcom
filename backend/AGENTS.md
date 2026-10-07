@@ -57,6 +57,7 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 |---|---|---|
 | `POST /users`, `POST /login` | — | Sign up; log in (returns `accessToken`) |
 | `GET /users/self` | required | Current user, with the topic they're promoting |
+| `GET /users/:name` | — | Anyone's public profile (`pid`, `name`, `avatar`, `created_at`), by name ignoring case; registered after `/users/self`, so "self" is a reserved name |
 | `GET /topics?page&pageSize&orderBy&with_count` | optional | Topic list, each with its top 3 posts and stats |
 | `GET /topics/:id` | optional | One topic with all its posts ranked; 404 for non-topics |
 | `GET /contents?authorId&page&pageSize` | optional | A user's contents, for the profile: `{ contents, count }` |

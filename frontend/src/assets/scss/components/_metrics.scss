@@ -53,4 +53,11 @@
             box-shadow: var(--shadow-md);
         }
     }
+
+    // Zoomed in, the avatar covers the name beside it (and a tap leaves it zoomed on phones): the
+    // link stays above it, so it can still be reached
+    a {
+        position: relative;
+        z-index: 2;
+    }
 }

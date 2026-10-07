@@ -92,6 +92,45 @@ describe("GET /users/self", () => {
   })
 })
 
+describe("GET /users/:name", () => {
+  it("returns anyone's public profile, ignoring the name's case", async () => {
+    const user = await signUp()
+    const res = await api().get(`/users/${user.name.toUpperCase()}`)
+
+    expect(res.status).toBe(200)
+    expect(res.body).toEqual({ pid: user.pid, name: user.name, avatar: AVATAR, created_at: expect.any(String) })
+  })
+
+  it("finds names with spaces", async () => {
+    const name = unique("erin")
+    const created = await api().post("/users").send({ name, email: `${name.replace(" ", "_")}@colcom.test`, pass: "a long enough secret", avatar: AVATAR })
+    const res = await api().get(`/users/${encodeURIComponent(name)}`)
+
+    expect(res.status).toBe(200)
+    expect(res.body.pid).toBe(created.body.pid)
+  })
+
+  it("answers 404 for an unknown name", async () => {
+    const res = await api().get("/users/nobody_here")
+    expect(res.status).toBe(404)
+    expect(res.body).toMatchObject({ key: "name", message: "Usuário não encontrado." })
+  })
+
+  it("refuses an email, which a name can't be", async () => {
+    const user = await signUp()
+    const res = await api().get(`/users/${encodeURIComponent(user.email)}`)
+
+    expect(res.status).toBe(400)
+    expect(res.body.key).toBe("name")
+  })
+
+  it("leaves /users/self to the logged in user", async () => {
+    const res = await api().get("/users/self")
+    expect(res.status).toBe(400)
+    expect(res.body.message).toBe("Token de autorização não fornecido.")
+  })
+})
+
 describe("GET /users", () => {
   it("lists users without sensitive data", async () => {
     await signUp()
@@ -128,6 +167,13 @@ describe("sign up validation", () => {
       { key: "pass", label: "senha", message: "mínimo de 8 caracteres" },
       { key: "avatar", label: "foto de perfil", message: "imagem inválida" }
     ])
+  })
+
+  it("reserves the name \"self\", taken by GET /users/self", async () => {
+    const res = await api().post("/users").send(newUser({ name: "self" }))
+
+    expect(res.status).toBe(400)
+    expect(res.body).toMatchObject({ key: "name", message: "Nome de usuário: nome reservado." })
   })
 
   it("refuses a password longer than bcrypt reads", async () => {

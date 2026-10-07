@@ -1,10 +1,14 @@
-import { getUserVote, toPercentageStr } from "@/assets/util"
+import { Link } from "react-router"
+
+import { getUserVote, toPercentageStr, userPath } from "@/assets/util"
 import Focus from "@/components/primitives/Focus"
 
+// Only the name links to the profile: the avatar stays out of the link so hovering it (or tapping it
+// on a phone) zooms it in rather than navigating
 export const Author = ({ isDesktop, name, avatar }) => {
   return (
     <span className="startedBy">
-      {isDesktop && "iniciado por"} <img src={`data:image/png;base64,${avatar}`} /> {name}
+      {isDesktop && "iniciado por"} <img src={`data:image/png;base64,${avatar}`} alt="" /> <Link to={userPath(name)}>{name}</Link>
     </span>
   )
 }

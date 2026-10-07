@@ -306,7 +306,7 @@ export default function Post({
                 >
                   {suggestion.config.message}
                 </span>
-                <div className="description"><Author name={author} avatar={author_avatar}/><Dot />{relativeTime(suggestion.created_at)}</div>
+                <div className="description"><Author name={suggestion.author} avatar={suggestion.author_avatar}/><Dot />{relativeTime(suggestion.created_at)}</div>
               </li>
             })
           }

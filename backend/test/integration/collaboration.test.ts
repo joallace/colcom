@@ -1,7 +1,7 @@
 // Editing posts, suggestions (edits by someone other than the author), merging and cloning
 import { beforeAll, describe, expect, it } from "vitest"
 
-import { api, createPost, createTopic, edit, history, latestCommit, signUp, TestUser } from "../support/api"
+import { api, AVATAR, createPost, createTopic, edit, history, latestCommit, signUp, TestUser } from "../support/api"
 
 
 let author: TestUser, contributor: TestUser
@@ -104,7 +104,7 @@ describe("suggestions", () => {
     expect((await api().get(`/contents/${post.id}`)).body.body).toBe("Alpha paragraph.")
 
     // Only the author is shown what's pending
-    expect(await pendingSuggestions(post.id)).toMatchObject([{ id: res.body.id, author: contributor.name, config: res.body.config }])
+    expect(await pendingSuggestions(post.id)).toMatchObject([{ id: res.body.id, author: contributor.name, author_avatar: AVATAR, config: res.body.config }])
     expect((await api().get(`/contents/${post.id}`).set(contributor.auth)).body.suggestions).toBeUndefined()
   })
 
