@@ -118,6 +118,21 @@ describe("PostPage", () => {
     await waitFor(() => expect(marks(container).map(mark => mark.textContent)).toEqual(["fall for everyone", "will be cut from the text"]))
   })
 
+  it("opens the criticised version from a critique made on it", async () => {
+    // Critique 10 alone, so its highlight opens it rather than a group
+    mockApi({ ...VERSIONS, [V2]: { ...VERSIONS[V2], critiques: VERSIONS[V2].critiques.slice(0, 1) } })
+    const { container } = renderPage()
+
+    await waitFor(() => expect(marks(container).length).toBeGreaterThan(0))
+    fireEvent.click(marks(container)[0])
+    fireEvent.click(await screen.findByText("ver a versão criticada"))
+
+    // The passage marked while the critique was open belonged to the other version: nothing is left marked
+    await waitFor(() => expect(container.querySelector(".ProseMirror")).toHaveTextContent("This sentence will be cut from the text."))
+    await waitFor(() => expect(marks(container).map(mark => mark.textContent)).toEqual(["fall for everyone", "will be cut from the text"]))
+    expect(container.querySelector(".ProseMirror mark.temporary")).toBeNull()
+  })
+
   it("falls back to the latest version for an unknown commit in the URL", async () => {
     const fetch = mockApi()
     renderPage(`/topics/1/posts/2?commit=${"f".repeat(40)}`)

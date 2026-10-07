@@ -33,6 +33,10 @@ export default function Editor({
 }) {
   // The content with the critiques highlighted; only effects read it, so changing it needn't re-render
   const markedBody = React.useRef()
+  // TipTap emits "create" a tick after the editor exists, so for a moment it's there without the
+  // critiques marked: a highlight asked for then (a version loaded with a critique's passage
+  // still marked) would rebuild it from no content, and its range wouldn't fit the empty document
+  const [isMarked, setIsMarked] = React.useState(false)
   const [modal, setModal] = React.useState(false)
   const { chartString, resetChartStr } = React.useContext(ChartContext)
 
@@ -72,7 +76,10 @@ export default function Editor({
       if (saveInLocalStorage)
         localStorage.setItem("editorContent", editorContent)
     },
-    onCreate: injectCritiques,
+    onCreate: props => {
+      injectCritiques(props)
+      setIsMarked(true)
+    },
     editable: isEditable,
     content: isEditable ? content : content?.replace(/<chart readonly="false"/g, '<chart readonly="true"')
   })
@@ -115,10 +122,10 @@ export default function Editor({
   })
 
   React.useEffect(() => {
-    if (editor && tempHighlight.length === 2)
+    if (isMarked && tempHighlight.length === 2)
       showTempHighlight()
-  // `editor` is null until it's created after mounting; a highlight asked for before then is shown once it exists
-  }, [editor, tempHighlight])
+  // A highlight asked for before the critiques are marked is shown once they are
+  }, [isMarked, tempHighlight])
 
   const applyEditable = React.useEffectEvent(() => {
     if (editor) {

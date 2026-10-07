@@ -72,6 +72,8 @@ export default function PostPage() {
         setPostCritiques(data.critiques)
         setCritiqueHistory({ versions: data.versions ?? {}, lineages: data.lineages ?? {} })
         setDiffBase(data.base?.body)
+        // A marked passage's positions belong to the version it was marked on
+        setTempHighlight([])
       }
     }
     catch (err) {
