@@ -1,9 +1,10 @@
 import env from "@/assets/enviroment"
 
-export const submitVote = async (navigate, content_id, type, colcoins = undefined) => {
+// `toLogin` is called instead when no one is logged in (see hooks/useToLogin)
+export const submitVote = async (toLogin, content_id, type, colcoins = undefined) => {
   const token = localStorage.getItem("accessToken")
   if (!token) {
-    navigate("/login")
+    toLogin()
     return
   }
   const url = `${env.apiAddress}/interactions`

@@ -1,5 +1,5 @@
 import React from "react"
-import { useNavigate, Link } from 'react-router'
+import { Link } from 'react-router'
 import {
   PiBookmarkSimple,
   PiBookmarkSimpleFill,
@@ -18,6 +18,7 @@ import env from "@/assets/enviroment"
 import useUser from "@/context/UserContext"
 import { describe, validate } from "@/assets/validation"
 import { readableText } from "@/assets/textIndex"
+import useToLogin from "@/hooks/useToLogin"
 
 
 export default function Critique({
@@ -53,7 +54,7 @@ export default function Critique({
   const [error, setError] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState("")
   const titleRef = React.useRef()
-  const navigate = useNavigate()
+  const toLogin = useToLogin()
   const { user } = useUser()
   const isDesktop = useBreakpoint("md")
   // Where the critique lands on the version being read; none when its passage was removed
@@ -78,7 +79,7 @@ export default function Critique({
       icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
       initialValue: userInteractions?.includes("bookmark") || false,
       hide: !readOnly,
-      onClick: () => submitVote(navigate, id, "bookmark")
+      onClick: () => submitVote(toLogin, id, "bookmark")
     },
     "close": {
       description: "fechar crítica",
@@ -107,7 +108,7 @@ export default function Critique({
     }
 
     if (!user) {
-      navigate("/login")
+      toLogin()
       return
     }
 

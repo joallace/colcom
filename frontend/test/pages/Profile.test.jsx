@@ -1,6 +1,6 @@
 // The profile page against a mocked API: the logged in user's (/profile) and anyone's (/users/:name)
 import { render, screen } from "@testing-library/react"
-import { MemoryRouter, Route, Routes } from "react-router"
+import { MemoryRouter, Route, Routes, useLocation } from "react-router"
 import { describe, expect, it, vi } from "vitest"
 
 import Profile from "@/pages/Profile"
@@ -41,13 +41,18 @@ function mockApi() {
   return fetch
 }
 
+function LoginPage() {
+  const { search } = useLocation()
+  return <p>login page{search}</p>
+}
+
 const renderPage = (url, user) => render(
   <UserContext.Provider value={{ user }}>
     <MemoryRouter initialEntries={[url]}>
       <Routes>
         <Route path="/profile" element={<Profile />} />
         <Route path="/users/:name" element={<Profile />} />
-        <Route path="/login" element={<p>login page</p>} />
+        <Route path="/login" element={<LoginPage />} />
       </Routes>
     </MemoryRouter>
   </UserContext.Provider>
@@ -67,7 +72,7 @@ describe("Profile", () => {
     mockApi()
     renderPage("/profile", null)
 
-    expect(await screen.findByText("login page")).toBeInTheDocument()
+    expect(await screen.findByText("login page?returnTo=%2Fprofile")).toBeInTheDocument()
   })
 
   it("shows anyone's profile and contents by name, without logging in", async () => {

@@ -1,9 +1,10 @@
 import React from "react"
-import { Navigate, useParams } from "react-router"
+import { Navigate, useLocation, useParams } from "react-router"
 
 import env from "@/assets/enviroment"
 import useUser from "@/context/UserContext"
 import usePageParam from "@/hooks/usePageParam"
+import { loginPath } from "@/assets/returnTo"
 import { relativeTime, userPath } from "@/assets/util"
 import Spinner from "@/components/primitives/Spinner"
 import Focus from "@/components/primitives/Focus"
@@ -16,6 +17,7 @@ const PAGE_SIZE = 5
 // The logged in user's profile (/profile) or anyone's (/users/:name)
 export default function Profile() {
   const { name } = useParams()
+  const location = useLocation()
   const { user } = useUser()
   const [page, setPage] = usePageParam()
   // The profile fetched by name (null when there's no such user) and the contents fetched for a profile
@@ -86,7 +88,7 @@ export default function Profile() {
   }, [name])
 
   if (!name && user === null)
-    return <Navigate to="/login" />
+    return <Navigate to={loginPath(location)} replace />
 
   if (name && profile === null)
     return (

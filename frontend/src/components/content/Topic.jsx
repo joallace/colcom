@@ -16,6 +16,7 @@ import { GROUPED, RANKED, groupByAnswer, loadTopicView, saveTopicView } from "@/
 import { toPercentageStr } from "@/assets/util"
 import { Author, Interactions, PostCount, Promotions, Relevance } from "@/components/content/Metrics"
 import { UserContext } from "@/context/UserContext"
+import useToLogin from "@/hooks/useToLogin"
 
 
 export default function Topic({
@@ -37,6 +38,7 @@ export default function Topic({
   const [view, setView] = React.useState(loadTopicView)
   const { user, updatePromoted } = React.useContext(UserContext)
   const navigate = useNavigate()
+  const toLogin = useToLogin()
 
   // Open topics (no answers) have nothing to group by
   const hasAnswers = config?.answers?.length > 0
@@ -58,13 +60,13 @@ export default function Topic({
     "answer": {
       description: "responder ao tópico",
       icons: PiArrowBendUpLeft,
-      onClick: () => { user ? navigate("/write", { state: { id, title, config } }) : navigate("/login") }
+      onClick: () => { user ? navigate("/write", { state: { id, title, config } }) : toLogin() }
     },
     "bookmark": {
       description: ["salvar tópico", "remover dos salvos"],
       icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
       initialValue: userInteractions?.includes("bookmark") || false,
-      onClick: () => submitVote(navigate, id, "bookmark")
+      onClick: () => submitVote(toLogin, id, "bookmark")
     }
   }
 

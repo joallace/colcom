@@ -1,5 +1,5 @@
 import React from "react"
-import { Link, useNavigate } from "react-router"
+import { Link } from "react-router"
 import { PiBookmarkSimple, PiBookmarkSimpleFill } from "react-icons/pi"
 
 import { default as Editor } from "@/components/Editor"
@@ -7,6 +7,7 @@ import Frame from "@/components/primitives/Frame"
 import { submitVote } from "@/assets/interactions"
 import { Author, Relevance } from "@/components/content/Metrics"
 import { readableText } from "@/assets/textIndex"
+import useToLogin from "@/hooks/useToLogin"
 
 
 // A critique outside its post (profile, bookmarks): the post and passage it criticises. Its title
@@ -14,7 +15,7 @@ import { readableText } from "@/assets/textIndex"
 export default function CritiquePreview({ id, title, body, author, author_avatar, upvotes, downvotes, config, post, topic, userInteractions }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
-  const navigate = useNavigate()
+  const toLogin = useToLogin()
   const postPath = `/topics/${topic.id}/posts/${post.id}`
   const critiquePath = `${postPath}?${new URLSearchParams({ commit: config?.commit ?? "", critique: id })}`
 
@@ -23,7 +24,7 @@ export default function CritiquePreview({ id, title, body, author, author_avatar
       description: ["salvar crítica", "remover dos salvos"],
       icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
       initialValue: userInteractions?.includes("bookmark") || false,
-      onClick: () => submitVote(navigate, id, "bookmark")
+      onClick: () => submitVote(toLogin, id, "bookmark")
     }
   }
 

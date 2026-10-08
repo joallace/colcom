@@ -9,6 +9,7 @@ import useUser from "@/context/UserContext"
 import Alert from "@/components/primitives/Alert"
 import LoadingButton from "@/components/primitives/LoadingButton"
 import { describe, validate } from "@/assets/validation"
+import useToLogin from "@/hooks/useToLogin"
 
 export default function Write() {
   const titleRef = React.useRef()
@@ -20,6 +21,7 @@ export default function Write() {
   const [isIncomplete, setIsIncomplete] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState(false)
   const navigate = useNavigate()
+  const toLogin = useToLogin()
   const { state } = useLocation()
   const { user } = useUser()
 
@@ -38,7 +40,7 @@ export default function Write() {
     }
 
     if (!user) {
-      navigate("/login")
+      toLogin()
       return
     }
 

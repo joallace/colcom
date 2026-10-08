@@ -1,11 +1,12 @@
 import React from "react"
-import { Link, useNavigate } from "react-router"
+import { Link } from "react-router"
 import { PiBookmarkSimple, PiBookmarkSimpleFill } from "react-icons/pi"
 import DOMPurify from "dompurify"
 
 import Frame from "@/components/primitives/Frame"
 import { submitVote } from "@/assets/interactions"
 import { Author, Relevance } from "@/components/content/Metrics"
+import useToLogin from "@/hooks/useToLogin"
 
 
 const SUMMARY_LENGTH = 280
@@ -14,7 +15,7 @@ const SUMMARY_LENGTH = 280
 export default function PostPreview({ id, title, body, author, author_avatar, upvotes, downvotes, config, topic, userInteractions }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
-  const navigate = useNavigate()
+  const toLogin = useToLogin()
   const path = `/topics/${topic.id}/posts/${id}`
 
   const headerConfig = {
@@ -22,7 +23,7 @@ export default function PostPreview({ id, title, body, author, author_avatar, up
       description: ["salvar post", "remover dos salvos"],
       icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
       initialValue: userInteractions?.includes("bookmark") || false,
-      onClick: () => submitVote(navigate, id, "bookmark")
+      onClick: () => submitVote(toLogin, id, "bookmark")
     }
   }
 

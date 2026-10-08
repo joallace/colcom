@@ -6,10 +6,10 @@ import {
   PiListNumbersBold,
   PiQuotesFill
 } from "react-icons/pi"
-import { useNavigate } from "react-router"
 
 import useUser from "@/context/UserContext"
 import useActiveFormats from "@/components/Editor/useActiveFormats"
+import useToLogin from "@/hooks/useToLogin"
 
 
 const hasTextSelection = ({ state, from, to }) =>
@@ -21,7 +21,7 @@ const hasFocus = ({ view, element }) => view.hasFocus() || element.contains(docu
 
 export default function EditorBubbleMenu({ editor, shouldShow = true, readOnly, setShowCritique }) {
   // Hooks must run on every render, before the early return
-  const navigate = useNavigate()
+  const toLogin = useToLogin()
   const { user } = useUser()
   const active = useActiveFormats(editor)
 
@@ -49,7 +49,7 @@ export default function EditorBubbleMenu({ editor, shouldShow = true, readOnly, 
             <button
               onClick={() => {
                 if (!user) {
-                  navigate("/login")
+                  toLogin()
                   return
                 }
                 // The selection may be a chart (a node selection), which a mark alone can't highlight

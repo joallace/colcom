@@ -25,6 +25,7 @@ import { Author, Interactions, Relevance } from "@/components/content/Metrics"
 import { UserContext } from "@/context/UserContext"
 import { relativeTime } from "@/assets/util"
 import env from "@/assets/enviroment"
+import useToLogin from "@/hooks/useToLogin"
 
 
 export default function Post({
@@ -65,13 +66,21 @@ export default function Post({
   const [modalError, setModalError] = React.useState("")
   const { user } = React.useContext(UserContext)
   const navigate = useNavigate()
+  const toLogin = useToLogin()
 
   const readingHeaderCfg = {
     "branch": {
       description: "clonar post",
       icons: PiGitBranch,
       hide: author_id === user?.pid,
-      onClick: () => { if (!user) navigate("/login"); setModalError(""); setModal(3) }
+      onClick: () => {
+        if (!user) {
+          toLogin()
+          return
+        }
+        setModalError("")
+        setModal(3)
+      }
     },
     "merge": {
       description: "incorporar sugestões",
@@ -98,8 +107,10 @@ export default function Post({
       initialValue: false,
       disabled: () => (!bubbleMenuShouldShow || alongsideCritique),
       onClick: (submit) => {
-        if (!user)
-          navigate("/login")
+        if (!user) {
+          toLogin()
+          return
+        }
         if (submit && content !== body) {
           setModalError("")
           setModal(1)
@@ -112,7 +123,7 @@ export default function Post({
       description: ["salvar post", "remover dos salvos"],
       icons: [PiBookmarkSimple, PiBookmarkSimpleFill],
       initialValue: userInteractions?.includes("bookmark") || false,
-      onClick: () => { if (!user) navigate("/login"); submitVote(navigate, id, "bookmark") }
+      onClick: () => submitVote(toLogin, id, "bookmark")
     }
   }
 

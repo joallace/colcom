@@ -2,7 +2,7 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import React from "react"
-import { MemoryRouter, Route, Routes } from "react-router"
+import { MemoryRouter, Route, Routes, useLocation } from "react-router"
 import { describe, expect, it, vi } from "vitest"
 
 import useUser, { UserContext } from "@/context/UserContext"
@@ -10,6 +10,7 @@ import UserProvider from "@/context/UserProvider"
 import Login from "@/pages/Login"
 import VotingButtons from "@/components/primitives/VotingButtons"
 import { submitVote } from "@/assets/interactions"
+import useToLogin from "@/hooks/useToLogin"
 
 
 const API = "http://api.test"
@@ -72,14 +73,20 @@ describe("UserProvider", () => {
 })
 
 describe("Login", () => {
-  const renderLogin = () => {
+  function Where() {
+    const { pathname, search, hash, state } = useLocation()
+    return <span data-testid="where">{`${pathname}${search}${hash} ${JSON.stringify(state)}`}</span>
+  }
+
+  const renderLogin = (entry = "/login") => {
     const fetchUser = vi.fn()
     const { container } = render(
       <UserContext.Provider value={{ fetchUser }}>
-        <MemoryRouter initialEntries={["/login"]}>
+        <MemoryRouter initialEntries={[entry]}>
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<span>home</span>} />
+            <Route path="*" element={<Where />} />
           </Routes>
         </MemoryRouter>
       </UserContext.Provider>
@@ -104,6 +111,42 @@ describe("Login", () => {
     expect(fetch).toHaveBeenCalledWith(`${API}/login`, expect.objectContaining({ method: "post", body: JSON.stringify({ login: "alice", pass: "secret" }) }))
     expect(localStorage.getItem("accessToken")).toBe("new-token")
     expect(fetchUser).toHaveBeenCalled()
+  })
+
+  it("goes back to the page in returnTo, with its state", async () => {
+    mockFetch({ accessToken: "new-token" })
+    const { login, pass, submit } = renderLogin({ pathname: "/login", search: "?returnTo=%2Ftopics%2F1%2Fposts%2F2%3Fcommit%3Dabc", state: { returnState: { id: 1 } } })
+
+    await userEvent.type(login, "alice")
+    await userEvent.type(pass, "secret")
+    await submit()
+
+    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent('/topics/1/posts/2?commit=abc {"id":1}'))
+  })
+
+  it("goes home instead of to another site", async () => {
+    mockFetch({ accessToken: "new-token" })
+    const { login, pass, submit } = renderLogin("/login?returnTo=%2F%2Fevil.test")
+
+    await userEvent.type(login, "alice")
+    await userEvent.type(pass, "secret")
+    await submit()
+
+    await waitFor(() => expect(screen.getByText("home")).toBeInTheDocument())
+  })
+
+  // Signing up turns the form into the login on the same address, as switching modes does
+  it("keeps returnTo through the sign up form, for the login that follows", async () => {
+    mockFetch({ accessToken: "new-token" })
+    renderLogin("/login?returnTo=%2Fprofile")
+    await userEvent.click(screen.getByText(/crie uma/))
+    await userEvent.click(screen.getByText(/entre/))
+
+    await userEvent.type(document.querySelector("input:not([type])"), "alice")
+    await userEvent.type(document.querySelector("input[type=password]"), "secret")
+    await userEvent.click(screen.getByRole("button", { name: "entrar" }))
+
+    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("/profile"))
   })
 
   it("requires both fields before calling the API", async () => {
@@ -150,14 +193,39 @@ describe("Login", () => {
   })
 })
 
+describe("useToLogin", () => {
+  it("sends the user to the login page, remembering where they were and the page's state", async () => {
+    function NeedsLogin() {
+      const toLogin = useToLogin()
+      return <button onClick={toLogin}>votar</button>
+    }
+    function ShowLogin() {
+      const { search, state } = useLocation()
+      return <span data-testid="login">{`${search} ${JSON.stringify(state)}`}</span>
+    }
+    render(
+      <MemoryRouter initialEntries={[{ pathname: "/write", search: "?x=1", state: { id: 7 } }]}>
+        <Routes>
+          <Route path="/write" element={<NeedsLogin />} />
+          <Route path="/login" element={<ShowLogin />} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    await userEvent.click(screen.getByText("votar"))
+
+    expect(screen.getByTestId("login")).toHaveTextContent('?returnTo=%2Fwrite%3Fx%3D1 {"returnState":{"id":7}}')
+  })
+})
+
 describe("submitVote", () => {
   it("sends logged out users to the login page", async () => {
     const fetch = mockFetch()
-    const navigate = vi.fn()
+    const toLogin = vi.fn()
 
-    await submitVote(navigate, 5, "up")
+    await submitVote(toLogin, 5, "up")
 
-    expect(navigate).toHaveBeenCalledWith("/login")
+    expect(toLogin).toHaveBeenCalled()
     expect(fetch).not.toHaveBeenCalled()
   })
 

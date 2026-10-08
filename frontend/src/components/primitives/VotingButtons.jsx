@@ -1,5 +1,4 @@
 import React from "react"
-import { useNavigate } from "react-router"
 import {
   PiCaretUpBold,
   PiCaretUpFill,
@@ -9,6 +8,7 @@ import {
 
 import Input from "@/components/primitives/Input"
 import { submitVote } from "@/assets/interactions"
+import useToLogin from "@/hooks/useToLogin"
 
 export default function VotingButtons({
   id,
@@ -21,12 +21,12 @@ export default function VotingButtons({
 }) {
   const [isLoading, setIsLoading] = React.useState(false)
   const [hovering, setHovering] = React.useState("")
-  const navigate = useNavigate()
+  const toLogin = useToLogin()
 
   const voteClick = async (type) => {
     setIsLoading(true)
     setRelevanceVote(type === relevanceVote ? "" : type)
-    await submitVote(navigate, id, type)
+    await submitVote(toLogin, id, type)
     setIsLoading(false)
   }
 
@@ -41,7 +41,7 @@ export default function VotingButtons({
       else
         setDefinitiveVote(id)
 
-    await submitVote(navigate, id, definitiveVoteType)
+    await submitVote(toLogin, id, definitiveVoteType)
     setIsLoading(false)
   }
 

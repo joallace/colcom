@@ -65,6 +65,7 @@ Forms validate with the schemas the API uses (`shared/`, see the root `AGENTS.md
 
 ## Other things to know
 
+- **Sending to the login.** Use `useToLogin()` (or `loginPath(location)` for `<Navigate>`/`<Link>`), never a bare `/login`: it adds `?returnTo=` with the current address and forwards the router state, and the login page goes back there (through `returnPath`, which only accepts paths on this site) after logging in. Signing up turns the form into the login on the same address, so `returnTo` survives it. `submitVote` takes the hook's function.
 - **`Frame` props.** `Frame` passes its header state to a *single* child through `cloneElement`; arrays and Fragments are rendered as they are. Wrapping an `Editor` together with something else changes which props it receives.
 - **Rendering HTML.** User-written HTML is only rendered through the editor or `DOMPurify.sanitize`. To parse HTML outside the editor, use `new DOMParser().parseFromString(...)`, which never runs handlers like `<img onerror>`; never assign it to `innerHTML`.
 - **Styles.** SCSS partials are imported by `assets/scss/main.scss`, base layers first. Style with the CSS custom properties in `core/_tokens.scss`, built from the Sass constants in `abstracts/_variables.scss`; those constants are only for Sass math and for what `_export.module.scss` hands to JavaScript.

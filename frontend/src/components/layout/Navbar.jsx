@@ -1,5 +1,5 @@
 import React from "react"
-import { NavLink, Link, useNavigate } from "react-router"
+import { NavLink, Link, useLocation, useNavigate } from "react-router"
 import {
   PiUserFill,
   PiPlusBold,
@@ -15,11 +15,13 @@ import DropdownMenu from "@/components/primitives/DropdownMenu"
 import Spinner from "@/components/primitives/Spinner"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import useUser from "@/context/UserContext"
+import { loginPath, loginState } from "@/assets/returnTo"
 
 export default function Navbar() {
   const [modalOpen, setModalOpen] = React.useState(false)
   const { user, clearUser } = useUser()
   const navigate = useNavigate()
+  const location = useLocation()
   const isDesktop = useBreakpoint("md")
   const isLargeScreen = useBreakpoint("lg")
 
@@ -111,7 +113,7 @@ export default function Navbar() {
                 </Link>
                 :
                 user === null ?
-                  <Link to="/login" className="userInfo" title="login e criação de conta">
+                  <Link to={loginPath(location)} state={loginState(location)} className="userInfo" title="login e criação de conta">
                     entrar
                     <PiSignInFill className="icon" />
                   </Link>

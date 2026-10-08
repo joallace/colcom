@@ -1,5 +1,5 @@
 import React from "react"
-import { useNavigate } from "react-router"
+import { useLocation, useNavigate, useSearchParams } from "react-router"
 
 import Input from "@/components/primitives/Input"
 import LoadingButton from "@/components/primitives/LoadingButton"
@@ -9,6 +9,7 @@ import Alert from "@/components/primitives/Alert"
 import { UserContext } from "@/context/UserContext"
 import env from "@/assets/enviroment"
 import { formErrors, limits, responseErrors } from "@/assets/validation"
+import { returnPath } from "@/assets/returnTo"
 
 const MISMATCHING_PASS = "senhas não estão iguais"
 const MISSING_FIELD = "campo obrigatório"
@@ -31,6 +32,8 @@ export default function Login() {
   const [formErrorMessage, setFormErrorMessage] = React.useState(false)
   const { fetchUser } = React.useContext(UserContext)
   const navigate = useNavigate()
+  const { state } = useLocation()
+  const [searchParams] = useSearchParams()
   const isPfpEmpty = React.useCallback(() => profilePicture.flat().every(pixel => pixel === ""), [profilePicture])
 
   const clearError = (...fields) =>
@@ -113,10 +116,11 @@ export default function Login() {
         fetchUser()
       }
 
+      // After signing up the form turns into the login, keeping `returnTo` in the URL for it
       if (isSignUp)
         setIsSignUp(false)
       else
-        navigate("/")
+        navigate(returnPath(searchParams.get("returnTo")), { replace: true, state: state?.returnState })
     }
     catch (err) {
       setFormErrorMessage("Não foi possível se conectar ao colcom. Por favor, verifique sua conexão.")
