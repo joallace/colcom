@@ -239,6 +239,25 @@
                 margin-right: var(--space-1);
             }
         }
+
+        // Ends level with the middle of the metrics beside it, however many lines they wrap to: the
+        // element stretches to the footer and draws the corner down to the metrics' middle, which
+        // sits below the footer's by half of their top margin
+        .footer > & {
+            align-self: stretch;
+            height: auto;
+            border-width: 0;
+
+            &::before {
+                content: "";
+                position: absolute;
+                inset: 0 0 auto 0;
+                height: calc(50% + var(--space-2) / 2);
+                border-style: solid;
+                border-color: inherit;
+                border-width: 0 0 var(--stroke) var(--stroke);
+            }
+        }
     }
 
     &.critique {
