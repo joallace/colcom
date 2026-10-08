@@ -70,12 +70,26 @@ describe("the author editing a post", () => {
     expect((await history(post.id)).at(-1)!.subject).toBe(message)
   })
 
-  it("serializes concurrent edits to the same repository", async () => {
+  it("lands every one of concurrent edits to the same post, each on top of the last", async () => {
     const post = await newPost()
     const results = await Promise.all(Array.from({ length: 6 }, (_, i) => edit(author, post.id, `<p>Version ${i}</p>`, `edit ${i}`)))
 
     expect(results.map(res => res.status)).toEqual(Array(6).fill(200))
-    expect(await history(post.id)).toHaveLength(7)
+    const versions = await history(post.id)
+    expect(versions).toHaveLength(7)
+    // One line of history holding every edit: none was lost by being written on a tip another one moved
+    expect(versions.slice(1).map(version => version.commit).sort()).toEqual(results.map(res => res.body.commit).sort())
+  })
+
+  it("keeps apart edits to different posts of the same topic made at once", async () => {
+    const topic = await createTopic(author)
+    const posts = await Promise.all([1, 2, 3].map(() => createPost(author, topic.id, { body: THREE_PARAGRAPHS })))
+
+    const results = await Promise.all(posts.map(post => edit(author, post.id, `<p>Only post ${post.id}.</p>`)))
+
+    expect(results.map(res => res.status)).toEqual([200, 200, 200])
+    for (const post of posts)
+      expect(await read(post.id, await latestCommit(post.id))).toBe(`<p>Only post ${post.id}.</p>\n`)
   })
 
   it("only edits posts", async () => {
@@ -202,8 +216,30 @@ describe("suggestions", () => {
     expect(res.body.message).toBe("Conflito no merge!")
     expect(await history(post.id)).toEqual(before)
     expect(await pendingSuggestions(post.id)).toHaveLength(1)
-    // The aborted merge left the repository clean
+    // The failed merge left the post's branch where it was
     expect((await edit(author, post.id, "<p>After the conflict.</p>")).status).toBe(200)
+  })
+
+  it("are merged even while the author edits the post at the same time", async () => {
+    const post = await newPost()
+    const suggestion = await edit(contributor, post.id, "<p>Alpha paragraph.</p><p>Beta paragraph.</p><p>Gamma, suggested.</p>", "Suggests gamma")
+    const commit = suggestion.body.config.commit
+
+    const [merged, edited] = await Promise.all([
+      api().post(`/contents/${post.id}/${commit}/merge`).set(author.auth),
+      edit(author, post.id, "<p>Alpha, by the author.</p><p>Beta paragraph.</p><p>Gamma paragraph.</p>", "Edits alpha")
+    ])
+
+    expect([merged.status, edited.status]).toEqual([204, 200])
+    const subjects = (await history(post.id)).map(version => version.subject)
+    expect(subjects).toEqual(expect.arrayContaining(["Suggests gamma", "Edits alpha", expect.stringMatching(/^Merge commit/)]))
+    // An edit sends the whole text, so whichever lands last decides it: merged into the edit, or the
+    // edit rebuilt on the merge, written without the suggestion
+    const last = await read(post.id, await latestCommit(post.id))
+    expect([
+      "<p>Alpha, by the author.</p>\n<p>Beta paragraph.</p>\n<p>Gamma, suggested.</p>\n",
+      "<p>Alpha, by the author.</p>\n<p>Beta paragraph.</p>\n<p>Gamma paragraph.</p>\n"
+    ]).toContain(last)
   })
 })
 
@@ -233,6 +269,16 @@ describe("cloning a post", () => {
     const res = await api().post(`/contents/${post.id}/${await latestCommit(post.id)}/clone`).set(contributor.auth).send({})
 
     expect(res.status).toBe(400)
+  })
+
+  it("refuses a hash that isn't in the repository and leaves no post behind", async () => {
+    const post = await newPost()
+    const res = await api().post(`/contents/${post.id}/${"0".repeat(40)}/clone`).set(contributor.auth).send({ title: "Ghost fork" })
+
+    expect(res.status).toBe(400)
+    expect(res.body.errorLocationCode).toBe("GIT:BRANCH:COMMIT_NOT_FOUND")
+    const retry = await api().post(`/contents/${post.id}/${await latestCommit(post.id)}/clone`).set(contributor.auth).send({ title: "Ghost fork" })
+    expect(retry.status).toBe(200)
   })
 
   it("refuses an invalid hash and leaves no post behind", async () => {

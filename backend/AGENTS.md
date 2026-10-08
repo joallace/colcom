@@ -23,9 +23,10 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 
 ## The git layer (`gitDatabase.ts`)
 
-- **Layout:** one repo per topic at `DB_PATH/<topicId>`. Branch `main` holds the topic; each post is a branch named by its id; suggestions are branches `<postId>_<interactionId>`. The single file is `main.html`.
+- **Layout:** one bare repo per topic at `DB_PATH/<topicId>`. Branch `main` holds the topic; each post is a branch named by its id; suggestions are branches `<postId>_<interactionId>`. The single file is `main.html`.
 - **One block per line:** `formatHtml` puts each block element (paragraph, heading, list item…) on its own line before committing. The editor emits a whole document as one line, and without this any two edits conflict. The browser's parser ignores this whitespace, so documents and critique positions are unaffected; code blocks are left untouched.
-- **Serialized writes:** every write runs through `write()`, which holds a module-wide `AsyncLock` per repo (writes share the repo's working tree and check out branches) and runs `git reset --hard` if the operation fails, so a failed write can't block the repo.
+- **Writes without a working tree:** there's no checkout, index or lock. A write stores objects (`hash-object -w`, `mktree`, `commit-tree`; merges with `merge-tree --write-tree`, hence git ≥ 2.38, checked at startup) and then moves one branch with `update-ref <ref> <new> <old>`, a compare-and-swap. Objects are content addressed, so concurrent writes can't disturb each other, and a failed write leaves nothing to clean up.
+- **Races:** new branches (posts, suggestions, clones) are created only if absent. Edits and merges go through `advance()`: if another write moved the branch first, the commit is rebuilt on the new tip after a random, growing delay, up to 20 times before a 409. An edit sends the whole text, so of two racing edits the last to land decides it, as before.
 - **Validated hashes:** every hash that comes from a request goes through `validateCommit` (`^[0-9a-f]{7,40}$`), because a value like `--output=…` would be read as a git option. Full 40-character hashes are stored everywhere.
 - **Read helpers:**
   - `isInHistory`: is a commit part of `main..<post>`, i.e. the post's own timeline?

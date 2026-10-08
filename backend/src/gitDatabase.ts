@@ -1,16 +1,11 @@
 import { dirname, resolve } from "path"
 import { fileURLToPath } from "url"
 import { existsSync, mkdirSync } from "fs"
-import { writeFile, mkdir } from "fs/promises"
-import { promisify } from "util"
-import { execFile } from "node:child_process"
-import AsyncLock from "async-lock"
+import { execFile, execFileSync } from "node:child_process"
 
 import { IContent } from "@/models/content"
 import logger from "@/logger"
 import { ValidationError } from "./errors"
-
-const exec = promisify(execFile)
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -24,9 +19,31 @@ if (!existsSync(dbPath)) {
 else
   logger.info(`[gitDatabase.ts] Loaded git db at "${dbPath}"`)
 
-// Every write checks out a branch in the repo's shared working tree, so all operations
-// on the same repo must be serialized through this single, module wide lock.
-const lock = new AsyncLock()
+// Merges are computed without a working tree by `git merge-tree --write-tree`, added in git 2.38
+const [major, minor] = (execFileSync("git", ["version"], { encoding: "utf-8" }).match(/(\d+)\.(\d+)/) ?? []).slice(1).map(Number)
+if (!(major > 2 || (major === 2 && minor >= 38)))
+  throw new Error(`[gitDatabase.ts] git 2.38 or newer is required (found ${major}.${minor})`)
+
+const FILE = "main.html"
+// Times a write is rebuilt on a branch that moved while it was being written (see advance)
+const MAX_ATTEMPTS = 20
+
+class GitError extends Error {
+  constructor(public code: number | null, public stderr: string) {
+    super(`git exited with ${code}: ${stderr.trim()}`)
+  }
+}
+
+// Runs git in a topic's repo and resolves with its stdout. `input` is written to its stdin.
+function git(repo: number | string, args: string[], { input, env }: { input?: string, env?: NodeJS.ProcessEnv } = {}): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const child = execFile("git", ["-C", `${dbPath}/${repo}`, ...args], { encoding: "utf-8", maxBuffer: 64 * 1024 * 1024, env: env && { ...process.env, ...env } },
+      (err, stdout, stderr) => err ? reject(new GitError(typeof err.code === "number" ? err.code : null, stderr)) : resolve(stdout))
+    // Commands that don't read stdin may exit before it's written (EPIPE); their exit status tells what happened
+    child.stdin!.on("error", () => { })
+    child.stdin!.end(input)
+  })
+}
 
 // Refs arrive from the URL, and a value such as "--output=..." would be parsed by git as an option
 function validateCommit(commit: string) {
@@ -38,20 +55,6 @@ function validateCommit(commit: string) {
       errorLocationCode: "GIT:VALIDATE_COMMIT:INVALID_HASH",
       key: "hash"
     })
-}
-
-// Runs a write while holding the repo's lock. If it fails midway, the working tree is reset,
-// otherwise leftover changes would make every later checkout in this repo fail.
-async function write<T>(repo: number, operation: () => Promise<T>): Promise<T> {
-  return await lock.acquire(String(repo), async () => {
-    try {
-      return await operation()
-    }
-    catch (err) {
-      await exec("git", ["-C", `${dbPath}/${repo}`, "reset", "--hard", "--quiet"]).catch(() => { })
-      throw err
-    }
-  })
 }
 
 // The editor emits the whole document as a single line, and git diffs and merges line by line,
@@ -68,56 +71,112 @@ export function formatHtml(html: string) {
     .join("")
 }
 
+// Repos are bare and written only through objects and refs, never a working tree or an index, so
+// concurrent writes to the same repo can't disturb each other: objects are content addressed, and
+// each write ends by moving one branch with a compare-and-swap (setRef).
+
+// A tree holding the document, the repo's only file
+async function writeTree(repo: number, body: string) {
+  const blob = (await git(repo, ["hash-object", "-w", "--stdin"], { input: formatHtml(body) })).trim()
+  return (await git(repo, ["mktree"], { input: `100644 blob ${blob}\t${FILE}\n` })).trim()
+}
+
+// Without an author, git's configured identity is used, as `git merge` did
+async function writeCommit(repo: number, tree: string, parents: string[], message: string, author?: { username: string, email: string }) {
+  const env = author && { GIT_AUTHOR_NAME: author.username, GIT_AUTHOR_EMAIL: author.email }
+  const args = ["commit-tree", tree, ...parents.flatMap(parent => ["-p", parent]), "-m", message]
+  return (await git(repo, args, { env })).trim()
+}
+
+// A branch's tip and its tree, read at once. Undefined if the branch doesn't exist.
+async function tip(repo: number, branch: string) {
+  const output = await git(repo, ["log", "-1", "--format=%H %T", `refs/heads/${branch}`, "--"]).catch(() => "")
+  const [commit, tree] = output.trim().split(" ")
+  return commit ? { commit, tree } : undefined
+}
+
+// Points a branch at a commit if it still points at `expected`; with no `expected`, only if the
+// branch doesn't exist yet. Resolves false when another write moved the branch first.
+async function setRef(repo: number, branch: string, commit: string, expected?: string) {
+  try {
+    await git(repo, ["update-ref", `refs/heads/${branch}`, commit, expected ?? ""])
+    return true
+  }
+  catch (err) {
+    if (err instanceof GitError && /cannot lock ref/.test(err.stderr))
+      return false
+    throw err
+  }
+}
+
+// Builds a commit on a branch's current tip and moves the branch to it. If another write moved the
+// branch meanwhile, the commit is rebuilt on the new tip, so concurrent writes all land, in order.
+// Only one of the writes racing for a branch wins each round, so the others wait a random, growing
+// delay before rebuilding, or they would all collide again.
+async function advance(repo: number, branch: string, build: (head: { commit: string, tree: string }) => Promise<string>) {
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const head = await tip(repo, branch)
+    if (!head)
+      throw new Error(`[gitDatabase.ts] Branch "${branch}" not found in repo ${repo}`)
+
+    const commit = await build(head)
+    if (await setRef(repo, branch, commit, head.commit))
+      return commit
+
+    await new Promise(resolve => setTimeout(resolve, Math.random() * Math.min(10 * 2 ** attempt, 500)))
+  }
+
+  throw new ValidationError({
+    message: "O texto foi alterado por outra pessoa ao mesmo tempo.",
+    action: "Atualize a página e tente novamente.",
+    statusCode: 409,
+    stack: new Error().stack,
+    errorLocationCode: "GIT:ADVANCE:TOO_MANY_ATTEMPTS"
+  })
+}
+
+function branchExists(branch: string) {
+  return new ValidationError({
+    message: `O branch "${branch}" já existe.`,
+    stack: new Error().stack,
+    errorLocationCode: "GIT:BRANCH:ALREADY_EXISTS",
+    statusCode: 409
+  })
+}
+
 async function create(content: IContent, author: any) {
   const { parent_id, id, type, body } = content
 
   if (type === "critique")
     return
 
-  const repo = parent_id || id
-  const path = `${dbPath}/${repo}`
-  const file = `${path}/main.html`
+  const repo = Number(parent_id || id)
 
-  await write(repo, async () => {
-    if (type === "topic") {
-      await mkdir(path)
-      await exec("git", ["-C", path, "init", "-b", "main"])
-    }
-    else
-      await exec("git", ["-C", path, "checkout", "-b", String(id), "main"])
+  if (type === "topic")
+    await git(".", ["init", "--quiet", "--bare", "--initial-branch=main", String(repo)])
 
-    await writeFile(file, formatHtml(body || ""))
-    await exec("git", ["-C", path, "add", file])
-    // A post identical to the topic's text would otherwise have nothing to commit, and every post
-    // needs its own first commit to appear in its history.
-    await exec("git", ["-C", path, "commit", "--allow-empty", "-m", type === "topic" ? "init topic" : `init post ${id}`, "--author", `${author.username} <${author.email}>`])
-  })
+  const parent = type === "topic" ? undefined : (await tip(repo, "main"))?.commit
+  const tree = await writeTree(repo, body || "")
+  // Every post gets its own first commit, even one identical to the topic's text, to appear in its history
+  const commit = await writeCommit(repo, tree, parent ? [parent] : [], type === "topic" ? "init topic" : `init post ${id}`, author)
+
+  const branch = type === "topic" ? "main" : String(id)
+  if (!(await setRef(repo, branch, commit)))
+    throw branchExists(branch)
 }
 
 async function read(repo: number, commit: string) {
   validateCommit(commit)
-  const path = `${dbPath}/${repo}`
-
-  const output = await exec("git", ["-C", path, "show", `${commit}:./main.html`])
-  return (output.stdout ?? output)
+  return await git(repo, ["show", `${commit}:${FILE}`])
 }
 
 async function update(content: IContent, author: any, body: string, message: string, interactionId: number | undefined) {
-  const { parent_id: repo, id } = content
-  const path = `${dbPath}/${repo}`
-  const file = `${path}/main.html`
+  const { parent_id, id } = content
+  const repo = Number(parent_id)
+  const tree = await writeTree(repo, body)
 
-  return await write(Number(repo), async () => {
-    if (interactionId === undefined)
-      await exec("git", ["-C", path, "checkout", String(id)])
-    else
-      await exec("git", ["-C", path, "checkout", "-b", `${id}_${interactionId}`, String(id)])
-
-    await writeFile(file, formatHtml(body))
-    await exec("git", ["-C", path, "add", file])
-
-    const hasChanges = await exec("git", ["-C", path, "diff", "--cached", "--quiet"]).then(() => false, () => true)
-    if (!hasChanges)
+  const build = async (head: { commit: string, tree: string }) => {
+    if (head.tree === tree)
       throw new ValidationError({
         message: "Nenhuma alteração foi feita no texto.",
         action: "Altere o conteúdo antes de enviar a edição.",
@@ -125,40 +184,67 @@ async function update(content: IContent, author: any, body: string, message: str
         errorLocationCode: "GIT:UPDATE:NO_CHANGES"
       })
 
-    await exec("git", ["-C", path, "commit", "-m", message, "--author", `${author.username} <${author.email}>`])
+    return await writeCommit(repo, tree, [head.commit], message, author)
+  }
 
-    const output = await exec("git", ["-C", path, "rev-parse", "HEAD"])
-    return (<any>(output.stdout ?? output)).trimEnd()
-  })
+  if (interactionId === undefined)
+    return await advance(repo, String(id), build)
+
+  // A suggestion is a new branch from the post's tip, so nothing else can be writing to it
+  const head = await tip(repo, String(id))
+  if (!head)
+    throw new Error(`[gitDatabase.ts] Branch "${id}" not found in repo ${repo}`)
+
+  const commit = await build(head)
+  const branch = `${id}_${interactionId}`
+  if (!(await setRef(repo, branch, commit)))
+    throw branchExists(branch)
+
+  return commit
 }
 
 async function branch(content: IContent, commit: string) {
-  const { parent_id: repo, id } = content
-  const path = `${dbPath}/${repo}`
+  const { parent_id, id } = content
+  const repo = Number(parent_id)
 
   validateCommit(commit)
 
-  await write(Number(repo), async () => {
-    await exec("git", ["-C", path, "checkout", "-b", String(id), commit])
-  })
+  const target = (await git(repo, ["rev-parse", "--verify", "--quiet", `${commit}^{commit}`]).catch(() => "")).trim()
+  if (!target)
+    throw new ValidationError({
+      message: "Versão não encontrada.",
+      action: "Forneça o hash de uma versão deste post.",
+      stack: new Error().stack,
+      errorLocationCode: "GIT:BRANCH:COMMIT_NOT_FOUND",
+      key: "hash"
+    })
+
+  if (!(await setRef(repo, String(id), target)))
+    throw branchExists(String(id))
 }
 
 async function merge(content: IContent, commit: string) {
-  const { parent_id: repo, id } = content
-  const path = `${dbPath}/${repo}`
+  const { parent_id, id } = content
+  const repo = Number(parent_id)
 
   validateCommit(commit)
 
-  await write(Number(repo), async () => {
-    await exec("git", ["-C", path, "checkout", String(id)])
+  await advance(repo, String(id), async head => {
+    let tree
     try {
-      await exec("git", ["-C", path, "merge", "--no-ff", commit])
-    } catch (err) {
-      await exec("git", ["-C", path, "merge", "--abort"])
-      throw new ValidationError({
-        message: "Conflito no merge!"
-      })
+      tree = (await git(repo, ["merge-tree", "--write-tree", "--no-messages", head.commit, commit])).split("\n")[0]
     }
+    catch (err) {
+      // Exit status 1 means the merge has conflicts; anything else is a failure
+      if (err instanceof GitError && err.code === 1)
+        throw new ValidationError({
+          message: "Conflito no merge!"
+        })
+      throw err
+    }
+
+    // The message `git merge` writes
+    return await writeCommit(repo, tree, [head.commit, commit], `Merge commit '${commit}' into ${id}`)
   })
 }
 
@@ -168,8 +254,8 @@ async function isInHistory(content: IContent, commit: string): Promise<boolean> 
   const { parent_id: repo, id } = content
   validateCommit(commit)
 
-  const output = await exec("git", ["-C", `${dbPath}/${repo}`, "rev-list", `main..${id}`], { encoding: "utf-8" })
-  return String(output?.stdout ?? output).split("\n").includes(commit)
+  const output = await git(Number(repo), ["rev-list", `main..${id}`])
+  return output.split("\n").includes(commit)
 }
 
 // The commit a suggestion branched from: comparing the suggestion against it shows exactly what its
@@ -178,8 +264,7 @@ async function mergeBase(content: IContent, commit: string): Promise<string> {
   const { parent_id: repo, id } = content
   validateCommit(commit)
 
-  const output = await exec("git", ["-C", `${dbPath}/${repo}`, "merge-base", String(id), commit], { encoding: "utf-8" })
-  return String(output?.stdout ?? output).trim()
+  return (await git(Number(repo), ["merge-base", String(id), commit])).trim()
 }
 
 // A version and its ancestors along the post's own line of history (first parents), newest first:
@@ -187,8 +272,7 @@ async function mergeBase(content: IContent, commit: string): Promise<string> {
 async function firstParentHistory(repo: number, commit: string): Promise<string[]> {
   validateCommit(commit)
 
-  const output = await exec("git", ["-C", `${dbPath}/${repo}`, "rev-list", "--first-parent", commit], { encoding: "utf-8" })
-  return String(output?.stdout ?? output).split("\n").filter(Boolean)
+  return (await git(repo, ["rev-list", "--first-parent", commit])).split("\n").filter(Boolean)
 }
 
 // Every commit a version descends from, itself included. Critiques made against any of them are
@@ -196,18 +280,16 @@ async function firstParentHistory(repo: number, commit: string): Promise<string[
 async function ancestors(repo: number, commit: string): Promise<Set<string>> {
   validateCommit(commit)
 
-  const output = await exec("git", ["-C", `${dbPath}/${repo}`, "rev-list", commit], { encoding: "utf-8" })
-  return new Set(String(output?.stdout ?? output).split("\n").filter(Boolean))
+  return new Set((await git(repo, ["rev-list", commit])).split("\n").filter(Boolean))
 }
 
 async function log(content: IContent) {
   const { parent_id: repo, id } = content
-  const path = `${dbPath}/${repo}/`
 
   // Fields and commits are separated by NUL, the only character that can't appear in commit
   // messages or author names, since it can't be passed as a command line argument.
-  const output = await exec("git", ["-C", path, "log", "-z", "--reverse", "--format=%H%x00%s%x00%aD%x00%aN", `main..${id}`], { encoding: "utf-8" })
-  const fields = String(output?.stdout ?? output).split("\0")
+  const output = await git(Number(repo), ["log", "-z", "--reverse", "--format=%H%x00%s%x00%aD%x00%aN", `main..${id}`])
+  const fields = output.split("\0")
 
   const history = []
   for (let i = 0; i + 3 < fields.length; i += 4) {

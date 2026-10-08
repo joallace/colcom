@@ -15,7 +15,7 @@ More specific guides: [`backend/AGENTS.md`](backend/AGENTS.md) and [`frontend/AG
 | Frontend | React 19, React Router 7, TipTap 3 (ProseMirror), Floating UI, Recharts 3, Vite 8, SCSS | `frontend/` |
 | Backend | Express 5, TypeScript 7 (built with `tsc` + `tsc-alias`), `pg`, pino | `backend/` |
 | Relational data | PostgreSQL 18 (Docker); schema in `backend/src/sql/init.sql`, applied on every start | — |
-| Content and history | git, one repo per topic under `DB_PATH` | `backend/src/gitDatabase.ts` |
+| Content and history | git, one bare repo per topic under `DB_PATH`, written with plumbing commands | `backend/src/gitDatabase.ts` |
 | Validation | JSON Schemas checked with Ajv 8, the same in the forms and the API | `shared/` |
 | Serving | nginx serves the built frontend, proxies `/api/` to the backend and sends the security headers (CSP and others, `nginx/headers.conf`) | `nginx/`, `docker-compose.yml` |
 
@@ -56,7 +56,7 @@ Every request's shape and size is described once, in `shared/` (the `@colcom/sha
 - **Everything:** copy `.env.example` to `.env` (needs `ACCESS_TOKEN_SECRET` of 32+ characters and `POSTGRES_PASSWORD`) and `docker compose up --build`. The frontend is built against the relative `/api`, so it works from any host; `VITE_API_ADDRESS` in `.env` overrides it (an address on another origin must also be added to the CSP's `connect-src`). Optional settings (`CORS_ORIGIN`, `TRUST_PROXY`, the `RATE_LIMIT_*` limits) are explained there too.
 - **Development:** `run.sh` starts `bun run dev -- --host` in `frontend/` (Vite, port 5173) and `bun --watch src/server.ts` in `backend/` (port 3000), which reads `backend/.env`. The frontend's API address comes from `VITE_API_ADDRESS` (`frontend/.env`), and is `http://localhost:3000` in dev and `/api` in a build when unset. Postgres runs separately (the compose `db` service uses port 5434).
 - **Mock data:** with the backend running, `npm run seed` in `backend/` fills an empty instance through the API (`scripts/seed.mjs`; `API=http://host:port` targets another one; it signs up more users than the default sign-up limit allows, so run the backend with `RATE_LIMIT_SIGN_UP=off`): 8 users with the password `colcom123`, three topics (one open), posts with edits, suggestions (one pending) and a clone, critiques (some on passages later changed or removed) and votes.
-- **Builds:** `npm run build` in each package. The backend runs on Node 24 in Docker and also works on Node 25.
+- **Builds:** `npm run build` in each package. The backend runs on Node 24 in Docker and also works on Node 25, and needs git 2.38 or newer (for `merge-tree --write-tree`; it refuses to start otherwise). Ubuntu 22.04 ships 2.34: use the `ppa:git-core/ppa`.
 
 ## Testing and verifying
 

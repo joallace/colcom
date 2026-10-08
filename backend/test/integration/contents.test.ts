@@ -1,4 +1,5 @@
-import { existsSync, readFileSync, rmSync } from "node:fs"
+import { execFileSync } from "node:child_process"
+import { existsSync, rmSync } from "node:fs"
 import { join } from "node:path"
 import { beforeAll, describe, expect, it } from "vitest"
 
@@ -12,6 +13,7 @@ beforeAll(async () => {
 })
 
 const repo = (topicId: number) => join(process.env.DB_PATH!, String(topicId))
+const git = (topicId: number, ...args: string[]) => execFileSync("git", ["-C", repo(topicId), ...args], { encoding: "utf-8" })
 
 describe("creating a topic", () => {
   it("stores it and creates its git repository", async () => {
@@ -20,8 +22,10 @@ describe("creating a topic", () => {
     expect(topic).toMatchObject({ type: "topic", author: alice.name, author_id: alice.pid, parent_id: null, config: { answers: ["sim", "não", "talvez"] } })
     // Only posts are summarized; a topic keeps its whole text
     expect(topic.body).toBe("<p>Should we?</p><p>Discuss.</p>")
+    // A bare repo, written without a working tree
+    expect(git(topic.id, "rev-parse", "--is-bare-repository").trim()).toBe("true")
     // One block per line, so git can diff and merge paragraphs separately
-    expect(readFileSync(join(repo(topic.id), "main.html"), "utf-8")).toBe("<p>Should we?</p>\n<p>Discuss.</p>\n")
+    expect(git(topic.id, "show", "main:main.html")).toBe("<p>Should we?</p>\n<p>Discuss.</p>\n")
   })
 
   it("requires a title", async () => {
