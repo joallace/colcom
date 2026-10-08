@@ -50,12 +50,15 @@ services:
       additional_contexts:
         shared: ./shared
       args:
-        VITE_API_ADDRESS: http://localhost/api
+        # Relative, so the build works on any host: nginx proxies /api/ on the same origin.
+        # An address on another origin also needs it in the CSP's connect-src (nginx/headers.conf)
+        VITE_API_ADDRESS: ${VITE_API_ADDRESS:-/api}
     environment:
       TZ: America/Recife
     volumes:
       # - ./nginx/nginx-https.conf:/etc/nginx/nginx.conf:ro    # Uncomment for using https instead of http
       - ./nginx/nginx-http.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/headers.conf:/etc/nginx/headers.conf:ro
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     depends_on:

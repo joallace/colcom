@@ -13,7 +13,7 @@ React 19 + React Router 7 + TipTap 3, built with Vite 8. Read the root [`AGENTS.
 | `src/assets/` | Logic shared across components: `anchoring.js`, `textDiff.js`, `textIndex.js`, the custom `highlight.js` mark, `validation.js`, and `scss/` |
 | `src/context/` | `UserContext`/`UserProvider` (the logged-in user and token, from `localStorage`) and `ChartContext`/`ChartProvider` |
 
-`@/` is an alias for `src/`. The API address is `import.meta.env.VITE_API_ADDRESS` (`assets/enviroment.js`).
+`@/` is an alias for `src/`. The API address is `import.meta.env.VITE_API_ADDRESS` (`assets/enviroment.js`), or when unset `http://localhost:3000` in dev and the relative `/api` in a build (nginx proxies it on the same origin). It is only ever prefixed to fetch paths, so a relative address works. nginx's CSP (`nginx/headers.conf`) allows only same-origin scripts, styles, fonts and requests, plus `data:` images and Ajv's eval: anything loaded from elsewhere must be added there.
 
 ## The editor (TipTap 3)
 
