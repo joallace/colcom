@@ -109,11 +109,33 @@ async function setRef(repo: number, branch: string, commit: string, expected?: s
   }
 }
 
-// Builds a commit on a branch's current tip and moves the branch to it. If another write moved the
-// branch meanwhile, the commit is rebuilt on the new tip, so concurrent writes all land, in order.
-// Only one of the writes racing for a branch wins each round, so the others wait a random, growing
-// delay before rebuilding, or they would all collide again.
-async function advance(repo: number, branch: string, build: (head: { commit: string, tree: string }) => Promise<string>) {
+// The last write queued for each branch ("<repo>/<branch>"), dropped once the queue drains
+const queues = new Map<string, Promise<void>>()
+
+// Runs this process' writes to one branch one after another. Racing for the branch instead made
+// every write but one rebuild its commit each round: with 64 people editing one post, the load
+// test saw 21% of edits give up with a 409 and the rest wait seconds, against none queued.
+function queued<T>(key: string, operation: () => Promise<T>): Promise<T> {
+  const result = (queues.get(key) ?? Promise.resolve()).then(operation)
+  // A failed write must not stop the ones queued after it
+  const tail = result.then(() => { }, () => { })
+  queues.set(key, tail)
+  tail.then(() => {
+    if (queues.get(key) === tail)
+      queues.delete(key)
+  })
+  return result
+}
+
+// Builds a commit on a branch's current tip and moves the branch to it. Writes from this process
+// are queued per branch; the compare-and-swap still guards against any other writer (another
+// backend process, a person with a shell): if the branch moved meanwhile, the commit is rebuilt on
+// the new tip after a random, growing delay, so the writers racing don't all collide again.
+function advance(repo: number, branch: string, build: (head: { commit: string, tree: string }) => Promise<string>) {
+  return queued(`${repo}/${branch}`, () => advanceNow(repo, branch, build))
+}
+
+async function advanceNow(repo: number, branch: string, build: (head: { commit: string, tree: string }) => Promise<string>) {
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const head = await tip(repo, branch)
     if (!head)
