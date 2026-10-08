@@ -16,7 +16,8 @@ export default function Frame({
   setDefinitiveVote,
   metrics,
   headerConfig = {},
-  saveInLocalStorage = false,
+  // Called with the title when it loses focus (the write page keeps it as a draft)
+  onTitleBlur,
   readOnly = true,
   hideVoteButtons = false,
   showDefinitiveVoteButton = false,
@@ -102,7 +103,7 @@ export default function Frame({
             document.execCommand("insertText", false, e.clipboardData.getData("text/plain").replace(/\s+/g, " "))
             setError(false)
           }}
-          onBlur={() => saveInLocalStorage && localStorage.setItem("postTitle", titleRef?.current?.textContent)}
+          onBlur={() => onTitleBlur?.(titleRef?.current?.textContent ?? "")}
           ref={titleRef}
         >
           {title}
@@ -171,7 +172,7 @@ export default function Frame({
           {children.constructor === Array || children.type === React.Fragment ?
             children
             :
-            React.cloneElement(children, { ...headerStatus, readOnly, saveInLocalStorage, alongsideCritique })
+            React.cloneElement(children, { ...headerStatus, readOnly, alongsideCritique })
           }
         </div>
       </div>

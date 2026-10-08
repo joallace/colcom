@@ -16,7 +16,7 @@ export const loginPath = location => {
 }
 
 // The router state for the login page: `location`'s own, given back on returning, since some
-// pages need it (/write reads its topic from it)
+// pages use it (/write takes its topic from it rather than fetching it again)
 export const loginState = location => location?.state == null ? undefined : { returnState: location.state }
 
 // Where to go after logging in, from the login page's `returnTo`; anything unsafe goes home
