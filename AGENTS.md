@@ -53,7 +53,7 @@ Every request's shape and size is described once, in `shared/` (the `@colcom/sha
 
 ## Running it
 
-- **Everything:** copy `.env.example` to `.env` (needs `ACCESS_TOKEN_SECRET` of 32+ characters and `POSTGRES_PASSWORD`) and `docker compose up --build`.
+- **Everything:** copy `.env.example` to `.env` (needs `ACCESS_TOKEN_SECRET` of 32+ characters and `POSTGRES_PASSWORD`) and `docker compose up --build`. Optional settings (`CORS_ORIGIN`, `TRUST_PROXY`, the `RATE_LIMIT_*` limits) are explained there too.
 - **Development:** `run.sh` starts `bun run dev -- --host` in `frontend/` (Vite, port 5173) and `bun --watch src/server.ts` in `backend/` (port 3000), which reads `backend/.env`. The frontend's API address comes from `VITE_API_ADDRESS` (`frontend/.env`). Postgres runs separately (the compose `db` service uses port 5434).
 - **Mock data:** with the backend running, `npm run seed` in `backend/` fills an empty instance through the API (`scripts/seed.mjs`; `API=http://host:port` targets another one): 8 users with the password `colcom123`, three topics (one open), posts with edits, suggestions (one pending) and a clone, critiques (some on passages later changed or removed) and votes.
 - **Builds:** `npm run build` in each package. The backend runs on Node 24 in Docker and also works on Node 25.
@@ -93,4 +93,3 @@ Beyond the suite, show changes work rather than assume they do:
 - **Backend bugs:**
   - `GET /contents/:id/interactions` is unreachable: `GET /contents/:id/:hash` is registered first and takes "interactions" as a hash. `GET /users/:id/interactions` passes a user id as a content id. Nothing calls either yet.
 - **Unfinished features:** tags, colcoins (the promote cost check is commented out) and prestige exist in the schema but aren't implemented. The README's to-do list is outdated.
-- **Server defaults:** unknown API routes return Express's HTML 404, not JSON.

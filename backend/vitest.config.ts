@@ -14,6 +14,11 @@ export default defineConfig({
       // config.ts refuses to load without a 32+ character secret
       ACCESS_TOKEN_SECRET: "test-secret-that-is-at-least-32-characters-long",
       PINO_LOG_LEVEL: "silent",
+      // Helpers sign up and log in many users from one address; rateLimit.test.ts turns them on
+      RATE_LIMIT_LOGIN: "off",
+      RATE_LIMIT_SIGN_UP: "off",
+      RATE_LIMIT_CONTENTS: "off",
+      RATE_LIMIT_INTERACTIONS: "off",
       DB_POOL: "4",
       // git must not read the developer's configuration (signing, hooks, default branch…), and
       // needs an identity for merge commits, as the Docker image sets one globally

@@ -30,6 +30,13 @@ services:
       ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET:?Set ACCESS_TOKEN_SECRET in .env (see .env.example)}
       DB_PATH: /app/gitDB
       NODE_ENV: production
+      # Optional; see .env.example
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
+      TRUST_PROXY: ${TRUST_PROXY:-}
+      RATE_LIMIT_LOGIN: ${RATE_LIMIT_LOGIN:-}
+      RATE_LIMIT_SIGN_UP: ${RATE_LIMIT_SIGN_UP:-}
+      RATE_LIMIT_CONTENTS: ${RATE_LIMIT_CONTENTS:-}
+      RATE_LIMIT_INTERACTIONS: ${RATE_LIMIT_INTERACTIONS:-}
     depends_on:
       - db
     network_mode: host

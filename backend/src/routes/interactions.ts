@@ -1,6 +1,7 @@
 import { Router } from "express"
 
 import authHandler from "@/middleware/authHandler"
+import { interactionsLimit } from "@/middleware/rateLimit"
 import { handleInteraction, getContentInteractions, getVoteHistory } from "@/controllers/interactions"
 
 
@@ -12,7 +13,7 @@ router.get("/users/:id/interactions", getContentInteractions)
 
 router.get("/topics/:id/votes", getVoteHistory)
 
-router.post("/interactions", authHandler(), handleInteraction)
+router.post("/interactions", authHandler(), interactionsLimit, handleInteraction)
 
 
 export default router

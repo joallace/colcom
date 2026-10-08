@@ -22,7 +22,8 @@ Since the code is open, anti-abuse measures must not depend on bots not knowing 
 
 ## 9–10: required before any public instance
 
-- [ ] **[9] Rate limiting** *(new)*: `POST /login`, `POST /users`, `POST /contents` and `POST /interactions` have no limits. That allows password brute force, mass sign-ups and spam. Add per-IP and per-user limits (e.g. `express-rate-limit`, or `limit_req` in nginx). The design doc also asks for a critique rate limit per user per post.
+- [x] **[9] Rate limiting** *(new)*: `POST /login`, `POST /users`, `POST /contents` and `POST /interactions` have no limits. That allows password brute force, mass sign-ups and spam. Add per-IP and per-user limits (e.g. `express-rate-limit`, or `limit_req` in nginx). The design doc also asks for a critique rate limit per user per post.
+    - Done with `express-rate-limit`: failed logins and sign-ups per IP, content writes and interactions per user, all `RATE_LIMIT_*` settings. **Left:** the per-user-per-post critique limit (critiques share the content-writes limit for now), and a shared store (counts are in memory, per process, reset on restart).
 - [ ] **[9] Fake accounts and vote integrity** (thesis ch. 4 and 5, design doc "Incentives and anti-abuse"): one person can make many accounts and swing polls and reviews. Use layers, each one an instance setting:
     1. **Make accounts cost something:** email verification with a disposable-domain blocklist, plus a self-hosted proof-of-work challenge at sign-up (e.g. [ALTCHA](https://altcha.org), MIT licensed, no third party). Proof-of-work still holds when the code is public.
     2. **Probation:** a new account can write, but its poll votes, verdicts and up/down votes count only after N days and some activity (e.g. 7 days and one critique, suggestion or post). They are stored from the start and counted once probation ends. The topic page says how many votes are still in probation.
@@ -37,6 +38,8 @@ Since the code is open, anti-abuse measures must not depend on bots not knowing 
 - [ ] **[8] Deployable frontend build** *(new)*: `docker-compose.yml` builds the frontend with `VITE_API_ADDRESS: http://localhost/api`, so any instance not opened from the server itself can't reach the API. Default to the relative `/api` (nginx already proxies it), or read it from `.env`.
 - [ ] **[8] HTTPS by default** *(new)*: HTTPS needs a commented-out volume swapped by hand, and `certificate-service.yml` still has `{email}`/`{domain}` placeholders and no renewal. Make the domain and email `.env` settings and renew certificates automatically.
 - [ ] **[8] Lock down CORS and add security headers** *(new)*: `app.use(cors())` accepts any origin. Allow only the instance's own origin. In nginx, add CSP, `X-Content-Type-Options`, `Referrer-Policy` and HSTS (HTTPS only). The JWT sits in `localStorage`, so a CSP is the main backstop if user HTML ever slips past DOMPurify.
+    - [x] CORS: only the origins in `CORS_ORIGIN` (the Vite dev server outside production).
+    - [ ] Security headers in nginx.
 - [ ] **[8] Reports and community moderation** (thesis ch. 5: spam, trolling): no appointed moderators. Instead:
     1. The instance publishes a short code of conduct, and a report must name the rule it breaks ("spam", "ataque pessoal", "conteúdo ilegal"…). A report is not a downvote: disagreeing is never a reason to report.
     2. When reports from distinct, out-of-probation users pass a threshold, the content is **collapsed, not deleted**, behind "ocultado após denúncias — ver mesmo assim", pending a verdict.
@@ -77,7 +80,7 @@ Since the code is open, anti-abuse measures must not depend on bots not knowing 
 - [ ] **[4] Pluggable identity verification** (gov.br, not soon): put verification behind a provider interface (email, allowed domain, OpenID Connect) so gov.br, which supports OIDC, is a configuration change later. Store only "verified by X at level Y" for each user, never the documents (LGPD).
 - [ ] **[3] Avatar drawing as a human signal** *(new, from your idea)*: recording the strokes on the sign-up pixel grid (timing, hesitation, order) can be **one weak signal** that feeds detection, never a gate. Since the code is open, a bot can replay recorded human strokes. A gate would also lock out screen-reader and motor-impaired users (eMAG), so keep a "gerar avatar" alternative. Store only aggregate features, not the raw trace.
 - [ ] **[3] Interactions endpoints** (`AGENTS.md`): `GET /contents/:id/interactions` is shadowed by `/contents/:id/:hash`, and `GET /users/:id/interactions` passes a user id as a content id. Nothing calls them: fix them (and drop the `it.fails` in `interactions.test.ts`) or remove them.
-- [ ] **[3] JSON 404 for unknown API routes** (`AGENTS.md`): unknown routes return Express's HTML page.
+- [x] **[3] JSON 404 for unknown API routes** (`AGENTS.md`): unknown routes return Express's HTML page.
 - [ ] **[3] Colcoins and promote** (`AGENTS.md`): the promote cost check is commented out, so promoting is free. Implement colcoins or drop them, and the column, from the model.
 - [ ] **[3] Browser end-to-end tests in CI** *(new)*: CI runs unit and integration tests only. A few puppeteer flows (sign up, write, suggest, merge, critique across versions) would catch breakage between the frontend and the API.
 - [ ] **[3] Contributor docs** *(new)*: `CONTRIBUTING.md`, a code of conduct and issue templates, for an AGPL project meant to attract outside contributors and institutions.
