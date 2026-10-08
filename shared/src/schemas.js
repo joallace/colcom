@@ -175,6 +175,15 @@ export function createSchemas(limits) {
     }
   }
 
+  // Marks the given notifications as read, or all of them when `ids` is left out
+  const readNotifications = {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      ids: { type: "array", label: "notificações", minItems: 1, maxItems: limits.pageSize.max, uniqueItems: true, items: id("notificação") }
+    }
+  }
+
   // Query strings and route parameters arrive as strings, so these are validated with type coercion.
   // Unknown keys are kept: flags like `with_count` are read by presence.
   const list = {
@@ -184,6 +193,16 @@ export function createSchemas(limits) {
       pageSize: { type: "integer", label: "tamanho da página", minimum: 1, maximum: limits.pageSize.max, default: limits.pageSize.default },
       orderBy: { type: "string", label: "ordenação", minLength: 1, maxLength: limits.orderBy.max, default: "id" },
       authorId: { type: "string", label: "autor", format: "uuid" }
+    }
+  }
+
+  const notifications = {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      page: list.properties.page,
+      pageSize: list.properties.pageSize,
+      unread: { type: "boolean", label: "não lidas", default: false }
     }
   }
 
@@ -206,7 +225,7 @@ export function createSchemas(limits) {
   }
 
   return {
-    body: { signUp, login, content, topic, post, critique, critiqueConfig, edit, clone, interaction },
-    query: { list, contentParams, versionParams, userParams }
+    body: { signUp, login, content, topic, post, critique, critiqueConfig, edit, clone, interaction, readNotifications },
+    query: { list, notifications, contentParams, versionParams, userParams }
   }
 }

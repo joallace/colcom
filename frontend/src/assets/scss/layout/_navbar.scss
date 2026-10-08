@@ -43,6 +43,15 @@ nav {
             font-weight: 700;
             color: var(--text-secondary);
 
+            @media screen and (max-width: variables.$screen-md) {
+                padding: var(--space-2) var(--space-1);
+
+                &::after {
+                    left: var(--space-1);
+                    right: var(--space-1);
+                }
+            }
+
             // The current page's underline, drawn from the center when a link becomes active
             &::after {
                 content: "";
@@ -76,7 +85,7 @@ nav {
         padding: var(--space-1);
 
         @media screen and (max-width: variables.$screen-md) {
-            margin-right: var(--space-2);
+            margin-right: var(--space-1);
         }
     }
 
@@ -92,6 +101,7 @@ nav {
         .avatar {
             width: 2.25rem;
             height: 2.25rem;
+            flex-shrink: 0;
             border-radius: var(--radius-sm);
         }
 
@@ -128,15 +138,46 @@ nav {
     .rightSide {
         gap: var(--space-3);
 
-        // The "create topic" button
+        // Three buttons and the avatar have to fit next to the links on a phone
+        @media screen and (max-width: variables.$screen-md) {
+            gap: var(--space-1);
+        }
+
+        // The "create topic" button and the notifications bell
         >a {
             display: flex;
             padding: var(--space-2);
             border-radius: var(--radius-md);
             @include mixins.transition((color, background-color));
 
+            @media screen and (max-width: variables.$screen-md) {
+                padding: var(--space-1);
+            }
+
             &:hover {
                 background-color: var(--hover);
+            }
+        }
+
+        .notificationsLink {
+            position: relative;
+
+            .badge {
+                position: absolute;
+                top: 0;
+                right: 0;
+                min-width: 1.125rem;
+                height: 1.125rem;
+                padding: 0 var(--space-1);
+                border-radius: var(--radius-full);
+                background-color: var(--red);
+                color: var(--text-on-fill);
+                font-size: var(--text-xs);
+                font-weight: 700;
+                line-height: 1.125rem;
+                text-align: center;
+                pointer-events: none;
+                animation: pop-in var(--duration-base) var(--ease-spring);
             }
         }
     }

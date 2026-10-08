@@ -1,0 +1,101 @@
+@use "../abstracts/mixins";
+
+.notifications {
+    @include mixins.content-width(var(--measure));
+    margin: var(--space-4) auto;
+
+    header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        margin-bottom: var(--space-3);
+
+        h1 {
+            margin: 0;
+            font-size: var(--text-xl);
+        }
+    }
+
+    .readAll {
+        display: flex;
+        align-items: center;
+        gap: var(--space-1);
+        font-size: var(--text-sm);
+    }
+
+    ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: var(--space-1);
+    }
+
+    li {
+        position: relative;
+        display: flex;
+        gap: var(--space-3);
+        padding: var(--space-3);
+        border-radius: var(--radius-md);
+        color: var(--text-secondary);
+        animation: fade-in var(--duration-base) var(--ease-out);
+
+        p {
+            margin: 0;
+        }
+
+        a {
+            font-weight: 700;
+        }
+
+        .avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            flex-shrink: 0;
+            border-radius: var(--radius-sm);
+        }
+
+        .detail {
+            margin-top: var(--space-1);
+            color: var(--text-muted);
+            font-size: var(--text-sm);
+            overflow-wrap: anywhere;
+        }
+
+        time {
+            display: block;
+            margin-top: var(--space-1);
+            color: var(--text-muted);
+            font-size: var(--text-xs);
+        }
+
+        // Unread ones stand out with a tint and a dot, not with color alone
+        &.unread {
+            background-color: var(--orange-tint);
+            color: var(--text);
+
+            &::before {
+                content: "";
+                position: absolute;
+                top: var(--space-3);
+                right: var(--space-3);
+                width: 0.5rem;
+                height: 0.5rem;
+                border-radius: var(--radius-full);
+                background-color: var(--orange-text);
+            }
+        }
+    }
+
+    // Read by screen readers only
+    .visuallyHidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+}

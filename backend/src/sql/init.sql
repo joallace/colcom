@@ -145,3 +145,30 @@ CREATE OR REPLACE TRIGGER vote_events_append_only
 CREATE OR REPLACE TRIGGER vote_events_no_truncate
     BEFORE TRUNCATE ON vote_events
     FOR EACH STATEMENT EXECUTE FUNCTION reject_vote_event_change();
+
+-- On-site notifications: what someone did that the recipient has to know about (a critique or a
+-- suggestion on their post, an answer to their suggestion…). Written by the API after the action's
+-- write succeeded. `content_id` is what it is about (the post, the topic), `subject_id` what was
+-- made (the critique, the new post, the clone) and `interaction_id` the suggestion, when there is one.
+CREATE TABLE IF NOT EXISTS notifications (
+    id BIGSERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    actor_id INT NOT NULL,
+    type TEXT NOT NULL,
+    content_id INT NOT NULL,
+    subject_id INT,
+    interaction_id INT,
+    read_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (actor_id) REFERENCES users(id),
+    -- Contents and suggestions are only deleted when their git write fails (withRollback)
+    FOREIGN KEY (content_id) REFERENCES contents(id) ON DELETE CASCADE,
+    FOREIGN KEY (subject_id) REFERENCES contents(id) ON DELETE CASCADE,
+    FOREIGN KEY (interaction_id) REFERENCES interactions(id) ON DELETE CASCADE,
+    -- No one is told about what they did themselves
+    CHECK (user_id <> actor_id)
+);
+
+CREATE INDEX IF NOT EXISTS notifications_user_idx ON notifications (user_id, id DESC);
+CREATE INDEX IF NOT EXISTS notifications_unread_idx ON notifications (user_id) WHERE read_at IS NULL;

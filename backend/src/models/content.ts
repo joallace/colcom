@@ -255,7 +255,7 @@ const userInteractionsSql = (contentId: string, userParam: string) => `
   )`
 
 // pg's base64 breaks lines every 76 characters, which a data URL can't contain
-const AVATAR_BASE64 = "translate(encode(users.avatar, 'base64'), E'\\n', '')"
+export const AVATAR_BASE64 = "translate(encode(users.avatar, 'base64'), E'\\n', '')"
 
 interface TreeOptions {
   where?: string,

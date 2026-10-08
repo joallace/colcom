@@ -3,6 +3,7 @@ import { RequestHandler } from "express"
 import git from "@/gitDatabase"
 import Content, { ContentInsertRequest, IContent, summarize } from "@/models/content"
 import Interactions from "@/models/interactions"
+import { notify } from "@/models/notifications"
 import { ValidationError, NotFoundError, ForbiddenError } from "@/errors"
 import { validate } from "@/validation"
 
@@ -142,6 +143,10 @@ export const createContent: RequestHandler = async (req, res, next) => {
     const result = await Content.create(content)
     result.body = body
     await withRollback(() => git.create(result, res.locals.user), () => Content.removeById(result.id))
+
+    // A critique is news for the post's author, a post for the topic's
+    if (type !== "topic")
+      await notify({ type, actor_pid: author_pid, content_id: <number>parent_id, subject_id: result.id })
 
     res.status(201).json(result)
   }
@@ -390,6 +395,7 @@ export const updateContent: RequestHandler = async (req, res, next) => {
     }
     else {
       const result = await Interactions.updateById({ id: interactionId, field: "config", config: { message, commit, accepted: null }, author_pid })
+      await notify({ type: "suggestion", actor_pid: author_pid, content_id, interaction_id: interactionId })
       res.status(200).json(result)
     }
   }
@@ -415,6 +421,7 @@ export const clonePost: RequestHandler = async (req, res, next) => {
 
     const result = await Content.create({ ...(<any>content), author_pid, title })
     await withRollback(() => git.branch(result, commit), () => Content.removeById(result.id))
+    await notify({ type: "clone", actor_pid: author_pid, content_id, subject_id: result.id })
 
     res.status(200).json(result)
   }
@@ -432,6 +439,7 @@ export const mergePost: RequestHandler = async (req, res, next) => {
 
     await git.merge(content, commit)
     await Interactions.setSuggestionAccepted(suggestion.id, true, author_pid)
+    await notify({ type: "suggestion_accepted", actor_pid: author_pid, content_id, interaction_id: suggestion.id })
 
     res.status(204).end()
   }
@@ -447,6 +455,7 @@ export const rejectSuggestion: RequestHandler = async (req, res, next) => {
     const { id: content_id, hash: commit } = validate("versionParams", req.params)
     const { suggestion } = await findOwnedSuggestion(content_id, commit, author_pid)
     const result = await Interactions.setSuggestionAccepted(suggestion.id, false, author_pid)
+    await notify({ type: "suggestion_rejected", actor_pid: author_pid, content_id, interaction_id: suggestion.id })
 
     res.status(200).json(result)
   }

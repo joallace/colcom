@@ -36,6 +36,8 @@ More specific guides: [`backend/AGENTS.md`](backend/AGENTS.md) and [`frontend/AG
 
 Interactions (`interactions.type`): `up`/`down` (relevance, mutually exclusive), `vote` (the poll: one per user per topic, on a post; the row holds only the current vote, and a trigger appends every cast, change and removal to `vote_events`, which rejects UPDATE, DELETE and TRUNCATE, served at `GET /topics/:id/votes`), `bookmark`, `promote` (a topic, valid until the end of the day), `suggestion` (an edit proposed by someone other than the author; `config: { commit, message, accepted }`).
 
+Notifications (`notifications` table) tell a user, on the site, about a critique, a suggestion or a clone of their post, a new post in their topic, and the answer to their suggestion. The bell in the navbar shows how many are unread.
+
 Collaboration flow: a non-author editing a post creates a `suggestion` and a branch `<postId>_<interactionId>`; the author sees what it changes (highlighted against the version it branched from, `git merge-base`) and accepts (git merge into the post branch) or rejects it. Anyone can clone a post at any version into a new post (a branch from that commit).
 
 Competition flow: a critique quotes a passage of a specific version. Later versions show it where that passage went (followed through every edit), mark it "changed" when the passage was edited, and list it under "removed" when the passage is gone. A commit can never make a critique disappear; in phase 2 only people will close critiques.

@@ -10,7 +10,7 @@ Express 5 + TypeScript 7 API over PostgreSQL and per-topic git repositories. Rea
 | `src/server.ts` | Starts listening; kept apart so tests import the app without binding a port |
 | `src/routes/*.ts` | Route → middleware → controller wiring |
 | `src/controllers/*.ts` | Request handling, validation, orchestration of models and git |
-| `src/models/*.ts` | All SQL. `content.ts` has `findAll`, `findTree`, `summarize`; `interactions.ts` has votes, bookmarks and suggestions |
+| `src/models/*.ts` | All SQL. `content.ts` has `findAll`, `findTree`, `summarize`; `interactions.ts` has votes, bookmarks and suggestions; `notifications.ts` has `notify` and the inbox |
 | `src/gitDatabase.ts` | Every git command (the only place that runs git) |
 | `src/pgDatabase.ts` | Connection pool; runs `sql/init.sql` on first connect (exits if it fails) |
 | `src/config.ts` | Settings from the environment; the server refuses to start without `ACCESS_TOKEN_SECRET` (32+ chars) or with a malformed `RATE_LIMIT_*` |
@@ -44,6 +44,7 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 - **Avatars:** `bytea`, sent as base64. Inside JSON built by SQL, use `AVATAR_BASE64` (strips the line breaks `encode` adds).
 - **Schema changes:** edit `init.sql` (idempotent `IF NOT EXISTS` statements). There is no production data yet, so no migrations.
 - **Vote log:** `vote_events` is filled by the `interactions_vote_events` trigger, not by models, so any statement on a `vote` row is logged in its own transaction. Triggers make it append-only.
+- **Notifications:** controllers call `notify()` (`models/notifications.ts`) once an action's Postgres and git writes have both succeeded, so a notification never points to something rolled back. Its recipient comes from SQL (`recipientOf`: the author of what it's about, or the suggester for an answer to a suggestion), and a `CHECK` keeps anyone from being told about their own action. A failed notification is logged and doesn't fail the action. A new kind of event (phase 2's critique answers and disputes) is a new `NotificationType`, a `recipientOf` entry and a case in the frontend's `describeNotification`.
 - **Unique indexes:** they prevent duplicate up/down votes, bookmarks and poll votes; a racing duplicate insert becomes a 409.
 
 ## Security rules
@@ -74,6 +75,9 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 | `POST /contents/:id/:hash/merge` and `/reject` | required | The author accepts or rejects a pending suggestion |
 | `POST /contents/:id/:hash/clone` | required | New post branched from that version |
 | `POST /interactions` | required | Toggle `up`/`down`/`vote`/`bookmark`/`promote`; 404 for a missing content, 400 for a poll vote on anything but a post |
+| `GET /notifications?page&pageSize&unread` | required | The user's notifications, newest first: `{ notifications, count, unread }`, each with `type`, `read`, `actor`, `content` (the post or topic it's about), `topic_id`, `subject` (the critique, post or clone made) and `suggestion` |
+| `GET /notifications/unread` | required | `{ unread }`, what the navbar polls |
+| `POST /notifications/read` | required | Marks `{ ids }`, or all without them, as read; only the user's own. Returns `{ read, unread }` |
 | `GET /topics/:id/votes` | — | The poll's history from `vote_events`, oldest first: `{ id, voter, from, to, created_at }`, with voters numbered per topic (not named until sign-up asks consent for public votes) |
 
 `lineages` maps each earlier version that critiques were made on to the list of commits from it to the requested one, along the post's first-parent history. `versions` holds the text of every commit in those lists. The frontend follows each critiqued passage through those edits (see `frontend/AGENTS.md`).

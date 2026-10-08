@@ -39,6 +39,8 @@ export interface SchemaData {
   edit: { body: string, message: string }
   clone: { title: string }
   interaction: { content_id: number, type: "up" | "down" | "vote" | "bookmark" | "promote" }
+  readNotifications: { ids?: number[] }
+  notifications: { page: number, pageSize: number, unread: boolean }
   list: { page: number, pageSize: number, orderBy: string, authorId?: string, [key: string]: unknown }
   contentParams: { id: number }
   versionParams: { id: number, hash: string }
