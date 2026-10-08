@@ -6,14 +6,15 @@ Express 5 + TypeScript 7 API over PostgreSQL and per-topic git repositories. Rea
 
 | Path | What it holds |
 |---|---|
-| `src/app.ts` | App setup: CORS, JSON body parser, routers, error handler |
+| `src/app.ts` | App setup: trust proxy, CORS, JSON body parser, routers, JSON 404, error handler |
 | `src/server.ts` | Starts listening; kept apart so tests import the app without binding a port |
 | `src/routes/*.ts` | Route → middleware → controller wiring |
 | `src/controllers/*.ts` | Request handling, validation, orchestration of models and git |
 | `src/models/*.ts` | All SQL. `content.ts` has `findAll`, `findTree`, `summarize`; `interactions.ts` has votes, bookmarks and suggestions |
 | `src/gitDatabase.ts` | Every git command (the only place that runs git) |
 | `src/pgDatabase.ts` | Connection pool; runs `sql/init.sql` on first connect (exits if it fails) |
-| `src/config.ts` | Required settings; the server refuses to start without `ACCESS_TOKEN_SECRET` (32+ chars) |
+| `src/config.ts` | Settings from the environment; the server refuses to start without `ACCESS_TOKEN_SECRET` (32+ chars) or with a malformed `RATE_LIMIT_*` |
+| `src/middleware/rateLimit.ts` | Rate limiters for login, sign-up, content writes and interactions |
 | `src/validation.ts` | `validate(schema, data)`: checks a request's body, query or params against the shared schemas (`shared/`) and returns the validated copy |
 | `src/pagination.ts` | `orderByColumn` whitelist and `limitOffset` clamping |
 | `src/errors.ts` | Error classes; messages and `action` hints in Portuguese |
@@ -47,6 +48,8 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 
 - **Auth:** `authHandler()` (required) or `authHandler(true)` (optional) verifies the JWT and puts the user in `res.locals.user` (`{ username, email, pid }`). Never read the user from `req.params`.
 - **Ownership:** only a post's author merges or rejects its suggestions (`findOwnedSuggestion` checks the post, the author and that the hash is a *pending* suggestion of that post). State-changing routes use POST/PATCH, never GET.
+- **Rate limits:** failed logins and sign-ups count per IP; content writes (`POST /contents`, `PATCH /contents/:id`, clone) and `POST /interactions` count per user, so the limiter goes after `authHandler`. Limits are `RATE_LIMIT_*` settings (`.env.example`); over one, the API answers a 429 `TooManyRequestsError`. Counts live in memory, so they reset on restart and assume a single backend process. `req.ip` comes from `X-Forwarded-For` only through proxies `TRUST_PROXY` trusts (default `loopback`, i.e. nginx on the same host).
+- **CORS:** only the origins in `CORS_ORIGIN` (comma-separated); outside production, with none set, the Vite dev server. Through nginx the site and API share an origin and need no CORS.
 - **Errors:** throw the classes from `errors.ts`. `errorHandler` returns only `BaseError`s (without stack); anything else (e.g. a pg error with table names) becomes a generic 500 with an `errorId`, and the full error is logged.
 - **Validate every input.** Controllers pass `req.body`, `req.query` and `req.params` through `validate` (`src/validation.ts`) before using them, and use what it returns: Express 5 parses `req.query` again on each access, so changes to it are lost. A failure is a 400 `ValidationError` whose `message` and `key` name the first problem and whose `errors` list all of them (`{ key, label, message }`), which the forms show by field.
 - **Critique anchors:** the `critique` schema checks the shape and strips unknown keys; `validateCritiqueCommit` requires the commit to be in the post's own history.
@@ -79,5 +82,6 @@ Lists that include topics (`toFeed`) return topics with their posts, posts with 
 `npm test` runs both Vitest projects; `npm run test:unit` and `npm run test:integration` run one. See the root `AGENTS.md` for how the database is provided.
 
 - **Integration tests go through the API** with the helpers in `test/support/api.ts` (`signUp`, `createTopic`, `createPost`, `edit`, `critique`, `interact`…), never through models directly, so routing, auth, SQL and git are exercised together.
+- **Rate limits are off in tests** (`vitest.config.ts`), since helpers sign up many users from one address. `rateLimit.test.ts` turns them on with low values and acts as different clients through `X-Forwarded-For`.
 - **Data is per file, not per test.** Tests in a file share a database, so make what each test needs (helpers generate unique names and titles) and don't assume a table is empty; a test that counts everything goes in its own file (e.g. `topics.test.ts`).
 - **Unit tests import modules directly.** Mock `@/pgDatabase` (`vi.mock`) when a module under test imports it, or the pool will try to connect.

@@ -1,6 +1,7 @@
 import { Router } from "express"
 
 import authHandler from "@/middleware/authHandler"
+import { contentsLimit } from "@/middleware/rateLimit"
 import {
     getContents,
     getBookmarkedContent,
@@ -26,7 +27,7 @@ router.get("/topics", authHandler(true), getContentTree)
 
 router.get("/topics/:id", authHandler(true), getTopicTree)
 
-router.post("/contents", authHandler(), createContent)
+router.post("/contents", authHandler(), contentsLimit, createContent)
 
 router.get("/contents/:id", authHandler(true), getContent)
 
@@ -36,8 +37,8 @@ router.post("/contents/:id/:hash/merge", authHandler(), mergePost)
 
 router.post("/contents/:id/:hash/reject", authHandler(), rejectSuggestion)
 
-router.post("/contents/:id/:hash/clone", authHandler(), clonePost)
+router.post("/contents/:id/:hash/clone", authHandler(), contentsLimit, clonePost)
 
-router.patch("/contents/:id", authHandler(), updateContent)
+router.patch("/contents/:id", authHandler(), contentsLimit, updateContent)
 
 export default router

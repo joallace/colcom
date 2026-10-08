@@ -1,6 +1,7 @@
 import { Router } from "express"
 
 import authHandler from "@/middleware/authHandler"
+import { loginLimit, signUpLimit } from "@/middleware/rateLimit"
 import { createUser, getCurrentUser, getUser, getUsers, loginUser } from "@/controllers/user"
 
 
@@ -13,8 +14,8 @@ router.get("/users/self", authHandler(), getCurrentUser)
 // After /users/self, which would otherwise be read as a name ("self" is reserved at sign up)
 router.get("/users/:name", getUser)
 
-router.post("/users", createUser)
+router.post("/users", signUpLimit, createUser)
 
-router.post("/login", loginUser)
+router.post("/login", loginLimit, loginUser)
 
 export default router
