@@ -43,7 +43,8 @@ services:
       additional_contexts:
         shared: ./shared
       args:
-        VITE_API_ADDRESS: http://localhost/api
+        # Relative, so the build works on any host: nginx proxies /api/ on the same origin.
+        VITE_API_ADDRESS: ${VITE_API_ADDRESS:-/api}
     environment:
       TZ: America/Recife
     volumes:

@@ -2,7 +2,7 @@ FROM node:24-alpine AS build
 
 WORKDIR /app
 
-ARG VITE_API_ADDRESS
+ARG VITE_API_ADDRESS=/api
 ENV VITE_API_ADDRESS=$VITE_API_ADDRESS
 
 # package.json installs the shared schemas from ../shared (compose's "shared" build context)
