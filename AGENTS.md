@@ -34,7 +34,7 @@ More specific guides: [`backend/AGENTS.md`](backend/AGENTS.md) and [`frontend/AG
 | post | a topic | `{ answer }` | A branch in the topic's repo; defends one answer |
 | critique | a post | `{ commit, from, to, quote: { exact, prefix, suffix, start } }` | Anchored to the exact version it criticised; critiques of critiques are refused |
 
-Interactions (`interactions.type`): `up`/`down` (relevance, mutually exclusive), `vote` (the poll: one per user per topic, on a post), `bookmark`, `promote` (a topic, valid until the end of the day), `suggestion` (an edit proposed by someone other than the author; `config: { commit, message, accepted }`).
+Interactions (`interactions.type`): `up`/`down` (relevance, mutually exclusive), `vote` (the poll: one per user per topic, on a post; the row holds only the current vote, and a trigger appends every cast, change and removal to `vote_events`, which rejects UPDATE, DELETE and TRUNCATE, served at `GET /topics/:id/votes`), `bookmark`, `promote` (a topic, valid until the end of the day), `suggestion` (an edit proposed by someone other than the author; `config: { commit, message, accepted }`).
 
 Collaboration flow: a non-author editing a post creates a `suggestion` and a branch `<postId>_<interactionId>`; the author sees what it changes (highlighted against the version it branched from, `git merge-base`) and accepts (git merge into the post branch) or rejects it. Anyone can clone a post at any version into a new post (a branch from that commit).
 
@@ -92,6 +92,5 @@ Beyond the suite, show changes work rather than assume they do:
   - `relativeTime` doesn't round years ("1.04… ano").
 - **Backend bugs:**
   - `GET /contents/:id/interactions` is unreachable: `GET /contents/:id/:hash` is registered first and takes "interactions" as a hash. `GET /users/:id/interactions` passes a user id as a content id. Nothing calls either yet.
-  - An `up`, `down` or `bookmark` on a content that doesn't exist is a 500 (foreign key violation), not a 404.
 - **Unfinished features:** tags, colcoins (the promote cost check is commented out) and prestige exist in the schema but aren't implemented. The README's to-do list is outdated.
 - **Server defaults:** unknown API routes return Express's HTML 404, not JSON.

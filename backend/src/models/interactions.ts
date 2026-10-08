@@ -174,6 +174,8 @@ async function getCount(where: string, values: Array<any>, join = ""): Promise<a
 }
 
 async function handleChange({ author_pid, content_id, type }: InteractionInsertRequest): Promise<Array<any>> {
+  // A 404 when the content doesn't exist, instead of a foreign key violation (500) on insert
+  const content = await Content.getDataById(content_id, ["parent_id", "type"])
   const postInteractions = await getUserContentInteractions({ author_pid, content_id, type })
 
   switch (type) {
@@ -198,8 +200,16 @@ async function handleChange({ author_pid, content_id, type }: InteractionInsertR
         if (interaction.type === "vote")
           return [204, await removeById(interaction.id)]
       }
-      const { parent_id } = await Content.getDataById(content_id, ["parent_id"])
-      const oldVoteId = (await getUserTopicVote(author_pid, parent_id))?.id
+      // The vote_events trigger also refuses them, but with a 500
+      if (content.type !== "post")
+        throw new ValidationError({
+          message: "Só é possível votar em posts.",
+          action: "Escolha o post que defende a sua resposta.",
+          stack: new Error().stack,
+          errorLocationCode: "MODEL:INTERACTION:HANDLE:VOTE_NOT_ON_POST"
+        })
+
+      const oldVoteId = (await getUserTopicVote(author_pid, content.parent_id))?.id
 
       if (oldVoteId)
         return [200, await updateById({ id: oldVoteId, field: "content_id", content_id, author_pid })]
@@ -341,6 +351,42 @@ async function setSuggestionAccepted(id: number, accepted: boolean, author_pid: 
 }
 
 
+interface VoteEvent {
+  id: number,
+  voter: number,
+  from: number | null,
+  to: number | null,
+  created_at: Date
+}
+
+// A topic's poll history, oldest first. Voters are numbered per topic in order of their first vote
+// rather than named, until the sign-up asks for consent to public votes (TODO.md).
+async function findVoteHistory(topic_id: number): Promise<VoteEvent[]> {
+  const query = {
+    text: `
+      SELECT
+        e.id::int,
+        DENSE_RANK() OVER (ORDER BY first.id)::int AS voter,
+        e.from_content_id AS "from",
+        e.to_content_id AS "to",
+        e.created_at
+      FROM
+        vote_events e
+      INNER JOIN LATERAL (
+        SELECT MIN(f.id) AS id FROM vote_events f WHERE f.topic_id = e.topic_id AND f.user_id = e.user_id
+      ) first ON true
+      WHERE
+        e.topic_id = $1
+      ORDER BY
+        e.id
+      ;`,
+    values: [topic_id]
+  }
+
+  const result = await db.query(query)
+  return result.rows
+}
+
 async function removeById(interaction_id: number) {
   const query = {
     text: `
@@ -367,6 +413,7 @@ export default Object.freeze({
   updateById,
   findPendingSuggestion,
   setSuggestionAccepted,
+  findVoteHistory,
   removeById
 })
 

@@ -41,6 +41,7 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 - **Count parameters exactly.** Postgres refuses a parameter the query doesn't use, so optional parameters (like `userPid`) are only added when the SQL uses them.
 - **Avatars:** `bytea`, sent as base64. Inside JSON built by SQL, use `AVATAR_BASE64` (strips the line breaks `encode` adds).
 - **Schema changes:** edit `init.sql` (idempotent `IF NOT EXISTS` statements). There is no production data yet, so no migrations.
+- **Vote log:** `vote_events` is filled by the `interactions_vote_events` trigger, not by models, so any statement on a `vote` row is logged in its own transaction. Triggers make it append-only.
 - **Unique indexes:** they prevent duplicate up/down votes, bookmarks and poll votes; a racing duplicate insert becomes a 409.
 
 ## Security rules
@@ -68,7 +69,8 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 | `PATCH /contents/:id` | required | Edit a post: a commit for the author, a suggestion for anyone else |
 | `POST /contents/:id/:hash/merge` and `/reject` | required | The author accepts or rejects a pending suggestion |
 | `POST /contents/:id/:hash/clone` | required | New post branched from that version |
-| `POST /interactions` | required | Toggle `up`/`down`/`vote`/`bookmark`/`promote` |
+| `POST /interactions` | required | Toggle `up`/`down`/`vote`/`bookmark`/`promote`; 404 for a missing content, 400 for a poll vote on anything but a post |
+| `GET /topics/:id/votes` | — | The poll's history from `vote_events`, oldest first: `{ id, voter, from, to, created_at }`, with voters numbered per topic (not named until sign-up asks consent for public votes) |
 
 `lineages` maps each earlier version that critiques were made on to the list of commits from it to the requested one, along the post's first-parent history. `versions` holds the text of every commit in those lists. The frontend follows each critiqued passage through those edits (see `frontend/AGENTS.md`).
 

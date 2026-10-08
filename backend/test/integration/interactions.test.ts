@@ -1,5 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest"
 
+import db from "@/pgDatabase"
+
 import { api, createPost, createTopic, interact, signUp, TestUser } from "../support/api"
 
 
@@ -77,6 +79,90 @@ describe("poll votes", () => {
   it("answer 404 for a content that doesn't exist", async () => {
     expect((await interact(bob, 999999, "vote")).status).toBe(404)
   })
+
+  it("only go on posts", async () => {
+    const topic = await createTopic(alice)
+    const res = await interact(bob, topic.id, "vote")
+
+    expect(res.status).toBe(400)
+    expect(res.body.message).toBe("Só é possível votar em posts.")
+  })
+})
+
+describe("poll vote history", () => {
+  const votes = async (topicId: number) => (await api().get(`/topics/${topicId}/votes`)).body
+
+  it("records a cast, a change and a removal, in order", async () => {
+    const topic = await createTopic(alice)
+    const [yes, no] = [await createPost(alice, topic.id), await createPost(alice, topic.id, { answer: "não" })]
+
+    await interact(bob, yes.id, "vote")
+    await interact(bob, no.id, "vote")
+    await interact(bob, no.id, "vote")
+    await interact(alice, yes.id, "vote")
+
+    const res = await api().get(`/topics/${topic.id}/votes`)
+    expect(res.status).toBe(200)
+    expect(res.body.map(({ voter, from, to }: any) => ({ voter, from, to }))).toEqual([
+      { voter: 1, from: null, to: yes.id },
+      { voter: 1, from: yes.id, to: no.id },
+      { voter: 1, from: no.id, to: null },
+      { voter: 2, from: null, to: yes.id }
+    ])
+    expect(res.body[0]).not.toHaveProperty("user_id")
+  })
+
+  it("keeps each topic's history apart", async () => {
+    const [first, second] = [await createTopic(alice), await createTopic(alice)]
+    const [a, b] = [await createPost(alice, first.id), await createPost(alice, second.id)]
+    await interact(bob, a.id, "vote")
+    await interact(bob, b.id, "vote")
+
+    expect((await votes(first.id)).map((event: any) => event.to)).toEqual([a.id])
+    expect((await votes(second.id)).map((event: any) => event.to)).toEqual([b.id])
+  })
+
+  it("logs nothing for other interactions", async () => {
+    const topic = await createTopic(alice)
+    const post = await createPost(alice, topic.id)
+    await interact(bob, post.id, "up")
+    await interact(bob, post.id, "bookmark")
+
+    expect(await votes(topic.id)).toEqual([])
+  })
+
+  it("answers 404 for a content that isn't a topic", async () => {
+    const topic = await createTopic(alice)
+    const post = await createPost(alice, topic.id)
+
+    expect((await api().get(`/topics/${post.id}/votes`)).status).toBe(404)
+    expect((await api().get("/topics/999999/votes")).status).toBe(404)
+  })
+
+  it("can't be edited or erased in the database", async () => {
+    const topic = await createTopic(alice)
+    const post = await createPost(alice, topic.id)
+    await interact(bob, post.id, "vote")
+    const [{ id }] = await votes(topic.id)
+
+    await expect(db.query("UPDATE vote_events SET to_content_id = NULL WHERE id = $1", [id])).rejects.toThrow(/append-only/)
+    await expect(db.query("DELETE FROM vote_events WHERE id = $1", [id])).rejects.toThrow(/append-only/)
+    await expect(db.query("TRUNCATE vote_events")).rejects.toThrow(/append-only/)
+    expect(await votes(topic.id)).toHaveLength(1)
+  })
+
+  it("also logs changes made outside the API", async () => {
+    const topic = await createTopic(alice)
+    const post = await createPost(alice, topic.id)
+    await interact(bob, post.id, "vote")
+
+    await db.query("DELETE FROM interactions WHERE type = 'vote' AND content_id = $1", [post.id])
+
+    expect((await votes(topic.id)).map(({ from, to }: any) => ({ from, to }))).toEqual([
+      { from: null, to: post.id },
+      { from: post.id, to: null }
+    ])
+  })
 })
 
 describe("bookmarks", () => {
@@ -128,12 +214,12 @@ describe("POST /interactions", () => {
     expect((await api().post("/interactions").send({ content_id: topic.id, type: "up" })).status).toBe(400)
   })
 
-  it("doesn't leak database details when it fails", async () => {
-    const res = await interact(bob, 999999, "up")
+  it.each(["up", "down", "bookmark", "promote"])("answers 404 to %s on a content that doesn't exist", async type => {
+    const res = await interact(bob, 999999, type)
 
-    expect(res.status).toBe(500)
-    expect(res.body.name).toBe("InternalServerError")
-    expect(JSON.stringify(res.body)).not.toMatch(/interactions|contents|foreign key|constraint/i)
+    expect(res.status).toBe(404)
+    expect(res.body).toMatchObject({ name: "NotFoundError", message: 'O conteúdo com "id" de valor "999999" não foi encontrado no sistema.' })
+    expect(JSON.stringify(res.body)).not.toMatch(/foreign key|constraint/i)
   })
 })
 

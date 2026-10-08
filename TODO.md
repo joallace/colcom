@@ -55,7 +55,7 @@ Since the code is open, anti-abuse measures must not depend on bots not knowing 
 
 - [ ] **[6] Configurable thresholds** (design doc open question, answered): move 7/14 days, 10 votes/60% and 20 votes/75% into configuration (`config.json` or a table), with default profiles by expected community size (small group, city, national).
 - [ ] **[6] `/write` crashes when opened directly** (`AGENTS.md`): it reads the topic from router state (`state.config`). Load the topic from a `?topic=` parameter instead. *(new)* The draft is saved under one global `editorContent` key, so a draft for one topic shows up when writing in another. Key it by topic.
-- [ ] **[6] Append-only poll vote history** *(new)*: changing a poll vote overwrites the `vote` row's `content_id`, and removing a vote deletes the row, so no history is kept. Log every change (from, to, when). The synthesis column's convergence numbers need it, and it lets anyone audit how a poll moved.
+- [x] **[6] Append-only poll vote history** *(new)*: changing a poll vote overwrites the `vote` row's `content_id`, and removing a vote deletes the row, so no history is kept. Log every change (from, to, when). The synthesis column's convergence numbers need it, and it lets anyone audit how a poll moved.
 - [ ] **[6] Design phase 4: bridging ranking**: groups from poll votes, the score with its critique penalty, and a "Consenso" ordering next to the raw poll. Explain the formula in the UI, since explainable rules are a goal.
 - [ ] **[5] Rewrite the README** (`README.md`): what colcom is, screenshots, a self-hosting guide (`.env`, HTTPS, backups), a development guide, and the comparison with Pol.is/Decidim/Consul/Wikilegis from thesis ch. 4. Replace its outdated to-do list with a link to this file.
 - [ ] **[5] Accessibility audit** *(new)*: Brazilian government sites must follow eMAG/WCAG 2.1 AA. Check keyboard use of the editor, critique popovers and the version slider, screen reader labels, and the zoom layout. The contrast tokens are a good start.
@@ -69,7 +69,7 @@ Since the code is open, anti-abuse measures must not depend on bots not knowing 
 ## 3–4: planned features and minor bugs
 
 - [ ] **[4] Design phase 6: re-synthesis and lineage**: "source updated since", the resynthesize merge, and the lineage view on the timeline.
-- [ ] **[4] 404 instead of 500 for missing content** (`AGENTS.md`): `up`, `down` or `bookmark` on a content that doesn't exist fails on the foreign key and returns 500.
+- [x] **[4] 404 instead of 500 for missing content** (`AGENTS.md`): `up`, `down` or `bookmark` on a content that doesn't exist fails on the foreign key and returns 500.
 - [ ] **[4] Load tests** (README): measure topic list, post page and edit throughput. The per-repo write lock and running git per request are the likely limits. Do this before the bare-repo move so it has a baseline.
 - [ ] **[4] Bare repositories** (design doc): writes check out branches in a shared working tree under a lock. Bare repos with `commit-tree`/`update-ref` remove the checkout and make phase 5 simpler.
 - [ ] **[4] Leaderboard ("pódio")** (README, thesis ch. 5): `pages/Leaderboard.jsx` is routed but renders an empty page. Build it on prestige, or hide the route until then.
