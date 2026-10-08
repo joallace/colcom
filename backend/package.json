@@ -11,7 +11,10 @@
     "test:integration": "vitest run --project integration",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
-    "seed": "node scripts/seed.mjs"
+    "seed": "node scripts/seed.mjs",
+    "loadtest": "node scripts/loadtest/index.mjs",
+    "loadtest:bench": "scripts/loadtest/bench.sh",
+    "loadtest:compare": "node scripts/loadtest/compare.mjs"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

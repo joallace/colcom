@@ -67,6 +67,7 @@ Both packages have a Vitest suite; run `npm test` in `backend/` and in `frontend
 - **Backend** (`backend/test/`): `unit/` tests pure modules; `integration/` drives the real app through HTTP (supertest) against a real Postgres and real git repos. Its global setup starts a throwaway Postgres cluster from the local binaries (`initdb`, found on `PATH`, in `PG_BIN` or under `/usr/lib/postgresql`), or uses a running server when `TEST_POSTGRES_HOST` is set (as CI does). Each test file gets its own database, cloned from a template with the schema, and its own `DB_PATH`, so files run in parallel and see none of each other's data. Tests isolate git from the developer's config (`GIT_CONFIG_GLOBAL=/dev/null`).
 - **Frontend** (`frontend/test/`): jsdom + Testing Library. `assets/` covers anchoring, diffing and density; `editor/` runs the real TipTap extensions; `components/` and `pages/` render components with `fetch` stubbed (`vi.stubGlobal`). `test/support/critiques.js` makes critiques the way the post page does, from a selected text.
 - **Known bugs** are recorded as `it.fails` tests with a comment; when one is fixed its test starts failing, and `.fails` must be dropped.
+- **Load tests** (`backend/scripts/loadtest/`, outside the suite): `npm run loadtest:bench` in `backend/` runs any revision against a throwaway Postgres under concurrent load, then checks that no write was lost. Run it before and after changes to the git layer or the request path; see `backend/AGENTS.md`.
 
 Beyond the suite, show changes work rather than assume they do:
 
@@ -91,5 +92,6 @@ Beyond the suite, show changes work rather than assume they do:
 - **Global title uniqueness:** content titles are unique across the whole site, critiques included.
 - **Frontend bug:** `relativeTime` doesn't round years ("1.04… ano").
 - **Backend bugs:**
+  - Accepting a suggestion doesn't update the post's summary in Postgres (`mergePost`), so lists keep showing the text from before the merge.
   - `GET /contents/:id/interactions` is unreachable: `GET /contents/:id/:hash` is registered first and takes "interactions" as a hash. `GET /users/:id/interactions` passes a user id as a content id. Nothing calls either yet.
 - **Unfinished features:** tags, colcoins (the promote cost check is commented out) and prestige exist in the schema but aren't implemented. The README's to-do list is outdated.

@@ -1,0 +1,1798 @@
+{
+  "label": "f289420 refactor(backend): Writes topic repositories as bare repos with plumbing commands, without locks",
+  "startedAt": "2026-10-08T11:07:07.532Z",
+  "machine": {
+    "cpus": 12,
+    "cpuModel": "AMD Ryzen 5 5500U with Radeon Graphics",
+    "node": "v25.2.0",
+    "git": "git version 2.55.0",
+    "platform": "Linux 5.15.0-76-generic"
+  },
+  "settings": {
+    "api": "http://localhost:3999",
+    "durationS": 15,
+    "warmupS": 3,
+    "levels": [
+      1,
+      4,
+      16,
+      64
+    ],
+    "scenarios": [
+      "read",
+      "edit-same-post",
+      "edit-same-topic",
+      "edit-many-topics",
+      "suggest-merge",
+      "create-posts",
+      "mixed"
+    ]
+  },
+  "phases": [
+    {
+      "scenario": "read",
+      "concurrency": 1,
+      "total": {
+        "count": 1059,
+        "rps": 70.6,
+        "mean": 14.2,
+        "p50": 8.5,
+        "p90": 34.9,
+        "p99": 37.9,
+        "max": 39.1,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "GET /contents/:id": {
+          "count": 279,
+          "rps": 18.6,
+          "mean": 8.4,
+          "p50": 8.5,
+          "p90": 10,
+          "p99": 11.8,
+          "max": 15,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /contents/:id/:hash": {
+          "count": 281,
+          "rps": 18.7,
+          "mean": 32.3,
+          "p50": 33.1,
+          "p90": 37.1,
+          "p99": 38.4,
+          "max": 39.1,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /topics": {
+          "count": 248,
+          "rps": 16.5,
+          "mean": 7.9,
+          "p50": 8.3,
+          "p90": 9.5,
+          "p99": 11.4,
+          "max": 11.9,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /topics/:id": {
+          "count": 251,
+          "rps": 16.7,
+          "mean": 6.4,
+          "p50": 6.6,
+          "p90": 7.8,
+          "p99": 8.7,
+          "max": 9.6,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 5.72,
+        "gitS": 6,
+        "msPerRequest": 11.07
+      },
+      "peakRssMb": 141
+    },
+    {
+      "scenario": "read",
+      "concurrency": 4,
+      "total": {
+        "count": 2858,
+        "rps": 190.5,
+        "mean": 21,
+        "p50": 11.8,
+        "p90": 54.9,
+        "p99": 77.7,
+        "max": 102.5,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "GET /contents/:id": {
+          "count": 762,
+          "rps": 50.8,
+          "mean": 14.3,
+          "p50": 13.7,
+          "p90": 20.5,
+          "p99": 27.7,
+          "max": 31.7,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /contents/:id/:hash": {
+          "count": 673,
+          "rps": 44.9,
+          "mean": 53.9,
+          "p50": 52.2,
+          "p90": 72.1,
+          "p99": 93.3,
+          "max": 102.5,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /topics": {
+          "count": 712,
+          "rps": 47.5,
+          "mean": 9.5,
+          "p50": 9.1,
+          "p90": 13.5,
+          "p99": 17.4,
+          "max": 19.9,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /topics/:id": {
+          "count": 711,
+          "rps": 47.4,
+          "mean": 8.4,
+          "p50": 8.2,
+          "p90": 12,
+          "p99": 16,
+          "max": 18.1,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 9.75,
+        "gitS": 11.92,
+        "msPerRequest": 7.58
+      },
+      "peakRssMb": 216
+    },
+    {
+      "scenario": "read",
+      "concurrency": 16,
+      "total": {
+        "count": 2770,
+        "rps": 184.7,
+        "mean": 86.5,
+        "p50": 49.9,
+        "p90": 216.4,
+        "p99": 312.4,
+        "max": 434.4,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "GET /contents/:id": {
+          "count": 711,
+          "rps": 47.4,
+          "mean": 67.6,
+          "p50": 65.8,
+          "p90": 91.1,
+          "p99": 114.6,
+          "max": 133.3,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /contents/:id/:hash": {
+          "count": 708,
+          "rps": 47.2,
+          "mean": 208.8,
+          "p50": 201.1,
+          "p90": 269.2,
+          "p99": 367,
+          "max": 434.4,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /topics": {
+          "count": 668,
+          "rps": 44.5,
+          "mean": 33.1,
+          "p50": 32,
+          "p90": 46.8,
+          "p99": 62.6,
+          "max": 74.1,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /topics/:id": {
+          "count": 683,
+          "rps": 45.5,
+          "mean": 31.8,
+          "p50": 30.4,
+          "p90": 44.3,
+          "p99": 60.1,
+          "max": 86.5,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 9.45,
+        "gitS": 12.82,
+        "msPerRequest": 8.04
+      },
+      "peakRssMb": 224
+    },
+    {
+      "scenario": "read",
+      "concurrency": 64,
+      "total": {
+        "count": 2702,
+        "rps": 180.1,
+        "mean": 352.7,
+        "p50": 217.8,
+        "p90": 821.3,
+        "p99": 1064.3,
+        "max": 1256.9,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "GET /contents/:id": {
+          "count": 669,
+          "rps": 44.6,
+          "mean": 312.5,
+          "p50": 308.1,
+          "p90": 396.6,
+          "p99": 469.2,
+          "max": 500.7,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /contents/:id/:hash": {
+          "count": 680,
+          "rps": 45.3,
+          "mean": 807.5,
+          "p50": 798,
+          "p90": 939.5,
+          "p99": 1185.6,
+          "max": 1256.9,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /topics": {
+          "count": 692,
+          "rps": 46.1,
+          "mean": 144.3,
+          "p50": 140.8,
+          "p90": 197.4,
+          "p99": 230.9,
+          "max": 265.9,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /topics/:id": {
+          "count": 661,
+          "rps": 44.1,
+          "mean": 143.9,
+          "p50": 140.8,
+          "p90": 196.4,
+          "p99": 237,
+          "max": 268,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 9.42,
+        "gitS": 12.96,
+        "msPerRequest": 8.28
+      },
+      "peakRssMb": 224
+    },
+    {
+      "scenario": "edit-same-post",
+      "concurrency": 1,
+      "total": {
+        "count": 489,
+        "rps": 32.6,
+        "mean": 30.7,
+        "p50": 29.7,
+        "p90": 33,
+        "p99": 81.8,
+        "max": 86,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "PATCH /contents/:id": {
+          "count": 489,
+          "rps": 32.6,
+          "mean": 30.7,
+          "p50": 29.7,
+          "p90": 33,
+          "p99": 81.8,
+          "max": 86,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 5.51,
+        "gitS": 7.75,
+        "msPerRequest": 27.12
+      },
+      "peakRssMb": 225
+    },
+    {
+      "scenario": "edit-same-post",
+      "concurrency": 4,
+      "total": {
+        "count": 554,
+        "rps": 36.9,
+        "mean": 107.9,
+        "p50": 71.4,
+        "p90": 201.7,
+        "p99": 585.1,
+        "max": 1249.9,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "PATCH /contents/:id": {
+          "count": 554,
+          "rps": 36.9,
+          "mean": 107.9,
+          "p50": 71.4,
+          "p90": 201.7,
+          "p99": 585.1,
+          "max": 1249.9,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 8.04,
+        "gitS": 12.27,
+        "msPerRequest": 36.66
+      },
+      "peakRssMb": 225
+    },
+    {
+      "scenario": "edit-same-post",
+      "concurrency": 16,
+      "total": {
+        "count": 372,
+        "rps": 24.8,
+        "mean": 609,
+        "p50": 210.3,
+        "p90": 1652.6,
+        "p99": 5280.9,
+        "max": 6021,
+        "errors": 5,
+        "errorRate": 0.0134
+      },
+      "endpoints": {
+        "PATCH /contents/:id": {
+          "count": 372,
+          "rps": 24.8,
+          "mean": 609,
+          "p50": 210.3,
+          "p90": 1652.6,
+          "p99": 5280.9,
+          "max": 6021,
+          "errors": 5,
+          "errorRate": 0.0134,
+          "errorKinds": {
+            "409 O texto foi alterado por outra pessoa ao mesmo tempo.": 5
+          }
+        }
+      },
+      "errors": {
+        "PATCH /contents/:id: 409 O texto foi alterado por outra pessoa ao mesmo tempo.": 5
+      },
+      "cpu": {
+        "serverS": 8.1,
+        "gitS": 13.9,
+        "msPerRequest": 59.14
+      },
+      "peakRssMb": 226
+    },
+    {
+      "scenario": "edit-same-post",
+      "concurrency": 64,
+      "total": {
+        "count": 122,
+        "rps": 8.1,
+        "mean": 5708.5,
+        "p50": 5521.1,
+        "p90": 10949.4,
+        "p99": 11434.4,
+        "max": 11498.5,
+        "errors": 26,
+        "errorRate": 0.2131
+      },
+      "endpoints": {
+        "PATCH /contents/:id": {
+          "count": 122,
+          "rps": 8.1,
+          "mean": 5708.5,
+          "p50": 5521.1,
+          "p90": 10949.4,
+          "p99": 11434.4,
+          "max": 11498.5,
+          "errors": 26,
+          "errorRate": 0.2131,
+          "errorKinds": {
+            "409 O texto foi alterado por outra pessoa ao mesmo tempo.": 26
+          }
+        }
+      },
+      "errors": {
+        "PATCH /contents/:id: 409 O texto foi alterado por outra pessoa ao mesmo tempo.": 26
+      },
+      "cpu": {
+        "serverS": 8.05,
+        "gitS": 14.94,
+        "msPerRequest": 188.44
+      },
+      "peakRssMb": 232
+    },
+    {
+      "scenario": "edit-same-topic",
+      "concurrency": 1,
+      "total": {
+        "count": 447,
+        "rps": 29.8,
+        "mean": 33.5,
+        "p50": 29.4,
+        "p90": 36,
+        "p99": 135.2,
+        "max": 141.9,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "PATCH /contents/:id": {
+          "count": 447,
+          "rps": 29.8,
+          "mean": 33.5,
+          "p50": 29.4,
+          "p90": 36,
+          "p99": 135.2,
+          "max": 141.9,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 5.36,
+        "gitS": 7.2,
+        "msPerRequest": 28.1
+      },
+      "peakRssMb": 232
+    },
+    {
+      "scenario": "edit-same-topic",
+      "concurrency": 4,
+      "total": {
+        "count": 657,
+        "rps": 43.8,
+        "mean": 91.5,
+        "p50": 80.9,
+        "p90": 153.1,
+        "p99": 203.9,
+        "max": 273.8,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "PATCH /contents/:id": {
+          "count": 657,
+          "rps": 43.8,
+          "mean": 91.5,
+          "p50": 80.9,
+          "p90": 153.1,
+          "p99": 203.9,
+          "max": 273.8,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 7.64,
+        "gitS": 10.56,
+        "msPerRequest": 27.7
+      },
+      "peakRssMb": 105
+    },
+    {
+      "scenario": "edit-same-topic",
+      "concurrency": 16,
+      "total": {
+        "count": 1091,
+        "rps": 72.7,
+        "mean": 221.2,
+        "p50": 211.7,
+        "p90": 287.6,
+        "p99": 351.2,
+        "max": 422.6,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "PATCH /contents/:id": {
+          "count": 1091,
+          "rps": 72.7,
+          "mean": 221.2,
+          "p50": 211.7,
+          "p90": 287.6,
+          "p99": 351.2,
+          "max": 422.6,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 8.43,
+        "gitS": 13.35,
+        "msPerRequest": 19.96
+      },
+      "peakRssMb": 119
+    },
+    {
+      "scenario": "edit-same-topic",
+      "concurrency": 64,
+      "total": {
+        "count": 1229,
+        "rps": 81.9,
+        "mean": 776.7,
+        "p50": 767.5,
+        "p90": 905.4,
+        "p99": 1018.3,
+        "max": 1137.6,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "PATCH /contents/:id": {
+          "count": 1229,
+          "rps": 81.9,
+          "mean": 776.7,
+          "p50": 767.5,
+          "p90": 905.4,
+          "p99": 1018.3,
+          "max": 1137.6,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 8.6,
+        "gitS": 14.02,
+        "msPerRequest": 18.41
+      },
+      "peakRssMb": 150
+    },
+    {
+      "scenario": "edit-many-topics",
+      "concurrency": 1,
+      "total": {
+        "count": 531,
+        "rps": 35.4,
+        "mean": 28.2,
+        "p50": 29.1,
+        "p90": 32.1,
+        "p99": 34.2,
+        "max": 40.7,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "PATCH /contents/:id": {
+          "count": 531,
+          "rps": 35.4,
+          "mean": 28.2,
+          "p50": 29.1,
+          "p90": 32.1,
+          "p99": 34.2,
+          "max": 40.7,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 5.95,
+        "gitS": 8.34,
+        "msPerRequest": 26.91
+      },
+      "peakRssMb": 151
+    },
+    {
+      "scenario": "edit-many-topics",
+      "concurrency": 4,
+      "total": {
+        "count": 1046,
+        "rps": 69.7,
+        "mean": 57.3,
+        "p50": 54.4,
+        "p90": 73.8,
+        "p99": 84,
+        "max": 88.1,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "PATCH /contents/:id": {
+          "count": 1046,
+          "rps": 69.7,
+          "mean": 57.3,
+          "p50": 54.4,
+          "p90": 73.8,
+          "p99": 84,
+          "max": 88.1,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 8.75,
+        "gitS": 13.71,
+        "msPerRequest": 21.47
+      },
+      "peakRssMb": 153
+    },
+    {
+      "scenario": "edit-many-topics",
+      "concurrency": 16,
+      "total": {
+        "count": 1137,
+        "rps": 75.8,
+        "mean": 210.7,
+        "p50": 202.2,
+        "p90": 257.5,
+        "p99": 316.7,
+        "max": 365.7,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "PATCH /contents/:id": {
+          "count": 1137,
+          "rps": 75.8,
+          "mean": 210.7,
+          "p50": 202.2,
+          "p90": 257.5,
+          "p99": 316.7,
+          "max": 365.7,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 8.86,
+        "gitS": 13.37,
+        "msPerRequest": 19.55
+      },
+      "peakRssMb": 201
+    },
+    {
+      "scenario": "edit-many-topics",
+      "concurrency": 64,
+      "total": {
+        "count": 1244,
+        "rps": 82.9,
+        "mean": 770.3,
+        "p50": 758.9,
+        "p90": 858.2,
+        "p99": 936.8,
+        "max": 1029.5,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "PATCH /contents/:id": {
+          "count": 1244,
+          "rps": 82.9,
+          "mean": 770.3,
+          "p50": 758.9,
+          "p90": 858.2,
+          "p99": 936.8,
+          "max": 1029.5,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 8.48,
+        "gitS": 14.23,
+        "msPerRequest": 18.26
+      },
+      "peakRssMb": 207
+    },
+    {
+      "scenario": "suggest-merge",
+      "concurrency": 1,
+      "total": {
+        "count": 565,
+        "rps": 37.7,
+        "mean": 26.5,
+        "p50": 26.6,
+        "p90": 33.4,
+        "p99": 35.8,
+        "max": 37.6,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "PATCH /contents/:id (suggestion)": {
+          "count": 282,
+          "rps": 18.8,
+          "mean": 29.5,
+          "p50": 29.9,
+          "p90": 34.6,
+          "p99": 37.1,
+          "max": 37.6,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "POST /contents/:id/:hash/merge": {
+          "count": 283,
+          "rps": 18.9,
+          "mean": 23.5,
+          "p50": 23.7,
+          "p90": 28.3,
+          "p99": 29.5,
+          "max": 30.7,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 5.75,
+        "gitS": 7.82,
+        "msPerRequest": 24.02
+      },
+      "peakRssMb": 207
+    },
+    {
+      "scenario": "suggest-merge",
+      "concurrency": 4,
+      "total": {
+        "count": 1029,
+        "rps": 68.6,
+        "mean": 58.2,
+        "p50": 56.7,
+        "p90": 78.9,
+        "p99": 91.1,
+        "max": 96.6,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "PATCH /contents/:id (suggestion)": {
+          "count": 514,
+          "rps": 34.3,
+          "mean": 67.1,
+          "p50": 65.5,
+          "p90": 83.8,
+          "p99": 92.5,
+          "max": 96.6,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "POST /contents/:id/:hash/merge": {
+          "count": 515,
+          "rps": 34.3,
+          "mean": 49.2,
+          "p50": 48.8,
+          "p90": 61.6,
+          "p99": 73,
+          "max": 79.7,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 8.77,
+        "gitS": 13.41,
+        "msPerRequest": 21.55
+      },
+      "peakRssMb": 207
+    },
+    {
+      "scenario": "suggest-merge",
+      "concurrency": 16,
+      "total": {
+        "count": 1120,
+        "rps": 74.7,
+        "mean": 213.6,
+        "p50": 204.1,
+        "p90": 293,
+        "p99": 364,
+        "max": 397.9,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "PATCH /contents/:id (suggestion)": {
+          "count": 558,
+          "rps": 37.2,
+          "mean": 256.4,
+          "p50": 252.7,
+          "p90": 311.9,
+          "p99": 385.6,
+          "max": 397.9,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "POST /contents/:id/:hash/merge": {
+          "count": 562,
+          "rps": 37.5,
+          "mean": 171.1,
+          "p50": 167.4,
+          "p90": 204.6,
+          "p99": 231.1,
+          "max": 299.8,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 8.83,
+        "gitS": 13.56,
+        "msPerRequest": 19.99
+      },
+      "peakRssMb": 207
+    },
+    {
+      "scenario": "suggest-merge",
+      "concurrency": 64,
+      "total": {
+        "count": 1247,
+        "rps": 83.1,
+        "mean": 763.2,
+        "p50": 770.8,
+        "p90": 959.3,
+        "p99": 1114.3,
+        "max": 1333.3,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "PATCH /contents/:id (suggestion)": {
+          "count": 621,
+          "rps": 41.4,
+          "mean": 888.5,
+          "p50": 873.5,
+          "p90": 1005.3,
+          "p99": 1144,
+          "max": 1333.3,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "POST /contents/:id/:hash/merge": {
+          "count": 626,
+          "rps": 41.7,
+          "mean": 638.8,
+          "p50": 629.2,
+          "p90": 734.8,
+          "p99": 830.7,
+          "max": 1011,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 8.65,
+        "gitS": 13.65,
+        "msPerRequest": 17.88
+      },
+      "peakRssMb": 207
+    },
+    {
+      "scenario": "create-posts",
+      "concurrency": 1,
+      "total": {
+        "count": 442,
+        "rps": 29.5,
+        "mean": 33.9,
+        "p50": 29.6,
+        "p90": 37.2,
+        "p99": 140.1,
+        "max": 631.6,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "POST /contents (post)": {
+          "count": 442,
+          "rps": 29.5,
+          "mean": 33.9,
+          "p50": 29.6,
+          "p90": 37.2,
+          "p99": 140.1,
+          "max": 631.6,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 4.97,
+        "gitS": 6.84,
+        "msPerRequest": 26.72
+      },
+      "peakRssMb": 207
+    },
+    {
+      "scenario": "create-posts",
+      "concurrency": 4,
+      "total": {
+        "count": 827,
+        "rps": 55.1,
+        "mean": 72.2,
+        "p50": 64.2,
+        "p90": 103.8,
+        "p99": 147.9,
+        "max": 724.2,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "POST /contents (post)": {
+          "count": 827,
+          "rps": 55.1,
+          "mean": 72.2,
+          "p50": 64.2,
+          "p90": 103.8,
+          "p99": 147.9,
+          "max": 724.2,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 7.88,
+        "gitS": 11.11,
+        "msPerRequest": 22.96
+      },
+      "peakRssMb": 207
+    },
+    {
+      "scenario": "create-posts",
+      "concurrency": 16,
+      "total": {
+        "count": 1214,
+        "rps": 80.9,
+        "mean": 198.7,
+        "p50": 191.3,
+        "p90": 242.6,
+        "p99": 310.4,
+        "max": 345.8,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "POST /contents (post)": {
+          "count": 1214,
+          "rps": 80.9,
+          "mean": 198.7,
+          "p50": 191.3,
+          "p90": 242.6,
+          "p99": 310.4,
+          "max": 345.8,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 8.35,
+        "gitS": 13.76,
+        "msPerRequest": 18.21
+      },
+      "peakRssMb": 207
+    },
+    {
+      "scenario": "create-posts",
+      "concurrency": 64,
+      "total": {
+        "count": 1280,
+        "rps": 85.3,
+        "mean": 747.9,
+        "p50": 736.9,
+        "p90": 833,
+        "p99": 960.4,
+        "max": 1047.2,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "POST /contents (post)": {
+          "count": 1280,
+          "rps": 85.3,
+          "mean": 747.9,
+          "p50": 736.9,
+          "p90": 833,
+          "p99": 960.4,
+          "max": 1047.2,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 8.61,
+        "gitS": 14,
+        "msPerRequest": 17.66
+      },
+      "peakRssMb": 208
+    },
+    {
+      "scenario": "mixed",
+      "concurrency": 1,
+      "total": {
+        "count": 596,
+        "rps": 39.7,
+        "mean": 24.5,
+        "p50": 14.6,
+        "p90": 43.6,
+        "p99": 92.3,
+        "max": 517.5,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "GET /contents/:id": {
+          "count": 96,
+          "rps": 6.4,
+          "mean": 8.1,
+          "p50": 8.1,
+          "p90": 10,
+          "p99": 12.2,
+          "max": 12.2,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /contents/:id/:hash": {
+          "count": 118,
+          "rps": 7.9,
+          "mean": 33.3,
+          "p50": 33,
+          "p90": 39.2,
+          "p99": 44.1,
+          "max": 44.6,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /topics": {
+          "count": 94,
+          "rps": 6.3,
+          "mean": 55.8,
+          "p50": 43.6,
+          "p90": 84.3,
+          "p99": 92.3,
+          "max": 92.3,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /topics/:id": {
+          "count": 127,
+          "rps": 8.5,
+          "mean": 5.2,
+          "p50": 5,
+          "p90": 7.1,
+          "p99": 8.3,
+          "max": 10.2,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "PATCH /contents/:id": {
+          "count": 74,
+          "rps": 4.9,
+          "mean": 34.3,
+          "p50": 28.8,
+          "p90": 33.3,
+          "p99": 192.1,
+          "max": 192.1,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "POST /contents (critique)": {
+          "count": 14,
+          "rps": 0.9,
+          "mean": 25.8,
+          "p50": 14.2,
+          "p90": 58.2,
+          "p99": 131.8,
+          "max": 131.8,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "POST /interactions": {
+          "count": 73,
+          "rps": 4.9,
+          "mean": 15.2,
+          "p50": 5.7,
+          "p90": 9,
+          "p99": 517.5,
+          "max": 517.5,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 3.32,
+        "gitS": 3.7,
+        "msPerRequest": 11.78
+      },
+      "peakRssMb": 207
+    },
+    {
+      "scenario": "mixed",
+      "concurrency": 4,
+      "total": {
+        "count": 2203,
+        "rps": 146.9,
+        "mean": 27.2,
+        "p50": 20.6,
+        "p90": 53.9,
+        "p99": 90.2,
+        "max": 185.2,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "GET /contents/:id": {
+          "count": 409,
+          "rps": 27.3,
+          "mean": 10.8,
+          "p50": 10.2,
+          "p90": 16.3,
+          "p99": 22.1,
+          "max": 27.5,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /contents/:id/:hash": {
+          "count": 426,
+          "rps": 28.4,
+          "mean": 39.7,
+          "p50": 37.8,
+          "p90": 55.8,
+          "p99": 72,
+          "max": 87.2,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /topics": {
+          "count": 399,
+          "rps": 26.6,
+          "mean": 52.8,
+          "p50": 47.9,
+          "p90": 73.5,
+          "p99": 91.7,
+          "max": 94.5,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /topics/:id": {
+          "count": 404,
+          "rps": 26.9,
+          "mean": 6.4,
+          "p50": 6.2,
+          "p90": 9.2,
+          "p99": 12.5,
+          "max": 14.3,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "PATCH /contents/:id": {
+          "count": 214,
+          "rps": 14.3,
+          "mean": 41.7,
+          "p50": 35.7,
+          "p90": 71.7,
+          "p99": 103.7,
+          "max": 185.2,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "POST /contents (critique)": {
+          "count": 64,
+          "rps": 4.3,
+          "mean": 26.3,
+          "p50": 20.6,
+          "p90": 43.8,
+          "p99": 146.6,
+          "max": 146.6,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "POST /interactions": {
+          "count": 287,
+          "rps": 19.1,
+          "mean": 15.3,
+          "p50": 10.9,
+          "p90": 23.1,
+          "p99": 131.9,
+          "max": 171.2,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 8.39,
+        "gitS": 9.31,
+        "msPerRequest": 8.03
+      },
+      "peakRssMb": 207
+    },
+    {
+      "scenario": "mixed",
+      "concurrency": 16,
+      "total": {
+        "count": 2786,
+        "rps": 185.7,
+        "mean": 86.1,
+        "p50": 70,
+        "p90": 167.6,
+        "p99": 225.3,
+        "max": 275.3,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "GET /contents/:id": {
+          "count": 497,
+          "rps": 33.1,
+          "mean": 53.1,
+          "p50": 52,
+          "p90": 70.4,
+          "p99": 93.8,
+          "max": 108.8,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /contents/:id/:hash": {
+          "count": 533,
+          "rps": 35.5,
+          "mean": 157,
+          "p50": 153.4,
+          "p90": 193.3,
+          "p99": 234.1,
+          "max": 275.3,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /topics": {
+          "count": 553,
+          "rps": 36.9,
+          "mean": 79.2,
+          "p50": 75.8,
+          "p90": 98.8,
+          "p99": 119.1,
+          "max": 134.5,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /topics/:id": {
+          "count": 537,
+          "rps": 35.8,
+          "mean": 25.4,
+          "p50": 24.7,
+          "p90": 34.3,
+          "p99": 43.8,
+          "max": 54.5,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "PATCH /contents/:id": {
+          "count": 257,
+          "rps": 17.1,
+          "mean": 168.8,
+          "p50": 166.1,
+          "p90": 213.3,
+          "p99": 261.5,
+          "max": 267.5,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "POST /contents (critique)": {
+          "count": 75,
+          "rps": 5,
+          "mean": 103.3,
+          "p50": 98.3,
+          "p90": 137,
+          "p99": 190.1,
+          "max": 190.1,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "POST /interactions": {
+          "count": 334,
+          "rps": 22.3,
+          "mean": 63.9,
+          "p50": 60.6,
+          "p90": 89.5,
+          "p99": 119.2,
+          "max": 156.5,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 9.9,
+        "gitS": 11.35,
+        "msPerRequest": 7.63
+      },
+      "peakRssMb": 207
+    },
+    {
+      "scenario": "mixed",
+      "concurrency": 64,
+      "total": {
+        "count": 2834,
+        "rps": 188.9,
+        "mean": 338.5,
+        "p50": 266.9,
+        "p90": 653.9,
+        "p99": 767,
+        "max": 902.6,
+        "errors": 0,
+        "errorRate": 0
+      },
+      "endpoints": {
+        "GET /contents/:id": {
+          "count": 506,
+          "rps": 33.7,
+          "mean": 258,
+          "p50": 253.2,
+          "p90": 312.9,
+          "p99": 374,
+          "max": 459.1,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /contents/:id/:hash": {
+          "count": 546,
+          "rps": 36.4,
+          "mean": 641.6,
+          "p50": 634.6,
+          "p90": 708.9,
+          "p99": 780.1,
+          "max": 902.6,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /topics": {
+          "count": 531,
+          "rps": 35.4,
+          "mean": 183,
+          "p50": 186.4,
+          "p90": 223.3,
+          "p99": 265.2,
+          "max": 301.7,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "GET /topics/:id": {
+          "count": 552,
+          "rps": 36.8,
+          "mean": 119.8,
+          "p50": 120.3,
+          "p90": 149.8,
+          "p99": 177.4,
+          "max": 211.6,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "PATCH /contents/:id": {
+          "count": 287,
+          "rps": 19.1,
+          "mean": 625.8,
+          "p50": 611.9,
+          "p90": 735,
+          "p99": 852.2,
+          "max": 895.9,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "POST /contents (critique)": {
+          "count": 67,
+          "rps": 4.5,
+          "mean": 439.3,
+          "p50": 441.5,
+          "p90": 478.5,
+          "p99": 530,
+          "max": 530,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        },
+        "POST /interactions": {
+          "count": 345,
+          "rps": 23,
+          "mean": 307.1,
+          "p50": 304.7,
+          "p90": 361.2,
+          "p99": 423.6,
+          "max": 474.4,
+          "errors": 0,
+          "errorRate": 0,
+          "errorKinds": {}
+        }
+      },
+      "errors": {},
+      "cpu": {
+        "serverS": 9.82,
+        "gitS": 11.52,
+        "msPerRequest": 7.53
+      },
+      "peakRssMb": 207
+    }
+  ],
+  "integrity": {
+    "problems": [
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 39 (topic 34): Postgres has \"Versão e5994: A participação direta exig…\", git's tip da5a0360 has \"Versão m13230: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 35 (topic 34): Postgres has \"Versão e6002: A participação direta exig…\", git's tip 91825178 has \"Versão m13232: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 40 (topic 34): Postgres has \"Versão e6018: A participação direta exig…\", git's tip 14debdeb has \"Versão m13241: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 36 (topic 34): Postgres has \"Versão e5992: A participação direta exig…\", git's tip 2e1f39c1 has \"Versão m13239: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 41 (topic 34): Postgres has \"Versão e5981: A participação direta exig…\", git's tip 91802df5 has \"Versão m13216: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 37 (topic 34): Postgres has \"Versão e6023: A participação direta exig…\", git's tip 48378645 has \"Versão m13231: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 38 (topic 34): Postgres has \"Versão e6029: A participação direta exig…\", git's tip 1177c3c4 has \"Versão m13218: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 42 (topic 34): Postgres has \"Versão e5995: A participação direta exig…\", git's tip 7bc641f8 has \"Versão m13220: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 43 (topic 34): Postgres has \"Versão e6030: A participação direta exig…\", git's tip 8889a6b6 has \"Versão m13207: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 44 (topic 34): Postgres has \"Versão e5988: A participação direta exig…\", git's tip ca435612 has \"Versão m13215: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 45 (topic 34): Postgres has \"Versão e6008: A participação direta exig…\", git's tip fca534e8 has \"Versão m13201: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 46 (topic 34): Postgres has \"Versão e5982: A participação direta exig…\", git's tip 51717c0a has \"Versão m13235: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 47 (topic 34): Postgres has \"Versão e6014: A participação direta exig…\", git's tip a3a77dcd has \"Versão m13234: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 48 (topic 34): Postgres has \"Versão e6001: A participação direta exig…\", git's tip 6ef4162e has \"Versão m13223: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 49 (topic 34): Postgres has \"Versão e6026: A participação direta exig…\", git's tip a990d48a has \"Versão m13217: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 50 (topic 34): Postgres has \"Versão e5991: A participação direta exig…\", git's tip c231ccdf has \"Versão m13219: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 54 (topic 34): Postgres has \"Versão e6020: A participação direta exig…\", git's tip ea0075e5 has \"Versão m13211: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 51 (topic 34): Postgres has \"Versão e6011: A participação direta exig…\", git's tip 9ef419d8 has \"Versão m13203: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 53 (topic 34): Postgres has \"Versão e6005: A participação direta exig…\", git's tip f46534fa has \"Versão m13206: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 55 (topic 34): Postgres has \"Versão e6027: A participação direta exig…\", git's tip a012f19d has \"Versão m13228: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 52 (topic 34): Postgres has \"Versão e5990: A participação direta exig…\", git's tip e7c298eb has \"Versão m13209: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 56 (topic 34): Postgres has \"Versão e6017: A participação direta exig…\", git's tip ec1430ad has \"Versão m13229: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 57 (topic 34): Postgres has \"Versão e6000: A participação direta exig…\", git's tip 08150138 has \"Versão m13237: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 58 (topic 34): Postgres has \"Versão e5977: A participação direta exig…\", git's tip ca8d70dd has \"Versão m13253: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 59 (topic 34): Postgres has \"Versão e6028: A participação direta exig…\", git's tip 7afaabea has \"Versão m13240: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 61 (topic 34): Postgres has \"Versão e5979: A participação direta exig…\", git's tip 1580dcf0 has \"Versão m13246: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 62 (topic 34): Postgres has \"Versão e6003: A participação direta exig…\", git's tip b593e964 has \"Versão m13242: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 60 (topic 34): Postgres has \"Versão e6004: A participação direta exig…\", git's tip 29fe109d has \"Versão m13252: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 63 (topic 34): Postgres has \"Versão e5985: A participação direta exig…\", git's tip a486f557 has \"Versão m13251: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 64 (topic 34): Postgres has \"Versão e6025: A participação direta exig…\", git's tip acbf875f has \"Versão m13263: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 65 (topic 34): Postgres has \"Versão e6033: A participação direta exig…\", git's tip 491f552c has \"Versão m13258: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 66 (topic 34): Postgres has \"Versão e6019: A participação direta exig…\", git's tip 24b589a0 has \"Versão m13261: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 67 (topic 34): Postgres has \"Versão e5975: A participação direta exig…\", git's tip 7c56874e has \"Versão m13212: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 68 (topic 34): Postgres has \"Versão e5980: A participação direta exig…\", git's tip 696aaa16 has \"Versão m13256: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 69 (topic 34): Postgres has \"Versão e5976: A participação direta exig…\", git's tip 3646244a has \"Versão m13208: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 71 (topic 34): Postgres has \"Versão e5996: A participação direta exig…\", git's tip afa9fd99 has \"Versão m13202: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 70 (topic 34): Postgres has \"Versão e5989: A participação direta exig…\", git's tip 1afd7573 has \"Versão m13214: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 72 (topic 34): Postgres has \"Versão e5998: A participação direta exig…\", git's tip 58f2bdf5 has \"Versão m13233: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 74 (topic 34): Postgres has \"Versão e5974: A participação direta exig…\", git's tip 53c6d590 has \"Versão m13204: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 73 (topic 34): Postgres has \"Versão e6021: A participação direta exig…\", git's tip bcbb7221 has \"Versão m13221: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 75 (topic 34): Postgres has \"Versão e5984: A participação direta exig…\", git's tip 9cfc2cd2 has \"Versão m13238: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 76 (topic 34): Postgres has \"Versão e5983: A participação direta exig…\", git's tip e7490130 has \"Versão m13249: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 77 (topic 34): Postgres has \"Versão e6024: A participação direta exig…\", git's tip 7287cc4a has \"Versão m13245: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 78 (topic 34): Postgres has \"Versão e6034: A participação direta exig…\", git's tip 2b39b47e has \"Versão m13244: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 79 (topic 34): Postgres has \"Versão e6032: A participação direta exig…\", git's tip e370307e has \"Versão m13236: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 80 (topic 34): Postgres has \"Versão e5978: A participação direta exig…\", git's tip 9f11e3ae has \"Versão m13248: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 81 (topic 34): Postgres has \"Versão e5987: A participação direta exig…\", git's tip 7f61f9b8 has \"Versão m13250: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 82 (topic 34): Postgres has \"Versão e5999: A participação direta exig…\", git's tip 58117321 has \"Versão m13257: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 83 (topic 34): Postgres has \"Versão e6012: A participação direta exig…\", git's tip 769936e2 has \"Versão m13247: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 85 (topic 34): Postgres has \"Versão e6031: A participação direta exig…\", git's tip 31e31c24 has \"Versão m13262: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 84 (topic 34): Postgres has \"Versão e5997: A participação direta exig…\", git's tip 686f1cf0 has \"Versão m13259: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 86 (topic 34): Postgres has \"Versão e6035: A participação direta exig…\", git's tip b1354da3 has \"Versão m13255: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 87 (topic 34): Postgres has \"Versão e5993: A participação direta exig…\", git's tip b404a76d has \"Versão m13205: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 88 (topic 34): Postgres has \"Versão e6013: A participação direta exig…\", git's tip a59171d1 has \"Versão m13260: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 89 (topic 34): Postgres has \"Versão e5971: A participação direta exig…\", git's tip f8cb6093 has \"Versão m13264: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 90 (topic 34): Postgres has \"Versão e5986: A participação direta exig…\", git's tip 774792f0 has \"Versão m13210: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 91 (topic 34): Postgres has \"Versão e6015: A participação direta exig…\", git's tip d97110a3 has \"Versão m13213: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 93 (topic 34): Postgres has \"Versão e6022: A participação direta exig…\", git's tip bd3aa93e has \"Versão m13227: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 92 (topic 34): Postgres has \"Versão e6007: A participação direta exig…\", git's tip ed5d7eb5 has \"Versão m13222: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 94 (topic 34): Postgres has \"Versão e6036: A participação direta exig…\", git's tip 7c6d213e has \"Versão m13226: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 95 (topic 34): Postgres has \"Versão e6006: A participação direta exig…\", git's tip 5c563c40 has \"Versão m13224: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 96 (topic 34): Postgres has \"Versão e6016: A participação direta exig…\", git's tip 6f37d65e has \"Versão m13225: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 97 (topic 34): Postgres has \"Versão e6010: A participação direta exig…\", git's tip a0a1f3d2 has \"Versão m13243: A participação direta exi…\""
+      },
+      {
+        "kind": "summary-stale-after-merge",
+        "detail": "post 98 (topic 34): Postgres has \"Versão e6009: A participação direta exig…\", git's tip 8f5c938c has \"Versão m13254: A participação direta exi…\""
+      }
+    ],
+    "postsCompared": 136,
+    "branchesChecked": 4673,
+    "commitsChecked": 14373,
+    "suggestionsChecked": 2432,
+    "createdPostsChecked": 4537,
+    "reposChecked": 67,
+    "problemCounts": {
+      "summary-stale-after-merge": 64
+    }
+  }
+}

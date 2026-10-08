@@ -163,6 +163,16 @@ describe("suggestions", () => {
     expect((await api().get(`/contents/${post.id}/${commit}`)).body.base).toBeUndefined()
   })
 
+  // Known bug, found by the load test's integrity check: mergePost moves the branch but never
+  // updates the summary Postgres keeps, so lists still show the text from before the merge
+  it.fails("update the post's summary once merged", async () => {
+    const post = await newPost()
+    const suggestion = await edit(contributor, post.id, "<p>Alpha, suggested.</p><p>Beta paragraph.</p><p>Gamma paragraph.</p>")
+
+    expect((await api().post(`/contents/${post.id}/${suggestion.body.config.commit}/merge`).set(author.auth)).status).toBe(204)
+    expect((await api().get(`/contents/${post.id}`)).body.body).toBe("Alpha, suggested.")
+  })
+
   it("are rejected by the author without touching the post", async () => {
     const post = await newPost()
     const suggestion = await edit(contributor, post.id, "<p>Nope.</p>")
