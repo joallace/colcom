@@ -17,6 +17,8 @@ async function call(method, path, body, token, { tolerate = false } = {}) {
   const data = res.status === 204 ? null : await res.json().catch(() => null)
   if (!res.ok) {
     const msg = `${method} ${path} → ${res.status} ${JSON.stringify(data)}`
+    // A 429 would leave users or posts missing and fail later with a confusing error
+    if (res.status === 429) throw new Error(`${msg}\nRun the backend with RATE_LIMIT_SIGN_UP=off (and the other RATE_LIMIT_* if needed) to seed.`)
     if (tolerate) { console.warn("  (ignored) " + msg); return null }
     throw new Error(msg)
   }
