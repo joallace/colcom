@@ -19,7 +19,6 @@ export default function Editor({
   groupedCritiques = [],
   reset,
   initialContent,
-  saveInLocalStorage = false,
   readOnly = true,
   edit: isEditable = !readOnly,
   alongsideCritique,
@@ -67,12 +66,7 @@ export default function Editor({
       }
     },
     onBlur: ({ editor }) => {
-      const editorContent = editor.getHTML()
-
-      setContent(editorContent)
-
-      if (saveInLocalStorage)
-        localStorage.setItem("editorContent", editorContent)
+      setContent(editor.getHTML())
     },
     onCreate: props => {
       injectCritiques(props)

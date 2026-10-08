@@ -60,7 +60,7 @@ export default function Topic({
     "answer": {
       description: "responder ao tópico",
       icons: PiArrowBendUpLeft,
-      onClick: () => { user ? navigate("/write", { state: { id, title, config } }) : toLogin() }
+      onClick: () => { user ? navigate(`/write?topic=${id}`, { state: { id, title, config } }) : toLogin() }
     },
     "bookmark": {
       description: ["salvar tópico", "remover dos salvos"],
