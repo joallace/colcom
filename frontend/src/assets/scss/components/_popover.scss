@@ -1,0 +1,67 @@
+// The trigger is a button for keyboards and screen readers, but looks like what it holds
+button.popoverTrigger {
+    min-height: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    font-size: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+    color: inherit;
+
+    &:hover,
+    &:active {
+        background: none;
+        color: inherit;
+        transform: none;
+    }
+}
+
+// Drawn in a portal at the end of <body>, positioned by Floating UI (components/primitives/Popover)
+.popover {
+    z-index: var(--z-dropdown);
+    width: max-content;
+    max-width: min(var(--popover-max-width, 100vw), 22rem);
+
+    // The focus lands on the panel itself only when it has nothing focusable inside
+    &:focus-visible {
+        outline: none;
+    }
+
+    .panel {
+        display: grid;
+        gap: var(--space-2);
+        max-height: var(--popover-max-height, 70vh);
+        overflow-y: auto;
+        padding: var(--space-3);
+        font-size: var(--text-sm);
+        line-height: var(--leading-normal);
+        color: var(--text);
+        background-color: var(--surface-raised);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+        transform-origin: top center;
+        animation: pop-in var(--duration-base) var(--ease-out);
+
+        &[data-placement^="top"] {
+            transform-origin: bottom center;
+        }
+
+        &[data-placement="bottom-start"] {
+            transform-origin: top left;
+        }
+
+        &[data-placement="bottom-end"] {
+            transform-origin: top right;
+        }
+    }
+
+    .heading {
+        margin: 0;
+        font-size: var(--text-sm);
+        font-weight: 700;
+        color: var(--text-secondary);
+    }
+}
