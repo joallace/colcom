@@ -1,0 +1,3 @@
+# Backups made by backup-service.yml land here; they hold every user's data
+*
+!.gitignore

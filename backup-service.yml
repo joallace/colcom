@@ -1,0 +1,29 @@
+# Backs up the database and the git repos into ./backups (or BACKUP_HOST_DIR), keeping the newest
+# BACKUP_KEEP (14). Used with docker-compose.yml, whose database and volumes it reads; the profile
+# keeps `docker compose up` from starting it. Restoring and scheduling: backend/scripts/backup/README.md
+#   docker compose -f docker-compose.yml -f backup-service.yml run --rm backup
+services:
+  backup:
+    # The same Postgres as the db service, so pg_dump and pg_restore match the server's version
+    image: postgres:18-alpine
+    profiles: [backup]
+    environment:
+      PGHOST: localhost
+      PGPORT: 5434
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (see .env.example)}
+      PGDATABASE: colcom
+      DB_PATH: /gitDB
+      BACKUP_DIR: /backups
+      BACKUP_KEEP: ${BACKUP_KEEP:-14}
+    network_mode: host
+    volumes:
+      # Read-write only because restore.sh writes it; backup.sh only reads
+      - git_data:/gitDB
+      - ${BACKUP_HOST_DIR:-./backups}:/backups
+      - ./backend/scripts/backup:/scripts:ro
+    entrypoint: ["sh"]
+    command: ["/scripts/backup.sh"]
+
+volumes:
+  git_data:

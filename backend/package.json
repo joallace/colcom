@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
     "seed": "node scripts/seed.mjs",
+    "check:consistency": "node --env-file-if-exists=.env scripts/checkConsistency.mjs",
     "loadtest": "node scripts/loadtest/index.mjs",
     "loadtest:bench": "scripts/loadtest/bench.sh",
     "loadtest:compare": "node scripts/loadtest/compare.mjs"
