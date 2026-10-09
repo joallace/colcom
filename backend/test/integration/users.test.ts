@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import jwt from "jsonwebtoken"
 
-import { api, AVATAR, signUp, unique } from "../support/api"
+import { api, AVATAR, createTopic, signUp, TestUser, unique } from "../support/api"
 
 
 describe("POST /users", () => {
@@ -46,6 +46,7 @@ describe("POST /login", () => {
 
       const decoded = jwt.verify(res.body.accessToken, process.env.ACCESS_TOKEN_SECRET!) as any
       expect(decoded.user).toEqual({ username: user.name, email: user.email, pid: user.pid })
+      expect(decoded.ver).toBe(0)
       expect(decoded.exp - decoded.iat).toBe(7 * 24 * 60 * 60)
     }
   })
@@ -189,5 +190,65 @@ describe("sign up validation", () => {
 
     const res = await api().post("/login").send({ login: user.email, pass: user.pass })
     expect(res.status).toBe(200)
+  })
+})
+
+describe("POST /logout", () => {
+  // Another device: a second login of the same user
+  const logIn = async (user: TestUser) => {
+    const res = await api().post("/login").send({ login: user.name, pass: user.pass })
+    expect(res.status).toBe(200)
+    return { Authorization: `Bearer ${res.body.accessToken}` }
+  }
+
+  it("revokes the token it was sent with", async () => {
+    const user = await signUp()
+
+    expect((await api().post("/logout").set(user.auth)).status).toBe(204)
+
+    const res = await api().get("/users/self").set(user.auth)
+    expect(res.status).toBe(401)
+    expect(res.body).toMatchObject({ name: "UnauthorizedError", message: "Sessão encerrada.", action: "Faça login novamente." })
+    expect((await api().post("/logout").set(user.auth)).status).toBe(401)
+  })
+
+  it("revokes every session of the user, and no one else's", async () => {
+    const user = await signUp()
+    const other = await signUp()
+    const phone = await logIn(user)
+
+    await api().post("/logout").set(user.auth)
+
+    expect((await api().get("/users/self").set(phone)).status).toBe(401)
+    expect((await api().get("/notifications/unread").set(phone)).status).toBe(401)
+    expect((await api().get("/users/self").set(other.auth)).status).toBe(200)
+  })
+
+  it("lets the user log in again afterwards", async () => {
+    const user = await signUp()
+    await api().post("/logout").set(user.auth)
+
+    const fresh = await logIn(user)
+    const res = await api().get("/users/self").set(fresh)
+    expect(res.status).toBe(200)
+    expect(res.body.pid).toBe(user.pid)
+
+    // Logging in doesn't bring old tokens back
+    expect((await api().get("/users/self").set(user.auth)).status).toBe(401)
+  })
+
+  it("refuses a revoked token on routes where login is optional, which still serve anonymous requests", async () => {
+    const user = await signUp()
+    const topic = await createTopic(user)
+    await api().post("/logout").set(user.auth)
+
+    expect((await api().get("/topics").set(user.auth)).status).toBe(401)
+    expect((await api().get(`/contents/${topic.id}`).set(user.auth)).status).toBe(401)
+    expect((await api().get(`/contents/${topic.id}`)).status).toBe(200)
+  })
+
+  it("requires a token", async () => {
+    const res = await api().post("/logout")
+    expect(res.status).toBe(400)
   })
 })

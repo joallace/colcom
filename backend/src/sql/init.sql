@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
     prestige INT DEFAULT 0,
     permissions TEXT[] DEFAULT '{"read:activation_token"}',
     config JSONB,
+    -- Signed into every token; raising it revokes all of the user's sessions (POST /logout)
+    token_version INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     modified_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );

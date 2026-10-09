@@ -46,6 +46,8 @@ export const loginUser: RequestHandler = async (req, res, next) => {
             email: user.email,
             pid: user.pid,
           },
+          // Checked on every request against users.token_version, so logging out revokes it
+          ver: user.token_version,
         },
         config.accessTokenSecret,
         { expiresIn: "7d" }
@@ -79,6 +81,17 @@ export const getCurrentUser: RequestHandler = async (req, res, next) => {
     const user = await User.findByPid(public_id)
     const promoting = (await Interactions.getUserCurrentPromote(user.pid))?.content_id
     res.status(200).json({ ...user, promoting })
+  }
+  catch (err) {
+    next(err)
+  }
+}
+
+// Revokes every session of the user, on every device, not only the one logging out
+export const logoutUser: RequestHandler = async (req, res, next) => {
+  try {
+    await User.revokeSessions(res.locals.user.pid)
+    res.status(204).end()
   }
   catch (err) {
     next(err)

@@ -20,7 +20,7 @@ import { loginPath, loginState } from "@/assets/returnTo"
 
 export default function Navbar() {
   const [modalOpen, setModalOpen] = React.useState(false)
-  const { user, clearUser } = useUser()
+  const { user, logout } = useUser()
   const navigate = useNavigate()
   const location = useLocation()
   const isDesktop = useBreakpoint("md")
@@ -99,7 +99,7 @@ export default function Navbar() {
                   "logout": {
                     description: "sair",
                     icons: PiSignOutFill,
-                    onClick: () => { clearUser(); navigate("/login") }
+                    onClick: () => { logout(); navigate("/login") }
                   }
                 }}
               >
