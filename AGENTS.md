@@ -50,8 +50,9 @@ Every request's shape and size is described once, in `shared/` (the `@colcom/sha
 - **Schemas** (`shared/src/schemas.js`): request bodies (`signUp`, `login`, `topic`, `post`, `critique`, `edit`, `clone`, `interaction`) and, with type coercion, query strings and route parameters (`list`, `contentParams`, `versionParams`). Unknown keys are removed and defaults filled in.
 - **Messages** (`shared/src/errors.js`): each error has the field's `key` (its path, like `config.answers.1`), its `label` and a short Portuguese `message` for the form ("máximo de 150 caracteres"); `describe` makes the API's sentence ("Título: máximo de 150 caracteres."). Labels, per-keyword `messages` and an `action` hint are annotations inside the schemas.
 - **Custom rules:** `trimmed`, `notBlank` and `maxBytes` (UTF-8 bytes, because bcrypt reads only the first 72 bytes of a password); formats `email`, `commit`, `uuid` and `png` (base64). A username can't contain "@", since logging in tells names from emails by it.
+- **Compiling:** the backend compiles the schemas at runtime (`createValidators(Ajv)`). The frontend can't, as the CSP has no `'unsafe-eval'`: its Vite plugin (`frontend/plugins/validators.js`) turns them into Ajv standalone code at build time (`@colcom/shared/standalone`) and wraps it with `createPrecompiledValidators`. So custom keywords are `code` generators, not `validate` functions, and function formats are imported by the generated code from the package; `frontend/test/plugins/validators.test.js` checks both agree.
 - **What schemas can't check** stays in the backend: a critique's commit must be in the post's history, a post's answer must be one of its topic's, names and emails must be unused.
-- `shared/index.d.ts` types the package for the backend; keep it in step with `limits.js` and `schemas.js`.
+- `shared/index.d.ts` (and `standalone.d.ts`) type the package; keep them in step with `src/`.
 
 ## Running it
 

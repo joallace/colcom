@@ -1,5 +1,9 @@
 // Custom keywords and formats used by the schemas. They are added to an Ajv instance given by the
 // caller, so this package needs no dependency and each side uses its own copy of Ajv.
+//
+// Keywords are code generators rather than `validate` functions so they also work in standalone
+// code (standalone.js), which the frontend runs without compiling anything in the browser.
+// Formats can't be generated: standalone code imports them from this module.
 
 const encoder = new TextEncoder()
 
@@ -17,29 +21,37 @@ export const formats = {
 
 export const byteLength = value => encoder.encode(value).length
 
-export function addKeywords(ajv) {
+// `Ajv` is the class, which carries the `_` template tag that builds generated code
+export function addKeywords(ajv, Ajv) {
+  const { _ } = Ajv
+  if (typeof _ !== "function")
+    throw new Error("addKeywords needs the Ajv class, which exports the `_` code template")
+
   // Annotations read by errors.js
   ajv.addVocabulary(["label", "messages", "action"])
 
+  // cxt.fail(condition) reports an error, with this keyword and its schemaPath, when the condition
+  // holds; a disabled boolean keyword generates nothing
   ajv.addKeyword({
     keyword: "trimmed",
     type: "string",
     schemaType: "boolean",
-    validate: (enabled, value) => !enabled || value === value.trim()
+    code: cxt => cxt.schema && cxt.fail(_`${cxt.data} !== ${cxt.data}.trim()`)
   })
 
   ajv.addKeyword({
     keyword: "notBlank",
     type: "string",
     schemaType: "boolean",
-    validate: (enabled, value) => !enabled || /\S/.test(value)
+    // trim() removes exactly what \s matches
+    code: cxt => cxt.schema && cxt.fail(_`${cxt.data}.trim() === ""`)
   })
 
   ajv.addKeyword({
     keyword: "maxBytes",
     type: "string",
     schemaType: "number",
-    validate: (max, value) => byteLength(value) <= max
+    code: cxt => cxt.fail(_`new TextEncoder().encode(${cxt.data}).length > ${cxt.schema}`)
   })
 
   for (const [name, format] of Object.entries(formats))

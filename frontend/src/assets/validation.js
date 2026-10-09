@@ -1,10 +1,11 @@
-import Ajv from "ajv"
-import { createValidators, describe, fieldErrors } from "@colcom/shared"
+import validators from "virtual:validators"
+import { describe, fieldErrors } from "@colcom/shared"
 
 
 // The same schemas the API validates requests with (shared/), so a form refuses exactly what the API
-// would, with the same messages
-export const { validate, limits } = createValidators(Ajv)
+// would, with the same messages. They are compiled at build time (plugins/validators.js): compiling
+// them here would need eval, which the CSP forbids.
+export const { validate, limits } = validators
 
 export { describe }
 
