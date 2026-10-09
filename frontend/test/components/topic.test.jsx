@@ -21,7 +21,7 @@ const topic = {
   config: { answers: ["sim", "não"] },
   // Ranked by votes, as the API sends them, and cropped like the topic list does
   children: [post(10, "Contra", "não", 3), post(11, "A favor", "sim", 1)],
-  childrenStats: { count: 4, upvotes: 0, downvotes: 0, votes: 6, answers: { "sim": { count: 3, votes: 3 }, "não": { count: 1, votes: 3 } } },
+  childrenStats: { count: 4, upvotes: 0, downvotes: 0, votes: 6, critiques: 2, suggestions: 1, answers: { "sim": { count: 3, votes: 3 }, "não": { count: 1, votes: 3 } } },
   userInteractions: [],
   userVote: null
 }
@@ -92,5 +92,17 @@ describe("Topic views", () => {
     expect(screen.queryByTitle("agrupar por resposta")).toBeNull()
     expect(screen.queryByRole("meter")).toBeNull()
     expect(screen.getByText("1. Livre")).toBeInTheDocument()
+  })
+})
+
+describe("Topic metrics", () => {
+  it("count the interactions with all its posts, and open how many of each", async () => {
+    renderTopic({ ...topic, childrenStats: { ...topic.childrenStats, upvotes: 5, downvotes: 2 } })
+
+    await userEvent.click(screen.getByRole("button", { name: "16 interações" }))
+    const breakdown = screen.getByRole("dialog", { name: "interações com os posts" })
+    expect(within(breakdown).getByText("votos na enquete").nextSibling).toHaveTextContent("6")
+    expect(within(breakdown).getByText("marcações de relevante").nextSibling).toHaveTextContent("5")
+    expect(within(breakdown).getByText("críticas").nextSibling).toHaveTextContent("2")
   })
 })

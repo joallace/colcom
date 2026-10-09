@@ -1,7 +1,7 @@
 // A topic's page, a user's contents (profile) and bookmarks
 import { beforeAll, describe, expect, it } from "vitest"
 
-import { api, AVATAR, createPost, createTopic, critique, critiqueConfig, interact, latestCommit, signUp, TestUser } from "../support/api"
+import { api, AVATAR, createPost, createTopic, critique, critiqueConfig, edit, interact, latestCommit, signUp, TestUser } from "../support/api"
 
 
 describe("GET /topics/:id", () => {
@@ -24,14 +24,18 @@ describe("GET /topics/:id", () => {
     await interact(voters[2], voted.id, "vote")
     await interact(voters[0], upvoted.id, "up")
     await interact(voters[1], oldest.id, "down")
+    await critique(voters[0], voted.id, critiqueConfig(await latestCommit(voted.id)))
+    await edit(voters[1], oldest.id, "<p>First paragraph.</p><p>Better second paragraph.</p>")
 
     const res = await api().get(`/topics/${topic.id}`)
 
     expect(res.status).toBe(200)
     expect(res.body.children.map((post: any) => post.id)).toEqual([mostVoted.id, voted.id, upvoted.id, oldest.id])
-    expect(res.body.children[0]).toMatchObject({ votes: 2, upvotes: 0, downvotes: 0, author: author.name, author_avatar: AVATAR, config: { answer: "não" } })
+    expect(res.body.children[0]).toMatchObject({ votes: 2, upvotes: 0, downvotes: 0, critiques: 0, suggestions: 0, author: author.name, author_avatar: AVATAR, config: { answer: "não" } })
+    expect(res.body.children[1]).toMatchObject({ critiques: 1, suggestions: 0 })
+    expect(res.body.children[3]).toMatchObject({ critiques: 0, suggestions: 1 })
     expect(res.body.childrenStats).toEqual({
-      count: 4, upvotes: 1, downvotes: 1, votes: 3,
+      count: 4, upvotes: 1, downvotes: 1, votes: 3, critiques: 1, suggestions: 1,
       answers: { "sim": { count: 3, votes: 1 }, "não": { count: 1, votes: 2 } }
     })
   })
@@ -61,7 +65,7 @@ describe("GET /topics/:id", () => {
     const topic = await createTopic(author)
     const res = await api().get(`/topics/${topic.id}`)
 
-    expect(res.body).toMatchObject({ children: [], childrenStats: { count: 0, upvotes: 0, downvotes: 0, votes: 0, answers: {} } })
+    expect(res.body).toMatchObject({ children: [], childrenStats: { count: 0, upvotes: 0, downvotes: 0, votes: 0, critiques: 0, suggestions: 0, answers: {} } })
   })
 })
 

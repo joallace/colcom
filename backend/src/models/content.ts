@@ -342,6 +342,11 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
           COUNT(interactions.id) FILTER (WHERE interactions.type = 'up')::INT AS upvotes,
           COUNT(interactions.id) FILTER (WHERE interactions.type = 'down')::INT AS downvotes,
           COUNT(interactions.id) FILTER (WHERE interactions.type = 'vote')::INT AS votes,
+          COUNT(interactions.id) FILTER (WHERE interactions.type = 'suggestion')::INT AS suggestions,
+          (
+            SELECT COUNT(*) FROM contents AS critiques
+            WHERE critiques.parent_id = posts.id AND critiques.type = 'critique'
+          )::INT AS critiques,
           ROW_NUMBER() OVER (
             PARTITION BY posts.parent_id
             ORDER BY
@@ -416,6 +421,8 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
             'upvotes', COALESCE(SUM(ranked_posts.upvotes), 0),
             'downvotes', COALESCE(SUM(ranked_posts.downvotes), 0),
             'votes', COALESCE(SUM(ranked_posts.votes), 0),
+            'suggestions', COALESCE(SUM(ranked_posts.suggestions), 0),
+            'critiques', COALESCE(SUM(ranked_posts.critiques), 0),
             'answers', (
               -- Over all posts, not only the cropped children, so the list's grouped view
               -- shows each answer's real share of the poll
@@ -455,6 +462,28 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
 async function findById(id: number, options = {}): Promise<Content> {
   const result = await findAll({ where: "contents.id = $1", values: [id], pageSize: 1, ...options })
   return result[0]
+}
+
+// How many poll votes, suggestions (pending or answered) and critiques a post has received; with
+// its up and down votes, what its "interactions" metric adds up
+async function interactionCounts(id: number): Promise<{ votes: number, suggestions: number, critiques: number }> {
+  const result = await db.query({
+    text: `
+      SELECT
+        COUNT(*) FILTER (WHERE interactions.type = 'vote')::INT AS votes,
+        COUNT(*) FILTER (WHERE interactions.type = 'suggestion')::INT AS suggestions,
+        (
+          SELECT COUNT(*) FROM contents
+          WHERE contents.parent_id = $1 AND contents.type = 'critique'
+        )::INT AS critiques
+      FROM
+        interactions
+      WHERE
+        interactions.content_id = $1
+    ;`,
+    values: [id]
+  })
+  return result.rows[0]
 }
 
 async function updateById(id: number, body: string, author_pid: string) {
@@ -558,6 +587,7 @@ export default Object.freeze({
   findAll,
   findTree,
   findById,
+  interactionCounts,
   updateById,
   removeById,
   getDataById,

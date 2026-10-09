@@ -232,6 +232,7 @@ export const getContent: RequestHandler = async (req, res, next) => {
       ...content,
       userInteractions,
       history: content.type === "post" ? await git.log(content) : undefined,
+      interactionCounts: content.type === "post" ? await Content.interactionCounts(content_id) : undefined,
       suggestions: content.type === "post" && author_pid === content.author_id ?
         await Interactions.findAll({
           where: `i.content_id = $1 AND i.type='suggestion' AND i.config->>'accepted' IS NULL`,

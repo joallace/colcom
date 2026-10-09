@@ -40,6 +40,7 @@ export default function Post({
   upvotes,
   downvotes,
   suggestions,
+  interactionCounts,
   fetchCommit,
   groupedCritiques,
   alongsideCritique,
@@ -180,13 +181,19 @@ export default function Post({
   }
 
   const getMetrics = () => {
-    const removeOrAddVote = initialVoteState ? -(relevanceVote === "") : +(relevanceVote === "up" || relevanceVote === "down")
-    const allVotes = upvotes + downvotes + removeOrAddVote
-    
+    // The counts as loaded, followed by the viewer's own votes since
+    const interactions = {
+      up: upvotes + (relevanceVote === "up") - (initialVoteState === "up"),
+      down: downvotes + (relevanceVote === "down") - (initialVoteState === "down"),
+      votes: (interactionCounts?.votes ?? 0) + Boolean(definitiveVote) - Boolean(userInteractions?.includes("vote")),
+      critiques: interactionCounts?.critiques,
+      suggestions: interactionCounts?.suggestions
+    }
+
     return [
       <Author key="author" name={author} avatar={author_avatar} />,
       <Relevance key="relevance" {...{ initialVoteState, relevanceVote, upvotes, downvotes }}/>,
-      <Interactions key="interactions" count={allVotes}/>
+      <Interactions key="interactions" counts={interactions} heading="interações com o post" />
     ]
   }
 

@@ -55,11 +55,11 @@ const VERSIONS = {
   }
 }
 
-function mockApi(versions = VERSIONS) {
+function mockApi(versions = VERSIONS, post = POST) {
   const fetch = vi.fn(async url => {
     const path = new URL(url).pathname
     const version = path.match(/^\/contents\/2\/([0-9a-f]{40})$/)?.[1]
-    const body = path === "/contents/2" ? POST : versions[version]
+    const body = path === "/contents/2" ? post : versions[version]
     return { ok: Boolean(body), status: body ? 200 : 404, json: async () => body ?? { message: "Não encontrado" } }
   })
   vi.stubGlobal("fetch", fetch)
@@ -262,5 +262,24 @@ describe("PostPage", () => {
     expect(sent).toMatchObject({ parent_id: 2, config: { commit: V2, from: chartPos, to: chartPos + 1, quote: { exact: CHART_TEXT } } })
     await waitFor(() => expect(container.querySelector(".ProseMirror .chart")).toHaveAttribute("data-highlight", "definitive"))
     expect(container.querySelector(".ProseMirror .chart")).toHaveAttribute("data-commit-index", "0")
+  })
+})
+
+describe("the post's interactions", () => {
+  it("add up its votes, critiques and suggestions, and open how many of each", async () => {
+    mockApi(VERSIONS, { ...POST, upvotes: 2, downvotes: 1, interactionCounts: { votes: 3, critiques: 4, suggestions: 0 } })
+    renderPage()
+
+    fireEvent.click(await screen.findByRole("button", { name: "10 interações" }))
+
+    const breakdown = screen.getByRole("dialog", { name: "interações com o post" })
+    const rows = [...breakdown.querySelectorAll("dl > div")].map(row => [row.querySelector("dt").textContent, row.querySelector("dd").textContent])
+    expect(rows).toEqual([
+      ["marcações de relevante", "2"],
+      ["marcações de não relevante", "1"],
+      ["votos na enquete", "3"],
+      ["críticas", "4"],
+      ["sugestões", "0"]
+    ])
   })
 })

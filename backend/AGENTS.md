@@ -38,7 +38,7 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 
 ## Query patterns
 
-- **No N+1 queries.** `findTree` returns a page of topics with their posts ranked (most poll votes, then up votes, then oldest), cropped to `childLimit`, statistics over all posts (`childrenStats`, with each answer's post `count` and poll `votes` under `answers`, which the grouped view needs since lists only send the top posts), and the viewer's interactions and poll vote, in one query. `findAll` takes `userPid` (adds `userInteractions`) and `withTotal` (adds `COUNT(*) OVER ()` as `total_count`). The shared `userInteractionsSql` fragment keeps both consistent; reuse it rather than querying per row.
+- **No N+1 queries.** `findTree` returns a page of topics with their posts ranked (most poll votes, then up votes, then oldest), cropped to `childLimit`, statistics over all posts (`childrenStats`: up, down and poll votes, critiques and suggestions summed over them, with each answer's post `count` and poll `votes` under `answers`, which the grouped view needs since lists only send the top posts), and the viewer's interactions and poll vote, in one query. `findAll` takes `userPid` (adds `userInteractions`) and `withTotal` (adds `COUNT(*) OVER ()` as `total_count`). The shared `userInteractionsSql` fragment keeps both consistent; reuse it rather than querying per row.
 - **Always parameterize.** `ORDER BY` can't be parameterized, so sort keys go through `orderByColumn` with a per-query whitelist. `page`/`pageSize` go through `limitOffset`.
 - **Count parameters exactly.** Postgres refuses a parameter the query doesn't use, so optional parameters (like `userPid`) are only added when the SQL uses them.
 - **Avatars:** `bytea`, sent as base64. Inside JSON built by SQL, use `AVATAR_BASE64` (strips the line breaks `encode` adds).
@@ -69,7 +69,7 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 | `GET /contents?authorId&page&pageSize` | optional | A user's contents, for the profile: `{ contents, count }` |
 | `GET /contents/bookmarked?page&pageSize` | required | The user's bookmarks, same shape |
 | `POST /contents` | required | Create a topic, post or critique (the type follows from the parent's depth) |
-| `GET /contents/:id` | optional | A content; for posts, `history` and (for the author) pending `suggestions` |
+| `GET /contents/:id` | optional | A content; for posts, `history`, `interactionCounts` (poll `votes`, `suggestions` in any state and `critiques`) and (for the author) pending `suggestions` |
 | `GET /contents/:id/:hash` | optional | A post version: `body`, `critiques` made on it or earlier, `versions` and `lineages` (see below), and `base` for a pending suggestion |
 | `PATCH /contents/:id` | required | Edit a post: a commit for the author, a suggestion for anyone else |
 | `POST /contents/:id/:hash/merge` and `/reject` | required | The author accepts or rejects a pending suggestion |

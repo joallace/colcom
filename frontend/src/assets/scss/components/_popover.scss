@@ -1,5 +1,7 @@
-// The trigger is a button for keyboards and screen readers, but looks like what it holds
-button.popoverTrigger {
+// The trigger is a button for keyboards and screen readers, but looks like what it holds. As
+// specific as the base `button` rules it undoes (it comes after them), so any class styling a
+// trigger overrides it.
+button:where(.popoverTrigger) {
     min-height: 0;
     padding: 0;
     border: none;

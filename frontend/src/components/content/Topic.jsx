@@ -71,8 +71,15 @@ export default function Topic({
   }
 
   const getMetrics = () => {
-    const interactions = childrenStats?.upvotes + childrenStats?.downvotes
-    
+    // Over the topic's posts, where people take part; the topic's own votes are under "relevance"
+    const interactions = {
+      up: childrenStats?.upvotes,
+      down: childrenStats?.downvotes,
+      votes: childrenStats?.votes,
+      critiques: childrenStats?.critiques,
+      suggestions: childrenStats?.suggestions
+    }
+
     return [
       <Author key="author" name={author} avatar={author_avatar} />,
       <Promotions
@@ -84,7 +91,7 @@ export default function Topic({
       />,
       <Relevance key="relevance" {...{ initialVoteState, relevanceVote, upvotes, downvotes }} />,
       <PostCount key="posts" count={childrenStats?.count} />,
-      <Interactions key="interactions" count={interactions} />
+      <Interactions key="interactions" counts={interactions} heading="interações com os posts" />
     ]
   }
 

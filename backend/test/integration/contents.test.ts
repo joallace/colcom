@@ -3,7 +3,7 @@ import { existsSync, rmSync } from "node:fs"
 import { join } from "node:path"
 import { beforeAll, describe, expect, it } from "vitest"
 
-import { api, createPost, createTopic, critique, critiqueConfig, history, latestCommit, signUp, TestUser, unique } from "../support/api"
+import { api, createPost, createTopic, critique, critiqueConfig, edit, history, interact, latestCommit, signUp, TestUser, unique } from "../support/api"
 
 
 let alice: TestUser, bob: TestUser
@@ -259,5 +259,27 @@ describe("GET /contents/:id", () => {
 
     expect(res.body.history).toBeUndefined()
     expect(res.body.suggestions).toBeUndefined()
+    expect(res.body.interactionCounts).toBeUndefined()
+  })
+
+  it("counts a post's poll votes, suggestions and critiques, whatever their state", async () => {
+    const topic = await createTopic(alice)
+    const post = await createPost(alice, topic.id)
+    const commit = await latestCommit(post.id)
+    const carol = await signUp()
+
+    expect((await api().get(`/contents/${post.id}`)).body.interactionCounts).toEqual({ votes: 0, suggestions: 0, critiques: 0 })
+
+    await interact(bob, post.id, "vote")
+    await interact(bob, post.id, "up")
+    await critique(bob, post.id, critiqueConfig(commit))
+    await critique(carol, post.id, critiqueConfig(commit))
+    const pending = await edit(bob, post.id, "<p>First paragraph.</p><p>Changed by bob.</p>")
+    await edit(carol, post.id, "<p>Changed by carol.</p><p>Second paragraph.</p>")
+    expect((await api().post(`/contents/${post.id}/${pending.body.config.commit}/reject`).set(alice.auth)).status).toBe(200)
+
+    const res = await api().get(`/contents/${post.id}`)
+    expect(res.body.interactionCounts).toEqual({ votes: 1, suggestions: 2, critiques: 2 })
+    expect(res.body).toMatchObject({ upvotes: 1, downvotes: 0 })
   })
 })

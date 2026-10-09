@@ -1,3 +1,4 @@
+@use "../abstracts/mixins";
 @use "../abstracts/variables";
 
 .metrics {
@@ -59,5 +60,53 @@
     a {
         position: relative;
         z-index: 2;
+    }
+}
+
+// The "interactions" metric opens what it adds up
+button.interactionsTrigger {
+    color: var(--text-muted);
+    text-decoration: underline dotted;
+    text-underline-offset: 0.2em;
+    @include mixins.transition(color);
+
+    &:hover,
+    &[aria-expanded="true"] {
+        color: var(--text-secondary);
+    }
+}
+
+.interactionsBreakdown {
+    min-width: 14rem;
+
+    dl {
+        display: grid;
+        gap: var(--space-1);
+        margin: 0;
+
+        div {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--space-4);
+        }
+
+        dt {
+            color: var(--text-secondary);
+        }
+
+        dd {
+            margin: 0;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        // Types nobody used yet stay listed, but faded
+        .none {
+            color: var(--text-muted);
+
+            dt {
+                color: inherit;
+            }
+        }
     }
 }

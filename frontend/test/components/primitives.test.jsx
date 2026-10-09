@@ -103,8 +103,25 @@ describe("Metrics", () => {
   it("pluralizes counts", () => {
     expect(render(<PostCount count={1} />).container.textContent).toBe("1 post")
     expect(render(<PostCount count={2} />).container.textContent).toBe("2 posts")
-    expect(render(<Interactions count={1} />).container.textContent).toBe("1 interação")
-    expect(render(<Interactions count={0} />).container.textContent).toBe("0 interações")
+    expect(render(<Interactions counts={{ critiques: 1 }} />).container.textContent).toBe("1 interação")
+    expect(render(<Interactions />).container.textContent).toBe("0 interações")
+  })
+
+  it("opens the interactions it adds up, every type listed and the unused ones faded", async () => {
+    render(<Interactions counts={{ up: 3, down: 1, critiques: 2 }} heading="interações com o post" />)
+
+    await userEvent.click(screen.getByRole("button", { name: "6 interações" }))
+    const breakdown = screen.getByRole("dialog", { name: "interações com o post" })
+    const rows = [...breakdown.querySelectorAll("dl > div")]
+
+    expect(rows.map(row => row.textContent)).toEqual([
+      "marcações de relevante3",
+      "marcações de não relevante1",
+      "votos na enquete0",
+      "críticas2",
+      "sugestões0"
+    ])
+    expect(rows.filter(row => row.classList.contains("none")).map(row => row.querySelector("dt").textContent)).toEqual(["votos na enquete", "sugestões"])
   })
 })
 
