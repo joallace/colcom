@@ -1,11 +1,15 @@
 import express from "express"
 import jwt from "jsonwebtoken"
 import request from "supertest"
-import { describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import authHandler from "@/middleware/authHandler"
 import errorHandler from "@/middleware/errorHandler"
 import { ForbiddenError, NotFoundError } from "@/errors"
+import User from "@/models/user"
+
+// authHandler asks the database for the user's current token version
+vi.mock("@/models/user", () => ({ default: { tokenVersion: vi.fn() } }))
 
 
 const secret = process.env.ACCESS_TOKEN_SECRET!
@@ -22,7 +26,13 @@ function appWith(handler: express.RequestHandler) {
 describe("authHandler", () => {
   const required = appWith(authHandler())
   const optional = appWith(authHandler(true))
-  const token = jwt.sign({ user }, secret, { expiresIn: "1h" })
+  const token = jwt.sign({ user, ver: 2 }, secret, { expiresIn: "1h" })
+  const tokenVersion = vi.mocked(User.tokenVersion)
+
+  beforeEach(() => {
+    tokenVersion.mockReset()
+    tokenVersion.mockResolvedValue(2)
+  })
 
   it("puts the token's user in res.locals", async () => {
     const res = await request(required).get("/").set("Authorization", `Bearer ${token}`)
@@ -68,6 +78,30 @@ describe("authHandler", () => {
   it("reads the user when optional and a token is given", async () => {
     const res = await request(optional).get("/").set("Authorization", `Bearer ${token}`)
     expect(res.body.user).toEqual(user)
+  })
+
+  it.each([
+    ["an older version", 3],
+    ["a deleted user", undefined],
+  ])("refuses a revoked token: %s", async (_, current) => {
+    tokenVersion.mockResolvedValue(current)
+
+    for (const app of [required, optional]) {
+      const res = await request(app).get("/").set("Authorization", `Bearer ${token}`)
+      expect(res.status).toBe(401)
+      expect(res.body.message).toBe("Sessão encerrada.")
+    }
+    expect(tokenVersion).toHaveBeenCalledWith(user.pid)
+  })
+
+  it("refuses a token without a version", async () => {
+    const res = await request(required).get("/").set("Authorization", `Bearer ${jwt.sign({ user }, secret)}`)
+    expect(res.status).toBe(401)
+  })
+
+  it("doesn't ask the database about a token it can't verify", async () => {
+    await request(required).get("/").set("Authorization", "Bearer not.a.jwt")
+    expect(tokenVersion).not.toHaveBeenCalled()
   })
 })
 

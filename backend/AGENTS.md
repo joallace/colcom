@@ -50,6 +50,7 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 ## Security rules
 
 - **Auth:** `authHandler()` (required) or `authHandler(true)` (optional) verifies the JWT and puts the user in `res.locals.user` (`{ username, email, pid }`). Never read the user from `req.params`.
+- **Sessions:** tokens last 7 days and carry the user's `token_version` (claim `ver`); `authHandler` compares it with the current one (one query by `pid`) and answers a 401 "Sessão encerrada." when they differ. `POST /logout` raises the version, so it ends every session of the user, on every device. An optional route without a token is served anonymously, but one with an invalid, expired or revoked token gets a 401 too, so the client logs out instead of taking anonymous data as its own.
 - **Ownership:** only a post's author merges or rejects its suggestions (`findOwnedSuggestion` checks the post, the author and that the hash is a *pending* suggestion of that post). State-changing routes use POST/PATCH, never GET.
 - **Rate limits:** failed logins and sign-ups count per IP; content writes (`POST /contents`, `PATCH /contents/:id`, clone) and `POST /interactions` count per user, so the limiter goes after `authHandler`. Limits are `RATE_LIMIT_*` settings (`.env.example`); over one, the API answers a 429 `TooManyRequestsError`. Counts live in memory, so they reset on restart and assume a single backend process. `req.ip` comes from `X-Forwarded-For` only through proxies `TRUST_PROXY` trusts (default `loopback`, i.e. nginx on the same host).
 - **CORS:** only the origins in `CORS_ORIGIN` (comma-separated); outside production, with none set, the Vite dev server. Through nginx the site and API share an origin and need no CORS.
@@ -62,6 +63,7 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 | Method and path | Auth | Purpose |
 |---|---|---|
 | `POST /users`, `POST /login` | — | Sign up; log in (returns `accessToken`) |
+| `POST /logout` | required | Revokes every token of the user (204) |
 | `GET /users/self` | required | Current user, with the topic they're promoting |
 | `GET /users/:name` | — | Anyone's public profile (`pid`, `name`, `avatar`, `created_at`), by name ignoring case; registered after `/users/self`, so "self" is a reserved name |
 | `GET /topics?page&pageSize&orderBy&with_count` | optional | Topic list, each with its top 3 posts and stats |

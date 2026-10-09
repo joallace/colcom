@@ -24,13 +24,22 @@ const mockFetch = (body = {}, status = 200) => {
 
 describe("UserProvider", () => {
   function ShowUser() {
-    const { user, clearUser } = useUser()
+    const { user, clearUser, logout } = useUser()
     return (
       <>
         <span data-testid="user">{user === undefined ? "loading" : JSON.stringify(user)}</span>
         <button onClick={clearUser}>sair</button>
+        <button onClick={logout}>sair de todos os dispositivos</button>
       </>
     )
+  }
+
+  const renderLoggedIn = async () => {
+    localStorage.setItem("accessToken", "token-123")
+    const fetch = mockFetch({ name: "alice" })
+    render(<UserProvider><ShowUser /></UserProvider>)
+    await waitFor(() => expect(screen.getByTestId("user")).toHaveTextContent("alice"))
+    return fetch
   }
 
   it("has no user without a stored token, and doesn't ask the API", async () => {
@@ -69,6 +78,47 @@ describe("UserProvider", () => {
 
     expect(screen.getByTestId("user")).toHaveTextContent("null")
     expect(localStorage.getItem("accessToken")).toBeNull()
+  })
+
+  it("revokes the session on the API when logging out", async () => {
+    const fetch = await renderLoggedIn()
+
+    await userEvent.click(screen.getByText("sair de todos os dispositivos"))
+
+    expect(fetch).toHaveBeenLastCalledWith(`${API}/logout`, { method: "post", headers: { Authorization: "Bearer token-123" } })
+    expect(screen.getByTestId("user")).toHaveTextContent("null")
+    expect(localStorage.getItem("accessToken")).toBeNull()
+  })
+
+  it("logs out here even when the API can't be reached", async () => {
+    await renderLoggedIn()
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("Failed to fetch") }))
+    vi.spyOn(console, "error").mockImplementation(() => { })
+
+    await userEvent.click(screen.getByText("sair de todos os dispositivos"))
+
+    expect(screen.getByTestId("user")).toHaveTextContent("null")
+    expect(localStorage.getItem("accessToken")).toBeNull()
+  })
+
+  it("logs out on returning to the tab when the session was ended elsewhere", async () => {
+    await renderLoggedIn()
+    mockFetch({ message: "Sessão encerrada." }, 401)
+
+    document.dispatchEvent(new Event("visibilitychange"))
+
+    await waitFor(() => expect(screen.getByTestId("user")).toHaveTextContent("null"))
+    expect(localStorage.getItem("accessToken")).toBeNull()
+  })
+
+  it("keeps the user on returning to the tab while the session holds", async () => {
+    await renderLoggedIn()
+    const fetch = mockFetch({ name: "alice", renamed: true })
+
+    document.dispatchEvent(new Event("visibilitychange"))
+
+    await waitFor(() => expect(fetch).toHaveBeenCalled())
+    expect(screen.getByTestId("user")).toHaveTextContent('{"name":"alice","accessToken":"token-123"}')
   })
 })
 

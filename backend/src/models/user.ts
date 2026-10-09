@@ -36,6 +36,7 @@ interface User {
   prestige: number,
   permissions: string[],
   config?: UserConfig,
+  token_version?: number,
   created_at: Date
 }
 
@@ -93,7 +94,7 @@ export async function findAll({ where = "", orderBy = "id", page = 1, pageSize =
       SELECT
         pid,
         name,
-        ${hideSensitiveInfo ? "" : "pass, email,"}
+        ${hideSensitiveInfo ? "" : "pass, email, token_version,"}
         avatar,
         colcoins,
         prestige,
@@ -243,6 +244,23 @@ export async function addFeatures(userPid: string, features: string[]): Promise<
 }
 
 
+// The version a token must carry to be valid, or undefined when the user no longer exists
+export async function tokenVersion(pid: string): Promise<number | undefined> {
+  const result = await db.query({
+    text: `SELECT token_version FROM users WHERE pid = $1;`,
+    values: [pid]
+  })
+  return result.rows[0]?.token_version
+}
+
+// Revokes every token issued so far, on every device
+export async function revokeSessions(pid: string): Promise<void> {
+  await db.query({
+    text: `UPDATE users SET token_version = token_version + 1 WHERE pid = $1;`,
+    values: [pid]
+  })
+}
+
 export async function getDataByPublicId(public_id: string, data: (keyof User)[]): Promise<any> {
   const query = {
     text: `
@@ -277,6 +295,8 @@ export default Object.freeze({
   findByName,
   removeFeatures,
   addFeatures,
+  tokenVersion,
+  revokeSessions,
   getDataByPublicId
 })
 
