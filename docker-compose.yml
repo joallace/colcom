@@ -55,17 +55,42 @@ services:
         VITE_API_ADDRESS: ${VITE_API_ADDRESS:-/api}
     environment:
       TZ: America/Recife
+      # Optional; with it nginx serves HTTPS once certbot has the certificate (see .env.example)
+      DOMAIN: ${DOMAIN:-}
     volumes:
-      # - ./nginx/nginx-https.conf:/etc/nginx/nginx.conf:ro    # Uncomment for using https instead of http
-      - ./nginx/nginx-http.conf:/etc/nginx/nginx.conf:ro
+      # 40-select-config.sh writes /etc/nginx/nginx.conf from one of these, depending on DOMAIN
+      - ./nginx/nginx-http.conf:/etc/nginx/colcom/nginx-http.conf:ro
+      - ./nginx/nginx-https.conf:/etc/nginx/colcom/nginx-https.conf:ro
+      - ./nginx/40-select-config.sh:/docker-entrypoint.d/40-select-config.sh:ro
       - ./nginx/headers.conf:/etc/nginx/headers.conf:ro
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
+      - letsencrypt:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot:ro
     depends_on:
       - backend
     network_mode: host
     restart: always
 
+  # Gets and renews the certificate for DOMAIN; exits right away when DOMAIN is unset
+  certbot:
+    image: certbot/certbot:v5.7.0
+    entrypoint: ["/bin/sh", "/colcom/certbot.sh"]
+    environment:
+      DOMAIN: ${DOMAIN:-}
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL:-}
+      LETSENCRYPT_STAGING: ${LETSENCRYPT_STAGING:-}
+    volumes:
+      - ./nginx/certbot.sh:/colcom/certbot.sh:ro
+      - letsencrypt:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    depends_on:
+      - frontend_nginx
+    # Forwards docker stop to the script, which spends most of its time in sleep
+    init: true
+    # Not "always": without a domain the script exits successfully and should stay stopped
+    restart: on-failure
+
 volumes:
   postgres_data:
   git_data:
+  letsencrypt:
+  certbot_www:
