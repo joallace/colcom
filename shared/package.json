@@ -10,7 +10,11 @@
     ".": {
       "types": "./index.d.ts",
       "default": "./src/index.js"
+    },
+    "./standalone": {
+      "types": "./standalone.d.ts",
+      "default": "./src/standalone.js"
     }
   },
-  "files": ["src", "index.d.ts"]
+  "files": ["src", "index.d.ts", "standalone.d.ts"]
 }

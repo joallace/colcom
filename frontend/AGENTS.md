@@ -13,7 +13,7 @@ React 19 + React Router 7 + TipTap 3, built with Vite 8. Read the root [`AGENTS.
 | `src/assets/` | Logic shared across components: `anchoring.js`, `textDiff.js`, `textIndex.js`, the custom `highlight.js` mark, `validation.js`, and `scss/` |
 | `src/context/` | `UserContext`/`UserProvider` (the logged-in user and token, from `localStorage`) and `ChartContext`/`ChartProvider` |
 
-`@/` is an alias for `src/`. The API address is `import.meta.env.VITE_API_ADDRESS` (`assets/enviroment.js`), or when unset `http://localhost:3000` in dev and the relative `/api` in a build (nginx proxies it on the same origin). It is only ever prefixed to fetch paths, so a relative address works. nginx's CSP (`nginx/headers.conf`) allows only same-origin scripts, styles, fonts and requests, plus `data:` images and Ajv's eval: anything loaded from elsewhere must be added there.
+`@/` is an alias for `src/`. The API address is `import.meta.env.VITE_API_ADDRESS` (`assets/enviroment.js`), or when unset `http://localhost:3000` in dev and the relative `/api` in a build (nginx proxies it on the same origin). It is only ever prefixed to fetch paths, so a relative address works. nginx's CSP (`nginx/headers.conf`) allows only same-origin scripts, styles, fonts and requests, plus `data:` images, and no eval: anything loaded from elsewhere must be added there.
 
 ## The editor (TipTap 3)
 
@@ -59,6 +59,7 @@ A critique stores `{ commit, from, to }` (ProseMirror positions in that version)
 
 Forms validate with the schemas the API uses (`shared/`, see the root `AGENTS.md`) through `assets/validation.js`, before sending anything:
 
+- The schemas are compiled at build time by a Vite plugin (`plugins/validators.js`, imported as `virtual:validators`), because the CSP forbids the eval Ajv compiles with. Restart the dev server after changing `shared/`.
 - `formErrors(schema, values)` returns `{ field: message }`, treating an empty field as missing; `validate` and `describe` give the full errors and the API's sentence; `limits` sets inputs' `maxLength`.
 - `responseErrors(data)` reads the API's `errors` list (or its single `key`), so the same messages appear next to the fields whatever found them.
 - Messages are short and lowercase ("campo obrigatório"); inputs show them with a "!", as the rest of the UI does.

@@ -71,8 +71,16 @@ export interface Validators {
 export const DEFAULT_LIMITS: Limits
 export function mergeLimits(overrides?: LimitOverrides): Limits
 export function createSchemas(limits: Limits): { body: Record<string, object>, query: Record<string, object> }
-export function createValidators(Ajv: new (options: object) => any, options?: { limits?: LimitOverrides }): Validators
+// Ajv's class. At runtime it also carries the `_` code template the custom keywords are generated
+// with, which its types leave out
+export type AjvClass = new (options: object) => any
+export type ValidateFunction = ((data: unknown) => boolean) & { errors?: object[] | null }
+
+export function createValidators(Ajv: AjvClass, options?: { limits?: LimitOverrides }): Validators
+export function createPrecompiledValidators(functions: Record<string, ValidateFunction>, options?: { limits?: LimitOverrides }): Validators
 export function formatErrors(errors: object[] | null | undefined, rootSchema: object): FieldError[]
 export function describe(error: FieldError): string
 export function fieldErrors(errors: FieldError[]): Record<string, string>
 export function byteLength(value: string): number
+export const formats: Record<"email" | "commit" | "uuid" | "png", RegExp | ((value: string) => boolean)>
+export function ucs2length(value: string): number
