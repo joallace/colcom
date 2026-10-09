@@ -24,14 +24,15 @@
         gap: var(--space-1);
         font-size: var(--text-sm);
     }
+}
 
-    ul {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        gap: var(--space-1);
-    }
+// Notifications as listed by the page and by the navbar bell's popover (NotificationItem)
+.notificationList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-1);
 
     li {
         position: relative;
@@ -97,5 +98,39 @@
         overflow: hidden;
         clip-path: inset(50%);
         white-space: nowrap;
+    }
+}
+
+// The bell's popover: the latest few, more compact, and a link to the page
+.notificationsPopover {
+    width: 22rem;
+    max-width: 100%;
+
+    .notificationList li {
+        gap: var(--space-2);
+        padding: var(--space-2);
+        padding-right: var(--space-5);
+
+        .avatar {
+            width: 2rem;
+            height: 2rem;
+        }
+
+        &.unread::before {
+            top: var(--space-2);
+            right: var(--space-2);
+        }
+    }
+
+    .empty {
+        margin: 0;
+        color: var(--text-muted);
+    }
+
+    .seeAll {
+        justify-self: center;
+        padding: var(--space-1) var(--space-2);
+        font-weight: 700;
+        color: var(--green-text);
     }
 }

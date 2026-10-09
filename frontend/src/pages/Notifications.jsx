@@ -1,38 +1,19 @@
 import React from "react"
-import { Link, Navigate, useLocation } from "react-router"
+import { Navigate, useLocation } from "react-router"
 import { PiChecksBold } from "react-icons/pi"
 
 import NoResponse from "@/components/primitives/NoResponse"
 import Spinner from "@/components/primitives/Spinner"
 import Pagination from "@/components/primitives/Pagination"
+import NotificationItem from "@/components/content/NotificationItem"
 import env from "@/assets/enviroment"
-import { describeNotification, markRead, announceUnread } from "@/assets/notifications"
+import { markRead, announceUnread } from "@/assets/notifications"
 import { loginPath } from "@/assets/returnTo"
-import { relativeTime, userPath } from "@/assets/util"
 import useUser from "@/context/UserContext"
 import usePageParam from "@/hooks/usePageParam"
 
 
 const PAGE_SIZE = 20
-
-function NotificationItem({ notification, onOpen }) {
-  const { actor, read, created_at } = notification
-  const { action, target, path, detail } = describeNotification(notification)
-
-  return (
-    <li className={read ? undefined : "unread"}>
-      <img className="avatar" src={`data:image/png;base64,${actor.avatar}`} alt="" />
-      <div>
-        <p>
-          <Link to={userPath(actor.name)}>{actor.name}</Link> {action} <Link to={path} onClick={onOpen}>{target}</Link>
-          {!read && <span className="visuallyHidden"> (não lida)</span>}
-        </p>
-        {detail && <p className="detail">{detail}</p>}
-        <time dateTime={created_at}>{relativeTime(created_at)}</time>
-      </div>
-    </li>
-  )
-}
 
 export default function Notifications() {
   const [notifications, setNotifications] = React.useState([])
@@ -113,7 +94,7 @@ export default function Notifications() {
                   </button>
                 }
               </header>
-              <ul>
+              <ul className="notificationList">
                 {notifications.map(notification =>
                   <NotificationItem key={notification.id} notification={notification} onOpen={() => openNotification(notification)} />
                 )}

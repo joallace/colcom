@@ -144,7 +144,8 @@ nav {
         }
 
         // The "create topic" button and the notifications bell
-        >a {
+        >a,
+        >button {
             display: flex;
             padding: var(--space-2);
             border-radius: var(--radius-md);
@@ -161,6 +162,10 @@ nav {
 
         .notificationsLink {
             position: relative;
+
+            &[aria-expanded="true"] {
+                background-color: var(--pressed);
+            }
 
             .badge {
                 position: absolute;

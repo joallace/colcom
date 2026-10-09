@@ -6,16 +6,15 @@ import {
   PiMedalFill,
   PiBookmarkSimpleFill,
   PiSignOutFill,
-  PiSignInFill,
-  PiBellFill
+  PiSignInFill
 } from "react-icons/pi"
 
 import BrandLogo from "@/components/primitives/BrandLogo"
 import TopicModal from "@/components/content/TopicModal"
 import DropdownMenu from "@/components/primitives/DropdownMenu"
+import NotificationBell from "@/components/layout/NotificationBell"
 import Spinner from "@/components/primitives/Spinner"
 import useBreakpoint from "@/hooks/useBreakpoint"
-import useUnreadNotifications from "@/hooks/useUnreadNotifications"
 import useUser from "@/context/UserContext"
 import { loginPath, loginState } from "@/assets/returnTo"
 
@@ -26,7 +25,6 @@ export default function Navbar() {
   const location = useLocation()
   const isDesktop = useBreakpoint("md")
   const isLargeScreen = useBreakpoint("lg")
-  const unread = useUnreadNotifications()
 
   const toggleModal = () => setModalOpen(!modalOpen)
 
@@ -63,15 +61,7 @@ export default function Navbar() {
           {user ?
             <>
               <a onClick={toggleModal} title="criar tópico"><PiPlusBold style={{ fontSize: "1.5rem" }} /></a>
-              <Link
-                to="/notifications"
-                className="notificationsLink"
-                title={unread ? `notificações (${unread} não lida${unread === 1 ? "" : "s"})` : "notificações"}
-                aria-label={unread ? `notificações, ${unread} não lida${unread === 1 ? "" : "s"}` : "notificações"}
-              >
-                <PiBellFill style={{ fontSize: "1.5rem" }} />
-                {unread > 0 && <span className="badge" aria-hidden="true">{unread > 99 ? "99+" : unread}</span>}
-              </Link>
+              <NotificationBell />
 
               {isDesktop &&
                 <>
