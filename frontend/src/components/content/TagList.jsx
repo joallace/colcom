@@ -15,7 +15,8 @@ const NO_TAGS = []
 const plural = (count, singular, plural) => `${count} ${count === 1 ? singular : plural}`
 
 // Every tag proposed on the topic with its votes, buttons to endorse or contest each (pressing the
-// active one withdraws the vote) and a field to propose another
+// active one withdraws the vote) and a field to propose another. A reserved tag has no buttons: only
+// the instance applies it, and nobody can take it off.
 function TagCuration({ topicId, tags, setTags }) {
   const { user } = useUser()
   const toLogin = useToLogin()
@@ -54,26 +55,32 @@ function TagCuration({ topicId, tags, setTags }) {
                 {plural(tag.endorsements, "apoio", "apoios")} · {plural(tag.contests, "contestação", "contestações")}
                 {!tag.visible && " · oculta"}
               </span>
-              <button
-                type="button"
-                className="tagVote"
-                aria-label={`apoiar ${tag.name}`}
-                aria-pressed={tag.userVote === 1}
-                disabled={pending}
-                onClick={() => vote(tag.name, tag.userVote === 1 ? 0 : 1)}
-              >
-                {tag.userVote === 1 ? <PiThumbsUpFill /> : <PiThumbsUp />}
-              </button>
-              <button
-                type="button"
-                className="tagVote contest"
-                aria-label={`contestar ${tag.name}`}
-                aria-pressed={tag.userVote === -1}
-                disabled={pending}
-                onClick={() => vote(tag.name, tag.userVote === -1 ? 0 : -1)}
-              >
-                {tag.userVote === -1 ? <PiThumbsDownFill /> : <PiThumbsDown />}
-              </button>
+              {tag.reserved ?
+                <span className="reservedNote">reservada</span>
+                :
+                <>
+                  <button
+                    type="button"
+                    className="tagVote"
+                    aria-label={`apoiar ${tag.name}`}
+                    aria-pressed={tag.userVote === 1}
+                    disabled={pending}
+                    onClick={() => vote(tag.name, tag.userVote === 1 ? 0 : 1)}
+                  >
+                    {tag.userVote === 1 ? <PiThumbsUpFill /> : <PiThumbsUp />}
+                  </button>
+                  <button
+                    type="button"
+                    className="tagVote contest"
+                    aria-label={`contestar ${tag.name}`}
+                    aria-pressed={tag.userVote === -1}
+                    disabled={pending}
+                    onClick={() => vote(tag.name, tag.userVote === -1 ? 0 : -1)}
+                  >
+                    {tag.userVote === -1 ? <PiThumbsDownFill /> : <PiThumbsDown />}
+                  </button>
+                </>
+              }
             </li>
           ))}
         </ul>

@@ -9,3 +9,25 @@
         gap: var(--space-5);
     }
 }
+
+// A topic's own text, on its page, between its tags and its posts
+.topicBody {
+    color: var(--text-secondary);
+    line-height: var(--leading-relaxed);
+
+    > :first-child {
+        margin-top: 0;
+    }
+
+    > :last-child {
+        margin-bottom: 0;
+    }
+
+    ul {
+        padding-left: var(--space-5);
+    }
+
+    li > p {
+        margin: var(--space-1) 0;
+    }
+}

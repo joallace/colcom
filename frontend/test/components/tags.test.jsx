@@ -110,6 +110,19 @@ describe("a topic's tags", () => {
     expect(screen.queryByRole("alert")).toBeNull()
   })
 
+  it("offers no votes on a reserved tag, which only the instance applies", async () => {
+    mockApi()
+    renderWithUser(<TagList topicId={4} tags={[tag("meta", { name: "Meta", reserved: true }), tag("politica")]} />)
+
+    expect(screen.getByRole("link", { name: "Meta" })).toHaveClass("reserved")
+    await userEvent.click(screen.getByRole("button", { name: "tags do tópico: votar e propor" }))
+    const panel = screen.getByRole("dialog", { name: "tags do tópico" })
+
+    expect(within(panel).getByText("reservada")).toBeInTheDocument()
+    expect(within(panel).queryByRole("button", { name: /Meta$/ })).toBeNull()
+    expect(within(panel).getByRole("button", { name: "apoiar politica" })).toBeInTheDocument()
+  })
+
   it("asks to log in to vote", async () => {
     mockApi()
     renderWithUser(<TagList topicId={4} tags={[tag("politica")]} />, null)

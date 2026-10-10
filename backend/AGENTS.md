@@ -7,7 +7,8 @@ Express 5 + TypeScript 7 API over PostgreSQL and per-topic git repositories. Rea
 | Path | What it holds |
 |---|---|
 | `src/app.ts` | App setup: trust proxy, CORS, JSON body parser, routers, JSON 404, error handler |
-| `src/server.ts` | Starts listening; kept apart so tests import the app without binding a port |
+| `src/server.ts` | Starts listening and, once `init.sql` has run (`ready` from `pgDatabase.ts`), opens what's missing of the meta space (`ensureMeta`); kept apart so tests import the app without binding a port |
+| `src/meta.ts`, `src/metaTopics.ts` | The meta space: the system account, the reserved "meta" tag and the foundational topics, defined (groups, titles, Portuguese bodies, answers) in `metaTopics.ts`. `ensureMeta` changes nothing when all is there; `test/unit/meta.test.ts` checks every body against the `topic` schema |
 | `src/routes/*.ts` | Route → middleware → controller wiring |
 | `src/controllers/*.ts` | Request handling, validation, orchestration of models and git |
 | `src/models/*.ts` | All SQL. `content.ts` has `findAll`, `findTree`, `summarize`; `interactions.ts` has votes, bookmarks and suggestions; `notifications.ts` has `notify` and the inbox; `tags.ts` has tag votes, search, intersections and the `tagFilterSql`/`topicTagsSql` fragments |
@@ -81,9 +82,10 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 | `GET /notifications?page&pageSize&unread` | required | The user's notifications, newest first: `{ notifications, count, unread }`, each with `type`, `read`, `actor`, `content` (the post or topic it's about), `topic_id`, `subject` (the critique, post or clone made) and `suggestion` |
 | `GET /notifications/unread` | required | `{ unread }`, what the navbar polls |
 | `POST /notifications/read` | required | Marks `{ ids }`, or all without them, as read; only the user's own. Returns `{ read, unread }` |
-| `GET /tags?q&page&pageSize` | — | Tags whose slug contains `q` (those starting with it first, then the most used): `{ tags, count }`, each with `slug`, `name`, `provisional` and `topics`. Aliases and expired tags are left out |
+| `GET /tags?q&page&pageSize` | — | Tags whose slug contains `q` (those starting with it first, then the most used): `{ tags, count }`, each with `slug`, `name`, `provisional` and `topics`. Aliases, expired and reserved tags are left out |
 | `GET /tags/:slugs` | — | One tag or an intersection (`a,b`): `{ tags, canonical, topics, related }`; `canonical` is the list with aliases replaced, `related` the tags those topics have most. 404 when a tag doesn't exist or expired |
-| `POST /topics/:id/tags` | required | `{ tag, value }`: endorse (1), contest (-1) or withdraw (0); endorsing a tag the topic lacks proposes it, one that doesn't exist creates it. 403 for accounts in probation (except on their own topics) or creating one too early, 429 over the daily creation limit. Returns the topic's `tags` |
+| `POST /topics/:id/tags` | required | `{ tag, value }`: endorse (1), contest (-1) or withdraw (0); endorsing a tag the topic lacks proposes it, one that doesn't exist creates it. 403 for accounts in probation (except on their own topics), creating one too early or any vote on a reserved tag, 429 over the daily creation limit. Returns the topic's `tags` |
+| `GET /meta` | optional | The foundational topics in their groups and order: `{ groups: [{ key, name, description, topics }] }`, each topic as `GET /topics` sends it; a group's `topics` are empty before the first start |
 | `GET /topics/:id/tags/history` | — | The topic's `tag_events`, oldest first: `{ id, voter, tag, name, from, to, created_at }`, voters numbered per topic |
 | `GET /topics/:id/votes` | — | The poll's history from `vote_events`, oldest first: `{ id, voter, from, to, created_at }`, with voters numbered per topic (not named until sign-up asks consent for public votes) |
 

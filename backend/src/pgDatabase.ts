@@ -38,13 +38,17 @@ async function connect() {
   }
 }
 
+let markReady: () => void
+// Resolves once init.sql has run: what runs at startup (src/meta.ts) needs its tables
+export const ready = new Promise<void>(resolve => { markReady = resolve })
+
 pool.on("error", connect)
 
 pool.once("connect", () => {
   logger.info(`[pgDatabase.ts] Connected to db ${URL}`)
   logger.info(`[pgDatabase.ts] Creating inital tables from "sql/init.sql" if they do not exist`)
   const initSql = readFileSync(resolve(__dirname, "sql/init.sql"), { encoding: "utf-8" })
-  return pool.query(initSql).catch(err => {
+  return pool.query(initSql).then(() => markReady()).catch(err => {
     logger.fatal(err, `[pgDatabase.ts] Failed to run "sql/init.sql"`)
     process.exit(1)
   })

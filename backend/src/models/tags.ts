@@ -8,7 +8,8 @@ export interface ResolvedTag {
   slug: string,
   name: string,
   provisional: boolean,
-  expired: boolean
+  expired: boolean,
+  reserved: boolean
 }
 
 export interface Voter {
@@ -49,6 +50,7 @@ export const topicTagsSql = (topicId: string, userParam?: string) => `
           'slug', tags.slug,
           'name', tags.name,
           'provisional', tags.activated_at IS NULL,
+          'reserved', tags.reserved,
           'visible', contents_tags.visible,
           'endorsements', contents_tags.endorsements,
           'contests', contents_tags.contests
@@ -94,7 +96,8 @@ async function resolve(slugs: string[]): Promise<Map<string, ResolvedTag>> {
         target.slug,
         target.name,
         target.activated_at IS NULL AS provisional,
-        ${expiredSql("target")} AS expired
+        ${expiredSql("target")} AS expired,
+        target.reserved
       FROM
         tags AS requested
       INNER JOIN
@@ -134,6 +137,19 @@ async function create(slug: string, name: string, userId: number): Promise<numbe
       UNION ALL
       SELECT COALESCE(alias_of, id) FROM tags WHERE slug = $1
       LIMIT 1
+      ;`,
+    values: [slug, name, userId]
+  })
+  return result.rows[0].id
+}
+
+// A reserved tag, active from the start; an existing tag with that slug becomes reserved
+async function reserve(slug: string, name: string, userId: number): Promise<number> {
+  const result = await db.query({
+    text: `
+      INSERT INTO tags (slug, name, author_id, reserved, activated_at) VALUES ($1, $2, $3, true, now())
+      ON CONFLICT (slug) DO UPDATE SET reserved = true, activated_at = COALESCE(tags.activated_at, now())
+      RETURNING id
       ;`,
     values: [slug, name, userId]
   })
@@ -203,7 +219,7 @@ async function ofTopic(topicId: number, userPid?: string): Promise<any[]> {
 }
 
 // Autocomplete and directory: tags whose slug contains `slug`, those starting with it first, then the
-// most used. Aliases and expired tags are left out.
+// most used. Aliases, expired and reserved tags (which nobody can apply) are left out.
 async function search(slug: string, page: number, pageSize: number) {
   const result = await db.query({
     text: `
@@ -219,6 +235,8 @@ async function search(slug: string, page: number, pageSize: number) {
         contents_tags ON contents_tags.tag_id = tags.id
       WHERE
         tags.alias_of IS NULL
+      AND
+        NOT tags.reserved
       AND
         NOT ${expiredSql("tags")}
       AND
@@ -328,6 +346,7 @@ export default Object.freeze({
   voter,
   createdToday,
   create,
+  reserve,
   vote,
   activate,
   proposed,

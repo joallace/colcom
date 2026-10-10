@@ -1,4 +1,5 @@
 import React from "react"
+import DOMPurify from "dompurify"
 import { Link, useNavigate } from "react-router"
 import {
   PiBookmarkSimple,
@@ -20,6 +21,9 @@ import { UserContext } from "@/context/UserContext"
 import useToLogin from "@/hooks/useToLogin"
 
 
+// An empty editor still sends "<p></p>"
+const hasText = html => Boolean(html && new DOMParser().parseFromString(html, "text/html").body.textContent.trim())
+
 export default function Topic({
   id,
   author,
@@ -33,7 +37,10 @@ export default function Topic({
   childrenStats,
   userInteractions,
   userVote,
-  tags
+  tags,
+  body,
+  // The topic's own text: on its page only, as lists would grow with every topic's
+  showBody = false
 }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
@@ -127,6 +134,9 @@ export default function Topic({
       {/* In one Fragment: the tags go above the posts, and Frame hands no header state to Fragments */}
       <>
         <TagList topicId={id} tags={tags} />
+        {showBody && hasText(body) &&
+          <div className="topicBody" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body) }} />
+        }
         {grouped ?
           <div className="answerGroups">
             {groupByAnswer(config.answers, children, childrenStats).map(group => (

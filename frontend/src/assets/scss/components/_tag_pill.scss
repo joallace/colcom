@@ -55,6 +55,12 @@
         text-decoration: line-through;
     }
 
+    // Applied by the instance only (the "meta" tag): nobody votes on it
+    &.reserved {
+        border-color: var(--orange);
+        color: var(--orange-text);
+    }
+
     // The viewer's own vote
     &.endorsed {
         border-color: transparent;
@@ -146,6 +152,13 @@
         }
 
         .counts {
+            color: var(--text-muted);
+            font-size: var(--text-xs);
+        }
+
+        // In place of the two vote buttons
+        .reservedNote {
+            grid-column: span 2;
             color: var(--text-muted);
             font-size: var(--text-xs);
         }

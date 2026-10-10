@@ -106,3 +106,22 @@ describe("Topic metrics", () => {
     expect(within(breakdown).getByText("críticas").nextSibling).toHaveTextContent("2")
   })
 })
+
+describe("Topic text", () => {
+  const body = "<p>Por que <strong>existe</strong>?</p><img src=x onerror=\"window.hacked = true\">"
+
+  it("shows on the topic's page, sanitized", () => {
+    const { container } = renderTopic({ ...topic, body, showBody: true })
+
+    expect(container.querySelector(".topicBody")).toHaveTextContent("Por que existe?")
+    expect(container.querySelector(".topicBody img")).not.toHaveAttribute("onerror")
+  })
+
+  it("stays out of lists, and out of the page when empty", () => {
+    const { container, unmount } = renderTopic({ ...topic, body })
+    expect(container.querySelector(".topicBody")).toBeNull()
+    unmount()
+
+    expect(renderTopic({ ...topic, body: "<p></p>", showBody: true }).container.querySelector(".topicBody")).toBeNull()
+  })
+})

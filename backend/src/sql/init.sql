@@ -162,11 +162,17 @@ CREATE TABLE IF NOT EXISTS tags (
     -- Null while provisional; set by the API once enough topics by distinct authors show it. A
     -- provisional tag that is too old is expired, which queries tell by its age.
     activated_at TIMESTAMP WITH TIME ZONE,
+    -- Only the instance applies it (the "meta" tag, src/meta.ts): nobody can propose, endorse or
+    -- contest it, so it can't be taken off a foundational topic or put on any other
+    reserved BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     FOREIGN KEY (author_id) REFERENCES users(id),
     FOREIGN KEY (alias_of) REFERENCES tags(id),
     CHECK (alias_of IS DISTINCT FROM id)
 );
+
+-- Databases made before `reserved` existed
+ALTER TABLE tags ADD COLUMN IF NOT EXISTS reserved BOOLEAN NOT NULL DEFAULT false;
 
 -- Counting the tags each user created today
 CREATE INDEX IF NOT EXISTS tags_author_idx ON tags (author_id, created_at);

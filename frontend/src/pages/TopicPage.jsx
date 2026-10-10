@@ -45,7 +45,7 @@ export default function TopicPage() {
       {isLoading ?
         <Spinner />
         :
-        <Topic {...topicData} />
+        <Topic {...topicData} showBody />
       }
     </div>
   )

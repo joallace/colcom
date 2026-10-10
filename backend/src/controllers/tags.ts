@@ -39,6 +39,16 @@ const expired = (tag: ResolvedTag, key: string) => new ValidationError({
   key
 })
 
+// Only the instance applies a reserved tag (src/meta.ts). A 403 that, unlike ForbiddenError, keeps
+// the field's key, for the topic form to show it on the tag
+const reserved = (tag: ResolvedTag, key: string) => new ValidationError({
+  message: `A tag "${tag.name}" é reservada aos tópicos fundamentais do colcom.`,
+  action: "Escolha outra tag.",
+  stack: new Error().stack,
+  statusCode: 403,
+  key
+})
+
 const notATopic = () => new ValidationError({
   message: "Somente tópicos têm tags.",
   stack: new Error().stack,
@@ -69,6 +79,8 @@ export async function prepareTopicTags(names: string[], authorPid: string): Prom
       missing.push({ slug, name })
     else if (tag.expired)
       throw expired(tag, `tags.${index}`)
+    else if (tag.reserved)
+      throw reserved(tag, `tags.${index}`)
     else
       ids.add(tag.id)
   }
@@ -133,6 +145,10 @@ export const voteOnTag: RequestHandler = async (req, res, next) => {
 
     if (tag?.expired)
       throw expired(tag, "tag")
+
+    // Neither proposed, endorsed nor contested: it stays exactly where the instance put it
+    if (tag?.reserved)
+      throw reserved(tag, "tag")
 
     if (value !== 1 && (!tag || !proposed.has(tag.id)))
       throw new ValidationError({
