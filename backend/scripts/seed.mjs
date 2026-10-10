@@ -2,7 +2,8 @@
 // 4 topics ("Lula ou Bolsonaro?", an open one, one with 4 answers and one on the four-day week),
 // posts, edits, suggestions (merged by git, merged by merge3, merged with a resolution, rejected and
 // pending), clones, critiques (including ones whose passage was later changed or removed, on charts,
-// lists and across paragraphs), votes changed and withdrawn, posts in two meta topics, notifications
+// lists and across paragraphs; answered, accepted, disputed, withdrawn and resolved by a merged fix,
+// on "Lula ou Bolsonaro?"), votes changed and withdrawn, posts in two meta topics, notifications
 // read and unread, and tags (active, provisional, contested, hidden by contests and withdrawn).
 // The four-day week post (log in as elisa_prado) has a chart critiqued and then altered, and its
 // latest commit has two pending suggestions that conflict with it, for the resolution page.
@@ -117,6 +118,8 @@ const history = async id => (await call("GET", `/contents/${id}`)).history
 const latest = async id => (await history(id)).at(-1).commit
 const edit = (who, id, blocks, message) => call("PATCH", `/contents/${id}`, { body: html(blocks), message }, U[who])
 const suggest = async (who, id, blocks, message) => (await edit(who, id, blocks, message)).config.commit
+// The post's author answers a critique, or its critic answers back (POST /contents/:id/events)
+const act = (who, critiqueId, event) => call("POST", `/contents/${critiqueId}/events`, event, U[who])
 const merge = (who, id, hash, resolution) => call("POST", `/contents/${id}/${hash}/merge`, resolution, U[who])
 const interact = (who, content_id, type) => call("POST", "/interactions", { content_id, type }, U[who], { tolerate: true })
 
@@ -188,13 +191,13 @@ const a4v1 = [
 const a4 = await post("elisa", t1.id, "Democracia não é negociável", a4v1, "Lula")
 
 // Critiques on the first version of A1: one whose passage is later reworded, one whose passage is removed
-await critique("carla", a1.id, a1c1, a1v1, "sem aumentar a dívida pública",
+const kCost = await critique("carla", a1.id, a1c1, a1v1, "sem aumentar a dívida pública",
   "Transferência de renda tem custo",
   ["O programa custa dezenas de bilhões por ano. Pode valer a pena, mas dizer que não pesa na dívida é esconder a conta. De onde vem o dinheiro?"])
-await critique("diego", a1.id, a1c1, a1v1, "Todo governo de esquerda é sempre melhor para os pobres, isso é um fato histórico.",
+const kGeneral = await critique("diego", a1.id, a1c1, a1v1, "Todo governo de esquerda é sempre melhor para os pobres, isso é um fato histórico.",
   "Generalização sem fonte",
   ["Isso não é um fato, é uma opinião. Há governos de esquerda e de direita com bons e maus resultados sociais. Cite dados ou retire."])
-await critique("felipe", a1.id, a1c1, a1v1, "valorização do salário mínimo acima da inflação",
+const kPension = await critique("felipe", a1.id, a1c1, a1v1, "valorização do salário mínimo acima da inflação",
   "Impacto na Previdência",
   ["Como os benefícios previdenciários são atrelados ao mínimo, cada aumento real pressiona as contas da Previdência. Vale mencionar esse custo."])
 
@@ -206,15 +209,29 @@ const a1v2 = [
   a1v1[4]
 ]
 await edit("bruno", a1.id, a1v2, "Corrige o custo do programa e remove generalização, após críticas")
+const a1c2 = await latest(a1.id)
+
+// ...and says so on each one: Carla accepts the fix, Diego hasn't answered yet, and Felipe disputes
+// the rebuttal, leaving it for the public (phase 3)
+await act("bruno", kCost.id, { action: "address", commit: a1c2, note: "Incluí o custo real do programa, em proporção do PIB." })
+await act("carla", kCost.id, { action: "accept", note: "Agora sim, com o número fica honesto." })
+await act("bruno", kGeneral.id, { action: "address", commit: a1c2, note: "Removi a frase." })
+await act("bruno", kPension.id, { action: "rebut", note: "O texto trata do combate à fome; a Previdência tem regras próprias de reajuste e merece outro debate." })
+await act("felipe", kPension.id, { action: "dispute", note: "Se o argumento é o salário mínimo, o custo dele na Previdência faz parte da conta." })
 
 // Elisa suggests a closing paragraph, which Bruno accepts
 const a1v3 = [...a1v2, "Combater a fome não é só caridade: crianças bem alimentadas aprendem mais, adoecem menos e se tornam adultos mais produtivos."]
 const s1 = await call("PATCH", `/contents/${a1.id}`, { body: html(a1v3), message: "Adiciona argumento sobre educação e saúde" }, U.elisa)
 await call("POST", `/contents/${a1.id}/${s1.config.commit}/merge`, null, U.bruno)
 const a1latest = (await history(a1.id)).at(-1).commit
-await critique("henrique", a1.id, a1latest, a1v3, "crianças bem alimentadas aprendem mais",
+const kSchools = await critique("henrique", a1.id, a1latest, a1v3, "crianças bem alimentadas aprendem mais",
   "Bom ponto, mas e a qualidade das escolas?",
   ["Concordo com a alimentação, mas sem escolas de qualidade o efeito é limitado. O texto poderia ligar o programa às condicionalidades de frequência escolar."])
+
+// Henrique suggests the fix for his own critique; merging it resolves the critique
+const a1v4 = [...a1v3, "Por isso o programa exige frequência escolar: a comida chega junto com a escola."]
+const sFix = await call("PATCH", `/contents/${a1.id}`, { body: html(a1v4), message: "Liga o programa à frequência escolar", critique: kSchools.id }, U.henrique)
+await merge("bruno", a1.id, sFix.config.commit)
 
 // Overlapping critiques on A2, so the passage shows a stronger shade
 await critique("bruno", a2.id, a2c1, a2v1, "geraram empregos formais",
@@ -223,12 +240,14 @@ await critique("bruno", a2.id, a2c1, a2v1, "geraram empregos formais",
 await critique("elisa", a2.id, a2c1, a2v1, "a Lei de Liberdade Econômica facilitaram a abertura de empresas e geraram empregos formais",
   "Abrir empresa ficou mais fácil, sim",
   ["Concordo que a burocracia diminuiu, mas boa parte das novas empresas são MEIs, que nem sempre representam empregos de qualidade."])
-await critique("gabi", a2.id, a2c1, a2v1, "Lei de Liberdade Econômica",
+const kLaw = await critique("gabi", a2.id, a2c1, a2v1, "Lei de Liberdade Econômica",
   "Lei aprovada pelo Congresso",
   ["Vale lembrar que a lei foi aprovada pelo Congresso com apoio de vários partidos; atribuí-la só ao presidente simplifica demais."])
 await critique("ana", a2.id, a2c1, a2v1, "Privatizar estatais ineficientes",
   "Quais estatais?",
   ["\"Ineficientes\" é vago. Algumas estatais dão lucro e pagam dividendos à União. Quais você privatizaria e por quê?"])
+// Elisa's critique says it better, so Gabi withdraws hers
+await act("gabi", kLaw.id, { action: "withdraw", note: "A crítica da Elisa já cobre isso." })
 
 // A pending suggestion on A2, for Carla to review
 await call("PATCH", `/contents/${a2.id}`, {
