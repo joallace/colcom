@@ -87,7 +87,7 @@ export async function create({ name, pass, email, avatar }: UserInsertRequest): 
   return result.rows[0]
 }
 
-export async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as any[], hideSensitiveInfo = true }): Promise<User[]> {
+export async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as unknown[], hideSensitiveInfo = true }): Promise<User[]> {
   const query = {
     text: `
       SELECT

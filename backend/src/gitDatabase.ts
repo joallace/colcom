@@ -81,8 +81,14 @@ async function writeTree(repo: number, body: string) {
   return (await git(repo, ["mktree"], { input: `100644 blob ${blob}\t${FILE}\n` })).trim()
 }
 
+// The commit's author, as the session has it (res.locals.user)
+interface GitAuthor {
+  username: string,
+  email: string
+}
+
 // Without an author, git's configured identity is used, as `git merge` did
-async function writeCommit(repo: number, tree: string, parents: string[], message: string, author?: { username: string, email: string }) {
+async function writeCommit(repo: number, tree: string, parents: string[], message: string, author?: GitAuthor) {
   const env = author && { GIT_AUTHOR_NAME: author.username, GIT_AUTHOR_EMAIL: author.email }
   const args = ["commit-tree", tree, ...parents.flatMap(parent => ["-p", parent]), "-m", message]
   return (await git(repo, args, { env })).trim()
@@ -162,7 +168,7 @@ function branchExists(branch: string) {
   })
 }
 
-async function create(content: IContent, author: any) {
+async function create(content: IContent, author: GitAuthor) {
   const { parent_id, id, type, body } = content
 
   if (type === "critique")
@@ -188,7 +194,7 @@ async function read(repo: number, commit: string) {
   return await git(repo, ["show", `${commit}:${FILE}`])
 }
 
-async function update(content: IContent, author: any, body: string, message: string, interactionId: number | undefined) {
+async function update(content: IContent, author: GitAuthor, body: string, message: string, interactionId: number | undefined) {
   const { parent_id, id } = content
   const repo = Number(parent_id)
   const tree = await writeTree(repo, body)

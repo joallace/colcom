@@ -16,7 +16,7 @@ Express 5 + TypeScript 7 API over PostgreSQL and per-topic git repositories. Rea
 | `src/pgDatabase.ts` | Connection pool; runs `sql/init.sql` on first connect (exits if it fails) |
 | `src/config.ts` | Settings from the environment; the server refuses to start without `ACCESS_TOKEN_SECRET` (32+ chars) or with a malformed `RATE_LIMIT_*` or `TAG_*` |
 | `src/middleware/rateLimit.ts` | Rate limiters for login, sign-up, content writes and interactions |
-| `src/validation.ts` | `validate(schema, data)`: checks a request's body, query or params against the shared schemas (`shared/`) and returns the validated copy |
+| `src/validation.ts` | `validate(schema, data)`: checks a request's body, query or params against the shared schemas (`shared/`) and returns the validated copy, typed by the schema (`SchemaData` in `shared/index.d.ts`) |
 | `src/pagination.ts` | `orderByColumn` whitelist and `limitOffset` clamping |
 | `src/errors.ts` | Error classes (`ValidationError` 400, `ForbiddenError` 403, `NotFoundError` 404, `ConflictError` 409…); messages and `action` hints in Portuguese |
 

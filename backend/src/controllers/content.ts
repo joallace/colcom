@@ -1,7 +1,7 @@
 import { RequestHandler } from "express"
 
 import git from "@/gitDatabase"
-import Content, { ContentInsertRequest, ContentType, IContent, summarize } from "@/models/content"
+import Content, { ContentInsertRequest, ContentType, IContent, ListedContent, summarize } from "@/models/content"
 import Interactions from "@/models/interactions"
 import { notify } from "@/models/notifications"
 import { ValidationError, NotFoundError, ForbiddenError } from "@/errors"
@@ -38,9 +38,7 @@ const validateCritiqueCommit = async (post: IContent, commit: string) => {
 }
 
 // A post defends one of its topic's answers; a topic without answers leaves them open
-const validateAnswer = (topicConfig: any, answer: string | undefined) => {
-  const answers: string[] = topicConfig?.answers ?? []
-
+const validateAnswer = (answers: string[], answer: string | undefined) => {
   if (answers.length > 0 && !answers.includes(answer ?? ""))
     throw new ValidationError({
       message: "Resposta: escolha uma das respostas do tópico.",
@@ -63,13 +61,13 @@ export const contentNotFound = (type?: ContentType) => new NotFoundError({
   action: 'Verifique se o "id" fornecido está correto.'
 })
 
-export async function findContentOrThrow(id: number, type?: ContentType, options?: { omitBody?: boolean, includeParentTitle?: boolean }) {
+export async function findContentOrThrow<T extends ContentType = ContentType>(id: number, type?: T, options?: { omitBody?: boolean, includeParentTitle?: boolean }) {
   const content = await Content.findById(id, options)
 
   if (!content || (type && content.type !== type))
     throw contentNotFound(type)
 
-  return content
+  return content as Extract<ListedContent, { type: T }>
 }
 
 const findOwnedSuggestion = async (content_id: number, commit: string, author_pid: string) => {
@@ -94,7 +92,7 @@ const findOwnedSuggestion = async (content_id: number, commit: string, author_pi
 // Turns a page of mixed contents (a profile, the bookmarks) into what each type needs to be shown
 // on its own: topics with their posts, posts with the topic they answer, critiques with the post
 // they criticise. `contents` must come from findAll with includeParentTitle.
-const toFeed = async (contents: any[], author_pid?: string) => {
+const toFeed = async (contents: ListedContent[], author_pid?: string) => {
   const topicIds = contents.filter(content => content.type === "topic").map(content => content.id)
   const trees = topicIds.length > 0 ?
     await Content.findTopicsByIds(topicIds, { childLimit: TOPIC_PREVIEW_POSTS, userPid: author_pid })
@@ -113,51 +111,47 @@ const toFeed = async (contents: any[], author_pid?: string) => {
 
 // A list's total comes with its page (total_count). Only a page past the end, which has no
 // rows to carry it, needs the count queried on its own.
-const totalOf = async (contents: any[], page: number, countAlone: () => Promise<number>) =>
+const totalOf = async (contents: ListedContent[], page: number, countAlone: () => Promise<number>) =>
   contents[0]?.total_count ?? (page > 1 ? await countAlone() : 0)
 
 export const createContent: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user.pid
 
   const { parent_id } = validate("content", req.body)
-  const parent = parent_id ? await Content.getFieldsOrThrow(parent_id, ["parent_id", "type", "config"]) : null
+  const parent = parent_id ? await Content.getFieldsOrThrow(parent_id, ["type", "config"]) : null
 
-  const type = !parent ?
-    "topic"
-    :
-    parent.parent_id ? "critique" : "post"
+  // The type follows from the parent: none for a topic, a topic for a post, a post for a critique
+  let content: ContentInsertRequest
+  let preparedTags: Awaited<ReturnType<typeof prepareTopicTags>> | undefined
 
+  if (!parent) {
+    const { title, body, config, tags } = validate("topic", req.body)
+    // Checked before anything is written; written once the topic exists, as the tag log can't be
+    // rolled back
+    preparedTags = await prepareTopicTags(tags, author_pid)
+    content = { type: "topic", title, body, config, author_pid }
+  }
+  else if (parent.type === "topic") {
+    const { title, parent_id, body, config } = validate("post", req.body)
+    validateAnswer(parent.config.answers, config.answer)
+    content = { type: "post", title, parent_id, body, config, author_pid }
+  }
   // Answers to a critique belong to its lifecycle (address, rebut, dispute), not to nested critiques
-  if (type === "critique" && parent.type !== "post")
+  else if (parent.type === "critique")
     throw new ValidationError({
       message: "Somente posts podem ser criticados.",
       errorLocationCode: "CONTROLLER:CONTENT:CREATE_CONTENT:CRITIQUE_PARENT",
       key: "parent_id"
     })
-
-  const { title, body, config, tags } = <any>validate(type, req.body)
-
-  // Checked before anything is written; written once the topic exists, as the tag log can't be
-  // rolled back
-  const preparedTags = type === "topic" ? await prepareTopicTags(tags, author_pid) : undefined
-
-  if (type === "post")
-    validateAnswer(parent.config, (<any>config).answer)
-
-  if (type === "critique")
-    await validateCritiqueCommit(<IContent>await Content.findById(<number>parent_id), (<any>config).commit)
-
-  const content: ContentInsertRequest = {
-    title,
-    author_pid,
-    parent_id,
-    body: type === "post" ? summarize(<string>body) : body,
-    type,
-    config
+  else {
+    const { title, parent_id, body, config } = validate("critique", req.body)
+    await validateCritiqueCommit(await findContentOrThrow(parent_id, "post"), config.commit)
+    content = { type: "critique", title, parent_id, body, config, author_pid }
   }
 
-  const result = await Content.create(content)
-  result.body = body
+  // Posts keep only a summary in Postgres; git and the response get the whole text
+  const { type, body } = content
+  const result = { ...(await Content.create(type === "post" ? { ...content, body: summarize(body) } : content)), body }
   await withRollback(() => git.create(result, res.locals.user), () => Content.removeById(result.id))
 
   if (preparedTags) {
@@ -172,7 +166,7 @@ export const createContent: RequestHandler = async (req, res) => {
 
   // A critique is news for the post's author, a post for the topic's
   if (type !== "topic")
-    await notify({ type, actor_pid: author_pid, content_id: <number>parent_id, subject_id: result.id })
+    await notify({ type, actor_pid: author_pid, content_id: content.parent_id, subject_id: result.id })
 
   res.status(201).json(preparedTags ? { ...result, tags: await Tags.ofTopic(result.id, author_pid) } : result)
 }
@@ -268,7 +262,7 @@ export const getVersion: RequestHandler = async (req, res) => {
   // The version may also be a pending suggestion, which descends from the post's history too
   const versionAncestors = await git.ancestors(repo, commit)
   const critiques = (await Content.critiquesOf(content_id, author_pid))
-    .filter(critique => versionAncestors.has((<any>critique.config)?.commit))
+    .filter(critique => versionAncestors.has(critique.config.commit))
 
   // For each earlier version critiques were made on, the versions from it to this one, along the
   // post's line of history, and their texts. The client follows each passage through every edit
@@ -277,7 +271,7 @@ export const getVersion: RequestHandler = async (req, res) => {
   const lineages: Record<string, string[]> = {}
   const versions: Record<string, string> = {}
 
-  for (const critiqueCommit of new Set(critiques.map(critique => String((<any>critique.config).commit)))) {
+  for (const critiqueCommit of new Set(critiques.map(critique => critique.config.commit))) {
     if (critiqueCommit === commit)
       continue
 
@@ -344,7 +338,7 @@ export const clonePost: RequestHandler = async (req, res) => {
   const { title } = validate("clone", req.body)
   const content = await findContentOrThrow(content_id, "post")
 
-  const result = await Content.create({ ...(<any>content), author_pid, title })
+  const result = await Content.create({ type: "post", title, author_pid, parent_id: content.parent_id, body: content.body, config: content.config })
   await withRollback(() => git.branch(result, commit), () => Content.removeById(result.id))
   await notify({ type: "clone", actor_pid: author_pid, content_id, subject_id: result.id })
 

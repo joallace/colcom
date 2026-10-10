@@ -1,9 +1,12 @@
+import { CritiqueConfig, PostConfig, TopicConfig } from "@colcom/shared"
+
 import db from "@/pgDatabase"
 import { NotFoundError, ValidationError } from "@/errors"
 import { avatarToBase64, getDataByPublicId } from "@/models/user"
 import { limitOffset, orderByColumn } from "@/pagination"
 import { tagFilterSql, topicTagsSql } from "@/models/tags"
 import { QueryParams, interactionCountSql, promotionCountSql, queryParams, userInteractionsSql } from "@/models/sql"
+import type { InteractionType } from "@/models/interactions"
 
 
 type ContentType = "topic" | "post" | "critique"
@@ -18,44 +21,67 @@ const orderColumns = {
   promotions: "promotions"
 }
 
-interface TopicConfig {
-  answers: string[]
-}
+// A content's config, by its type
+type Typed =
+  | { type: "topic", parent_id: null, config: TopicConfig }
+  | { type: "post", parent_id: number, config: PostConfig }
+  | { type: "critique", parent_id: number, config: CritiqueConfig }
 
-interface PostConfig {
-  answer?: string
-}
-
-interface CritiqueConfig {
-  commit: string,
-  from: number,
-  to: number,
-}
-
-type ConfigType = TopicConfig | PostConfig | CritiqueConfig
-
-interface ContentInsertRequest {
-  title: string,
-  author_pid: string,
-  parent_id?: number,
-  body?: string,
-  type: ContentType,
-  config?: ConfigType,
-  [key: string]: string | number | ContentType | ConfigType | undefined
-}
-
-interface Content {
+type Content = Typed & {
   id: number,
   title: string,
+  // The author's name and public id (users.pid), never the internal id
   author: string,
   author_id: string,
-  parent_id?: number,
   body?: string,
-  type: ContentType,
   status: string,
-  created_at: Date,
-  config?: ConfigType
+  created_at: Date
 }
+
+// The columns of a row of `contents`, where the author is the internal users.id
+type ContentRow = Typed & {
+  id: number,
+  title: string,
+  author_id: number,
+  body: string | null,
+  status: string,
+  created_at: Date
+}
+
+// A content as findAll lists it
+type ListedContent = Content & {
+  author_avatar: string,
+  upvotes: number,
+  downvotes: number,
+  // Topics only
+  promotions: number | null,
+  userInteractions?: InteractionType[],
+  total_count?: number,
+  parent_title?: string,
+  grandparent_id?: number | null
+}
+
+// A topic as findTree returns it; its children and stats are JSON built by the query
+type TopicTree = Extract<ListedContent, { type: "topic" }> & {
+  children: unknown[],
+  childrenStats: Record<string, unknown>,
+  tags: unknown[],
+  userInteractions: InteractionType[] | null,
+  userVote: number | null
+}
+
+type ContentInsertRequest = {
+  title: string,
+  author_pid: string,
+  body?: string
+} & (
+  | { type: "topic", parent_id?: undefined, config: TopicConfig }
+  | { type: "post", parent_id: number, config: PostConfig }
+  | { type: "critique", parent_id: number, config: CritiqueConfig }
+)
+
+// Pick over each member of a union, keeping what ties a content's type to its config
+type PickEach<T, K extends PropertyKey> = T extends unknown ? Pick<T, K & keyof T> : never
 
 const SUMMARY_LENGTH = 280
 
@@ -144,7 +170,7 @@ interface FindAllOptions {
 }
 
 // Contents matching `filter`, which may also filter on the author (users.*)
-async function findAll(filter: Filter | undefined, { orderBy = "id", page = 1, pageSize = 10, omitBody = false, includeParentTitle = false, paginate = true, userPid, withTotal = false }: FindAllOptions = {}): Promise<Content[]> {
+async function findAll(filter: Filter | undefined, { orderBy = "id", page = 1, pageSize = 10, omitBody = false, includeParentTitle = false, paginate = true, userPid, withTotal = false }: FindAllOptions = {}): Promise<ListedContent[]> {
   const params = queryParams()
   const where = filter?.(params)
 
@@ -219,7 +245,7 @@ interface PageOptions {
 }
 
 // A page of every content, or of one author's (the profile), each with its parent's title and total_count
-async function findList({ authorPid, ...options }: PageOptions & { authorPid?: string, orderBy?: string, userPid?: string }): Promise<Content[]> {
+async function findList({ authorPid, ...options }: PageOptions & { authorPid?: string, orderBy?: string, userPid?: string }): Promise<ListedContent[]> {
   return await findAll(byAuthor(authorPid), { ...options, includeParentTitle: true, withTotal: true })
 }
 
@@ -242,7 +268,7 @@ const bookmarkedBy = (userPid: string): Filter => params => `
   )`
 
 // A page of the contents a user bookmarked, with the user's interactions, parent titles and total_count
-async function findBookmarked(userPid: string, options: PageOptions = {}): Promise<Content[]> {
+async function findBookmarked(userPid: string, options: PageOptions = {}): Promise<ListedContent[]> {
   return await findAll(bookmarkedBy(userPid), { ...options, includeParentTitle: true, userPid, withTotal: true })
 }
 
@@ -251,8 +277,8 @@ async function countBookmarked(userPid: string): Promise<number> {
 }
 
 // Every critique of a post, oldest first, with the viewer's interactions
-async function critiquesOf(postId: number, userPid?: string): Promise<Content[]> {
-  const critiques = await findAll(
+async function critiquesOf(postId: number, userPid?: string): Promise<Extract<ListedContent, { type: "critique" }>[]> {
+  const critiques = <Extract<ListedContent, { type: "critique" }>[]>await findAll(
     params => `contents.parent_id = ${params.add(postId, "INT")} AND contents.type = 'critique'`,
     { paginate: false, userPid }
   )
@@ -275,7 +301,7 @@ interface TreeOptions extends PageOptions {
 // posts, its tags and, for a logged in user, their interactions with it, the post they voted for and
 // their tag votes. A single query: Postgres ranks, crops and aggregates the posts, instead of every
 // post being fetched to be cropped here.
-async function findTree(filter: Filter, { orderBy = "promotions", page = 1, pageSize = 10, childLimit, userPid }: TreeOptions): Promise<any[]> {
+async function findTree(filter: Filter, { orderBy = "promotions", page = 1, pageSize = 10, childLimit, userPid }: TreeOptions): Promise<TopicTree[]> {
   const params = queryParams()
   const where = filter(params)
   const userParam = params.add(userPid ?? null, "UUID")
@@ -459,7 +485,7 @@ const tagged = (tagIds?: number[]): Filter =>
   params => tagIds ? tagFilterSql("topics.id", params.add(tagIds)) : "TRUE"
 
 // The topic list, optionally only the topics showing all of `tagIds`
-async function findTopics({ tagIds, ...options }: TreeOptions & { tagIds?: number[] }): Promise<any[]> {
+async function findTopics({ tagIds, ...options }: TreeOptions & { tagIds?: number[] }): Promise<TopicTree[]> {
   return await findTree(tagged(tagIds), options)
 }
 
@@ -475,25 +501,25 @@ async function countTopics({ tagIds }: { tagIds?: number[] } = {}): Promise<numb
 }
 
 // One topic with all its posts
-async function findTopic(id: number, userPid?: string): Promise<any | undefined> {
+async function findTopic(id: number, userPid?: string): Promise<TopicTree | undefined> {
   const [topic] = await findTree(params => `topics.id = ${params.add(id, "INT")}`, { pageSize: 1, userPid })
   return topic
 }
 
 // The topics with these ids, in no particular order
-async function findTopicsByIds(ids: number[], options: TopicListOptions = {}): Promise<any[]> {
+async function findTopicsByIds(ids: number[], options: TopicListOptions = {}): Promise<TopicTree[]> {
   return await findTree(params => `topics.id = ANY(${params.add(ids, "INT[]")})`, { ...options, pageSize: ids.length })
 }
 
 // An author's topics with these titles, in no particular order
-async function findTopicsByTitle(authorId: number, titles: string[], options: TopicListOptions = {}): Promise<any[]> {
+async function findTopicsByTitle(authorId: number, titles: string[], options: TopicListOptions = {}): Promise<TopicTree[]> {
   return await findTree(
     params => `topics.author_id = ${params.add(authorId, "INT")} AND topics.title = ANY(${params.add(titles, "TEXT[]")})`,
     { ...options, pageSize: titles.length }
   )
 }
 
-async function findById(id: number, options: { omitBody?: boolean, includeParentTitle?: boolean } = {}): Promise<Content | undefined> {
+async function findById(id: number, options: { omitBody?: boolean, includeParentTitle?: boolean } = {}): Promise<ListedContent | undefined> {
   const [content] = await findAll(params => `contents.id = ${params.add(id, "INT")}`, { ...options, pageSize: 1 })
   return content
 }
@@ -555,7 +581,7 @@ async function removeById(id: number) {
 }
 
 // Some columns of a content, or a 404 when it doesn't exist (findById returns undefined instead)
-export async function getFieldsOrThrow(id: number, data: (keyof Content)[]): Promise<any> {
+export async function getFieldsOrThrow<K extends keyof ContentRow>(id: number, data: K[]): Promise<PickEach<ContentRow, K>> {
   const query = {
     text: `
       SELECT
@@ -598,4 +624,4 @@ export default Object.freeze({
   getFieldsOrThrow
 })
 
-export { Content as IContent, ContentInsertRequest, ContentType }
+export { Content as IContent, ContentInsertRequest, ContentType, ListedContent, TopicTree }

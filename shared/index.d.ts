@@ -22,6 +22,16 @@ export interface Limits {
 
 export type LimitOverrides = { [Group in keyof Limits]?: Partial<Limits[Group]> }
 
+// What a content's `config` holds, by its type
+export interface TopicConfig {
+  answers: string[]
+  allowMultipleAnswers?: boolean
+}
+
+export interface PostConfig {
+  answer?: string
+}
+
 export interface CritiqueConfig {
   commit: string
   from: number
@@ -34,8 +44,8 @@ export interface SchemaData {
   signUp: { name: string, email: string, pass: string, avatar: string }
   login: { login: string, pass: string }
   content: { parent_id?: number, [key: string]: unknown }
-  topic: { title: string, body?: string, config: { answers: string[], allowMultipleAnswers?: boolean }, tags: string[] }
-  post: { title: string, parent_id: number, body: string, config: { answer?: string } }
+  topic: { title: string, body?: string, config: TopicConfig, tags: string[] }
+  post: { title: string, parent_id: number, body: string, config: PostConfig }
   critique: { title: string, parent_id: number, body: string, config: CritiqueConfig }
   critiqueConfig: CritiqueConfig
   edit: { body: string, message: string }

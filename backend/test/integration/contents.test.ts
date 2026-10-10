@@ -196,6 +196,17 @@ describe("creating a critique", () => {
     expect(res.body.action).toBe("Selecione um trecho de texto do post e tente novamente.")
   })
 
+  it("refuses critiques of critiques", async () => {
+    const topic = await createTopic(alice)
+    const post = await createPost(alice, topic.id)
+    const made = (await critique(bob, post.id, critiqueConfig(await latestCommit(post.id)))).body
+
+    const res = await critique(alice, made.id, critiqueConfig(await latestCommit(post.id)))
+
+    expect(res.status).toBe(400)
+    expect(res.body).toMatchObject({ key: "parent_id", message: "Somente posts podem ser criticados.", errorLocationCode: "CONTROLLER:CONTENT:CREATE_CONTENT:CRITIQUE_PARENT" })
+  })
+
   it("refuses a version that isn't in the post's own history", async () => {
     const topic = await createTopic(alice)
     const [post, other] = [await createPost(alice, topic.id), await createPost(bob, topic.id)]
