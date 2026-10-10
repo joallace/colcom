@@ -361,6 +361,7 @@ export default Object.freeze({
   create,
   getUserContentInteractions,
   getUserCurrentPromote,
+  getUserTopicVote,
   pendingSuggestions,
   setSuggestionCommit,
   findPendingSuggestion,

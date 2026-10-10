@@ -279,7 +279,7 @@ describe("GET /contents/:id", () => {
     const commit = await latestCommit(post.id)
     const carol = await signUp()
 
-    expect((await api().get(`/contents/${post.id}`)).body.interactionCounts).toEqual({ votes: 0, suggestions: 0, critiques: 0 })
+    expect((await api().get(`/contents/${post.id}`)).body.interactionCounts).toEqual({ votes: 0, topicVotes: 0, suggestions: 0, critiques: 0 })
 
     await interact(bob, post.id, "vote")
     await interact(bob, post.id, "up")
@@ -290,7 +290,28 @@ describe("GET /contents/:id", () => {
     expect((await api().post(`/contents/${post.id}/${pending.body.config.commit}/reject`).set(alice.auth)).status).toBe(200)
 
     const res = await api().get(`/contents/${post.id}`)
-    expect(res.body.interactionCounts).toEqual({ votes: 1, suggestions: 2, critiques: 2 })
+    expect(res.body.interactionCounts).toEqual({ votes: 1, topicVotes: 1, suggestions: 2, critiques: 2 })
     expect(res.body).toMatchObject({ upvotes: 1, downvotes: 0 })
+  })
+
+  it("counts the topic's poll votes and tells which post the viewer voted for", async () => {
+    const topic = await createTopic(alice)
+    const post = await createPost(alice, topic.id)
+    const other = await createPost(bob, topic.id)
+    const elsewhere = await createPost(bob, (await createTopic(bob)).id)
+    const carol = await signUp()
+
+    await interact(bob, post.id, "vote")
+    await interact(carol, other.id, "vote")
+    await interact(alice, elsewhere.id, "vote")
+
+    const asCarol = await api().get(`/contents/${post.id}`).set(carol.auth)
+    expect(asCarol.body.interactionCounts).toMatchObject({ votes: 1, topicVotes: 2 })
+    expect(asCarol.body.userTopicVote).toBe(other.id)
+    expect((await api().get(`/contents/${post.id}`).set(bob.auth)).body.userTopicVote).toBe(post.id)
+    // alice voted only in another topic
+    expect((await api().get(`/contents/${post.id}`).set(alice.auth)).body.userTopicVote).toBeNull()
+    expect((await api().get(`/contents/${post.id}`)).body).not.toHaveProperty("userTopicVote")
+    expect((await api().get(`/contents/${topic.id}`).set(carol.auth)).body).not.toHaveProperty("userTopicVote")
   })
 })

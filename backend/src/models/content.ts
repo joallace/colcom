@@ -524,13 +524,19 @@ async function findById(id: number, options: { omitBody?: boolean, includeParent
   return content
 }
 
-// How many poll votes, suggestions (pending or answered) and critiques a post has received; with
-// its up and down votes, what its "interactions" metric adds up
-async function interactionCounts(id: number): Promise<{ votes: number, suggestions: number, critiques: number }> {
+// How many poll votes, suggestions (pending or answered) and critiques a post has received, and how many
+// votes its topic's poll has in all: its share of the poll is a metric of its own, and the rest, with its
+// up and down votes, is what its "interactions" metric adds up
+async function interactionCounts(id: number): Promise<{ votes: number, topicVotes: number, suggestions: number, critiques: number }> {
   const result = await db.query({
     text: `
       SELECT
         COUNT(*) FILTER (WHERE interactions.type = 'vote')::INT AS votes,
+        (
+          SELECT COUNT(*) FROM interactions AS topic_votes
+          INNER JOIN contents AS siblings ON siblings.id = topic_votes.content_id
+          WHERE siblings.parent_id = (SELECT parent_id FROM contents WHERE id = $1) AND topic_votes.type = 'vote'
+        )::INT AS "topicVotes",
         COUNT(*) FILTER (WHERE interactions.type = 'suggestion')::INT AS suggestions,
         (
           SELECT COUNT(*) FROM contents

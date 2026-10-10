@@ -227,6 +227,12 @@ export const getContent: RequestHandler = async (req, res) => {
     userInteractions,
     history: content.type === "post" ? await git.log(content) : undefined,
     interactionCounts: content.type === "post" ? await Content.interactionCounts(content_id) : undefined,
+    // The post the viewer voted for in this post's topic (null for none), so the page can tell whether
+    // their vote here is new to the poll or moved from another post
+    userTopicVote: content.type === "post" && author_pid ?
+      (await Interactions.getUserTopicVote(author_pid, content.parent_id))?.content_id ?? null
+      :
+      undefined,
     suggestions: content.type === "post" && author_pid === content.author_id ?
       await Interactions.pendingSuggestions(content_id)
       :
