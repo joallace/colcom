@@ -174,6 +174,6 @@ describe("creating a topic", () => {
     await userEvent.type(form.answer(1), "não")
     await form.submit()
 
-    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ title: "Should we?", config: { allowMultipleAnswers: false, answers: ["sim", "não"] } })
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ title: "Should we?", config: { allowMultipleAnswers: false, answers: ["sim", "não"] }, tags: [] })
   })
 })

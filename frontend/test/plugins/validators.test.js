@@ -43,7 +43,15 @@ const CASES = [
   ["notifications", { unread: "true", page: "2", extra: "x" }],
   ["contentParams", { id: "12abc" }],
   ["versionParams", { id: "1", hash: "abcdef0" }],
-  ["userParams", { name: "self" }]
+  ["userParams", { name: "self" }],
+  ["topic", { title: "Should we?", tags: ["Política", "São Paulo", "covid-19"] }],
+  ["topic", { title: "Should we?", tags: ["a", "x  y", "c++", "-eua", "ok", "seis"] }],
+  ["tagVote", { tag: "Texas", value: -1 }],
+  ["tagVote", { tag: "Texas", value: 2 }],
+  ["list", { tags: "politica,eua,sao-paulo" }],
+  ["list", { tags: "a,,b" }],
+  ["tagList", { q: "pol", page: "2" }],
+  ["tagParams", { slugs: "a,b,c,d,e,f" }]
 ]
 
 describe("precompiled validators", () => {

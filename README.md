@@ -8,7 +8,7 @@ Uma plataforma git-like de colaboração e competição na criação de ideias.
 - [ ] Implementar página do usuário;
 - [ ] Implementar sistema de pontuação;
 - [ ] Implementar pódio dos usuários;
-- [ ] Implementar sistema de tags;
+- [x] Implementar sistema de tags;
 - [ ] Implementar sistema para permitir temas customizados;
 - [ ] Implementar checagens de segurança mais robustas;
 - [ ] Implementar buscador por texto;

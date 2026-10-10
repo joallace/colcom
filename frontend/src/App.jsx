@@ -12,6 +12,7 @@ import Bookmarked from "@/pages/Bookmarked"
 import Profile from "@/pages/Profile"
 import Leaderboard from "@/pages/Leaderboard"
 import Notifications from "@/pages/Notifications"
+import TagTopics from "@/pages/TagTopics"
 
 function App() {
   const loadingPage = document.getElementById("loading-page")
@@ -30,6 +31,7 @@ function App() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/write" element={<Write />} />
         <Route path="/topics/:id" element={<TopicPage />} />
+        <Route path="/t/:tags" element={<TagTopics />} />
         <Route path="/topics/:tid/posts/:pid" element={<PostPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/profile" element={<Profile />} />

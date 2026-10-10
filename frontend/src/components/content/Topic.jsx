@@ -11,6 +11,7 @@ import {
 import Frame from "@/components/primitives/Frame"
 import PostSummary from "@/components/content/PostSummary"
 import NoResponse from "@/components/primitives/NoResponse"
+import TagList from "@/components/content/TagList"
 import { submitVote } from "@/assets/interactions"
 import { GROUPED, RANKED, groupByAnswer, loadTopicView, saveTopicView } from "@/assets/topicView"
 import { toPercentageStr } from "@/assets/util"
@@ -31,7 +32,8 @@ export default function Topic({
   children,
   childrenStats,
   userInteractions,
-  userVote
+  userVote,
+  tags
 }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
@@ -122,9 +124,10 @@ export default function Topic({
       showDefinitiveVoteButton
       metrics={getMetrics}
     >
-      {grouped ?
-        // In a Fragment: a single element child would receive the header state as DOM attributes
-        <>
+      {/* In one Fragment: the tags go above the posts, and Frame hands no header state to Fragments */}
+      <>
+        <TagList topicId={id} tags={tags} />
+        {grouped ?
           <div className="answerGroups">
             {groupByAnswer(config.answers, children, childrenStats).map(group => (
               <section className="answerGroup" key={`t${id}-a${group.answer}`}>
@@ -144,18 +147,18 @@ export default function Topic({
               </section>
             ))}
           </div>
-        </>
-        :
-        children?.length > 0 ?
-          <>
-            {children.map((child, i) => renderPost(child, i))}
-            {childrenStats?.count > children.length &&
-              <Link to={`/topics/${id}`} className="morePosts">. . .</Link>
-            }
-          </>
           :
-          <NoResponse />
-      }
+          children?.length > 0 ?
+            <>
+              {children.map((child, i) => renderPost(child, i))}
+              {childrenStats?.count > children.length &&
+                <Link to={`/topics/${id}`} className="morePosts">. . .</Link>
+              }
+            </>
+            :
+            <NoResponse />
+        }
+      </>
     </Frame>
   )
 }
