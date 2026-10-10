@@ -12,10 +12,7 @@ const PREVIEW_POSTS = 3
 export const getMeta: RequestHandler = async (req, res) => {
   const systemId = await systemUserId()
   const titles = metaTitles()
-  const trees = systemId === undefined ? [] : await Content.findTree({
-    where: "topics.type = 'topic' AND topics.author_id = $1 AND topics.title = ANY($2::TEXT[])",
-    values: [systemId, titles],
-    pageSize: titles.length,
+  const trees = systemId === undefined ? [] : await Content.findTopicsByTitle(systemId, titles, {
     childLimit: PREVIEW_POSTS,
     userPid: res.locals.user?.pid
   })

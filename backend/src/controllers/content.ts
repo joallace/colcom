@@ -7,7 +7,7 @@ import { notify } from "@/models/notifications"
 import { ValidationError, NotFoundError, ForbiddenError } from "@/errors"
 import { validate } from "@/validation"
 import { applyTopicTags, prepareTopicTags, resolveFilter, splitSlugs } from "@/controllers/tags"
-import Tags, { tagFilterSql } from "@/models/tags"
+import Tags from "@/models/tags"
 import logger from "@/logger"
 
 
@@ -97,7 +97,7 @@ const findOwnedSuggestion = async (content_id: number, commit: string, author_pi
 const toFeed = async (contents: any[], author_pid?: string) => {
   const topicIds = contents.filter(content => content.type === "topic").map(content => content.id)
   const trees = topicIds.length > 0 ?
-    await Content.findTree({ where: "topics.id = ANY($1::int[])", values: [topicIds], pageSize: topicIds.length, childLimit: TOPIC_PREVIEW_POSTS, userPid: author_pid })
+    await Content.findTopicsByIds(topicIds, { childLimit: TOPIC_PREVIEW_POSTS, userPid: author_pid })
     :
     []
   const treeById = new Map(trees.map(tree => [tree.id, tree]))
@@ -111,7 +111,7 @@ const toFeed = async (contents: any[], author_pid?: string) => {
   })
 }
 
-// A list's total comes with its page (findAll's withTotal). Only a page past the end, which has no
+// A list's total comes with its page (total_count). Only a page past the end, which has no
 // rows to carry it, needs the count queried on its own.
 const totalOf = async (contents: any[], page: number, countAlone: () => Promise<number>) =>
   contents[0]?.total_count ?? (page > 1 ? await countAlone() : 0)
@@ -181,13 +181,9 @@ export const getContents: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user?.pid
 
   const { page, pageSize, orderBy, authorId } = validate("list", req.query)
-  const where = authorId ? {
-    where: "users.pid = $1",
-    values: [authorId]
-  } : {}
 
-  const contents = await Content.findAll({ page, pageSize, orderBy, includeParentTitle: true, userPid: author_pid, withTotal: true, ...where })
-  const count = await totalOf(contents, page, () => Content.count(where))
+  const contents = await Content.findList({ authorPid: authorId, page, pageSize, orderBy, userPid: author_pid })
+  const count = await totalOf(contents, page, () => Content.countList({ authorPid: authorId }))
   res.status(200).json({ contents: await toFeed(contents, author_pid), count })
 }
 
@@ -197,30 +193,16 @@ export const getContentTree: RequestHandler = async (req, res) => {
 
   const { page, pageSize, orderBy, tags: slugs } = validate("list", req.query)
 
-  if (!slugs) {
-    const contents = await Content.findTree({ page, pageSize, orderBy, childLimit: TOPIC_PREVIEW_POSTS, userPid: author_pid })
-    res.status(200).json({ tree: contents, count: getCount ? (await Content.getCount("topic")) : undefined })
-    return
-  }
-
   // Topics showing all of these tags; none when one of them doesn't exist
-  const tags = await resolveFilter(splitSlugs(slugs))
-  if (!tags) {
+  const tags = slugs ? await resolveFilter(splitSlugs(slugs)) : undefined
+  if (tags === null) {
     res.status(200).json({ tree: [], count: getCount ? 0 : undefined })
     return
   }
 
-  const values = [tags.map(tag => tag.id)]
-  const contents = await Content.findTree({
-    where: `topics.type = 'topic' AND ${tagFilterSql("topics.id", "$1")}`,
-    values,
-    page,
-    pageSize,
-    orderBy,
-    childLimit: TOPIC_PREVIEW_POSTS,
-    userPid: author_pid
-  })
-  const count = getCount ? await Content.count({ where: `contents.type = 'topic' AND ${tagFilterSql("contents.id", "$1")}`, values }) : undefined
+  const tagIds = tags?.map(tag => tag.id)
+  const contents = await Content.findTopics({ tagIds, page, pageSize, orderBy, childLimit: TOPIC_PREVIEW_POSTS, userPid: author_pid })
+  const count = getCount ? await Content.countTopics({ tagIds }) : undefined
   res.status(200).json({ tree: contents, count })
 }
 
@@ -228,7 +210,7 @@ export const getTopicTree: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user?.pid
 
   const { id } = validate("contentParams", req.params)
-  const [topic] = await Content.findTree({ where: "topics.id = $1 AND topics.type = 'topic'", values: [id], pageSize: 1, userPid: author_pid })
+  const topic = await Content.findTopic(id, author_pid)
 
   if (!topic)
     throw contentNotFound("topic")
@@ -252,45 +234,18 @@ export const getContent: RequestHandler = async (req, res) => {
     history: content.type === "post" ? await git.log(content) : undefined,
     interactionCounts: content.type === "post" ? await Content.interactionCounts(content_id) : undefined,
     suggestions: content.type === "post" && author_pid === content.author_id ?
-      await Interactions.findAll({
-        where: `i.content_id = $1 AND i.type='suggestion' AND i.config->>'accepted' IS NULL`,
-        values: [content_id],
-        orderBy: "i.id DESC"
-      })
+      await Interactions.pendingSuggestions(content_id)
       :
       undefined
   })
 }
 
 export const getBookmarkedContent: RequestHandler = async (req, res) => {
-  const author_pid = res.locals.user?.pid
+  const author_pid = res.locals.user.pid
 
   const { page, pageSize } = validate("list", req.query)
-  const contents = await Content.findAll({
-    where: `
-    contents.id IN (
-      SELECT
-        content_id AS id
-      FROM
-        interactions
-      INNER JOIN
-        users ON users.id = interactions.author_id
-      WHERE
-        interactions.type = 'bookmark'
-      AND
-        users.pid = $1
-    )
-    `,
-    values: [author_pid],
-    page,
-    pageSize,
-    includeParentTitle: true,
-    userPid: author_pid,
-    withTotal: true
-  })
-
-  const count = await totalOf(contents, page, () =>
-    Interactions.getCount(`interactions.type = 'bookmark' AND users.pid = $1`, [author_pid], "INNER JOIN users ON users.id = interactions.author_id"))
+  const contents = await Content.findBookmarked(author_pid, { page, pageSize })
+  const count = await totalOf(contents, page, () => Content.countBookmarked(author_pid))
 
   res.status(200).json({ contents: await toFeed(contents, author_pid), count })
 }
@@ -312,14 +267,8 @@ export const getVersion: RequestHandler = async (req, res) => {
 
   // The version may also be a pending suggestion, which descends from the post's history too
   const versionAncestors = await git.ancestors(repo, commit)
-  const critiques = (await Content.findAll({
-    where: "contents.parent_id = $1 AND contents.type = 'critique'",
-    values: [content_id],
-    paginate: false,
-    userPid: author_pid
-  }))
+  const critiques = (await Content.critiquesOf(content_id, author_pid))
     .filter(critique => versionAncestors.has((<any>critique.config)?.commit))
-    .reverse()
 
   // For each earlier version critiques were made on, the versions from it to this one, along the
   // post's line of history, and their texts. The client follows each passage through every edit

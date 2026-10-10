@@ -121,6 +121,17 @@ describe("GET /contents (a user's profile)", () => {
     expect(pastTheEnd.body).toEqual({ contents: [], count: 3 })
   })
 
+  it("sorts by the given column, newest first", async () => {
+    await interact(other, post.id, "up")
+    const res = await api().get("/contents").query({ authorId: author.pid, orderBy: "upvotes" }).set(other.auth)
+
+    expect(res.body.contents.map((content: any) => content.id)).toEqual([post.id, made.id, topic.id])
+    expect(res.body.contents[0]).toMatchObject({ upvotes: 1, userInteractions: ["up"] })
+
+    const byDate = await api().get("/contents").query({ authorId: author.pid, orderBy: "created_at" })
+    expect(byDate.body.contents.map((content: any) => content.id)).toEqual([made.id, post.id, topic.id])
+  })
+
   it("is empty for a user without contents", async () => {
     const nobody = await signUp()
     const res = await api().get("/contents").query({ authorId: nobody.pid })
@@ -148,6 +159,20 @@ describe("GET /contents/bookmarked", () => {
 
     const pastTheEnd = await api().get("/contents/bookmarked").query({ page: 3 }).set(reader.auth)
     expect(pastTheEnd.body).toEqual({ contents: [], count: 2 })
+  })
+
+  it("pages, counting every bookmark on each page", async () => {
+    const [author, reader] = await Promise.all([signUp(), signUp()])
+    const topics = [await createTopic(author), await createTopic(author), await createTopic(author)]
+    for (const topic of topics)
+      await interact(reader, topic.id, "bookmark")
+
+    const pages = await Promise.all([1, 2].map(page => api().get("/contents/bookmarked").query({ page, pageSize: 2 }).set(reader.auth)))
+
+    expect(pages.map(res => res.body.count)).toEqual([3, 3])
+    expect(pages.map(res => res.body.contents.map((content: any) => content.id))).toEqual([[topics[2].id, topics[1].id], [topics[0].id]])
+    // Topics come as the lists send them, with the viewer's interactions
+    expect(pages[1].body.contents[0]).toMatchObject({ childrenStats: { count: 0 }, userInteractions: ["bookmark"] })
   })
 
   it("requires the user to be logged in", async () => {

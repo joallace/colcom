@@ -2,6 +2,7 @@ import db from "@/pgDatabase"
 import { avatarToBase64, getDataByPublicId } from "@/models/user"
 import { ConflictError, ValidationError } from "@/errors"
 import Content from "@/models/content"
+import { activeInteractionSql, pendingSuggestionSql, promotionValidSql } from "@/models/sql"
 
 
 type InteractionType = "up" | "down" | "vote" | "bookmark" | "promote" | "suggestion"
@@ -71,6 +72,38 @@ async function findAll({ where = "", values = [] as any[], orderBy = "" }): Prom
   return result.rows
 }
 
+// A post's suggestions its author hasn't answered yet, newest first
+async function pendingSuggestions(content_id: number): Promise<Interaction[]> {
+  const query = {
+    text: `
+      SELECT
+        i.id,
+        i.content_id,
+        i.type,
+        i.config,
+        i.created_at,
+        users.name as author,
+        users.pid as author_id,
+        users.avatar as author_avatar
+      FROM
+        interactions i
+      INNER JOIN
+        users ON users.id = i.author_id
+      WHERE
+        i.content_id = $1
+      AND
+        ${pendingSuggestionSql("i")}
+      ORDER BY
+        i.id DESC
+      ;`,
+    values: [content_id]
+  }
+
+  const result = await db.query(query)
+  avatarToBase64("author_avatar", result)
+  return result.rows
+}
+
 async function getUserContentInteractions({ author_pid, content_id }: InteractionInsertRequest): Promise<Interaction[]> {
   const query = {
     text: `
@@ -86,13 +119,8 @@ async function getUserContentInteractions({ author_pid, content_id }: Interactio
         i.author_id = users.id
       AND
         i.content_id = $2
-      AND(
-        i.config IS NULL
-        OR
-        i.config->>'valid_until' IS NULL
-        OR
-        (i.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
-      )
+      AND
+        ${activeInteractionSql("i")}
       ;`,
     values: [author_pid, content_id]
   }
@@ -144,7 +172,7 @@ async function getUserCurrentPromote(author_pid: string): Promise<Interaction> {
     AND
       users.pid = $1
     AND
-      (i.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
+      ${promotionValidSql("i")}
     LIMIT 1
     ;`,
     values: [author_pid]
@@ -152,25 +180,6 @@ async function getUserCurrentPromote(author_pid: string): Promise<Interaction> {
 
   const result = await db.query(query)
   return result.rows[0]
-}
-
-async function getCount(where: string, values: Array<any>, join = ""): Promise<any> {
-  const query = {
-    text: `
-      SELECT
-        COUNT(*)::int
-      FROM
-        interactions
-      ${join}
-      WHERE
-        ${where}
-      ;`,
-    values,
-  }
-
-  const result = await db.query(query)
-
-  return result.rows[0].count
 }
 
 async function handleChange({ author_pid, content_id, type }: InteractionInsertRequest): Promise<Array<any>> {
@@ -312,11 +321,9 @@ async function findPendingSuggestion(content_id: number, commit: string): Promis
       WHERE
         content_id = $1
       AND
-        type = 'suggestion'
+        ${pendingSuggestionSql("interactions")}
       AND
         config->>'commit' = $2
-      AND
-        config->>'accepted' IS NULL
       LIMIT 1
       ;`,
     values: [content_id, commit]
@@ -404,7 +411,7 @@ export default Object.freeze({
   getUserContentInteractions,
   getUserTopicVote,
   getUserCurrentPromote,
-  getCount,
+  pendingSuggestions,
   updateById,
   findPendingSuggestion,
   setSuggestionAccepted,

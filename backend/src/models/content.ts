@@ -2,21 +2,15 @@ import db from "@/pgDatabase"
 import { NotFoundError, ValidationError } from "@/errors"
 import { avatarToBase64, getDataByPublicId } from "@/models/user"
 import { limitOffset, orderByColumn } from "@/pagination"
-import { topicTagsSql } from "@/models/tags"
+import { tagFilterSql, topicTagsSql } from "@/models/tags"
+import { QueryParams, interactionCountSql, promotionCountSql, queryParams, userInteractionsSql } from "@/models/sql"
 
 
 type ContentType = "topic" | "post" | "critique"
 
-const contentOrderBy = {
-  id: "contents.id",
-  created_at: "contents.created_at",
-  upvotes: "upvotes",
-  downvotes: "downvotes",
-  promotions: "promotions"
-}
-
-// Columns of findTree's topic_rows, where the topics are ranked
-const topicOrderBy = {
+// Output columns of findAll's select and of findTree's topic_rows. ORDER BY reads a bare name as the
+// output column, so `id` and `created_at` aren't ambiguous next to the joined tables'.
+const orderColumns = {
   id: "id",
   created_at: "created_at",
   upvotes: "upvotes",
@@ -137,25 +131,27 @@ async function create({ title, author_pid, parent_id, body, type, config }: Cont
   return { ...result.rows[0], author: name, author_id: author_pid }
 }
 
-// paginate = false is only for internal queries already bounded by their WHERE, e.g. a post's critiques
+// Builds a query's WHERE: it adds the values it uses to the query's parameters and returns the condition
+type Filter = (params: QueryParams) => string
+
 interface FindAllOptions {
-  where?: string,
   orderBy?: string,
   page?: number,
   pageSize?: number,
-  values?: any[],
   omitBody?: boolean,
   includeParentTitle?: boolean,
+  // false only for queries already bounded by their filter, e.g. a post's critiques
   paginate?: boolean,
   // The user whose interactions with each content are included (userInteractions)
   userPid?: string,
-  // Adds total_count, how many contents match `where` across all pages, so lists need no count query
+  // Adds total_count, how many contents match the filter across all pages, so lists need no count query
   withTotal?: boolean
 }
 
-async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [], omitBody = false, includeParentTitle = false, paginate = true, userPid, withTotal = false }: FindAllOptions): Promise<Content[]> {
-  // Postgres refuses parameters a query doesn't use, so the user's is only added when needed
-  const userParam = `$${values.length + 1}::UUID`
+// Contents matching `filter`, which may also filter on the author (users.*)
+async function findAll(filter: Filter | undefined, { orderBy = "id", page = 1, pageSize = 10, omitBody = false, includeParentTitle = false, paginate = true, userPid, withTotal = false }: FindAllOptions = {}): Promise<Content[]> {
+  const params = queryParams()
+  const where = filter?.(params)
 
   const query = {
     text: `
@@ -172,42 +168,10 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
         users.pid as author_id,
         users.name as author,
         users.avatar as author_avatar,
-        (
-          SELECT COUNT(*) FROM
-            interactions as interaction
-          WHERE
-            interaction.content_id = contents.id
-          AND
-            interaction.type = 'up'
-        )::INT as upvotes,
-        (
-          SELECT COUNT(*) FROM
-            interactions as interaction
-          WHERE
-            interaction.content_id = contents.id
-          AND
-            interaction.type = 'down'
-        )::INT as downvotes,
-        (
-          CASE
-            WHEN
-              contents.type = 'topic'
-            THEN (
-              SELECT
-                COUNT(*)
-              FROM
-                interactions as interaction
-              WHERE
-                interaction.content_id = contents.id
-              AND
-                interaction.type = 'promote'
-              AND
-                (interaction.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
-            )
-            ELSE NULL
-          END
-        )::INT as promotions
-        ${userPid ? `, ${userInteractionsSql("contents.id", userParam)} AS "userInteractions"` : ""}
+        ${interactionCountSql("contents.id", "up")} as upvotes,
+        ${interactionCountSql("contents.id", "down")} as downvotes,
+        CASE WHEN contents.type = 'topic' THEN ${promotionCountSql("contents.id")} END as promotions
+        ${userPid ? `, ${userInteractionsSql("contents.id", params.add(userPid, "UUID"))} AS "userInteractions"` : ""}
         ${withTotal ? ", COUNT(*) OVER ()::INT AS total_count" : ""}
       FROM
         contents
@@ -220,10 +184,10 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
         ""
       }
       ${where ? `WHERE ${where}` : ""}
-      ORDER BY ${orderByColumn(orderBy, contentOrderBy)} DESC, contents.id DESC
+      ORDER BY ${orderByColumn(orderBy, orderColumns)} DESC, contents.id DESC
       ${paginate ? limitOffset(page, pageSize) : ""}
       ;`,
-    values: userPid ? [...values, userPid] : values
+    values: params.values
   }
 
   const result = await db.query(query)
@@ -231,38 +195,80 @@ async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, va
   return result.rows
 }
 
-// A user's interactions with a content, as an array of their types. Promotions count only while
-// they last. Shared by every query returning contents to a logged in user.
-const userInteractionsSql = (contentId: string, userParam: string) => `
-  ARRAY(
+// Counts the contents matching a findAll filter
+async function countAll(filter: Filter | undefined): Promise<number> {
+  const params = queryParams()
+  const where = filter?.(params)
+
+  const result = await db.query({
+    text: `
+      SELECT
+        COUNT(*)::int
+      FROM
+        contents
+      INNER JOIN
+        users ON contents.author_id = users.id
+      ${where ? `WHERE ${where}` : ""}
+      ;`,
+    values: params.values
+  })
+  return result.rows[0].count
+}
+
+const byAuthor = (authorPid?: string): Filter | undefined =>
+  authorPid ? params => `users.pid = ${params.add(authorPid, "UUID")}` : undefined
+
+interface PageOptions {
+  page?: number,
+  pageSize?: number
+}
+
+// A page of every content, or of one author's (the profile), each with its parent's title and total_count
+async function findList({ authorPid, ...options }: PageOptions & { authorPid?: string, orderBy?: string, userPid?: string }): Promise<Content[]> {
+  return await findAll(byAuthor(authorPid), { ...options, includeParentTitle: true, withTotal: true })
+}
+
+async function countList({ authorPid }: { authorPid?: string } = {}): Promise<number> {
+  return await countAll(byAuthor(authorPid))
+}
+
+const bookmarkedBy = (userPid: string): Filter => params => `
+  contents.id IN (
     SELECT
-      interactions.type
+      interactions.content_id
     FROM
       interactions
     INNER JOIN
-      users AS viewer ON viewer.id = interactions.author_id
+      users AS bookmarker ON bookmarker.id = interactions.author_id
     WHERE
-      viewer.pid = ${userParam}
+      interactions.type = 'bookmark'
     AND
-      interactions.content_id = ${contentId}
-    AND (
-      interactions.config IS NULL
-      OR
-      interactions.config->>'valid_until' IS NULL
-      OR
-      (interactions.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
-    )
+      bookmarker.pid = ${params.add(userPid, "UUID")}
   )`
+
+// A page of the contents a user bookmarked, with the user's interactions, parent titles and total_count
+async function findBookmarked(userPid: string, options: PageOptions = {}): Promise<Content[]> {
+  return await findAll(bookmarkedBy(userPid), { ...options, includeParentTitle: true, userPid, withTotal: true })
+}
+
+async function countBookmarked(userPid: string): Promise<number> {
+  return await countAll(bookmarkedBy(userPid))
+}
+
+// Every critique of a post, oldest first, with the viewer's interactions
+async function critiquesOf(postId: number, userPid?: string): Promise<Content[]> {
+  const critiques = await findAll(
+    params => `contents.parent_id = ${params.add(postId, "INT")} AND contents.type = 'critique'`,
+    { paginate: false, userPid }
+  )
+  return critiques.reverse()
+}
 
 // pg's base64 breaks lines every 76 characters, which a data URL can't contain
 export const AVATAR_BASE64 = "translate(encode(users.avatar, 'base64'), E'\\n', '')"
 
-interface TreeOptions {
-  where?: string,
+interface TreeOptions extends PageOptions {
   orderBy?: string,
-  page?: number,
-  pageSize?: number,
-  values?: any[],
   // How many of each topic's posts to return, the most voted first; all of them when omitted.
   // childrenStats always covers every post.
   childLimit?: number,
@@ -270,12 +276,15 @@ interface TreeOptions {
   userPid?: string
 }
 
-// A page of topics, each with its posts ranked by poll votes, stats over all its posts, its tags and,
-// for a logged in user, their interactions with it, the post they voted for and their tag votes. A single query: Postgres
-// ranks, crops and aggregates the posts, instead of every post being fetched to be cropped here.
-async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions", page = 1, pageSize = 10, values = [], childLimit, userPid }: TreeOptions): Promise<any[]> {
-  const userParam = `$${values.length + 1}::UUID`
-  const childLimitParam = `$${values.length + 2}::INT`
+// A page of the topics matching `filter`, each with its posts ranked by poll votes, stats over all its
+// posts, its tags and, for a logged in user, their interactions with it, the post they voted for and
+// their tag votes. A single query: Postgres ranks, crops and aggregates the posts, instead of every
+// post being fetched to be cropped here.
+async function findTree(filter: Filter, { orderBy = "promotions", page = 1, pageSize = 10, childLimit, userPid }: TreeOptions): Promise<any[]> {
+  const params = queryParams()
+  const where = filter(params)
+  const userParam = params.add(userPid ?? null, "UUID")
+  const childLimitParam = params.add(childLimit ?? null, "INT")
 
   const query = {
     text: `
@@ -292,33 +301,22 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
           users.pid AS author_id,
           users.name AS author,
           ${AVATAR_BASE64} AS author_avatar,
-          (
-            SELECT COUNT(*) FROM interactions
-            WHERE interactions.content_id = topics.id AND interactions.type = 'up'
-          )::INT AS upvotes,
-          (
-            SELECT COUNT(*) FROM interactions
-            WHERE interactions.content_id = topics.id AND interactions.type = 'down'
-          )::INT AS downvotes,
-          (
-            SELECT COUNT(*) FROM interactions
-            WHERE
-              interactions.content_id = topics.id
-            AND
-              interactions.type = 'promote'
-            AND
-              (interactions.config->>'valid_until')::TIMESTAMP WITH TIME ZONE > NOW()
-          )::INT AS promotions
+          ${interactionCountSql("topics.id", "up")} AS upvotes,
+          ${interactionCountSql("topics.id", "down")} AS downvotes,
+          ${promotionCountSql("topics.id")} AS promotions
         FROM
           contents AS topics
         INNER JOIN
           users ON topics.author_id = users.id
-        WHERE ${where}
+        WHERE
+          topics.type = 'topic'
+        AND
+          ${where}
       ),
       page_topics AS (
         SELECT
           *,
-          ROW_NUMBER() OVER (ORDER BY ${orderByColumn(orderBy, topicOrderBy)} DESC, id DESC) AS position
+          ROW_NUMBER() OVER (ORDER BY ${orderByColumn(orderBy, orderColumns)} DESC, id DESC) AS position
         FROM
           topic_rows
         ORDER BY
@@ -453,16 +451,56 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
       ORDER BY
         page_topics.position
     ;`,
-    values: [...values, userPid ?? null, childLimit ?? null]
+    values: params.values
   }
 
   const results = await db.query(query)
   return results.rows
 }
 
-async function findById(id: number, options = {}): Promise<Content> {
-  const result = await findAll({ where: "contents.id = $1", values: [id], pageSize: 1, ...options })
-  return result[0]
+type TopicListOptions = Omit<TreeOptions, keyof PageOptions | "orderBy">
+
+const tagged = (tagIds?: number[]): Filter =>
+  params => tagIds ? tagFilterSql("topics.id", params.add(tagIds)) : "TRUE"
+
+// The topic list, optionally only the topics showing all of `tagIds`
+async function findTopics({ tagIds, ...options }: TreeOptions & { tagIds?: number[] }): Promise<any[]> {
+  return await findTree(tagged(tagIds), options)
+}
+
+async function countTopics({ tagIds }: { tagIds?: number[] } = {}): Promise<number> {
+  const params = queryParams()
+  const where = tagged(tagIds)(params)
+
+  const result = await db.query({
+    text: `SELECT COUNT(*)::int FROM contents AS topics WHERE topics.type = 'topic' AND ${where};`,
+    values: params.values
+  })
+  return result.rows[0].count
+}
+
+// One topic with all its posts
+async function findTopic(id: number, userPid?: string): Promise<any | undefined> {
+  const [topic] = await findTree(params => `topics.id = ${params.add(id, "INT")}`, { pageSize: 1, userPid })
+  return topic
+}
+
+// The topics with these ids, in no particular order
+async function findTopicsByIds(ids: number[], options: TopicListOptions = {}): Promise<any[]> {
+  return await findTree(params => `topics.id = ANY(${params.add(ids, "INT[]")})`, { ...options, pageSize: ids.length })
+}
+
+// An author's topics with these titles, in no particular order
+async function findTopicsByTitle(authorId: number, titles: string[], options: TopicListOptions = {}): Promise<any[]> {
+  return await findTree(
+    params => `topics.author_id = ${params.add(authorId, "INT")} AND topics.title = ANY(${params.add(titles, "TEXT[]")})`,
+    { ...options, pageSize: titles.length }
+  )
+}
+
+async function findById(id: number, options: { omitBody?: boolean, includeParentTitle?: boolean } = {}): Promise<Content | undefined> {
+  const [content] = await findAll(params => `contents.id = ${params.add(id, "INT")}`, { ...options, pageSize: 1 })
+  return content
 }
 
 // How many poll votes, suggestions (pending or answered) and critiques a post has received; with
@@ -545,54 +583,23 @@ export async function getDataById(id: number, data: (keyof Content)[]): Promise<
   return result.rows[0]
 }
 
-// Counts the contents matching a findAll `where`, which may filter on the author (users.*)
-async function count({ where = "", values = [] as any[] }): Promise<number> {
-  const query = {
-    text: `
-      SELECT
-        COUNT(*)::int
-      FROM
-        contents
-      INNER JOIN
-        users ON contents.author_id = users.id
-      ${where ? `WHERE ${where}` : ""}
-      ;`,
-    values
-  }
-
-  const result = await db.query(query)
-  return result.rows[0].count
-}
-
-export async function getCount(type: ContentType): Promise<any> {
-  const query = {
-    text: `
-      SELECT
-        COUNT(*)::int
-      FROM
-        contents
-      WHERE
-        contents.type = $1
-      ;`,
-    values: [type],
-  }
-
-  const result = await db.query(query)
-
-  return result.rows[0].count
-}
-
 export default Object.freeze({
   create,
-  findAll,
-  findTree,
   findById,
+  findList,
+  countList,
+  findBookmarked,
+  countBookmarked,
+  critiquesOf,
+  findTopics,
+  countTopics,
+  findTopic,
+  findTopicsByIds,
+  findTopicsByTitle,
   interactionCounts,
   updateById,
   removeById,
-  getDataById,
-  getCount,
-  count
+  getDataById
 })
 
 export { Content as IContent, ContentInsertRequest, ContentType }

@@ -9,7 +9,7 @@ import { beforeAll, describe, expect, it } from "vitest"
 
 import db from "@/pgDatabase"
 
-import { api, createPost, createTopic, signUp, TestUser, topicTags, unique, voteTag } from "../support/api"
+import { api, createPost, createTopic, interact, signUp, TestUser, topicTags, unique, voteTag } from "../support/api"
 
 
 let alice: TestUser, bob: TestUser, carol: TestUser
@@ -222,6 +222,20 @@ describe("browsing by tag", () => {
     expect(await topicsWith(`${slugOf(c)},${slugOf(a)},${slugOf(b)}`)).toEqual({ ids: [abc.id], count: 1 })
     expect(await topicsWith(`${slugOf(a)},nao-existe`)).toEqual({ ids: [], count: 0 })
     expect((await api().get("/topics?tags=A,,b")).status).toBe(400)
+  })
+
+  it("pages a filtered list, counting all its topics, with the viewer's votes", async () => {
+    const tag = newTag()
+    const topics = [await createTopic(alice, { tags: [tag] }), await createTopic(bob, { tags: [tag] }), await createTopic(alice, { tags: [tag] })]
+    await interact(carol, topics[0].id, "up")
+
+    const page = (n: number) => api().get(`/topics?tags=${slugOf(tag)}&with_count&orderBy=id&pageSize=2&page=${n}`).set(carol.auth)
+    const [first, second] = await Promise.all([page(1), page(2)])
+
+    expect(first.body.count).toBe(3)
+    expect(first.body.tree.map((topic: any) => topic.id)).toEqual([topics[2].id, topics[1].id])
+    expect(second.body.tree.map((topic: any) => topic.id)).toEqual([topics[0].id])
+    expect(second.body.tree[0]).toMatchObject({ upvotes: 1, userInteractions: ["up"], tags: [{ slug: slugOf(tag), userVote: null }] })
   })
 
   it("describes an intersection with the tags its topics have most", async () => {
