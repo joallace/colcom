@@ -4,15 +4,18 @@ import { PiBookmarkSimple, PiBookmarkSimpleFill } from "react-icons/pi"
 import DOMPurify from "dompurify"
 
 import Frame from "@/components/primitives/Frame"
+import Excerpt from "@/components/content/Excerpt"
 import { submitVote } from "@/assets/interactions"
+import { hasMatch } from "@/assets/search"
 import { Author, Relevance } from "@/components/content/Metrics"
 import useToLogin from "@/hooks/useToLogin"
 
 
 const SUMMARY_LENGTH = 280
 
-// A post outside its own page (profile, bookmarks): which topic it answers and its summary
-export default function PostPreview({ id, title, body, author, author_avatar, upvotes, downvotes, config, topic, userInteractions }) {
+// A post outside its own page (profile, bookmarks, search): which topic it answers and its summary,
+// or, as a search result, the passage that matched
+export default function PostPreview({ id, title, body, author, author_avatar, upvotes, downvotes, config, topic, userInteractions, excerpt }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
   const toLogin = useToLogin()
@@ -46,7 +49,11 @@ export default function PostPreview({ id, title, body, author, author_avatar, up
         respondendo ao tópico <Link to={`/topics/${topic.id}`}>{topic.title}</Link>
         {config?.answer && <> com <strong>{config.answer}</strong></>}
       </div>
-      <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(`${body ?? ""}${body?.length === SUMMARY_LENGTH ? "..." : ""}`) }} />
+      {hasMatch(excerpt) ?
+        <Excerpt excerpt={excerpt} />
+        :
+        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(`${body ?? ""}${body?.length === SUMMARY_LENGTH ? "..." : ""}`) }} />
+      }
     </Frame>
   )
 }

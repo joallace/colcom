@@ -1,0 +1,80 @@
+@use "../abstracts/mixins";
+
+// The search field, in the navbar and atop the search page
+.searchBox {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+
+    input {
+        width: 100%;
+        height: 2.5rem;
+        padding: 0 2.5rem 0 var(--space-3);
+        color: var(--text);
+        background: var(--surface);
+        border: var(--stroke) solid var(--border);
+        border-radius: var(--radius-full);
+        outline: none;
+        @include mixins.transition((border-color, box-shadow), var(--duration-base));
+
+        &::placeholder {
+            color: var(--text-muted);
+        }
+
+        &:hover:not(:focus) {
+            border-color: var(--green);
+        }
+
+        &:focus {
+            border-color: var(--orange);
+            box-shadow: 0 0 0 3px var(--orange-tint);
+        }
+    }
+
+    button {
+        position: absolute;
+        right: var(--space-1);
+        display: flex;
+        padding: var(--space-2);
+        color: var(--text-secondary);
+        background: none;
+        border: none;
+        border-radius: var(--radius-full);
+        cursor: pointer;
+        @include mixins.transition((color, background-color));
+
+        &:hover {
+            color: var(--green-text);
+            background-color: var(--hover);
+        }
+
+        &:focus-visible {
+            @include mixins.focus-ring;
+        }
+    }
+
+    &.navSearch {
+        width: 16rem;
+
+        input {
+            height: 2.25rem;
+            font-size: var(--text-sm);
+        }
+    }
+}
+
+// A search result's matched passage, in place of a post's summary or under a topic's tags
+.searchExcerpt {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: var(--leading-relaxed);
+
+    mark {
+        padding: 0 0.125em;
+        color: inherit;
+        font-weight: 700;
+        background-color: var(--green-tint);
+        border-radius: var(--radius-sm);
+    }
+}

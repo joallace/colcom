@@ -275,6 +275,11 @@ describe("Pagination", () => {
     expect(pages().map(link => link.getAttribute("href"))).toEqual(["/recent", "/recent?p=2", "/recent?p=3", "/recent?p=4", "/recent?p=5"])
   })
 
+  it("adds the page to a path that has a query", () => {
+    render(<MemoryRouter><Pagination path="/search?q=a" state={[1, vi.fn()]} maxIndex={3} /></MemoryRouter>)
+    expect(pages().map(link => link.getAttribute("href"))).toEqual(["/search?q=a", "/search?q=a&p=2", "/search?q=a&p=3", "/search?q=a&p=4"])
+  })
+
   it("moves to a clicked page", async () => {
     const setIndex = renderPagination({ index: 0 })
     await userEvent.click(screen.getByText("3"))

@@ -378,9 +378,7 @@ describe("cloning a post", () => {
     expect(await history(post.id)).toHaveLength(2)
   })
 
-  // Known bug: the clone's summary is copied from the post as it is now, not from the chosen
-  // version. Drop `.fails` once it's fixed.
-  it.fails("summarizes the clone from the chosen version", async () => {
+  it("summarizes the clone from the chosen version", async () => {
     const post = await newPost()
     const first = await latestCommit(post.id)
     await edit(author, post.id, "<p>Second version.</p>")

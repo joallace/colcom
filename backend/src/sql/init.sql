@@ -47,6 +47,32 @@ CREATE TABLE IF NOT EXISTS synonyms (
     FOREIGN KEY (content_id) REFERENCES contents(id)
 );
 
+-- Full-text search. `colcom` is Portuguese with accents dropped, so "eleicao" finds "eleição".
+-- CREATE TEXT SEARCH CONFIGURATION has no IF NOT EXISTS.
+CREATE EXTENSION IF NOT EXISTS unaccent;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_ts_config WHERE cfgname = 'colcom') THEN
+        CREATE TEXT SEARCH CONFIGURATION colcom (COPY = portuguese);
+        ALTER TEXT SEARCH CONFIGURATION colcom
+            ALTER MAPPING FOR hword, hword_part, word WITH unaccent, portuguese_stem;
+    END IF;
+END;
+$$;
+
+-- What search reads: a post's `body` is only its summary, so `search_text` holds the plain text of
+-- its latest version (written on every commit), and `tag_names` its topic's visible tags (a topic's
+-- own, copied to its posts; kept by the tag_votes trigger). Titles weigh most, then tags, then text.
+ALTER TABLE contents ADD COLUMN IF NOT EXISTS search_text TEXT;
+ALTER TABLE contents ADD COLUMN IF NOT EXISTS tag_names TEXT;
+ALTER TABLE contents ADD COLUMN IF NOT EXISTS search tsvector GENERATED ALWAYS AS (
+    setweight(to_tsvector('colcom', title), 'A') ||
+    setweight(to_tsvector('colcom', COALESCE(tag_names, '')), 'B') ||
+    setweight(to_tsvector('colcom', COALESCE(search_text, '')), 'D')
+) STORED;
+
+CREATE INDEX IF NOT EXISTS contents_search_idx ON contents USING GIN (search);
+
 CREATE INDEX IF NOT EXISTS contents_parent_id_idx ON contents (parent_id);
 CREATE INDEX IF NOT EXISTS interactions_content_type_idx ON interactions (content_id, type);
 CREATE INDEX IF NOT EXISTS interactions_author_content_idx ON interactions (author_id, content_id);
@@ -226,6 +252,23 @@ CREATE TABLE IF NOT EXISTS tag_events (
 
 CREATE INDEX IF NOT EXISTS tag_events_content_idx ON tag_events (content_id, id);
 
+-- The names of the tags a topic shows, as search indexes them. A provisional tag that expires
+-- (computed from its age, never stored) stays indexed until the topic's tags change again.
+CREATE OR REPLACE FUNCTION topic_tag_names(topic_id INT) RETURNS TEXT LANGUAGE sql STABLE AS $$
+    SELECT string_agg(tags.name, ' ' ORDER BY tags.name)
+    FROM contents_tags
+    INNER JOIN tags ON tags.id = contents_tags.tag_id
+    WHERE contents_tags.content_id = topic_id AND contents_tags.visible AND tags.alias_of IS NULL;
+$$;
+
+-- Copies a topic's tag names to it and its posts, rewriting only the rows they changed
+CREATE OR REPLACE FUNCTION refresh_tag_names(topic_id INT) RETURNS VOID LANGUAGE sql AS $$
+    UPDATE contents SET tag_names = names.value
+    FROM (SELECT topic_tag_names(topic_id) AS value) AS names
+    WHERE (contents.id = topic_id OR (contents.parent_id = topic_id AND contents.type = 'post'))
+    AND contents.tag_names IS DISTINCT FROM names.value;
+$$;
+
 -- Like the vote log, written by a trigger so any statement on tag_votes is logged and counted in
 -- its own transaction
 CREATE OR REPLACE FUNCTION apply_tag_vote() RETURNS trigger LANGUAGE plpgsql AS $$
@@ -262,6 +305,8 @@ BEGIN
     -- A tag nobody votes for anymore is no longer proposed
     DELETE FROM contents_tags
     WHERE content_id = vote.content_id AND tag_id = vote.tag_id AND endorsements = 0 AND contests = 0;
+
+    PERFORM refresh_tag_names(vote.content_id);
 
     RETURN NULL;
 END;

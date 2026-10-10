@@ -1,7 +1,7 @@
 import { RequestHandler } from "express"
 
 import git from "@/gitDatabase"
-import Content, { ContentInsertRequest, ContentType, IContent, ListedContent, summarize } from "@/models/content"
+import Content, { ContentInsertRequest, ContentType, IContent, ListedContent } from "@/models/content"
 import Interactions from "@/models/interactions"
 import { notify } from "@/models/notifications"
 import { ValidationError, NotFoundError, ForbiddenError } from "@/errors"
@@ -92,7 +92,7 @@ const findOwnedSuggestion = async (content_id: number, commit: string, author_pi
 // Turns a page of mixed contents (a profile, the bookmarks) into what each type needs to be shown
 // on its own: topics with their posts, posts with the topic they answer, critiques with the post
 // they criticise. `contents` must come from findAll with includeParentTitle.
-const toFeed = async (contents: ListedContent[], author_pid?: string) => {
+export const toFeed = async (contents: ListedContent[], author_pid?: string) => {
   const topicIds = contents.filter(content => content.type === "topic").map(content => content.id)
   const trees = topicIds.length > 0 ?
     await Content.findTopicsByIds(topicIds, { childLimit: TOPIC_PREVIEW_POSTS, userPid: author_pid })
@@ -111,7 +111,7 @@ const toFeed = async (contents: ListedContent[], author_pid?: string) => {
 
 // A list's total comes with its page (total_count). Only a page past the end, which has no
 // rows to carry it, needs the count queried on its own.
-const totalOf = async (contents: ListedContent[], page: number, countAlone: () => Promise<number>) =>
+export const totalOf = async (contents: ListedContent[], page: number, countAlone: () => Promise<number>) =>
   contents[0]?.total_count ?? (page > 1 ? await countAlone() : 0)
 
 export const createContent: RequestHandler = async (req, res) => {
@@ -151,7 +151,7 @@ export const createContent: RequestHandler = async (req, res) => {
 
   // Posts keep only a summary in Postgres; git and the response get the whole text
   const { type, body } = content
-  const result = { ...(await Content.create(type === "post" ? { ...content, body: summarize(body) } : content)), body }
+  const result = { ...(await Content.create(content)), body }
   await withRollback(() => git.create(result, res.locals.user), () => Content.removeById(result.id))
 
   if (preparedTags) {
@@ -344,8 +344,11 @@ export const clonePost: RequestHandler = async (req, res) => {
   const { title } = validate("clone", req.body)
   const content = await findContentOrThrow(content_id, "post")
 
-  const result = await Content.create({ type: "post", title, author_pid, parent_id: content.parent_id, body: content.body, config: content.config })
-  await withRollback(() => git.branch(result, commit), () => Content.removeById(result.id))
+  const created = await Content.create({ type: "post", title, author_pid, parent_id: content.parent_id, config: content.config })
+  await withRollback(() => git.branch(created, commit), () => Content.removeById(created.id))
+  // The branch checked the version exists; its text, not the post's latest, is the clone's
+  const { body } = await Content.updateById(created.id, await git.read(Number(content.parent_id), commit), author_pid)
+  const result = { ...created, body }
   await notify({ type: "clone", actor_pid: author_pid, content_id, subject_id: result.id })
 
   res.status(200).json(result)

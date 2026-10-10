@@ -263,6 +263,20 @@ export function createSchemas(limits) {
     }
   }
 
+  // Full-text search over topics and posts: their titles, tags and texts
+  const search = {
+    type: "object",
+    required: ["q"],
+    additionalProperties: false,
+    properties: {
+      q: { type: "string", label: "busca", minLength: 1, maxLength: limits.search.max, notBlank: true },
+      type: { type: "string", label: "tipo", enum: ["topic", "post"], messages: { enum: "busque tópicos ou posts" } },
+      tags: list.properties.tags,
+      page: list.properties.page,
+      pageSize: list.properties.pageSize
+    }
+  }
+
   const notifications = {
     type: "object",
     additionalProperties: false,
@@ -300,6 +314,6 @@ export function createSchemas(limits) {
 
   return {
     body: { signUp, login, content, topic, post, critique, critiqueConfig, edit, resolution, clone, interaction, tagVote, readNotifications },
-    query: { list, tagList, notifications, contentParams, versionParams, tagParams, userParams }
+    query: { list, tagList, search, notifications, contentParams, versionParams, tagParams, userParams }
   }
 }

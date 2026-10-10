@@ -23,6 +23,8 @@ export const DEFAULT_LIMITS = Object.freeze({
   tag: Object.freeze({ min: 2, max: 32 }),
   // Tags given when creating a topic, distinct tags proposed on one topic, and tags combined in a filter
   tags: Object.freeze({ seed: 5, perTopic: 10, filter: 5 }),
+  // What's typed in the search box
+  search: Object.freeze({ max: 200 }),
 
   page: Object.freeze({ max: 1_000_000 }),
   pageSize: Object.freeze({ default: 10, max: 100 }),

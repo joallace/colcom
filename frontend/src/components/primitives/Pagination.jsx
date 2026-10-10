@@ -27,6 +27,8 @@ export default function Pagination({ path = "", state, isLoading, maxIndex = -1 
 
   const [index, setIndex] = state
   const pages = visiblePages(index, maxIndex)
+  // The first page is the path itself; `path` may already have a query (the search's)
+  const pagePath = page => page <= 0 ? path : `${path}${path.includes("?") ? "&" : "?"}p=${page + 1}`
 
   const nextPage = () => {
     setIndex(index + 1)
@@ -48,7 +50,7 @@ export default function Pagination({ path = "", state, isLoading, maxIndex = -1 
         </Link>
 
         <Link
-          to={index === 1 ? path : `${path}?p=${index}`}
+          to={pagePath(index - 1)}
           className={`clickable${(index === 0 || (maxIndex >= 0 && index > maxIndex + 1)) ? " disabled" : ""}`}
           onClick={previousPage}
         >
@@ -59,7 +61,7 @@ export default function Pagination({ path = "", state, isLoading, maxIndex = -1 
           {pages.map((page, i) => (
             <Link
               key={`pag_${i + 1}`}
-              to={page === 0 ? path : `${path}?p=${page + 1}`}
+              to={pagePath(page)}
               className={`${(index !== page && (maxIndex >= 0 && page > maxIndex)) ? "disabled" : ""}${index === page ? " active" : ""}`}
               contentEditable={index === page}
               suppressContentEditableWarning={true}
@@ -101,14 +103,14 @@ export default function Pagination({ path = "", state, isLoading, maxIndex = -1 
         </div>
 
         <Link
-          to={`${path}?p=${index + 2}`}
+          to={pagePath(index + 1)}
           className={`clickable${(maxIndex >= 0 ? index >= maxIndex : isLoading) ? " disabled" : ""}`}
           onClick={nextPage}
         >
           <PiCaretRight />
         </Link>
         <Link
-          to={`${path}?p=${maxIndex + 1}`}
+          to={pagePath(maxIndex)}
           className={`clickable${((maxIndex >= 0 && index >= maxIndex) || isLoading || maxIndex < 0) ? " disabled" : ""}`}
           onClick={() => setIndex(maxIndex)}
         >

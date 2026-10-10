@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("@/pgDatabase", () => ({ default: {} }))
 
 const { formatHtml } = await import("@/gitDatabase")
-const { summarize } = await import("@/models/content")
+const { plainText, summarize } = await import("@/models/content")
 
 
 describe("formatHtml", () => {
@@ -60,5 +60,24 @@ describe("summarize", () => {
 
   it("doesn't take <pre> for a paragraph", () => {
     expect(summarize("<pre>code</pre><p>Text.</p>")).toBe("Text.")
+  })
+})
+
+describe("plainText", () => {
+  it("drops markup, keeping words of neighbouring blocks apart", () => {
+    expect(plainText("<h2>Título</h2>\n<p>Um <strong>texto</strong></p><ul><li>a</li><li>b</li></ul>")).toBe("Título Um texto a b")
+  })
+
+  it("decodes entities, named and numbered", () => {
+    expect(plainText("<p>R&amp;D &lt;b&gt; &quot;x&quot;&nbsp;y &#233; &#xE7; &unknown;</p>")).toBe('R&D <b> "x" y é ç &unknown;')
+  })
+
+  it("removes the characters search excerpts mark matches with", () => {
+    expect(plainText("<p>ab&#xE001;c</p>")).toBe("abc")
+  })
+
+  it("is empty for no text", () => {
+    expect(plainText(undefined)).toBe("")
+    expect(plainText("<p></p>")).toBe("")
   })
 })

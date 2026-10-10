@@ -15,6 +15,7 @@ import Notifications from "@/pages/Notifications"
 import TagTopics from "@/pages/TagTopics"
 import Meta from "@/pages/Meta"
 import ResolveSuggestion from "@/pages/ResolveSuggestion"
+import Search from "@/pages/Search"
 
 function App() {
   const loadingPage = document.getElementById("loading-page")
@@ -29,6 +30,7 @@ function App() {
         <Route path="/recent" element={<TopicTree orderBy="id" />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/meta" element={<Meta />} />
+        <Route path="/search" element={<Search />} />
         <Route path="/bookmarked" element={<Bookmarked />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/write" element={<Write />} />

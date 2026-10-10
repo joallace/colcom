@@ -20,6 +20,7 @@
 @use "components/pixel_editor";
 @use "components/popover";
 @use "components/post_summary";
+@use "components/search_box";
 @use "components/spinner";
 @use "components/tag_pill";
 @use "components/text_editor";
@@ -32,5 +33,6 @@
 @use "pages/post";
 @use "pages/profile";
 @use "pages/resolve";
+@use "pages/search";
 @use "pages/topics";
 @use "pages/write";

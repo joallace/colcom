@@ -100,6 +100,28 @@ export function summarize(html: unknown): string {
   return summary.slice(0, SUMMARY_LENGTH)
 }
 
+const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " }
+
+// What search indexes of a body: its text without markup, tags turned into spaces so words in
+// neighbouring blocks don't run together. Entities other than these are decoded by their number.
+// U+E000 and U+E001 are dropped: search excerpts use them to mark the matched words.
+export function plainText(html: unknown): string {
+  if (typeof html !== "string")
+    return ""
+
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (entity, name: string) => {
+      if (name[0] !== "#")
+        return ENTITIES[name.toLowerCase()] ?? entity
+      const code = /^#x/i.test(name) ? parseInt(name.slice(2), 16) : Number(name.slice(1))
+      return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : entity
+    })
+    .replace(/[]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
 // Titles are unique across every content, ignoring case
 async function validateUniqueTitle(title: string) {
   const results = await db.query({
@@ -116,6 +138,8 @@ async function validateUniqueTitle(title: string) {
   }
 }
 
+// `body` is the whole text: a post keeps only its summary, and search its plain text. A post also
+// starts with its topic's tag names, which the tag_votes trigger keeps from then on.
 async function create({ title, author_pid, parent_id, body, type, config }: ContentInsertRequest): Promise<Content> {
   // author_pid comes from a verified session (authHandler checks it against users) or the system account
   await validateUniqueTitle(title)
@@ -131,26 +155,32 @@ async function create({ title, author_pid, parent_id, body, type, config }: Cont
           parent_id,
           body,
           type,
-          config
+          config,
+          search_text,
+          tag_names
         )
       VALUES
-          ($1, $2, $3, $4, $5, $6)
+          ($1, $2, $3, $4, $5, $6, $7, CASE WHEN $5 = 'post' THEN topic_tag_names($3) END)
       RETURNING
-        *
+        ${RETURNED_COLUMNS}
     ;`,
     values: [
       title,
       id,
       parent_id,
-      body,
+      type === "post" ? summarize(body) : body,
       type,
-      config
+      config,
+      plainText(body)
     ],
   }
 
   const result = await db.query(query)
   return { ...result.rows[0], author: name, author_id: author_pid }
 }
+
+// A row as the API sends it, without the columns kept for search
+const RETURNED_COLUMNS = "id, title, author_id, parent_id, body, type, status, config, created_at"
 
 // Builds a query's WHERE: it adds the values it uses to the query's parameters and returns the condition
 type Filter = (params: QueryParams) => string
@@ -274,6 +304,11 @@ async function findBookmarked(userPid: string, options: PageOptions = {}): Promi
 
 async function countBookmarked(userPid: string): Promise<number> {
   return await countAll(bookmarkedBy(userPid))
+}
+
+// The contents with these ids, in no particular order, as findList shows them (search results)
+async function findListByIds(ids: number[], userPid?: string): Promise<ListedContent[]> {
+  return await findAll(params => `contents.id = ANY(${params.add(ids, "INT[]")})`, { includeParentTitle: true, paginate: false, userPid })
 }
 
 // Every critique of a post, oldest first, with the viewer's interactions
@@ -552,19 +587,21 @@ async function interactionCounts(id: number): Promise<{ votes: number, topicVote
   return result.rows[0]
 }
 
+// A post's new version: its summary and the text search indexes
 async function updateById(id: number, body: string, author_pid: string) {
   const query = {
     text: `
       UPDATE
         contents
       SET
-        body = $1
+        body = $1,
+        search_text = $3
       WHERE
         id = $2
       RETURNING
-        *
+        ${RETURNED_COLUMNS}
       ;`,
-    values: [summarize(body), id]
+    values: [summarize(body), id, plainText(body)]
   }
 
   const result = await db.query(query)
@@ -615,6 +652,7 @@ export default Object.freeze({
   create,
   findById,
   findList,
+  findListByIds,
   countList,
   findBookmarked,
   countBookmarked,

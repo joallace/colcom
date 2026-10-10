@@ -13,6 +13,8 @@ import Frame from "@/components/primitives/Frame"
 import PostSummary from "@/components/content/PostSummary"
 import NoResponse from "@/components/primitives/NoResponse"
 import TagList from "@/components/content/TagList"
+import Excerpt from "@/components/content/Excerpt"
+import { hasMatch } from "@/assets/search"
 import { submitVote } from "@/assets/interactions"
 import { GROUPED, RANKED, groupByAnswer, loadTopicView, saveTopicView } from "@/assets/topicView"
 import { toPercentageStr } from "@/assets/util"
@@ -40,7 +42,9 @@ export default function Topic({
   tags,
   body,
   // The topic's own text: on its page only, as lists would grow with every topic's
-  showBody = false
+  showBody = false,
+  // As a search result: the passage of its text that matched, if any did
+  excerpt
 }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
@@ -137,6 +141,7 @@ export default function Topic({
         {showBody && hasText(body) &&
           <div className="topicBody" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(body) }} />
         }
+        {hasMatch(excerpt) && <Excerpt excerpt={excerpt} />}
         {grouped ?
           <div className="answerGroups">
             {groupByAnswer(config.answers, children, childrenStats).map(group => (

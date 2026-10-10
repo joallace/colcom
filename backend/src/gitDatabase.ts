@@ -194,6 +194,13 @@ async function read(repo: number, commit: string) {
   return await git(repo, ["show", `${commit}:${FILE}`])
 }
 
+// A topic's or post's latest text, undefined when its branch doesn't exist
+async function readLatest(content: Pick<IContent, "id" | "parent_id">) {
+  const repo = Number(content.parent_id || content.id)
+  const head = await tip(repo, content.parent_id ? String(content.id) : "main")
+  return head ? await read(repo, head.commit) : undefined
+}
+
 async function update(content: IContent, author: GitAuthor, body: string, message: string, interactionId: number | undefined) {
   const { parent_id, id } = content
   const repo = Number(parent_id)
@@ -376,6 +383,7 @@ async function log(content: IContent) {
 export default Object.freeze({
   create,
   read,
+  readLatest,
   update,
   branch,
   merge,

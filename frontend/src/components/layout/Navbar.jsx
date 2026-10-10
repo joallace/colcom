@@ -6,13 +6,15 @@ import {
   PiMedalFill,
   PiBookmarkSimpleFill,
   PiSignOutFill,
-  PiSignInFill
+  PiSignInFill,
+  PiMagnifyingGlassBold
 } from "react-icons/pi"
 
 import BrandLogo from "@/components/primitives/BrandLogo"
 import TopicModal from "@/components/content/TopicModal"
 import DropdownMenu from "@/components/primitives/DropdownMenu"
 import NotificationBell from "@/components/layout/NotificationBell"
+import SearchBox from "@/components/layout/SearchBox"
 import Spinner from "@/components/primitives/Spinner"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import useUser from "@/context/UserContext"
@@ -58,6 +60,12 @@ export default function Navbar() {
           </ul>
         </div>
         <div className="rightSide">
+          {/* The search page has its own field */}
+          {location.pathname !== "/search" && (isLargeScreen ?
+            <SearchBox key={location.key} className="navSearch" />
+            :
+            <Link to="/search" title="buscar"><PiMagnifyingGlassBold style={{ fontSize: "1.5rem" }} /></Link>
+          )}
           {user ?
             <>
               <a onClick={toggleModal} title="criar tópico"><PiPlusBold style={{ fontSize: "1.5rem" }} /></a>
