@@ -57,9 +57,15 @@ export const getUser: RequestHandler = async (req, res) => {
 
 export const getCurrentUser: RequestHandler = async (req, res) => {
   const public_id = res.locals.user.pid
-  const user = await User.findByPid(public_id)
+  const user = await User.findByPid(public_id, { withSettings: true })
   const promoting = (await Interactions.getUserCurrentPromote(user.pid))?.content_id
   res.status(200).json({ ...user, promoting })
+}
+
+// The user's own settings; for now only the theme. Returns them as saved.
+export const updateSettings: RequestHandler = async (req, res) => {
+  const { theme } = validate("settings", req.body)
+  res.status(200).json({ theme: await User.saveTheme(res.locals.user.pid, theme) })
 }
 
 // Revokes every session of the user, on every device, not only the one logging out

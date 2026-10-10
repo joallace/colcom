@@ -102,7 +102,7 @@ Since the code is open, anti-abuse measures must not depend on bots not knowing 
 
 - [ ] **[2] `relativeTime` doesn't round years** (`AGENTS.md`): it shows "1.04… ano". Drop the `.fails` in `frontend/test/assets/util.test.js` once fixed.
 - [ ] **[2] Configurable time zone** *(new)*: `America/Recife` is hardcoded in compose, and promotions expire at the server's midnight. Make it an `.env` setting.
-- [ ] **[2] Custom themes** (README).
+- [x] **[2] Custom themes** (README): each user picks a preset (the default, "claro", "alto contraste") or replaces any of its fifteen base colors at `/settings`, with contrast warnings; saved on the account (`PATCH /users/self`) and in the browser, and painted before the app loads. **Left:** an instance-wide default theme chosen by the operator (the presets would need to come from config).
 - [ ] **[2] Past promoted topics** (thesis ch. 5): a view of the most promoted topics on past days.
 - [ ] **[2] LLM topic summaries** (thesis ch. 5 "machine learning", design doc answer): summarise the discussion into the topic text. First settle what triggers a summary and how to resist prompt injection from posts. Keep it optional per instance so self-hosting doesn't require a model provider.
 - [ ] **[2] Interface translations** *(new)*: UI and API messages are Portuguese-only. Extract strings if instances outside Brazil become a goal.

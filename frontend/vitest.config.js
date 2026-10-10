@@ -8,6 +8,9 @@ export default mergeConfig(viteConfig, defineConfig({
     include: ["test/**/*.test.{js,jsx}"],
     environment: "jsdom",
     setupFiles: ["test/setup.js"],
+    // Stylesheets aren't compiled in tests (so components see no breakpoints), except the default
+    // theme's colors, which the presets are built from
+    css: { include: [/_theme\.module\.scss$/] },
     env: {
       VITE_API_ADDRESS: "http://api.test"
     },

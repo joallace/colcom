@@ -69,7 +69,8 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 |---|---|---|
 | `POST /users`, `POST /login` | — | Sign up; log in (returns `accessToken`) |
 | `POST /logout` | required | Revokes every token of the user (204) |
-| `GET /users/self` | required | Current user, with the topic they're promoting |
+| `GET /users/self` | required | Current user, with the topic they're promoting and their `theme` (null until they choose one) |
+| `PATCH /users/self` | required | `{ theme }` (the `settings` schema): saves the user's theme in `users.config.theme`, replacing it whole; returns `{ theme }` |
 | `GET /users/:name` | — | Anyone's public profile (`pid`, `name`, `avatar`, `created_at`), by name ignoring case; registered after `/users/self`, so "self" is a reserved name |
 | `GET /topics?page&pageSize&orderBy&with_count&tags` | optional | Topic list, each with its top 3 posts, stats and `tags`; `tags=a,b` keeps those having all of them (none when one doesn't exist) |
 | `GET /topics/:id` | optional | One topic with all its posts ranked; 404 for non-topics |

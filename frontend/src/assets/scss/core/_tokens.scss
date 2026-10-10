@@ -1,51 +1,60 @@
-@use "sass:color";
 @use "../abstracts/variables" as v;
+
+// A theme's color with `$amount` of it over what's beneath: rgba(), but from a custom property
+@function alpha($color, $amount) {
+    @return color-mix(in srgb, var(--#{$color}) #{$amount * 100%}, transparent);
+}
 
 // Design tokens. Components use these custom properties rather than Sass colors or literal sizes,
 // so a value is decided once and every part of the interface agrees on it.
 :root {
     color-scheme: dark;
 
-    // Surfaces, by elevation
+    // The theme's colors (THEME_COLORS in shared/src/themes.js). These are the default theme's;
+    // a chosen theme sets them on <html> (assets/themes.js), and every color below is derived from
+    // them, in the browser, so it follows.
     --bg: #{v.$bg};
     --surface: #{v.$surface};
     --surface-raised: #{v.$surface-raised};
-    --navbar-bg: #{rgba(v.$navbar-bg, 0.92)};
-    // Hovered and pressed rows, icons and buttons, over whichever surface they're on
-    --hover: #{rgba(v.$text, 0.07)};
-    --pressed: #{rgba(v.$text, 0.12)};
-    --border: #{rgba(v.$text, 0.12)};
-    // Data drawn under text (a poll share): strong enough to compare, faint enough to read over
-    --fill-neutral: #{rgba(v.$text, 0.16)};
-    --orange-fill: #{rgba(v.$orange, 0.5)};
-    --green-fill: #{rgba(v.$green, 0.55)};
-    --border-strong: #{rgba(v.$text, 0.24)};
-
-    // Text
+    --navbar: #{v.$navbar};
     --text: #{v.$text};
     --text-secondary: #{v.$text-secondary};
     --text-muted: #{v.$text-muted};
-    --text-disabled: #{rgba(v.$text, 0.38)};
-    // On the strong brand fills
-    --text-on-fill: #fff;
-    --text-on-light: #{v.$bg};
-
-    // Brand and status
     --green: #{v.$green};
     --green-text: #{v.$green-light};
-    --green-tint: #{rgba(v.$green, 0.22)};
     --orange: #{v.$orange};
-    --orange-hover: #{color.adjust(v.$orange, $lightness: 6%)};
-    --orange-pressed: #{color.adjust(v.$orange, $lightness: -6%)};
     --orange-text: #{v.$orange-light};
-    --orange-tint: #{rgba(v.$orange, 0.22)};
     --red: #{v.$red};
-    --red-hover: #{color.adjust(v.$red, $lightness: 6%)};
     --red-text: #{v.$red-light};
-    --red-tint: #{rgba(v.$red, 0.2)};
     --yellow: #{v.$yellow};
     --blue: #{v.$blue};
-    --focus-ring: #{v.$orange-light};
+
+    // Surfaces, by elevation: --bg, --surface and --surface-raised, above
+    --navbar-bg: #{alpha(navbar, 0.92)};
+    // Hovered and pressed rows, icons and buttons, over whichever surface they're on
+    --hover: #{alpha(text, 0.07)};
+    --pressed: #{alpha(text, 0.12)};
+    --border: #{alpha(text, 0.12)};
+    // Data drawn under text (a poll share): strong enough to compare, faint enough to read over
+    --fill-neutral: #{alpha(text, 0.16)};
+    --orange-fill: #{alpha(orange, 0.5)};
+    --green-fill: #{alpha(green, 0.55)};
+    --border-strong: #{alpha(text, 0.24)};
+
+    // Text: --text, --text-secondary and --text-muted, above
+    --text-disabled: #{alpha(text, 0.38)};
+    // On the strong brand fills
+    --text-on-fill: #fff;
+    --text-on-light: var(--bg);
+
+    // Brand and status. Hover and pressed shades move the HSL lightness, as Sass' color.adjust does.
+    --green-tint: #{alpha(green, 0.22)};
+    --orange-hover: hsl(from var(--orange) h s calc(l + 6));
+    --orange-pressed: hsl(from var(--orange) h s calc(l - 6));
+    --orange-tint: #{alpha(orange, 0.22)};
+    --red-hover: hsl(from var(--red) h s calc(l + 6));
+    --red-tint: #{alpha(red, 0.2)};
+    --focus-ring: var(--orange-text);
 
     // Spacing, on a 4px grid
     --space-1: 0.25rem;
@@ -105,6 +114,16 @@
 
     // The background behind a floating input label: the surface the input sits on
     --input-label-bg: var(--bg);
+}
+
+// A light theme (assets/themes.js tells by its background): native controls and scrollbars follow,
+// and shadows soften, since a light surface needs much less to show depth
+:root[data-scheme="light"] {
+    color-scheme: light;
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.08);
+    --shadow-md: 0 4px 12px rgb(0 0 0 / 0.1), 0 1px 3px rgb(0 0 0 / 0.08);
+    --shadow-lg: 0 16px 40px rgb(0 0 0 / 0.14), 0 4px 12px rgb(0 0 0 / 0.08);
 }
 
 @media (prefers-reduced-motion: reduce) {

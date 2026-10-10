@@ -93,6 +93,51 @@ describe("GET /users/self", () => {
   })
 })
 
+describe("PATCH /users/self", () => {
+  it("saves the theme, which GET /users/self then returns, and keeps it to the user", async () => {
+    const user = await signUp()
+    expect((await api().get("/users/self").set(user.auth)).body.theme).toBeNull()
+
+    const theme = { preset: "claro", colors: { bg: "#ffffff", "orange-text": "#a34500" } }
+    const res = await api().patch("/users/self").set(user.auth).send({ theme })
+    expect(res.status).toBe(200)
+    expect(res.body).toEqual({ theme })
+
+    expect((await api().get("/users/self").set(user.auth)).body.theme).toEqual(theme)
+    expect((await api().get(`/users/${user.name}`)).body).not.toHaveProperty("theme")
+    expect((await api().get("/users/self").set((await signUp()).auth)).body.theme).toBeNull()
+  })
+
+  it("replaces the whole theme, dropping colors left out", async () => {
+    const user = await signUp()
+    await api().patch("/users/self").set(user.auth).send({ theme: { preset: "contraste", colors: { bg: "#000000" } } })
+    const res = await api().patch("/users/self").set(user.auth).send({ theme: { preset: "colcom" } })
+
+    expect(res.body).toEqual({ theme: { preset: "colcom" } })
+  })
+
+  it("strips unknown colors and refuses unknown presets and malformed colors", async () => {
+    const user = await signUp()
+
+    const stripped = await api().patch("/users/self").set(user.auth).send({ theme: { preset: "colcom", colors: { "font-family": "Comic Sans", bg: "#101010" } } })
+    expect(stripped.body).toEqual({ theme: { preset: "colcom", colors: { bg: "#101010" } } })
+
+    const preset = await api().patch("/users/self").set(user.auth).send({ theme: { preset: "neon" } })
+    expect(preset.status).toBe(400)
+    expect(preset.body.key).toBe("theme.preset")
+
+    // A color is only ever a hex code, so it can't smuggle anything into a style
+    const color = await api().patch("/users/self").set(user.auth).send({ theme: { preset: "colcom", colors: { bg: "red; background: url(x)" } } })
+    expect(color.status).toBe(400)
+    expect(color.body).toMatchObject({ key: "theme.colors.bg", message: "Cor: use uma cor como #1a0e06." })
+  })
+
+  it("requires a token", async () => {
+    const res = await api().patch("/users/self").send({ theme: { preset: "colcom" } })
+    expect(res.status).toBe(400)
+  })
+})
+
 describe("GET /users/:name", () => {
   it("returns anyone's public profile, ignoring the name's case", async () => {
     const user = await signUp()

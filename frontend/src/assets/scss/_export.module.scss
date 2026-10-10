@@ -6,10 +6,10 @@
     lg: variables.$screen-lg;
     xl: variables.$screen-xl;
     xxl: variables.$screen-2xl;
+    // The pixel editor's palette: avatars keep their colors whatever the theme
     defaultGreen: variables.$green;
     defaultOrange: variables.$orange;
     defaultYellow: variables.$yellow;
     defaultBlue: variables.$blue;
-    defaultInputBg: variables.$surface-raised;
     defaultFontColor: variables.$text;
 }

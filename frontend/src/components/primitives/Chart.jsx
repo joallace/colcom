@@ -22,7 +22,7 @@ import {
   Legend
 } from "recharts"
 
-import { defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultInputBg, defaultFontColor } from "@/assets/scss/_export.module.scss"
+import useTheme from "@/context/ThemeContext"
 import { toPercentageStr } from "@/assets/util"
 import useBreakpoint from "@/hooks/useBreakpoint"
 
@@ -44,10 +44,12 @@ const mobileMargin = {
 export default function Chart({ type, data = [{}], width, height, isLegendOn = true, ...remainingProps }) {
   const isDesktop = useBreakpoint()
 
-  const COLORS = [defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultFontColor]
+  // Series follow the theme, so they stay legible on its surfaces
+  const { colors } = useTheme()
+  const COLORS = [colors.orange, colors.green, colors.yellow, colors.blue, colors.text]
   const RADIAN = Math.PI / 180
   const tooltipStyle = {
-    backgroundColor: defaultInputBg,
+    backgroundColor: colors["surface-raised"],
     borderRadius: "0.25rem",
     border: "1px solid #737373"
   }
@@ -145,7 +147,7 @@ export default function Chart({ type, data = [{}], width, height, isLegendOn = t
           // margin={isDesktop? desktopMargin : mobileMargin}
           {...remainingProps}
         >
-          <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: defaultFontColor }} />
+          <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: colors.text }} />
           {isLegendOn && <Legend />}
           <Pie
             dataKey="0value"
@@ -176,8 +178,8 @@ export default function Chart({ type, data = [{}], width, height, isLegendOn = t
           <CartesianGrid />
           <XAxis type="number" dataKey="0x" name="stature"/>
           <YAxis type="number" dataKey="0y" name="weight"/>
-          <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={tooltipStyle} itemStyle={{ color: defaultFontColor }} />
-          <Scatter data={data} fill={defaultOrange} />
+          <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={tooltipStyle} itemStyle={{ color: colors.text }} />
+          <Scatter data={data} fill={colors.orange} />
         </ScatterChart>
       )
     case "radar":
@@ -194,7 +196,7 @@ export default function Chart({ type, data = [{}], width, height, isLegendOn = t
           <PolarGrid />
           <PolarAngleAxis dataKey="0name" />
           <PolarRadiusAxis />
-          <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: defaultFontColor }} />
+          <Tooltip contentStyle={tooltipStyle} itemStyle={{ color: colors.text }} />
           {isLegendOn && <Legend />}
           {
             Object.keys(data[0]).map((row, index) => {

@@ -40,6 +40,16 @@ export interface CritiqueConfig {
   quote: { exact: string, prefix: string, suffix: string, start: number }
 }
 
+// A preset with some of its colors replaced (themes.js)
+export type ThemePreset = "colcom" | "claro" | "contraste"
+export type ThemeColor =
+  "bg" | "surface" | "surface-raised" | "navbar" | "text" | "text-secondary" | "text-muted" |
+  "green" | "green-text" | "orange" | "orange-text" | "red" | "red-text" | "yellow" | "blue"
+export interface Theme {
+  preset: ThemePreset
+  colors?: Partial<Record<ThemeColor, string>>
+}
+
 // What each schema accepts, after defaults are filled in
 export interface SchemaData {
   signUp: { name: string, email: string, pass: string, avatar: string }
@@ -55,6 +65,7 @@ export interface SchemaData {
   interaction: { content_id: number, type: "up" | "down" | "vote" | "bookmark" | "promote" }
   tagVote: { tag: string, value: 1 | -1 | 0 }
   readNotifications: { ids?: number[] }
+  settings: { theme: Theme }
   notifications: { page: number, pageSize: number, unread: boolean }
   list: { page: number, pageSize: number, orderBy: string, authorId?: string, tags?: string, [key: string]: unknown }
   tagList: { q: string, page: number, pageSize: number }
@@ -106,6 +117,9 @@ export function ucs2length(value: string): number
 export function tagSlug(name: string): string
 export const TAG_NAME_PATTERN: string
 export const TAG_SLUG_PATTERN: string
+export const THEME_PRESETS: ThemePreset[]
+export const THEME_COLORS: ThemeColor[]
+export const HEX_COLOR_PATTERN: string
 // A three-way merge of documents stored one block per line (merge.js)
 export type MergeChunk = { type: "ok", text: string } | { type: "conflict", base: string, ours: string, theirs: string }
 export function merge3(base: string, ours: string, theirs: string): MergeChunk[]

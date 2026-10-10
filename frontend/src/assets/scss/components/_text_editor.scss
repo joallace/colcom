@@ -1,25 +1,46 @@
 @use "../abstracts/mixins";
 @use "../abstracts/variables";
 
-@use "sass:color";
+@use "sass:map";
+@use "sass:string";
+
+@function get($map, $key, $default) {
+    @return if(map.has-key($map, $key), map.get($map, $key), $default);
+}
+
+// A theme color (a custom property) adjusted by the browser, so it follows the theme: its HSL hue
+// and saturation shifted by `h` and `s`, its lightness multiplied by `l` and then shifted by `dl`, and
+// its alpha set to `a`. Multiplying is what Sass' color.scale does to a darker shade.
+@function shade($color) {
+    @return string.unquote("hsl(from var(--#{map.get($color, color)}) "
+        + "calc(h + #{get($color, h, 0)}) calc(s + #{get($color, s, 0)}) "
+        + "calc(l * #{get($color, l, 1)} + #{get($color, dl, 0)}) / #{get($color, a, 1)})");
+}
+
+// A shade hovered: 15% darker and 15% less transparent, as color.scale(-15%, +15%)
+@function hovered($color) {
+    $a: get($color, a, 1);
+    @return map.merge($color, (l: get($color, l, 1) * 0.85, dl: get($color, dl, 0) * 0.85, a: $a + (1 - $a) * 0.15));
+}
 
 // Critique highlights by how many critiques cover the text (assets/critiqueDensity.js): from a
-// faint orange to a solid one, then into red, with the most disputed passages a vivid red
+// faint orange to a solid one, then into red, with the most disputed passages a vivid red (#e3150c
+// in the default theme, so level 5 is that red's distance from the default --red)
 $critique-density: (
-    1: color.scale(variables.$orange, $lightness: -10%, $alpha: -70%),
-    2: color.scale(variables.$orange, $lightness: -10%, $alpha: -45%),
-    3: color.scale(variables.$orange, $lightness: -10%),
-    4: variables.$red,
-    5: #e3150c,
+    1: (color: orange, l: 0.9, a: 0.3),
+    2: (color: orange, l: 0.9, a: 0.55),
+    3: (color: orange, l: 0.9),
+    4: (color: red),
+    5: (color: red, h: -8.86, s: -10, dl: 9.61),
 );
 
 @mixin critique-density {
     @each $level, $color in $critique-density {
         &[data-level="#{$level}"] {
-            background-color: $color;
+            background-color: shade($color);
 
             &:hover {
-                background-color: color.scale($color, $lightness: -15%, $alpha: 15%);
+                background-color: shade(hovered($color));
             }
         }
     }
@@ -28,16 +49,22 @@ $critique-density: (
     &[data-level="5"] {
         color: white;
     }
+
+    // A light theme's text is dark, and so are the solid shades: over them it turns light, as a
+    // dark theme's text already is
+    :root[data-scheme="light"] &:is([data-level="3"], [data-level="4"]) {
+        color: var(--text-on-fill);
+    }
 }
 
 // The same scale for a criticised chart, which is outlined rather than shaded so it stays legible
 @mixin critique-outline {
     @each $level, $color in $critique-density {
         &[data-level="#{$level}"] {
-            outline-color: $color;
+            outline-color: shade($color);
 
             &:hover {
-                outline-color: color.scale($color, $lightness: -15%, $alpha: 15%);
+                outline-color: shade(hovered($color));
             }
         }
     }
@@ -301,7 +328,7 @@ $critique-density: (
         }
 
         &[data-highlight="temporary"] {
-            outline-color: color.scale(variables.$yellow, $lightness: -18%);
+            outline-color: hsl(from var(--yellow) h s calc(l * 0.82));
         }
     }
 
@@ -329,13 +356,13 @@ $critique-density: (
 
         // The criticised passage was edited after the critique was made
         &.changed {
-            text-decoration: underline dashed color.scale(variables.$orange, $lightness: 25%);
+            text-decoration: underline dashed hsl(from var(--orange) h s calc(l + (100 - l) * 0.25));
             text-underline-offset: 0.2em;
         }
 
         &.temporary {
             color: black;
-            background-color: color.scale(variables.$yellow, $lightness: -18%);
+            background-color: hsl(from var(--yellow) h s calc(l * 0.82));
         }
     }
 }

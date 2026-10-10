@@ -1,19 +1,20 @@
-// Sass constants: the source the design tokens (core/_tokens.scss) are built from, and what
-// _export.module.scss hands to JavaScript (charts, the pixel editor, breakpoints). Components
-// should use the CSS custom properties instead.
+// Sass constants: the default theme, which the design tokens (core/_tokens.scss) start from, and
+// what _export.module.scss hands to JavaScript (the presets, the pixel editor, breakpoints).
+// Components should use the CSS custom properties instead, which follow the chosen theme.
 
 // Surfaces, from the page's background up to what floats over it (menus, modals)
 $bg: #1a0e06;
 $surface: #25150a;
 $surface-raised: #33200f;
-$navbar-bg: #2b1708;
+$navbar: #2b1708;
 
 // Text, each at least 4.5:1 against every surface above
 $text: #efe6dc;
 $text-secondary: #c4b5a5;
 $text-muted: #9a8a7a;
 
-// Brand: the strong tones fill and outline (white text on them is at least 4.5:1); the light ones
+// Brand: the strong tones fill and outline (white text on them is at least 4.5:1 on orange and red,
+// 3.7:1 on green, so only bold labels go on it; assets/themes.js checks 3:1); the light ones
 // are for text and icons on the dark surfaces, where the strong ones lack contrast
 $green: #669100;
 $green-light: #8db43a;

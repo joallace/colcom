@@ -1,0 +1,21 @@
+@use "abstracts/variables";
+
+// The default theme, by THEME_COLORS key, for assets/themes.js. Apart from _export.module.scss, so
+// tests can compile it (vitest.config.js) and still get no breakpoints.
+:export {
+    bg: variables.$bg;
+    surface: variables.$surface;
+    surface-raised: variables.$surface-raised;
+    navbar: variables.$navbar;
+    text: variables.$text;
+    text-secondary: variables.$text-secondary;
+    text-muted: variables.$text-muted;
+    green: variables.$green;
+    green-text: variables.$green-light;
+    orange: variables.$orange;
+    orange-text: variables.$orange-light;
+    red: variables.$red;
+    red-text: variables.$red-light;
+    yellow: variables.$yellow;
+    blue: variables.$blue;
+}

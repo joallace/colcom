@@ -1,0 +1,179 @@
+@use "../abstracts/mixins";
+
+.settings {
+    @include mixins.content-width(var(--measure));
+    margin: var(--space-4) auto;
+    display: grid;
+    gap: var(--space-5);
+
+    header {
+        h1 {
+            margin: 0 0 var(--space-2);
+            font-size: var(--text-xl);
+        }
+
+        p {
+            margin: 0;
+            color: var(--text-secondary);
+        }
+    }
+
+    // The presets, as cards showing a few of their colors
+    .presets {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+        gap: var(--space-3);
+
+        .preset {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            gap: var(--space-1) var(--space-2);
+            padding: var(--space-3);
+            border: var(--stroke) solid var(--border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            @include mixins.transition((border-color, background-color));
+
+            &:hover {
+                background-color: var(--hover);
+            }
+
+            &.selected {
+                border-color: var(--orange);
+            }
+
+            .swatches {
+                grid-column: 1 / -1;
+                display: flex;
+                height: 1.5rem;
+                border-radius: var(--radius-sm);
+                overflow: hidden;
+                // Keeps a swatch as dark as the page from vanishing into it
+                box-shadow: inset 0 0 0 1px var(--border);
+                order: -1;
+
+                span {
+                    flex: 1;
+                }
+            }
+
+            .presetName {
+                font-weight: 700;
+            }
+
+            small {
+                grid-column: 1 / -1;
+                color: var(--text-muted);
+                font-size: var(--text-xs);
+            }
+        }
+    }
+
+    .customColors {
+        summary {
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--green-text);
+        }
+
+        > p {
+            color: var(--text-muted);
+            font-size: var(--text-sm);
+        }
+
+        fieldset {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+            gap: var(--space-2) var(--space-4);
+            margin-top: var(--space-3);
+        }
+    }
+
+    .colorField {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        min-height: 2rem;
+
+        input[type=color] {
+            flex: none;
+            width: 2rem;
+            height: 2rem;
+            padding: 0;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            background: none;
+            cursor: pointer;
+
+            &::-webkit-color-swatch-wrapper {
+                padding: 0;
+            }
+
+            // Apart: a browser drops a whole rule over a selector it doesn't know
+            &::-webkit-color-swatch {
+                border: none;
+                border-radius: calc(var(--radius-sm) - 1px);
+            }
+
+            &::-moz-color-swatch {
+                border: none;
+                border-radius: calc(var(--radius-sm) - 1px);
+            }
+        }
+
+        label {
+            font-size: var(--text-sm);
+        }
+
+        &.changed label {
+            font-weight: 700;
+        }
+
+        .resetColor {
+            display: inline-flex;
+            padding: var(--space-1);
+            border: none;
+            color: var(--text-muted);
+
+            &:hover {
+                color: var(--orange-text);
+                background-color: var(--hover);
+            }
+        }
+    }
+
+    .contrastWarning {
+        padding: var(--space-3) var(--space-4);
+        border-left: var(--stroke) solid var(--orange);
+        border-radius: var(--radius-sm);
+        background-color: var(--orange-tint);
+        font-size: var(--text-sm);
+
+        p {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin: 0;
+            font-weight: 700;
+        }
+
+        ul {
+            margin: var(--space-2) 0 0;
+            padding-left: var(--space-5);
+            color: var(--text-secondary);
+        }
+    }
+
+    .actions {
+        display: flex;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+    }
+}

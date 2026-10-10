@@ -7,12 +7,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="colaboração e competição na criação de ideias">
   <title>colcom</title>
+  <script src="/theme.js"></script>
   <style>
     body,
     html {
       margin: 0;
       padding: 0;
-      background-color: #1a0e06;
+      background-color: var(--bg, #1a0e06);
     }
 
     .loading-container {
@@ -25,8 +26,8 @@
     .navbar-mock {
       flex: 0 0 3.5rem;
       box-sizing: border-box;
-      background-color: #2b1708;
-      border-bottom: 1px solid rgba(239, 230, 220, 0.12);
+      background-color: var(--navbar, #2b1708);
+      border-bottom: 1px solid color-mix(in srgb, var(--text, #efe6dc) 12%, transparent);
     }
 
     .container-mock {
@@ -42,7 +43,7 @@
     .footer-mock {
       flex: 0 0 4.5rem;
       width: min(100% - 4rem, 48rem);
-      border-top: 1px solid rgba(239, 230, 220, 0.12);
+      border-top: 1px solid color-mix(in srgb, var(--text, #efe6dc) 12%, transparent);
       place-self: center;
     }
 
@@ -51,7 +52,7 @@
       height: 5rem;
       border-radius: 100%;
       border: 0.25rem solid transparent;
-      border-top-color: #8db43a;
+      border-top-color: var(--green-text, #8db43a);
       background: transparent;
       animation: spinner 1s linear infinite;
     }

@@ -9,6 +9,7 @@
 // - formats: `email`, `commit`, `uuid` and `png` (base64). See keywords.js.
 
 import { TAG_NAME_PATTERN, TAG_SLUG_PATTERN } from "./tags.js"
+import { HEX_COLOR_PATTERN, THEME_COLORS, THEME_PRESETS } from "./themes.js"
 
 const MAX_ID = 2_147_483_647 // Postgres' SERIAL
 
@@ -232,6 +233,36 @@ export function createSchemas(limits) {
     }
   }
 
+  // The user's own settings, saved on the account. A theme is a preset with some of its colors
+  // replaced (themes.js); the preset alone, "colcom" without colors, is the default.
+  const settings = {
+    type: "object",
+    required: ["theme"],
+    additionalProperties: false,
+    properties: {
+      theme: {
+        type: "object",
+        label: "tema",
+        required: ["preset"],
+        additionalProperties: false,
+        properties: {
+          preset: { type: "string", label: "tema", enum: THEME_PRESETS },
+          colors: {
+            type: "object",
+            label: "cores",
+            additionalProperties: false,
+            properties: Object.fromEntries(THEME_COLORS.map(key => [key, {
+              type: "string",
+              label: "cor",
+              pattern: HEX_COLOR_PATTERN,
+              messages: { pattern: "use uma cor como #1a0e06" }
+            }]))
+          }
+        }
+      }
+    }
+  }
+
   // Query strings and route parameters arrive as strings, so these are validated with type coercion.
   // Unknown keys are kept: flags like `with_count` are read by presence.
   const list = {
@@ -315,7 +346,7 @@ export function createSchemas(limits) {
   }
 
   return {
-    body: { signUp, login, content, topic, post, critique, critiqueConfig, edit, resolution, clone, interaction, tagVote, readNotifications },
+    body: { signUp, login, content, topic, post, critique, critiqueConfig, edit, resolution, clone, interaction, tagVote, readNotifications, settings },
     query: { list, tagList, search, notifications, contentParams, versionParams, tagParams, userParams }
   }
 }

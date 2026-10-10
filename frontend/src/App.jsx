@@ -16,6 +16,7 @@ import TagTopics from "@/pages/TagTopics"
 import Meta from "@/pages/Meta"
 import ResolveSuggestion from "@/pages/ResolveSuggestion"
 import Search from "@/pages/Search"
+import Settings from "@/pages/Settings"
 
 function App() {
   const loadingPage = document.getElementById("loading-page")
@@ -40,6 +41,7 @@ function App() {
         <Route path="/topics/:tid/posts/:pid/suggestions/:hash" element={<ResolveSuggestion />} />
         <Route path="/login" element={<Login />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="/users/:name" element={<Profile />} />
       </Routes>
       <Footer />

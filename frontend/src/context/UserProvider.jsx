@@ -47,6 +47,10 @@ export default function UserProvider({ children }) {
     setUser(prev => ({ ...prev, promoting: contentId }))
   }
 
+  const updateTheme = theme => {
+    setUser(prev => prev && { ...prev, theme })
+  }
+
   React.useEffect(() => {
     if (getToken())
       requestUser().then(setUser, err => console.error(err))
@@ -76,7 +80,7 @@ export default function UserProvider({ children }) {
   }, [])
 
   return (
-    <UserContext.Provider value={{ user, clearUser, logout, fetchUser, updatePromoted }}>
+    <UserContext.Provider value={{ user, clearUser, logout, fetchUser, updatePromoted, updateTheme }}>
       {children}
     </UserContext.Provider>
   )

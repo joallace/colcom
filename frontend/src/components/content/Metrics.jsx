@@ -3,6 +3,7 @@ import { Link } from "react-router"
 import { getUserVote, toPercentageStr, userPath } from "@/assets/util"
 import Focus from "@/components/primitives/Focus"
 import Popover from "@/components/primitives/Popover"
+import useTheme from "@/context/ThemeContext"
 
 // Only the name links to the profile: the avatar stays out of the link so hovering it (or tapping it
 // on a phone) zooms it in rather than navigating
@@ -14,14 +15,18 @@ export const Author = ({ isDesktop, name, avatar }) => {
   )
 }
 
-// 0 = red, 0.5 = yellow, 1 = green; muted enough to sit in a line of small grey text
-const percentageToColorHSL = (pct) => `hsl(${pct * 110}, 55%, 62%)`
+// 0 = red, 0.5 = yellow, 1 = green; muted enough to sit in a line of small grey text, and as light
+// or dark as the theme needs to read on it
+const percentageToColorHSL = (pct, scheme) => `hsl(${pct * 110}, 55%, ${scheme === "light" ? 30 : 62}%)`
 
-const Colored = ({ percentage, children }) => (
-  <Focus style={{ color: percentageToColorHSL(percentage) }}>
-    {children}
-  </Focus>
-)
+const Colored = ({ percentage, children }) => {
+  const { scheme } = useTheme()
+  return (
+    <Focus style={{ color: percentageToColorHSL(percentage, scheme) }}>
+      {children}
+    </Focus>
+  )
+}
 
 export const Relevance = ({ initialVoteState, relevanceVote, upvotes, downvotes }) => {
   const removeOrAddVote = initialVoteState ? -(relevanceVote === "") : +(relevanceVote === "up" || relevanceVote === "down")

@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs"
 import { QueryResult } from "pg"
+import { Theme } from "@colcom/shared"
 
 import db from "@/pgDatabase"
 import { NotFoundError, ValidationError } from "@/errors"
@@ -14,7 +15,7 @@ const userOrderBy = {
 }
 
 interface UserConfig {
-  theme?: string
+  theme?: Theme
 }
 
 interface UserInsertRequest {
@@ -36,6 +37,7 @@ interface User {
   prestige: number,
   permissions: string[],
   config?: UserConfig,
+  theme?: Theme | null, // with `withSettings`
   token_version?: number,
   created_at: Date
 }
@@ -87,13 +89,15 @@ export async function create({ name, pass, email, avatar }: UserInsertRequest): 
   return result.rows[0]
 }
 
-export async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as unknown[], hideSensitiveInfo = true }): Promise<User[]> {
+// `withSettings` adds the user's own settings (`theme`, null when never chosen), for themselves only
+export async function findAll({ where = "", orderBy = "id", page = 1, pageSize = 10, values = [] as unknown[], hideSensitiveInfo = true, withSettings = false }): Promise<User[]> {
   const query = {
     text: `
       SELECT
         pid,
         name,
         ${hideSensitiveInfo ? "" : "pass, email, token_version,"}
+        ${withSettings ? "config->'theme' AS theme," : ""}
         avatar,
         colcoins,
         prestige,
@@ -240,6 +244,20 @@ export async function addFeatures(userPid: string, features: string[]): Promise<
 }
 
 
+// Replaces the user's theme, keeping the rest of their config
+export async function saveTheme(pid: string, theme: Theme): Promise<Theme> {
+  const result = await db.query({
+    text: `
+      UPDATE users
+      SET config = jsonb_set(COALESCE(config, '{}'), '{theme}', $1::jsonb), modified_at = now()
+      WHERE pid = $2
+      RETURNING config->'theme' AS theme
+    ;`,
+    values: [JSON.stringify(theme), pid]
+  })
+  return result.rows[0]?.theme
+}
+
 // The version a token must carry to be valid, or undefined when the user no longer exists
 export async function tokenVersion(pid: string): Promise<number | undefined> {
   const result = await db.query({
@@ -291,6 +309,7 @@ export default Object.freeze({
   findByName,
   removeFeatures,
   addFeatures,
+  saveTheme,
   tokenVersion,
   revokeSessions,
   getDataByPublicId

@@ -53,7 +53,7 @@
         color: var(--green-text);
 
         &:hover {
-            color: #a4cc4c;
+            color: hsl(from var(--green-text) h s calc(l + 8));
         }
     }
 
@@ -61,7 +61,7 @@
         color: var(--orange-text);
 
         &:hover {
-            color: #f08f45;
+            color: hsl(from var(--orange-text) h s calc(l + 8));
         }
     }
 }

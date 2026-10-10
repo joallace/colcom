@@ -7,7 +7,8 @@ import {
   PiBookmarkSimpleFill,
   PiSignOutFill,
   PiSignInFill,
-  PiMagnifyingGlassBold
+  PiMagnifyingGlassBold,
+  PiPaletteFill
 } from "react-icons/pi"
 
 import BrandLogo from "@/components/primitives/BrandLogo"
@@ -103,6 +104,11 @@ export default function Navbar() {
                     description: "conteúdos salvos",
                     icons: PiBookmarkSimpleFill,
                     onClick: () => { navigate("/bookmarked") }
+                  },
+                  "settings": {
+                    description: "aparência",
+                    icons: PiPaletteFill,
+                    onClick: () => { navigate("/settings") }
                   },
                   "logout": {
                     description: "sair",
