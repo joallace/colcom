@@ -74,30 +74,25 @@ export function summarize(html: unknown): string {
   return summary.slice(0, SUMMARY_LENGTH)
 }
 
-async function validateUnique(value: string, field: keyof Content) {
-  const query = {
-    text: `SELECT ${field} FROM contents WHERE LOWER(${field}) = LOWER($1)`,
-    values: [value],
-  }
-
-  const results = await db.query(query)
+// Titles are unique across every content, ignoring case
+async function validateUniqueTitle(title: string) {
+  const results = await db.query({
+    text: "SELECT 1 FROM contents WHERE LOWER(title) = LOWER($1)",
+    values: [title],
+  })
 
   if (Number(results.rowCount) > 0) {
     throw new ValidationError({
-      message: `O "${field}" informado já está sendo usado.`,
-      errorLocationCode: 'MODEL:USER:VALIDATE_UNIQUE:ALREADY_EXISTS',
-      key: field,
+      message: 'O "title" informado já está sendo usado.',
+      errorLocationCode: 'MODEL:CONTENT:VALIDATE_UNIQUE:ALREADY_EXISTS',
+      key: "title",
     })
   }
 }
 
 async function create({ title, author_pid, parent_id, body, type, config }: ContentInsertRequest): Promise<Content> {
-  if (!/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/.test(author_pid))
-    throw new ValidationError({
-      message: 'O campo "author_pid" não é um uuid válido.'
-    })
-
-  await validateUnique(title, "title")
+  // author_pid comes from a verified session (authHandler checks it against users) or the system account
+  await validateUniqueTitle(title)
 
   const { id, name } = await getDataByPublicId(author_pid, ["id", "name"])
 
@@ -559,7 +554,8 @@ async function removeById(id: number) {
   await db.query(query)
 }
 
-export async function getDataById(id: number, data: (keyof Content)[]): Promise<any> {
+// Some columns of a content, or a 404 when it doesn't exist (findById returns undefined instead)
+export async function getFieldsOrThrow(id: number, data: (keyof Content)[]): Promise<any> {
   const query = {
     text: `
       SELECT
@@ -599,7 +595,7 @@ export default Object.freeze({
   interactionCounts,
   updateById,
   removeById,
-  getDataById
+  getFieldsOrThrow
 })
 
 export { Content as IContent, ContentInsertRequest, ContentType }

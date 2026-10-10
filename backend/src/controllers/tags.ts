@@ -118,7 +118,7 @@ export const voteOnTag: RequestHandler = async (req, res) => {
 
   const { id } = validate("contentParams", req.params)
   const { tag: name, value } = validate("tagVote", req.body)
-  const topic = await Content.getDataById(id, ["type", "author_id"])
+  const topic = await Content.getFieldsOrThrow(id, ["type", "author_id"])
 
   if (topic.type !== "topic")
     throw notATopic()
@@ -197,7 +197,7 @@ export const getTagIntersection: RequestHandler = async (req, res) => {
 
 export const getTagHistory: RequestHandler = async (req, res) => {
   const { id } = validate("contentParams", req.params)
-  const topic = await Content.getDataById(id, ["type"])
+  const topic = await Content.getFieldsOrThrow(id, ["type"])
 
   // As the poll's history does
   if (topic.type !== "topic")

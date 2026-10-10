@@ -47,7 +47,7 @@ describe("creating a topic", () => {
     for (const title of [topic.title.toUpperCase(), post.title.toLowerCase()]) {
       const res = await api().post("/contents").set(bob.auth).send({ title })
       expect(res.status).toBe(400)
-      expect(res.body).toMatchObject({ key: "title", message: 'O "title" informado já está sendo usado.' })
+      expect(res.body).toMatchObject({ key: "title", message: 'O "title" informado já está sendo usado.', errorLocationCode: "MODEL:CONTENT:VALIDATE_UNIQUE:ALREADY_EXISTS" })
     }
   })
 })

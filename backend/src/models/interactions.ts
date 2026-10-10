@@ -162,7 +162,7 @@ const OPPOSITE = { up: "down", down: "up" } as const
 // per topic and per day.
 async function toggle({ author_pid, content_id, type }: { author_pid: string, content_id: number, type: ToggledType }): Promise<ToggleOutcome> {
   // A 404 when the content doesn't exist, instead of a foreign key violation (500) on insert
-  const content = await Content.getDataById(content_id, ["parent_id", "type"])
+  const content = await Content.getFieldsOrThrow(content_id, ["parent_id", "type"])
   const current = await getUserContentInteractions(author_pid, content_id)
 
   const same = current.find(interaction => interaction.type === type)

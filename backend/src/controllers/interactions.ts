@@ -19,7 +19,7 @@ export const handleInteraction: RequestHandler = async (req, res) => {
 
 export const getVoteHistory: RequestHandler = async (req, res) => {
   const { id } = validate("contentParams", req.params)
-  const { type } = await Content.getDataById(id, ["type"])
+  const { type } = await Content.getFieldsOrThrow(id, ["type"])
 
   if (type !== "topic")
     throw contentNotFound("topic")

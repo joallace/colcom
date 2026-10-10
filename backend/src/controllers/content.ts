@@ -120,7 +120,7 @@ export const createContent: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user.pid
 
   const { parent_id } = validate("content", req.body)
-  const parent = parent_id ? await Content.getDataById(parent_id, ["parent_id", "type", "config"]) : null
+  const parent = parent_id ? await Content.getFieldsOrThrow(parent_id, ["parent_id", "type", "config"]) : null
 
   const type = !parent ?
     "topic"
