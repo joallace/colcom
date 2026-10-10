@@ -311,6 +311,27 @@ describe("accepting a suggestion", () => {
     fireEvent.click(await screen.findByText(option))
   }
 
+  it("hides the critiques while it's reviewed and shows them again once it's closed", async () => {
+    // The suggestion descends from v2, so a critique of v2 is followed onto it too
+    const onSuggestion = { body: SUGGESTED_HTML, critiques: [critique(12, V2_HTML, V2, "spending must be reviewed")], versions: { [V2]: V2_HTML }, lineages: { [V2]: [V2, SUGGESTION] }, base: { commit: V2, body: V2_HTML } }
+    mockApi({ ...VERSIONS, [SUGGESTION]: onSuggestion }, { ...POST, suggestions })
+    const { container } = renderPage("/topics/1/posts/2", { pid: "a", accessToken: "token" })
+    await waitFor(() => expect(marks(container).length).toBe(3))
+
+    await menu("incorporar sugestões")
+    fireEvent.click(await screen.findByText("Softens the claim"))
+    await waitFor(() => expect(container.querySelector(".ProseMirror")).toHaveTextContent("a little."))
+    // Its changes are drawn against the version it was made on, with no highlight over them
+    await waitFor(() => expect(container.querySelector(".diffLegend")).toBeTruthy())
+    expect(marks(container)).toEqual([])
+    expect(container.querySelector(".critiqueLegend")).toBeNull()
+
+    await menu("fechar sugestão")
+    await waitFor(() => expect(container.querySelector(".ProseMirror")).toHaveTextContent("Taxes should fall for everyone."))
+    await waitFor(() => expect(marks(container).length).toBe(3))
+    expect(container.querySelector(".critiqueLegend")).toBeTruthy()
+  })
+
   it("leads to resolving its conflicts when it changes passages the author also changed", async () => {
     const fetch = await accept({ status: 409, body: { message: "A sugestão altera trechos…", errorLocationCode: "GIT:MERGE:CONFLICT" } })
 
