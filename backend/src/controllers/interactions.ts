@@ -2,7 +2,7 @@ import { RequestHandler } from "express"
 
 import Interactions, { InteractionInsertRequest } from "@/models/interactions"
 import Content from "@/models/content"
-import { NotFoundError } from "@/errors"
+import { contentNotFound } from "@/controllers/content"
 import { validate } from "@/validation"
 
 export const getContentInteractions: RequestHandler = async (req, res) => {
@@ -27,10 +27,7 @@ export const getVoteHistory: RequestHandler = async (req, res) => {
   const { type } = await Content.getDataById(id, ["type"])
 
   if (type !== "topic")
-    throw new NotFoundError({
-      message: "Tópico não encontrado.",
-      action: 'Verifique se o "id" fornecido está correto.'
-    })
+    throw contentNotFound("topic")
 
   res.status(200).json(await Interactions.findVoteHistory(id))
 }

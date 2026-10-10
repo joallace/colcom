@@ -1,7 +1,7 @@
 import { RequestHandler } from "express"
 
 import git from "@/gitDatabase"
-import Content, { ContentInsertRequest, IContent, summarize } from "@/models/content"
+import Content, { ContentInsertRequest, ContentType, IContent, summarize } from "@/models/content"
 import Interactions from "@/models/interactions"
 import { notify } from "@/models/notifications"
 import { ValidationError, NotFoundError, ForbiddenError } from "@/errors"
@@ -50,14 +50,30 @@ const validateAnswer = (topicConfig: any, answer: string | undefined) => {
     })
 }
 
-const findOwnedSuggestion = async (content_id: number, commit: string, author_pid: string) => {
-  const content = await Content.findById(content_id)
+const NOT_FOUND = {
+  topic: "Tópico não encontrado.",
+  post: "Post não encontrado.",
+  critique: "Crítica não encontrada.",
+  any: "Conteúdo não encontrado."
+}
 
-  if (!content || content.type !== "post")
-    throw new NotFoundError({
-      message: "Post não encontrado.",
-      action: 'Verifique se o "id" fornecido está correto.'
-    })
+// The 404 for an id from the URL; a content of another type than the route serves is as missing
+export const contentNotFound = (type?: ContentType) => new NotFoundError({
+  message: NOT_FOUND[type ?? "any"],
+  action: 'Verifique se o "id" fornecido está correto.'
+})
+
+export async function findContentOrThrow(id: number, type?: ContentType, options?: { omitBody?: boolean, includeParentTitle?: boolean }) {
+  const content = await Content.findById(id, options)
+
+  if (!content || (type && content.type !== type))
+    throw contentNotFound(type)
+
+  return content
+}
+
+const findOwnedSuggestion = async (content_id: number, commit: string, author_pid: string) => {
+  const content = await findContentOrThrow(content_id, "post")
 
   if (author_pid !== content.author_id)
     throw new ForbiddenError({
@@ -215,10 +231,7 @@ export const getTopicTree: RequestHandler = async (req, res) => {
   const [topic] = await Content.findTree({ where: "topics.id = $1 AND topics.type = 'topic'", values: [id], pageSize: 1, userPid: author_pid })
 
   if (!topic)
-    throw new NotFoundError({
-      message: "Tópico não encontrado.",
-      action: 'Verifique se o "id" fornecido está correto.'
-    })
+    throw contentNotFound("topic")
 
   res.status(200).json(topic)
 }
@@ -229,14 +242,7 @@ export const getContent: RequestHandler = async (req, res) => {
   const includeParentTitle = "include_parent_title" in req.query
 
   const { id: content_id } = validate("contentParams", req.params)
-  const content = await Content.findById(content_id, { omitBody, includeParentTitle })
-
-  if (!content)
-    throw new NotFoundError({
-      message: "Conteúdo não encontrado.",
-      action: 'Verifique se o "id" fornecido está correto.'
-    })
-
+  const content = await findContentOrThrow(content_id, undefined, { omitBody, includeParentTitle })
 
   const userInteractions = author_pid ? (await Interactions.getUserContentInteractions({ author_pid, content_id })).map(v => v.type) : undefined
 
@@ -293,13 +299,7 @@ export const getVersion: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user?.pid
 
   const { id: content_id, hash: commit } = validate("versionParams", req.params)
-  const content = await Content.findById(content_id)
-
-  if (!content)
-    throw new NotFoundError({
-      message: "Conteúdo não encontrado.",
-      action: 'Verifique se o "id" fornecido está correto.'
-    })
+  const content = await findContentOrThrow(content_id)
 
   if (content.type !== "post")
     throw new ValidationError({
@@ -354,13 +354,7 @@ export const updateContent: RequestHandler = async (req, res) => {
 
   const { id: content_id } = validate("contentParams", req.params)
   const { message, body } = validate("edit", req.body)
-  const content = await Content.findById(content_id)
-
-  if (!content)
-    throw new NotFoundError({
-      message: "Conteúdo não encontrado.",
-      action: 'Verifique se o "id" fornecido está correto.'
-    })
+  const content = await findContentOrThrow(content_id)
 
   if (content.type !== "post")
     throw new ValidationError({
@@ -399,13 +393,7 @@ export const clonePost: RequestHandler = async (req, res) => {
 
   const { id: content_id, hash: commit } = validate("versionParams", req.params)
   const { title } = validate("clone", req.body)
-  const content = await Content.findById(content_id)
-
-  if (!content || content.type !== "post")
-    throw new NotFoundError({
-      message: "Post não encontrado.",
-      action: 'Verifique se o "id" fornecido está correto.'
-    })
+  const content = await findContentOrThrow(content_id, "post")
 
   const result = await Content.create({ ...(<any>content), author_pid, title })
   await withRollback(() => git.branch(result, commit), () => Content.removeById(result.id))

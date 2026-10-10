@@ -68,6 +68,27 @@ describe("the server", () => {
       })
     })
 
+    it.each([
+      ["a missing content", () => api().get("/contents/2147483647"), "Conteúdo não encontrado."],
+      ["a topic where a post is expected", (topicId: number) => api().get(`/contents/${topicId}/${"a".repeat(40)}/merge`), "Post não encontrado."],
+      ["a topic's poll history of a post", (_: number, postId: number) => api().get(`/topics/${postId}/votes`), "Tópico não encontrado."],
+    ])("names what's missing: %s", async (_, send, message) => {
+      const user = await signUp()
+      const topic = await createTopic(user)
+      const post = await createPost(user, topic.id)
+
+      const res = await send(topic.id, post.id).set(user.auth)
+
+      expect(res.status).toBe(404)
+      expect(res.body).toEqual({
+        name: "NotFoundError",
+        message,
+        action: 'Verifique se o "id" fornecido está correto.',
+        statusCode: 404,
+        errorId: expect.any(String)
+      })
+    })
+
     it("keeps its key and location", async () => {
       const user = await signUp()
       const topic = await createTopic(user, { answers: ["sim", "não"] })

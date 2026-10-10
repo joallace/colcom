@@ -18,7 +18,7 @@ Express 5 + TypeScript 7 API over PostgreSQL and per-topic git repositories. Rea
 | `src/middleware/rateLimit.ts` | Rate limiters for login, sign-up, content writes and interactions |
 | `src/validation.ts` | `validate(schema, data)`: checks a request's body, query or params against the shared schemas (`shared/`) and returns the validated copy |
 | `src/pagination.ts` | `orderByColumn` whitelist and `limitOffset` clamping |
-| `src/errors.ts` | Error classes; messages and `action` hints in Portuguese |
+| `src/errors.ts` | Error classes (`ValidationError` 400, `ForbiddenError` 403, `NotFoundError` 404, `ConflictError` 409…); messages and `action` hints in Portuguese |
 
 Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build). `npm run build` also copies `sql/` into `build/`.
 
@@ -57,7 +57,7 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 - **Ownership:** only a post's author merges or rejects its suggestions (`findOwnedSuggestion` checks the post, the author and that the hash is a *pending* suggestion of that post). State-changing routes use POST/PATCH, never GET.
 - **Rate limits:** failed logins and sign-ups count per IP; content writes (`POST /contents`, `PATCH /contents/:id`, clone) and `POST /interactions` count per user, so the limiter goes after `authHandler`. Limits are `RATE_LIMIT_*` settings (`.env.example`); over one, the API answers a 429 `TooManyRequestsError`. Counts live in memory, so they reset on restart and assume a single backend process. `req.ip` comes from `X-Forwarded-For` only through proxies `TRUST_PROXY` trusts (default `loopback`, i.e. nginx on the same host).
 - **CORS:** only the origins in `CORS_ORIGIN` (comma-separated); outside production, with none set, the Vite dev server. Through nginx the site and API share an origin and need no CORS.
-- **Errors:** throw the classes from `errors.ts`. `errorHandler` returns only `BaseError`s (without stack); anything else (e.g. a pg error with table names) becomes a generic 500 with an `errorId`, and the full error is logged.
+- **Errors:** throw the classes from `errors.ts` (each only sets a default status, message and action; every one takes every field, and the stack is captured where it's created). Handlers don't catch to call `next`: Express 5 sends a rejected async handler's error to `errorHandler`; catch only to roll back, log or turn one error into another. `findContentOrThrow`/`contentNotFound` (`controllers/content.ts`) make the usual 404s. `errorHandler` returns only `BaseError`s (without stack); anything else (e.g. a pg error with table names) becomes a generic 500 with an `errorId`, and the full error is logged.
 - **Validate every input.** Controllers pass `req.body`, `req.query` and `req.params` through `validate` (`src/validation.ts`) before using them, and use what it returns: Express 5 parses `req.query` again on each access, so changes to it are lost. A failure is a 400 `ValidationError` whose `message` and `key` name the first problem and whose `errors` list all of them (`{ key, label, message }`), which the forms show by field.
 - **Critique anchors:** the `critique` schema checks the shape and strips unknown keys; `validateCritiqueCommit` requires the commit to be in the post's own history.
 
