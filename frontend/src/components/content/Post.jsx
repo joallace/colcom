@@ -17,6 +17,7 @@ import {
 import { default as Editor } from "@/components/Editor"
 import Frame from "@/components/primitives/Frame"
 import Modal from "@/components/primitives/Modal"
+import Alert from "@/components/primitives/Alert"
 import { describe, limits, validate } from "@/assets/validation"
 import Input from "@/components/primitives/Input"
 import LoadingButton from "@/components/primitives/LoadingButton"
@@ -33,6 +34,7 @@ export default function Post({
   author,
   author_avatar,
   author_id,
+  parent_id,
   commit,
   title,
   titleRef,
@@ -65,6 +67,8 @@ export default function Post({
   const commitMessageRef = React.useRef()
   // What's wrong with the edit or clone being sent, shown in its modal
   const [modalError, setModalError] = React.useState("")
+  // Why accepting a suggestion failed, shown under the post
+  const [mergeError, setMergeError] = React.useState("")
   const { user } = React.useContext(UserContext)
   const navigate = useNavigate()
   const toLogin = useToLogin()
@@ -134,21 +138,31 @@ export default function Post({
       icons: PiCheck,
       onClick: async () => {
         const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
+        const suggestionCommit = suggestions[currentSuggestion].config.commit
         try {
           setIsLoading(true)
-          const res = await fetch(`${env.apiAddress}/contents/${id}/${suggestions[currentSuggestion].config.commit}/merge`, { method: "post", headers })
+          const res = await fetch(`${env.apiAddress}/contents/${id}/${suggestionCommit}/merge`, { method: "post", headers })
 
           if (res.ok)
             setPostData(prev => ({ ...prev, suggestions: suggestions.filter((_, i) => i !== currentSuggestion) }))
+          else {
+            const data = await res.json()
+            // It changes passages the author also changed since: they choose what stays on its own page
+            if (data.errorLocationCode === "GIT:MERGE:CONFLICT") {
+              navigate(`/topics/${parent_id}/posts/${id}/suggestions/${suggestionCommit}`)
+              return
+            }
+            setMergeError(data.message)
+          }
         }
         catch (err) {
           console.error(err)
         }
         finally {
-          setCurrentSuggestion(undefined)
           setIsLoading(false)
-          await fetchCommit()
         }
+        setCurrentSuggestion(undefined)
+        await fetchCommit()
       }
     },
     "reject": {
@@ -291,6 +305,8 @@ export default function Post({
           reset={reset}
         />
       </Frame>
+
+      <Alert setter={setMergeError}>{mergeError}</Alert>
 
       <Modal isOpen={modal === 3} setIsOpen={setModal} title="clonar post">
         <div className="spaced">

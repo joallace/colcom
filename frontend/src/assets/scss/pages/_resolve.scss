@@ -1,0 +1,111 @@
+@use "../abstracts/mixins";
+@use "../abstracts/variables";
+
+// Resolving a suggestion's conflicts (pages/ResolveSuggestion)
+.content.resolve {
+    gap: var(--space-5);
+
+    .resolveIntro {
+        margin: 0;
+        text-align: center;
+        color: var(--text-secondary);
+        text-wrap: pretty;
+    }
+
+    // The page's own legend, not the editor's
+    >.diffLegend {
+        justify-content: center;
+        margin: 0;
+    }
+
+    .conflicts {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: var(--space-5);
+    }
+
+    .conflict {
+        display: grid;
+        gap: var(--space-3);
+        margin: 0;
+        padding: var(--space-4);
+        background-color: var(--surface);
+        border: var(--stroke) solid var(--orange);
+        border-radius: var(--radius-md);
+
+        legend {
+            padding: 0 var(--space-2);
+            font-size: var(--text-sm);
+            font-weight: 700;
+            color: var(--orange-text);
+        }
+    }
+
+    // The blocks around the conflict, for where it is
+    .context {
+        margin: 0;
+        font-size: var(--text-sm);
+        color: var(--text-muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sides {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-3);
+
+        @media screen and (max-width: variables.$screen-sm) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .side {
+        min-width: 0;
+        padding: var(--space-3);
+        border: var(--stroke) dashed var(--text-muted);
+        border-radius: var(--radius-md);
+        @include mixins.transition((border-color, background-color));
+
+        h3 {
+            margin: 0 0 var(--space-2);
+            font-size: var(--text-xs);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        &.kept {
+            border-style: solid;
+            border-color: var(--green);
+            background-color: var(--green-tint);
+        }
+
+        .removed {
+            margin: 0;
+            font-style: italic;
+            color: var(--text-muted);
+        }
+    }
+
+    .choices {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2) var(--space-5);
+        justify-content: center;
+    }
+
+    .alert button {
+        margin-top: var(--space-2);
+    }
+
+    >.buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-4);
+        justify-content: center;
+    }
+}

@@ -14,6 +14,7 @@ import Leaderboard from "@/pages/Leaderboard"
 import Notifications from "@/pages/Notifications"
 import TagTopics from "@/pages/TagTopics"
 import Meta from "@/pages/Meta"
+import ResolveSuggestion from "@/pages/ResolveSuggestion"
 
 function App() {
   const loadingPage = document.getElementById("loading-page")
@@ -34,6 +35,7 @@ function App() {
         <Route path="/topics/:id" element={<TopicPage />} />
         <Route path="/t/:tags" element={<TagTopics />} />
         <Route path="/topics/:tid/posts/:pid" element={<PostPage />} />
+        <Route path="/topics/:tid/posts/:pid/suggestions/:hash" element={<ResolveSuggestion />} />
         <Route path="/login" element={<Login />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/users/:name" element={<Profile />} />

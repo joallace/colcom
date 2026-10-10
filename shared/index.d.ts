@@ -39,6 +39,7 @@ export interface SchemaData {
   critique: { title: string, parent_id: number, body: string, config: CritiqueConfig }
   critiqueConfig: CritiqueConfig
   edit: { body: string, message: string }
+  resolution: { body: string, head: string }
   clone: { title: string }
   interaction: { content_id: number, type: "up" | "down" | "vote" | "bookmark" | "promote" }
   tagVote: { tag: string, value: 1 | -1 | 0 }
@@ -93,3 +94,9 @@ export function ucs2length(value: string): number
 export function tagSlug(name: string): string
 export const TAG_NAME_PATTERN: string
 export const TAG_SLUG_PATTERN: string
+// A three-way merge of documents stored one block per line (merge.js)
+export type MergeChunk = { type: "ok", text: string } | { type: "conflict", base: string, ours: string, theirs: string }
+export function merge3(base: string, ours: string, theirs: string): MergeChunk[]
+export function cleanMerge(base: string, ours: string, theirs: string): string | undefined
+export function diffLines(a: string[], b: string[]): { start: number, end: number, lines: string[] }[]
+export function splitLines(text: string): string[]

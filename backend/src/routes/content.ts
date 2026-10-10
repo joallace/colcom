@@ -13,6 +13,7 @@ import {
     getVersion,
     clonePost,
     mergePost,
+    getMergeSides,
     rejectSuggestion
 } from "@/controllers/content"
 
@@ -32,6 +33,8 @@ router.post("/contents", authHandler(), contentsLimit, createContent)
 router.get("/contents/:id", authHandler(true), getContent)
 
 router.get("/contents/:id/:hash", authHandler(true), getVersion)
+
+router.get("/contents/:id/:hash/merge", authHandler(), getMergeSides)
 
 router.post("/contents/:id/:hash/merge", authHandler(), mergePost)
 

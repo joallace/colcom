@@ -53,7 +53,15 @@ A critique stores `{ commit, from, to }` (ProseMirror positions in that version)
 - **Projection is derived.** `critiques` is computed with `useMemo` from the fetched body, critiques, `versions` and `lineages`; it's never stored.
 - **`showCritique`** holds what's open: a new critique's `[from, to]` selection, a critique's index as a string, or a JSON list of indexes (a group).
 - **Critique placement (desktop).** `CritiquePopover` places the open critiques beside the post, level with the passage, using Floating UI (`autoUpdate`, `shift` bounded by the post frame so they never cover the timeline). Being absolutely positioned, the popover takes no room in the page, so it reports where it ends (its `reservedHeight` middleware) and its column is stretched to that height, pushing the footer below a long stack; the list of removed passages sits in the post's column, under the post. On phones, critiques open in a `Modal`.
-- **Reviewing a suggestion.** It loads the suggestion's commit; the response's `base` (the version it branched from) is passed to the editor as `diffBase`.
+- **Reviewing a suggestion.** It loads the suggestion's commit; the response's `base` (the version it branched from) is passed to the editor as `diffBase`. Accepting one that conflicts (a 409 `GIT:MERGE:CONFLICT`) goes to its resolution page; other refusals are shown under the post.
+
+## Resolving a suggestion's conflicts (`pages/ResolveSuggestion.jsx`)
+
+At `/topics/:tid/posts/:pid/suggestions/:hash`, for the post's author. It loads `GET /contents/:id/:hash/merge` and runs the same `merge3` the backend does (`assets/mergeConflicts.js` wraps it), so it shows exactly the conflicts the API refused.
+
+- **Choosing.** Each conflict shows the author's version and the suggestion side by side, as read-only editors highlighting what each changed from the base (`diffBase`, with `diffLabel={null}` to drop the per-editor legend), between the plain text of the blocks around it (`conflictContexts`). Radios pick "ours", "theirs" or "both" (the author's first); `resolveChunks` joins the result.
+- **Reviewing.** The result opens in an editable editor compared with the post's current version. Like the post's edits, the editor hands its content over on blur, before the button's click.
+- **Sending.** `{ body, head }` goes to `POST …/merge`. A `GIT:MERGE:HEAD_MOVED` refusal (the post changed meanwhile) offers to start over, loading the sides again.
 
 ## Forms
 

@@ -477,13 +477,32 @@ export const mergePost: RequestHandler = async (req, res, next) => {
 
   try {
     const { id: content_id, hash: commit } = validate("versionParams", req.params)
+    // A body is the author's resolution of the conflicts (see getMergeSides); without one, the merge is automatic
+    const resolution = req.body && Object.keys(req.body).length > 0 ? validate("resolution", req.body) : undefined
     const { content, suggestion } = await findOwnedSuggestion(content_id, commit, author_pid)
 
-    await git.merge(content, commit)
+    const merged = await git.merge(content, commit, resolution)
+    await Content.updateById(content.id, await git.read(Number(content.parent_id), merged), author_pid)
     await Interactions.setSuggestionAccepted(suggestion.id, true, author_pid)
     await notify({ type: "suggestion_accepted", actor_pid: author_pid, content_id, interaction_id: suggestion.id })
 
     res.status(204).end()
+  }
+  catch (err) {
+    next(err)
+  }
+}
+
+// What the author needs to resolve a suggestion that conflicts with the post: the post as it is
+// (`head`, whose commit goes back with the resolution), the suggestion, and the version it was made on
+export const getMergeSides: RequestHandler = async (req, res, next) => {
+  const author_pid = res.locals.user?.pid
+
+  try {
+    const { id: content_id, hash: commit } = validate("versionParams", req.params)
+    const { content } = await findOwnedSuggestion(content_id, commit, author_pid)
+
+    res.status(200).json(await git.mergeSides(content, commit))
   }
   catch (err) {
     next(err)

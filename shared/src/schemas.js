@@ -182,6 +182,18 @@ export function createSchemas(limits) {
     }
   }
 
+  // The text an author settled on for a suggestion that conflicts with the post, and the post's
+  // version they resolved it against
+  const resolution = {
+    type: "object",
+    required: ["body", "head"],
+    additionalProperties: false,
+    properties: {
+      body: postBody,
+      head: commit("versão do post")
+    }
+  }
+
   const clone = {
     type: "object",
     required: ["title"],
@@ -287,7 +299,7 @@ export function createSchemas(limits) {
   }
 
   return {
-    body: { signUp, login, content, topic, post, critique, critiqueConfig, edit, clone, interaction, tagVote, readNotifications },
+    body: { signUp, login, content, topic, post, critique, critiqueConfig, edit, resolution, clone, interaction, tagVote, readNotifications },
     query: { list, tagList, notifications, contentParams, versionParams, tagParams, userParams }
   }
 }

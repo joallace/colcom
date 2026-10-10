@@ -47,7 +47,7 @@ Tags (`tags`, `tag_votes`, `contents_tags`, `tag_events`) go on topics only; pos
 
 Notifications (`notifications` table) tell a user, on the site, about a critique, a suggestion or a clone of their post, a new post in their topic, and the answer to their suggestion. The bell in the navbar shows how many are unread.
 
-Collaboration flow: a non-author editing a post creates a `suggestion` and a branch `<postId>_<interactionId>`; the author sees what it changes (highlighted against the version it branched from, `git merge-base`) and accepts (git merge into the post branch) or rejects it. Anyone can clone a post at any version into a new post (a branch from that commit).
+Collaboration flow: a non-author editing a post creates a `suggestion` and a branch `<postId>_<interactionId>`; the author sees what it changes (highlighted against the version it branched from, `git merge-base`) and accepts (git merge into the post branch) or rejects it. git also refuses changes on adjacent lines, so when it does the texts are merged again line by line (`merge3` in `shared/src/merge.js`), which only refuses changes to the same lines. Those go to a resolution page (`/topics/:t/posts/:p/suggestions/:hash`): the author picks their version, the suggestion's or both for each conflict, reviews and may edit the result, and it's committed as the merge. Anyone can clone a post at any version into a new post (a branch from that commit).
 
 Competition flow: a critique quotes a passage of a specific version. Later versions show it where that passage went (followed through every edit), mark it "changed" when the passage was edited, and list it under "removed" when the passage is gone. A commit can never make a critique disappear; in phase 2 only people will close critiques.
 
@@ -56,10 +56,11 @@ Competition flow: a critique quotes a passage of a specific version. Later versi
 Every request's shape and size is described once, in `shared/` (the `@colcom/shared` package, plain ESM JavaScript with no dependencies), and checked with the same schemas by the forms and by the API. Both packages install it as `"file:../shared"`; Docker gets it through compose's `additional_contexts`.
 
 - **Limits** (`shared/src/limits.js`): every size (title, username, password, answers, bodies, quote, page size…) is a value in `DEFAULT_LIMITS`, and every schema is built from them, so changing a limit there changes it everywhere. `createValidators(Ajv, { limits: { title: { max: 200 } } })` overrides some for one instance. `users.name` and `users.email` are also sized in `init.sql`: keep them in step.
-- **Schemas** (`shared/src/schemas.js`): request bodies (`signUp`, `login`, `topic`, `post`, `critique`, `edit`, `clone`, `interaction`, `tagVote`) and, with type coercion, query strings and route parameters (`list`, `tagList`, `contentParams`, `versionParams`, `tagParams`). Unknown keys are removed and defaults filled in.
+- **Schemas** (`shared/src/schemas.js`): request bodies (`signUp`, `login`, `topic`, `post`, `critique`, `edit`, `resolution`, `clone`, `interaction`, `tagVote`) and, with type coercion, query strings and route parameters (`list`, `tagList`, `contentParams`, `versionParams`, `tagParams`). Unknown keys are removed and defaults filled in.
 - **Messages** (`shared/src/errors.js`): each error has the field's `key` (its path, like `config.answers.1`), its `label` and a short Portuguese `message` for the form ("máximo de 150 caracteres"); `describe` makes the API's sentence ("Título: máximo de 150 caracteres."). Labels, per-keyword `messages` and an `action` hint are annotations inside the schemas.
 - **Custom rules:** `trimmed`, `notBlank` and `maxBytes` (UTF-8 bytes, because bcrypt reads only the first 72 bytes of a password); formats `email`, `commit`, `uuid` and `png` (base64). A username can't contain "@", since logging in tells names from emails by it. A tag name is Latin letters (accented ones included), digits and single spaces or hyphens (`TAG_NAME_PATTERN`), so its slug has its exact length and the name's limits are the slug's.
 - **Compiling:** the backend compiles the schemas at runtime (`createValidators(Ajv)`). The frontend can't, as the CSP has no `'unsafe-eval'`: its Vite plugin (`frontend/plugins/validators.js`) turns them into Ajv standalone code at build time (`@colcom/shared/standalone`) and wraps it with `createPrecompiledValidators`. So custom keywords are `code` generators, not `validate` functions, and function formats are imported by the generated code from the package; `frontend/test/plugins/validators.test.js` checks both agree.
+- **Merging** (`shared/src/merge.js`, not validation but shared the same way): `merge3(base, ours, theirs)` splits documents into lines (blocks), diffs each side against the base (Myers, compared as one block past 1000 changed lines) and returns `ok` chunks and `conflict` chunks where both sides changed the same lines differently. The backend commits a merge without conflicts (`cleanMerge`); the resolution page shows the conflicts.
 - **What schemas can't check** stays in the backend: a critique's commit must be in the post's history, a post's answer must be one of its topic's, names and emails must be unused.
 - `shared/index.d.ts` (and `standalone.d.ts`) type the package; keep them in step with `src/`.
 
@@ -98,11 +99,9 @@ Beyond the suite, show changes work rather than assume they do:
 
 ## Known issues and backlog
 
-- **Merge conflicts:** git refuses to merge changes on adjacent lines (e.g. the author edited a paragraph and a suggestion added one right after it). Merging then fails with "Conflito no merge!" and there's no resolution UI yet.
 - **Critique anchoring payload:** the version endpoint sends the text of every version between a critique's version and the one being read. Long histories will need the server-side `critique_anchors` cache planned for phase 3.
 - **Global title uniqueness:** content titles are unique across the whole site, critiques included.
 - **Frontend bug:** `relativeTime` doesn't round years ("1.04… ano").
 - **Backend bugs:**
-  - Accepting a suggestion doesn't update the post's summary in Postgres (`mergePost`), so lists keep showing the text from before the merge.
   - `GET /contents/:id/interactions` is unreachable: `GET /contents/:id/:hash` is registered first and takes "interactions" as a hash. `GET /users/:id/interactions` passes a user id as a content id. Nothing calls either yet.
 - **Unfinished features:** colcoins (the promote cost check is commented out) and prestige exist in the schema but aren't implemented. The README's to-do list is outdated.

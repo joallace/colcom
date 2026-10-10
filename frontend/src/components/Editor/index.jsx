@@ -28,7 +28,9 @@ export default function Editor({
   bubbleMenuShouldShow = true,
   tempHighlight = [],
   // The version this content is compared against, its changes highlighted (reviewing a suggestion)
-  diffBase
+  diffBase,
+  // What the legend above says it's compared with; none hides the legend
+  diffLabel = "comparando com a versão em que a sugestão foi feita:"
 }) {
   // The content with the critiques highlighted; only effects read it, so changing it needn't re-render
   const markedBody = React.useRef()
@@ -198,9 +200,9 @@ export default function Editor({
 
       <ChartModal isOpen={modal} setIsOpen={setModal} editor={editor} />
 
-      {diffBase &&
+      {diffBase && diffLabel &&
         <div className="diffLegend">
-          comparando com a versão em que a sugestão foi feita:
+          {diffLabel}
           <span className="diffInsert">adicionado</span>
           <span className="diffDelete">removido</span>
         </div>

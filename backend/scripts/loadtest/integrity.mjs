@@ -39,9 +39,8 @@ export async function checkIntegrity({ must }, ledger, dbPath) {
     const tip = content.history.at(-1).commit
     const { body } = await must("GET", `/contents/${postId}/${tip}`)
     compared++
-    // Accepting a suggestion doesn't update the summary (mergePost), a known bug apart from any race
     if (summarize(body) !== content.body)
-      problem(content.history.at(-1).subject.startsWith("Merge commit") ? "summary-stale-after-merge" : "postgres-git-mismatch", `post ${postId} (topic ${topicId}): Postgres has "${content.body.slice(0, 40)}…", git's tip ${tip.slice(0, 8)} has "${summarize(body).slice(0, 40)}…"`)
+      problem("postgres-git-mismatch", `post ${postId} (topic ${topicId}): Postgres has "${content.body.slice(0, 40)}…", git's tip ${tip.slice(0, 8)} has "${summarize(body).slice(0, 40)}…"`)
   }
   result.postsCompared = compared
 

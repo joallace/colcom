@@ -36,6 +36,7 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
   - `ancestors`: every commit a version descends from.
   - `log`: the timeline, parsed from NUL-separated `git log -z`, since NUL is the one character commit messages can't contain.
 - **Edits:** an edit with no changes is refused with a 400 before committing.
+- **Merges:** `merge` tries `merge-tree --write-tree` first. git also refuses changes on adjacent lines, so on its exit status 1 the three texts (`sides`: the post's tip, the merge base and the suggestion) go through `cleanMerge` (`shared/src/merge.js`), which only refuses changes to the same lines; then it's a 409 `GIT:MERGE:CONFLICT`. A `resolution` (`{ body, head }`, from the author's resolution page) is committed as the merge's tree only if the post's tip is still `head`, or it's a 409 `GIT:MERGE:HEAD_MOVED`. Every merge has the post and the suggestion as parents, and `mergePost` then updates the post's summary from the merged text.
 
 ## Query patterns
 
@@ -76,7 +77,8 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 | `GET /contents/:id` | optional | A content; for posts, `history`, `interactionCounts` (poll `votes`, `suggestions` in any state and `critiques`) and (for the author) pending `suggestions` |
 | `GET /contents/:id/:hash` | optional | A post version: `body`, `critiques` made on it or earlier, `versions` and `lineages` (see below), and `base` for a pending suggestion |
 | `PATCH /contents/:id` | required | Edit a post: a commit for the author, a suggestion for anyone else |
-| `POST /contents/:id/:hash/merge` and `/reject` | required | The author accepts or rejects a pending suggestion |
+| `POST /contents/:id/:hash/merge` and `/reject` | required | The author accepts or rejects a pending suggestion. A merge without a body is automatic (409 `GIT:MERGE:CONFLICT` when both changed the same lines); with `{ body, head }` (the `resolution` schema) it commits the author's resolution, 409 `GIT:MERGE:HEAD_MOVED` if the post changed since `head` |
+| `GET /contents/:id/:hash/merge` | required | For the post's author, what resolving a pending suggestion needs: `{ head, base, suggestion }`, each `{ commit, body }` |
 | `POST /contents/:id/:hash/clone` | required | New post branched from that version |
 | `POST /interactions` | required | Toggle `up`/`down`/`vote`/`bookmark`/`promote`; 404 for a missing content, 400 for a poll vote on anything but a post |
 | `GET /notifications?page&pageSize&unread` | required | The user's notifications, newest first: `{ notifications, count, unread }`, each with `type`, `read`, `actor`, `content` (the post or topic it's about), `topic_id`, `subject` (the critique, post or clone made) and `suggestion` |

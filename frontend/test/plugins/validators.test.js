@@ -31,6 +31,7 @@ const CASES = [
   ["critique", { title: "Disagree", parent_id: 2, body: "<p>No.</p>", config: { ...critiqueConfig, from: 6, to: 1, commit: "--output=x" } }],
   ["critique", { title: "Disagree", parent_id: 2, body: "x", config: { ...critiqueConfig, quote: { ...critiqueConfig.quote, exact: " \n " } } }],
   ["edit", { body: "<p>x</p>", message: "fix " }],
+  ["resolution", { body: "<p>x</p>", head: "--output=x" }],
   ["clone", { title: "ab" }],
   // Emoji are one character each (a surrogate pair), as in the API
   ["clone", { title: "🙂".repeat(150) }],

@@ -2,6 +2,7 @@ import { dirname, resolve } from "path"
 import { fileURLToPath } from "url"
 import { existsSync, mkdirSync } from "fs"
 import { execFile, execFileSync } from "node:child_process"
+import { cleanMerge } from "@colcom/shared"
 
 import { IContent } from "@/models/content"
 import logger from "@/logger"
@@ -245,25 +246,80 @@ async function branch(content: IContent, commit: string) {
     throw branchExists(String(id))
 }
 
-async function merge(content: IContent, commit: string) {
+// The three texts a merge combines: the post as it is (head), the suggestion, and the version the
+// suggestion was made on (base)
+async function sides(repo: number, head: string, commit: string) {
+  const base = (await git(repo, ["merge-base", head, commit])).trim()
+  const [headBody, baseBody, suggestionBody] = await Promise.all([head, base, commit].map(version => read(repo, version)))
+  return {
+    head: { commit: head, body: headBody },
+    base: { commit: base, body: baseBody },
+    suggestion: { commit, body: suggestionBody }
+  }
+}
+
+async function mergeSides(content: IContent, commit: string) {
   const { parent_id, id } = content
   const repo = Number(parent_id)
 
   validateCommit(commit)
 
-  await advance(repo, String(id), async head => {
+  const head = await tip(repo, String(id))
+  if (!head)
+    throw new Error(`[gitDatabase.ts] Branch "${id}" not found in repo ${repo}`)
+
+  return await sides(repo, head.commit, commit)
+}
+
+// Merges a suggestion into its post and returns the merge commit. git refuses changes on adjacent
+// lines too, so when it does, the texts are merged again by merge3 (shared/), which only refuses
+// changes to the same lines; those are a 409 for the author to resolve. A `resolution` is the text
+// the author settled on, against the post's version `head`: if the post moved since, it's a 409 too.
+async function merge(content: IContent, commit: string, resolution?: { body: string, head: string }) {
+  const { parent_id, id } = content
+  const repo = Number(parent_id)
+
+  validateCommit(commit)
+  if (resolution)
+    validateCommit(resolution.head)
+
+  return await advance(repo, String(id), async head => {
     let tree
-    try {
-      tree = (await git(repo, ["merge-tree", "--write-tree", "--no-messages", head.commit, commit])).split("\n")[0]
-    }
-    catch (err) {
-      // Exit status 1 means the merge has conflicts; anything else is a failure
-      if (err instanceof GitError && err.code === 1)
+
+    if (resolution) {
+      if (resolution.head !== head.commit)
         throw new ValidationError({
-          message: "Conflito no merge!"
+          message: "O post foi alterado enquanto os conflitos eram resolvidos.",
+          action: "Resolva os conflitos novamente sobre a versão atual do post.",
+          statusCode: 409,
+          stack: new Error().stack,
+          errorLocationCode: "GIT:MERGE:HEAD_MOVED"
         })
-      throw err
+
+      tree = await writeTree(repo, resolution.body)
     }
+    else
+      try {
+        tree = (await git(repo, ["merge-tree", "--write-tree", "--no-messages", head.commit, commit])).split("\n")[0]
+      }
+      catch (err) {
+        // Exit status 1 means the merge has conflicts; anything else is a failure
+        if (!(err instanceof GitError && err.code === 1))
+          throw err
+
+        const { base, head: ours, suggestion } = await sides(repo, head.commit, commit)
+        const merged = cleanMerge(base.body, ours.body, suggestion.body)
+        if (merged === undefined)
+          throw new ValidationError({
+            message: "A sugestão altera trechos que também foram alterados no post depois dela.",
+            action: "Resolva os conflitos para aceitar a sugestão.",
+            statusCode: 409,
+            stack: new Error().stack,
+            errorLocationCode: "GIT:MERGE:CONFLICT"
+          })
+
+        tree = await writeTree(repo, merged)
+      }
 
     // The message `git merge` writes
     return await writeCommit(repo, tree, [head.commit, commit], `Merge commit '${commit}' into ${id}`)
@@ -328,6 +384,7 @@ export default Object.freeze({
   update,
   branch,
   merge,
+  mergeSides,
   isInHistory,
   mergeBase,
   firstParentHistory,

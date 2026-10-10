@@ -163,9 +163,7 @@ describe("suggestions", () => {
     expect((await api().get(`/contents/${post.id}/${commit}`)).body.base).toBeUndefined()
   })
 
-  // Known bug, found by the load test's integrity check: mergePost moves the branch but never
-  // updates the summary Postgres keeps, so lists still show the text from before the merge
-  it.fails("update the post's summary once merged", async () => {
+  it("update the post's summary once merged", async () => {
     const post = await newPost()
     const suggestion = await edit(contributor, post.id, "<p>Alpha, suggested.</p><p>Beta paragraph.</p><p>Gamma paragraph.</p>")
 
@@ -222,12 +220,104 @@ describe("suggestions", () => {
 
     const res = await api().post(`/contents/${post.id}/${suggestion.body.config.commit}/merge`).set(author.auth)
 
-    expect(res.status).toBe(400)
-    expect(res.body.message).toBe("Conflito no merge!")
+    expect(res.status).toBe(409)
+    expect(res.body.errorLocationCode).toBe("GIT:MERGE:CONFLICT")
     expect(await history(post.id)).toEqual(before)
     expect(await pendingSuggestions(post.id)).toHaveLength(1)
     // The failed merge left the post's branch where it was
     expect((await edit(author, post.id, "<p>After the conflict.</p>")).status).toBe(200)
+  })
+
+  // git counts these as a conflict; they change different paragraphs, so colcom merges them
+  it("are merged when they change a paragraph next to one the author changed", async () => {
+    const post = await newPost()
+    const suggestion = await edit(contributor, post.id, "<p>Alpha paragraph.</p><p>Beta paragraph.</p><p>Inserted by contributor.</p><p>Gamma paragraph.</p>")
+    await edit(author, post.id, "<p>Alpha paragraph.</p><p>Beta by author.</p><p>Gamma paragraph.</p>")
+
+    const res = await api().post(`/contents/${post.id}/${suggestion.body.config.commit}/merge`).set(author.auth)
+
+    expect(res.status).toBe(204)
+    const versions = await history(post.id)
+    expect(versions.at(-1)!.subject).toMatch(/^Merge commit/)
+    expect(await read(post.id, versions.at(-1)!.commit))
+      .toBe("<p>Alpha paragraph.</p>\n<p>Beta by author.</p>\n<p>Inserted by contributor.</p>\n<p>Gamma paragraph.</p>\n")
+  })
+})
+
+describe("resolving a suggestion's conflicts", () => {
+  // The author and the contributor both rewrote the second paragraph
+  async function conflicting() {
+    const post = await newPost()
+    const base = await latestCommit(post.id)
+    const suggestion = await edit(contributor, post.id, "<p>Alpha paragraph.</p><p>Beta by contributor.</p><p>Gamma paragraph.</p>", "Rewrites beta")
+    const head = (await edit(author, post.id, "<p>Alpha paragraph.</p><p>Beta by author.</p><p>Gamma paragraph.</p>")).body.commit
+    return { post, base, head, commit: suggestion.body.config.commit as string }
+  }
+
+  const resolve = (postId: number, commit: string, body: object, user = author) =>
+    api().post(`/contents/${postId}/${commit}/merge`).set(user.auth).send(body)
+
+  it("starts from the post's version, the suggestion and the version it was made on", async () => {
+    const { post, base, head, commit } = await conflicting()
+
+    const res = await api().get(`/contents/${post.id}/${commit}/merge`).set(author.auth)
+
+    expect(res.status).toBe(200)
+    expect(res.body).toEqual({
+      head: { commit: head, body: "<p>Alpha paragraph.</p>\n<p>Beta by author.</p>\n<p>Gamma paragraph.</p>\n" },
+      base: { commit: base, body: "<p>Alpha paragraph.</p>\n<p>Beta paragraph.</p>\n<p>Gamma paragraph.</p>\n" },
+      suggestion: { commit, body: "<p>Alpha paragraph.</p>\n<p>Beta by contributor.</p>\n<p>Gamma paragraph.</p>\n" }
+    })
+  })
+
+  it("is only for the post's author", async () => {
+    const { post, commit } = await conflicting()
+
+    expect((await api().get(`/contents/${post.id}/${commit}/merge`).set(contributor.auth)).status).toBe(403)
+    // Without a token, as every authenticated route
+    expect((await api().get(`/contents/${post.id}/${commit}/merge`)).status).toBe(400)
+    expect((await resolve(post.id, commit, { body: "<p>Mine.</p>", head: commit }, contributor)).status).toBe(403)
+  })
+
+  it("merges the text the author settled on, as one step, and updates the summary", async () => {
+    const { post, head, commit } = await conflicting()
+
+    const res = await resolve(post.id, commit, { body: "<p>Alpha, at last.</p><p>Beta by both.</p><p>Gamma paragraph.</p>", head })
+
+    expect(res.status).toBe(204)
+    const versions = await history(post.id)
+    expect(versions.map(version => version.subject)).toContain("Rewrites beta")
+    expect(versions.at(-1)!.subject).toMatch(/^Merge commit/)
+    expect(await read(post.id, versions.at(-1)!.commit)).toBe("<p>Alpha, at last.</p>\n<p>Beta by both.</p>\n<p>Gamma paragraph.</p>\n")
+    expect((await api().get(`/contents/${post.id}`)).body.body).toBe("Alpha, at last.")
+    expect(await pendingSuggestions(post.id)).toEqual([])
+  })
+
+  it("is refused when the post changed while it was being resolved", async () => {
+    const { post, head, commit } = await conflicting()
+    await edit(author, post.id, "<p>Alpha paragraph.</p><p>Beta by author, again.</p><p>Gamma paragraph.</p>")
+    const before = await history(post.id)
+
+    const res = await resolve(post.id, commit, { body: "<p>Resolved.</p>", head })
+
+    expect(res.status).toBe(409)
+    expect(res.body.errorLocationCode).toBe("GIT:MERGE:HEAD_MOVED")
+    expect(await history(post.id)).toEqual(before)
+    expect(await pendingSuggestions(post.id)).toHaveLength(1)
+  })
+
+  it.each([
+    ["no head", { body: "<p>Resolved.</p>" }, "head"],
+    ["a head that isn't a hash", { body: "<p>Resolved.</p>", head: "--output=x" }, "head"],
+    ["a blank body", { body: "   ", head: "0".repeat(40) }, "body"]
+  ])("is refused with %s", async (_, body, key) => {
+    const { post, commit } = await conflicting()
+
+    const res = await resolve(post.id, commit, body)
+
+    expect(res.status).toBe(400)
+    expect(res.body.key).toBe(key)
+    expect(await pendingSuggestions(post.id)).toHaveLength(1)
   })
 
   it("are merged even while the author edits the post at the same time", async () => {

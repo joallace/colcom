@@ -66,12 +66,13 @@ function mockApi(versions = VERSIONS, post = POST) {
   return fetch
 }
 
-const renderPage = (url = "/topics/1/posts/2") => render(
-  <UserContext.Provider value={{ user: null }}>
+const renderPage = (url = "/topics/1/posts/2", user = null) => render(
+  <UserContext.Provider value={{ user }}>
     <ChartProvider>
       <MemoryRouter initialEntries={[url]}>
         <Routes>
           <Route path="/topics/:tid/posts/:pid" element={<PostPage />} />
+          <Route path="/topics/:tid/posts/:pid/suggestions/:hash" element={<p>resolving conflicts</p>} />
         </Routes>
       </MemoryRouter>
     </ChartProvider>
@@ -281,5 +282,45 @@ describe("the post's interactions", () => {
       ["críticas", "4"],
       ["sugestões", "0"]
     ])
+  })
+})
+
+describe("accepting a suggestion", () => {
+  const SUGGESTION = "5".repeat(40)
+  const SUGGESTED_HTML = p("Taxes should fall a little.", "Public spending must be reviewed.")
+  const suggestions = [{ id: 9, author: "bob", author_avatar: "", created_at: new Date().toISOString(), config: { commit: SUGGESTION, message: "Softens the claim", accepted: null } }]
+
+  // The author opens the pending suggestion and accepts it; the API answers the merge with `merge`
+  async function accept(merge) {
+    const fetch = mockApi({ ...VERSIONS, [SUGGESTION]: { body: SUGGESTED_HTML, critiques: [], versions: {}, lineages: {}, base: { commit: V2, body: V2_HTML } } }, { ...POST, suggestions })
+    const original = fetch.getMockImplementation()
+    fetch.mockImplementation(async (url, options) => options?.method === "post" ?
+      { ok: merge.status < 300, status: merge.status, json: async () => merge.body } : original(url, options))
+    renderPage("/topics/1/posts/2", { pid: "a", accessToken: "token" })
+
+    await menu("incorporar sugestões")
+    fireEvent.click(await screen.findByText("Softens the claim"))
+    await menu("aceitar sugestão")
+    return fetch
+  }
+
+  // jsdom gets no breakpoints from the styles, so the post's buttons are in its dropdown menu
+  async function menu(option) {
+    await waitFor(() => expect(document.querySelector(".frame .dropdownMenu > .clickable")).toBeTruthy())
+    fireEvent.click(document.querySelector(".frame .dropdownMenu > .clickable"))
+    fireEvent.click(await screen.findByText(option))
+  }
+
+  it("leads to resolving its conflicts when it changes passages the author also changed", async () => {
+    const fetch = await accept({ status: 409, body: { message: "A sugestão altera trechos…", errorLocationCode: "GIT:MERGE:CONFLICT" } })
+
+    expect(await screen.findByText("resolving conflicts")).toBeInTheDocument()
+    expect(fetch).toHaveBeenCalledWith(`http://api.test/contents/2/${SUGGESTION}/merge`, expect.objectContaining({ method: "post" }))
+  })
+
+  it("says why it couldn't be merged otherwise", async () => {
+    await accept({ status: 409, body: { message: "O texto foi alterado por outra pessoa ao mesmo tempo." } })
+
+    expect(await screen.findByText("O texto foi alterado por outra pessoa ao mesmo tempo.")).toBeInTheDocument()
   })
 })
