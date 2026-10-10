@@ -10,7 +10,7 @@ Express 5 + TypeScript 7 API over PostgreSQL and per-topic git repositories. Rea
 | `src/server.ts` | Starts listening and, once `init.sql` has run (`ready` from `pgDatabase.ts`), opens what's missing of the meta space (`ensureMeta`); kept apart so tests import the app without binding a port |
 | `src/meta.ts`, `src/metaTopics.ts` | The meta space: the system account, the reserved "meta" tag and the foundational topics, defined (groups, titles, Portuguese bodies, answers) in `metaTopics.ts`. `ensureMeta` changes nothing when all is there; `test/unit/meta.test.ts` checks every body against the `topic` schema |
 | `src/routes/*.ts` | Route → middleware → controller wiring |
-| `src/controllers/*.ts` | Request handling, validation, orchestration of models and git |
+| `src/controllers/*.ts` | Request handling, validation, orchestration of models and git. Models return data or outcomes, never HTTP statuses: `Interactions.toggle` says whether it `created`, `updated` or `removed`, and the controller answers 201, 200 or 204 |
 | `src/models/*.ts` | All SQL; controllers call named functions (`Content.findBookmarked`, `Interactions.pendingSuggestions`…) and never pass SQL. `content.ts` has the lists (built on `findAll` and `findTree`) and `summarize`; `interactions.ts` has votes, bookmarks and suggestions; `notifications.ts` has `notify` and the inbox; `tags.ts` has tag votes, search, intersections and the `tagFilterSql`/`topicTagsSql` fragments; `sql.ts` has `queryParams` and the fragments several models share |
 | `src/gitDatabase.ts` | Every git command (the only place that runs git) |
 | `src/pgDatabase.ts` | Connection pool; runs `sql/init.sql` on first connect (exits if it fails) |

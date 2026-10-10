@@ -1,6 +1,6 @@
 import { RequestHandler } from "express"
 
-import Interactions, { InteractionInsertRequest } from "@/models/interactions"
+import Interactions from "@/models/interactions"
 import Content from "@/models/content"
 import { contentNotFound } from "@/controllers/content"
 import { validate } from "@/validation"
@@ -9,11 +9,12 @@ export const handleInteraction: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user.pid
 
   const { content_id, type } = validate("interaction", req.body)
-  const interaction: InteractionInsertRequest = { author_pid, content_id, type }
+  const result = await Interactions.toggle({ author_pid, content_id, type })
 
-  const [status, result] = await Interactions.handleChange(interaction)
-
-  res.status(status).json(result)
+  if (result.outcome === "removed")
+    res.status(204).end()
+  else
+    res.status(result.outcome === "created" ? 201 : 200).json(result.interaction)
 }
 
 export const getVoteHistory: RequestHandler = async (req, res) => {

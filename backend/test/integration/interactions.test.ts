@@ -32,6 +32,23 @@ describe("relevance votes (up and down)", () => {
     expect(await counts(topic.id, bob)).toEqual({ upvotes: 0, downvotes: 0, mine: [] })
   })
 
+  it("answer each toggle with the interaction as it is: 201 created, 200 switched, 204 removed", async () => {
+    const topic = await createTopic(alice)
+
+    const created = await interact(bob, topic.id, "up")
+    expect(created.status).toBe(201)
+    expect(created.body).toEqual({ id: expect.any(Number), author_id: bob.pid, content_id: topic.id, type: "up", config: null, created_at: expect.any(String) })
+
+    const switched = await interact(bob, topic.id, "down")
+    expect(switched.status).toBe(200)
+    expect(switched.body).toEqual({ ...created.body, type: "down" })
+
+    const removed = await interact(bob, topic.id, "down")
+    expect(removed.status).toBe(204)
+    expect(removed.body).toEqual({})
+    expect(removed.headers["content-type"]).toBeUndefined()
+  })
+
   it("count each user once", async () => {
     const topic = await createTopic(alice)
     await interact(alice, topic.id, "up")
@@ -59,9 +76,12 @@ describe("poll votes", () => {
     expect((await interact(bob, yes.id, "vote")).status).toBe(201)
     expect(await userVote()).toBe(yes.id)
 
+    const cast = (await api().get(`/contents/${yes.id}`).set(bob.auth)).body
+    expect(cast.userInteractions).toEqual(["vote"])
+
     const moved = await interact(bob, no.id, "vote")
     expect(moved.status).toBe(200)
-    expect(moved.body.content_id).toBe(no.id)
+    expect(moved.body).toMatchObject({ author_id: bob.pid, content_id: no.id, type: "vote", config: null })
     expect(await userVote()).toBe(no.id)
 
     expect((await interact(bob, no.id, "vote")).status).toBe(204)

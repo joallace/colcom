@@ -226,7 +226,7 @@ export const getContent: RequestHandler = async (req, res) => {
   const { id: content_id } = validate("contentParams", req.params)
   const content = await findContentOrThrow(content_id, undefined, { omitBody, includeParentTitle })
 
-  const userInteractions = author_pid ? (await Interactions.getUserContentInteractions({ author_pid, content_id })).map(v => v.type) : undefined
+  const userInteractions = author_pid ? (await Interactions.getUserContentInteractions(author_pid, content_id)).map(v => v.type) : undefined
 
   res.status(200).json({
     ...content,
@@ -331,7 +331,7 @@ export const updateContent: RequestHandler = async (req, res) => {
     res.status(200).json({ ...result, commit })
   }
   else {
-    const result = await Interactions.updateById({ id: interactionId, field: "config", config: { message, commit, accepted: null }, author_pid })
+    const result = await Interactions.setSuggestionCommit(interactionId, { message, commit }, author_pid)
     await notify({ type: "suggestion", actor_pid: author_pid, content_id, interaction_id: interactionId })
     res.status(200).json(result)
   }
