@@ -2,6 +2,7 @@ import db from "@/pgDatabase"
 import { NotFoundError, ValidationError } from "@/errors"
 import { avatarToBase64, getDataByPublicId } from "@/models/user"
 import { limitOffset, orderByColumn } from "@/pagination"
+import { topicTagsSql } from "@/models/tags"
 
 
 type ContentType = "topic" | "post" | "critique"
@@ -270,8 +271,8 @@ interface TreeOptions {
   userPid?: string
 }
 
-// A page of topics, each with its posts ranked by poll votes, stats over all its posts and, for a
-// logged in user, their interactions with it and the post they voted for. A single query: Postgres
+// A page of topics, each with its posts ranked by poll votes, stats over all its posts, its tags and,
+// for a logged in user, their interactions with it, the post they voted for and their tag votes. A single query: Postgres
 // ranks, crops and aggregates the posts, instead of every post being fetched to be cropped here.
 async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions", page = 1, pageSize = 10, values = [], childLimit, userPid }: TreeOptions): Promise<any[]> {
   const userParam = `$${values.length + 1}::UUID`
@@ -384,6 +385,7 @@ async function findTree({ where = "topics.type = 'topic'", orderBy = "promotions
         page_topics.promotions,
         children.list AS children,
         stats.summary AS "childrenStats",
+        ${topicTagsSql("page_topics.id", userParam)} AS tags,
         CASE WHEN ${userParam} IS NULL THEN NULL ELSE ${userInteractionsSql("page_topics.id", userParam)} END AS "userInteractions",
         (
           SELECT

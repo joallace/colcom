@@ -38,8 +38,8 @@ export async function signUp(name = unique("user").replace(" ", "_")): Promise<T
   return { pid: created.body.pid, name, email, pass, token, auth: { Authorization: `Bearer ${token}` } }
 }
 
-export async function createTopic(user: TestUser, { title = unique("Topic"), body = "<p>What do you think?</p>", answers = ["sim", "não"] } = {}) {
-  const res = await api().post("/contents").set(user.auth).send({ title, body, config: { answers } })
+export async function createTopic(user: TestUser, { title = unique("Topic"), body = "<p>What do you think?</p>", answers = ["sim", "não"], tags = [] as string[] } = {}) {
+  const res = await api().post("/contents").set(user.auth).send({ title, body, config: { answers }, tags })
   expect(res.status, JSON.stringify(res.body)).toBe(201)
   return res.body
 }
@@ -72,3 +72,15 @@ export async function critique(user: TestUser, postId: number, config: object, {
 
 export const interact = (user: TestUser, content_id: number, type: string) =>
   api().post("/interactions").set(user.auth).send({ content_id, type })
+
+// Endorses (1), contests (-1) or withdraws (0) a tag on a topic
+export const voteTag = (user: TestUser, topicId: number, tag: string, value: 1 | -1 | 0) =>
+  api().post(`/topics/${topicId}/tags`).set(user.auth).send({ tag, value })
+
+// A topic's tags as the topic page gets them, with the user's votes when given
+export async function topicTags(topicId: number, user?: TestUser): Promise<any[]> {
+  const req = api().get(`/topics/${topicId}`)
+  const res = await (user ? req.set(user.auth) : req)
+  expect(res.status, JSON.stringify(res.body)).toBe(200)
+  return res.body.tags
+}

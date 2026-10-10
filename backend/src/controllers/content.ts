@@ -6,6 +6,9 @@ import Interactions from "@/models/interactions"
 import { notify } from "@/models/notifications"
 import { ValidationError, NotFoundError, ForbiddenError } from "@/errors"
 import { validate } from "@/validation"
+import { applyTopicTags, prepareTopicTags, resolveFilter, splitSlugs } from "@/controllers/tags"
+import Tags, { tagFilterSql } from "@/models/tags"
+import logger from "@/logger"
 
 
 // Postgres and git can't share a transaction, so when the git write fails the row that was
@@ -123,7 +126,11 @@ export const createContent: RequestHandler = async (req, res, next) => {
         key: "parent_id"
       })
 
-    const { title, body, config } = validate(type, req.body)
+    const { title, body, config, tags } = <any>validate(type, req.body)
+
+    // Checked before anything is written; written once the topic exists, as the tag log can't be
+    // rolled back
+    const preparedTags = type === "topic" ? await prepareTopicTags(tags, author_pid) : undefined
 
     if (type === "post")
       validateAnswer(parent.config, (<any>config).answer)
@@ -144,11 +151,21 @@ export const createContent: RequestHandler = async (req, res, next) => {
     result.body = body
     await withRollback(() => git.create(result, res.locals.user), () => Content.removeById(result.id))
 
+    if (preparedTags) {
+      // The topic is there either way: a tag that fails (a race on the daily limit) isn't worth losing it
+      try {
+        await applyTopicTags(result.id, preparedTags, author_pid)
+      }
+      catch (err) {
+        logger.error(err, `[content.ts] Failed to tag topic ${result.id}`)
+      }
+    }
+
     // A critique is news for the post's author, a post for the topic's
     if (type !== "topic")
       await notify({ type, actor_pid: author_pid, content_id: <number>parent_id, subject_id: result.id })
 
-    res.status(201).json(result)
+    res.status(201).json(preparedTags ? { ...result, tags: await Tags.ofTopic(result.id, author_pid) } : result)
   }
   catch (err) {
     next(err)
@@ -179,9 +196,33 @@ export const getContentTree: RequestHandler = async (req, res, next) => {
   const getCount = "with_count" in req.query
 
   try {
-    const { page, pageSize, orderBy } = validate("list", req.query)
-    const contents = await Content.findTree({ page, pageSize, orderBy, childLimit: TOPIC_PREVIEW_POSTS, userPid: author_pid })
-    res.status(200).json({ tree: contents, count: getCount ? (await Content.getCount("topic")) : undefined })
+    const { page, pageSize, orderBy, tags: slugs } = validate("list", req.query)
+
+    if (!slugs) {
+      const contents = await Content.findTree({ page, pageSize, orderBy, childLimit: TOPIC_PREVIEW_POSTS, userPid: author_pid })
+      res.status(200).json({ tree: contents, count: getCount ? (await Content.getCount("topic")) : undefined })
+      return
+    }
+
+    // Topics showing all of these tags; none when one of them doesn't exist
+    const tags = await resolveFilter(splitSlugs(slugs))
+    if (!tags) {
+      res.status(200).json({ tree: [], count: getCount ? 0 : undefined })
+      return
+    }
+
+    const values = [tags.map(tag => tag.id)]
+    const contents = await Content.findTree({
+      where: `topics.type = 'topic' AND ${tagFilterSql("topics.id", "$1")}`,
+      values,
+      page,
+      pageSize,
+      orderBy,
+      childLimit: TOPIC_PREVIEW_POSTS,
+      userPid: author_pid
+    })
+    const count = getCount ? await Content.count({ where: `contents.type = 'topic' AND ${tagFilterSql("contents.id", "$1")}`, values }) : undefined
+    res.status(200).json({ tree: contents, count })
   }
   catch (err) {
     next(err)

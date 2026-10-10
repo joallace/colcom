@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import Ajv from "ajv"
-import { createValidators, DEFAULT_LIMITS, describe as describeError, fieldErrors } from "@colcom/shared"
+import { createValidators, DEFAULT_LIMITS, describe as describeError, fieldErrors, tagSlug } from "@colcom/shared"
 
 import { validate } from "@/validation"
 import { ValidationError } from "@/errors"
@@ -50,7 +50,7 @@ describe("shared schemas", () => {
 
   it("drop unknown keys and fill in defaults", () => {
     const { data } = check("topic", { title: "Should we?", evil: true })
-    expect(data).toEqual({ title: "Should we?", config: { answers: [] } })
+    expect(data).toEqual({ title: "Should we?", config: { answers: [] }, tags: [] })
 
     const critiqueData = check("critique", { ...structuredClone(critique), config: { ...critique.config, extra: 1 } }).data
     expect(critiqueData.config).toEqual(critique.config)
@@ -63,6 +63,34 @@ describe("shared schemas", () => {
     expect(answers(["sim"]).errors[0]).toMatchObject({ key: "config.answers", message: "defina ao menos 2 respostas, ou nenhuma" })
     expect(answers(["sim", "sim"]).errors[0]).toMatchObject({ message: "as respostas devem ser diferentes" })
     expect(answers(Array.from({ length: 11 }, (_, i) => `a${i}`)).errors[0]).toMatchObject({ message: "máximo de 10 itens" })
+  })
+
+  it("take tag names of letters, digits, spaces and hyphens, a few per topic", () => {
+    const tags = (list: string[]) => check("topic", { title: "Should we?", tags: list })
+
+    expect(tags(["Política", "São Paulo", "covid-19"]).valid).toBe(true)
+    expect(fieldErrors(tags(["a", "x  y", "c++", "-eua"]).errors)).toEqual({
+      "tags.0": `mínimo de ${DEFAULT_LIMITS.tag.min} caracteres`,
+      "tags.1": "use letras, números, espaços ou hífens",
+      "tags.2": "use letras, números, espaços ou hífens",
+      "tags.3": "use letras, números, espaços ou hífens"
+    })
+    expect(fieldErrors(tags(Array.from({ length: DEFAULT_LIMITS.tags.seed + 1 }, (_, i) => `tag ${i}`)).errors))
+      .toEqual({ tags: `máximo de ${DEFAULT_LIMITS.tags.seed} tags` })
+  })
+
+  it("take tag filters as comma-separated slugs", () => {
+    expect(check("list", { tags: "politica,eua,sao-paulo" }).valid).toBe(true)
+    expect(check("tagParams", { slugs: "politica" }).valid).toBe(true)
+
+    for (const tags of ["Politica", "a,,b", "a,", "-a", "a b", Array.from({ length: DEFAULT_LIMITS.tags.filter + 1 }, (_, i) => `t${i}`).join(",")])
+      expect(check("list", { tags }).valid, tags).toBe(false)
+  })
+
+  it("take a tag vote of 1, -1 or 0", () => {
+    expect(check("tagVote", { tag: "Texas", value: -1 }).valid).toBe(true)
+    expect(check("tagVote", { tag: "Texas", value: 2 }).valid).toBe(false)
+    expect(check("tagVote", { value: 1 }).valid).toBe(false)
   })
 
   it("measure passwords in bytes, as bcrypt does", () => {
@@ -97,6 +125,22 @@ describe("shared schemas", () => {
     expect(limits.title).toEqual({ min: DEFAULT_LIMITS.title.min, max: 5 })
     expect(custom("clone", { title: "Too long" }).errors[0].message).toBe("máximo de 5 caracteres")
     expect(check("clone", { title: "Too long" }).valid).toBe(true)
+  })
+})
+
+describe("tagSlug", () => {
+  it("drops accents and case and joins words with hyphens", () => {
+    expect(tagSlug("Política")).toBe("politica")
+    expect(tagSlug("  São Paulo ")).toBe("sao-paulo")
+    expect(tagSlug("COVID-19")).toBe("covid-19")
+    expect(tagSlug("Ação Afirmativa")).toBe("acao-afirmativa")
+  })
+
+  it("gives every valid name a slug of the same length, so the name's limits are the slug's", () => {
+    for (const name of ["Política", "São Paulo", "ÁÉÍÓÚ ãõ çñ", "covid-19", "Über Ýes"]) {
+      expect(check("tagVote", { tag: name, value: 1 }).valid, name).toBe(true)
+      expect(tagSlug(name)).toHaveLength(name.length)
+    }
   })
 })
 

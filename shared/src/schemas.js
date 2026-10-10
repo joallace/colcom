@@ -8,6 +8,8 @@
 //   `maxBytes` (UTF-8 length);
 // - formats: `email`, `commit`, `uuid` and `png` (base64). See keywords.js.
 
+import { TAG_NAME_PATTERN, TAG_SLUG_PATTERN } from "./tags.js"
+
 const MAX_ID = 2_147_483_647 // Postgres' SERIAL
 
 // base64 takes 4 characters for every 3 bytes
@@ -16,6 +18,9 @@ const base64Length = bytes => 4 * Math.ceil(bytes / 3)
 const id = label => ({ type: "integer", minimum: 1, maximum: MAX_ID, label })
 
 const offset = { type: "integer", minimum: 0, maximum: MAX_ID }
+
+// TAG_SLUG_PATTERN without its anchors, to repeat it in a list
+const TAG_SLUG = TAG_SLUG_PATTERN.slice(1, -1)
 
 export function createSchemas(limits) {
   const title = { type: "string", label: "título", minLength: limits.title.min, maxLength: limits.title.max, trimmed: true }
@@ -32,6 +37,16 @@ export function createSchemas(limits) {
     // GET /users/self is the logged in user, so a user named "self" couldn't have a public profile
     not: { const: "self" },
     messages: { pattern: 'não pode conter "@"', not: "nome reservado" }
+  }
+
+  // Typed as people write it ("Política"); the API identifies it by its slug (tags.js)
+  const tagName = {
+    type: "string",
+    label: "tag",
+    minLength: limits.tag.min,
+    maxLength: limits.tag.max,
+    pattern: TAG_NAME_PATTERN,
+    messages: { pattern: "use letras, números, espaços ou hífens" }
   }
 
   const signUp = {
@@ -81,6 +96,15 @@ export function createSchemas(limits) {
           },
           allowMultipleAnswers: { type: "boolean", label: "permitir múltiplas respostas" }
         }
+      },
+      // The author's first tags; two names with one slug are one tag
+      tags: {
+        type: "array",
+        label: "tags",
+        default: [],
+        maxItems: limits.tags.seed,
+        messages: { maxItems: `máximo de ${limits.tags.seed} tags` },
+        items: tagName
       }
     }
   }
@@ -175,6 +199,18 @@ export function createSchemas(limits) {
     }
   }
 
+  // Endorses (1) or contests (-1) a tag on a topic, or withdraws the vote (0). Endorsing a tag the
+  // topic doesn't have proposes it, and one that doesn't exist creates it.
+  const tagVote = {
+    type: "object",
+    required: ["tag", "value"],
+    additionalProperties: false,
+    properties: {
+      tag: tagName,
+      value: { type: "integer", label: "voto", enum: [1, -1, 0] }
+    }
+  }
+
   // Marks the given notifications as read, or all of them when `ids` is left out
   const readNotifications = {
     type: "object",
@@ -192,7 +228,26 @@ export function createSchemas(limits) {
       page: { type: "integer", label: "página", minimum: 1, maximum: limits.page.max, default: 1 },
       pageSize: { type: "integer", label: "tamanho da página", minimum: 1, maximum: limits.pageSize.max, default: limits.pageSize.default },
       orderBy: { type: "string", label: "ordenação", minLength: 1, maxLength: limits.orderBy.max, default: "id" },
-      authorId: { type: "string", label: "autor", format: "uuid" }
+      authorId: { type: "string", label: "autor", format: "uuid" },
+      // Comma-separated slugs: topics having all of them
+      tags: {
+        type: "string",
+        label: "tags",
+        maxLength: (limits.tag.max + 1) * limits.tags.filter,
+        pattern: `^${TAG_SLUG}(?:,${TAG_SLUG}){0,${limits.tags.filter - 1}}$`,
+        messages: { pattern: `combine de 1 a ${limits.tags.filter} tags` }
+      }
+    }
+  }
+
+  // Tag autocomplete and directory: names starting with or containing `q`
+  const tagList = {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      q: { type: "string", label: "busca", maxLength: limits.tag.max, default: "" },
+      page: list.properties.page,
+      pageSize: list.properties.pageSize
     }
   }
 
@@ -218,6 +273,13 @@ export function createSchemas(limits) {
     properties: { id: id("id"), hash: commit("versão") }
   }
 
+  // One tag or an intersection of them, as in list's `tags`
+  const tagParams = {
+    type: "object",
+    required: ["slugs"],
+    properties: { slugs: list.properties.tags }
+  }
+
   const userParams = {
     type: "object",
     required: ["name"],
@@ -225,7 +287,7 @@ export function createSchemas(limits) {
   }
 
   return {
-    body: { signUp, login, content, topic, post, critique, critiqueConfig, edit, clone, interaction, readNotifications },
-    query: { list, notifications, contentParams, versionParams, userParams }
+    body: { signUp, login, content, topic, post, critique, critiqueConfig, edit, clone, interaction, tagVote, readNotifications },
+    query: { list, tagList, notifications, contentParams, versionParams, tagParams, userParams }
   }
 }

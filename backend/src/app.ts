@@ -5,6 +5,7 @@ import contentRouter from "@/routes/content"
 import interactionsRouter from "@/routes/interactions"
 import userRouter from "@/routes/user"
 import notificationsRouter from "@/routes/notifications"
+import tagsRouter from "@/routes/tags"
 import errorHandler from "@/middleware/errorHandler"
 import { NotFoundError } from "@/errors"
 
@@ -20,6 +21,7 @@ app.use(contentRouter)
 app.use(interactionsRouter)
 app.use(userRouter)
 app.use(notificationsRouter)
+app.use(tagsRouter)
 
 app.get("/", (req, res) => {
   res.send("I'm alive!")

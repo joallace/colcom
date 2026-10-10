@@ -1,7 +1,9 @@
 // Fills a development instance with mock data through the API: 8 users (password "colcom123"),
 // 3 topics ("Lula ou Bolsonaro?", an open one and one with 4 answers), posts, edits, accepted and
 // pending suggestions, a clone, critiques (including ones whose passage was later changed or
-// removed) and votes. Run it with the backend up: `npm run seed`, or `API=http://host:port npm run seed`.
+// removed), votes and tags (one active, one provisional, one contested and one proposed by someone
+// other than the author). Run it with the backend up: `npm run seed`, or `API=http://host:port npm run seed`.
+// The backend needs RATE_LIMIT_SIGN_UP=off and TAG_MIN_ACCOUNT_DAYS=0, as every user is brand new.
 // Titles are unique site-wide, so it seeds a database once; it stops if the topics already exist.
 import zlib from "node:zlib"
 
@@ -19,6 +21,8 @@ async function call(method, path, body, token, { tolerate = false } = {}) {
     const msg = `${method} ${path} → ${res.status} ${JSON.stringify(data)}`
     // A 429 would leave users or posts missing and fail later with a confusing error
     if (res.status === 429) throw new Error(`${msg}\nRun the backend with RATE_LIMIT_SIGN_UP=off (and the other RATE_LIMIT_* if needed) to seed.`)
+    // The seeded users are brand new, and new accounts can't create tags
+    if (res.status === 403 && /tags/.test(data?.message ?? "")) throw new Error(`${msg}\nRun the backend with TAG_MIN_ACCOUNT_DAYS=0 to seed.`)
     if (tolerate) { console.warn("  (ignored) " + msg); return null }
     throw new Error(msg)
   }
@@ -80,7 +84,8 @@ console.log("users ok")
 
 // ---- Helpers ----
 const html = paragraphs => paragraphs.map(t => `<p>${t}</p>`).join("")
-const topic = (who, title, body, answers) => call("POST", "/contents", { title, body: html(body), config: { answers } }, U[who])
+const topic = (who, title, body, answers, tags = []) => call("POST", "/contents", { title, body: html(body), config: { answers }, tags }, U[who])
+const voteTag = (who, topicId, tag, value) => call("POST", `/topics/${topicId}/tags`, { tag, value }, U[who])
 const post = (who, topicId, title, paragraphs, answer) =>
   call("POST", "/contents", { title, body: html(paragraphs), parent_id: topicId, config: answer ? { answer } : {} }, U[who])
 const history = async id => (await call("GET", `/contents/${id}`)).history
@@ -116,7 +121,8 @@ const critique = (who, postId, commit, paragraphs, exact, title, body) =>
 // =====================================================================
 const t1 = await topic("ana", "Lula ou Bolsonaro?",
   ["Se a eleição fosse hoje, em quem você votaria e por quê? Vamos manter o debate nos argumentos: critique trechos, sugira melhorias e vote no texto que melhor representa a sua posição."],
-  ["Lula", "Bolsonaro"])
+  ["Lula", "Bolsonaro"],
+  ["Política", "Eleições", "Brasil"])
 
 const a1v1 = [
   "Votaria no Lula porque o combate à fome precisa voltar a ser prioridade do governo federal.",
@@ -223,7 +229,8 @@ console.log("topic 1 ok", t1.id)
 // =====================================================================
 const t2 = await topic("felipe", "Como melhorar o transporte público da nossa cidade?",
   ["Tópico aberto: não há respostas fixas. Proponha ideias concretas, critique as dos outros e ajude a melhorar os textos com sugestões."],
-  [])
+  [],
+  ["Transporte", "Cidade", "Política"])
 
 const b1v1 = [
   "Faixas exclusivas de ônibus são a medida mais barata e rápida para melhorar o transporte.",
@@ -270,7 +277,8 @@ console.log("topic 2 ok", t2.id)
 // =====================================================================
 const t3 = await topic("gabi", "Qual deve ser a prioridade do orçamento municipal em 2027?",
   ["A prefeitura vai abrir a consulta do orçamento participativo. Se só uma área pudesse receber o aumento de recursos, qual deveria ser?"],
-  ["saúde", "educação", "segurança", "mobilidade"])
+  ["saúde", "educação", "segurança", "mobilidade"],
+  ["Orçamento", "Cidade", "Política"])
 
 const c1v1 = [
   "A prioridade deve ser a saúde, começando pelas unidades básicas.",
@@ -324,5 +332,10 @@ for (const [who, t, type] of [
   ["ana", t3, "bookmark"], ["bruno", a2, "bookmark"], ["carla", a1, "bookmark"], ["felipe", t2, "bookmark"]
 ])
   await interact(who, t.id, type)
+
+// Tags curated by others: "Política" is on 3 topics by 3 authors (active), "Cidade" on 2 (provisional)
+await voteTag("carla", t1.id, "Brasil", -1)
+await voteTag("diego", t2.id, "Mobilidade", 1)
+await voteTag("henrique", t3.id, "Cidade", 1)
 
 console.log(JSON.stringify({ topics: { lulaOuBolsonaro: t1.id, aberto: t2.id, orcamento: t3.id } }))

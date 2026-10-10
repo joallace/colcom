@@ -10,10 +10,10 @@ Express 5 + TypeScript 7 API over PostgreSQL and per-topic git repositories. Rea
 | `src/server.ts` | Starts listening; kept apart so tests import the app without binding a port |
 | `src/routes/*.ts` | Route → middleware → controller wiring |
 | `src/controllers/*.ts` | Request handling, validation, orchestration of models and git |
-| `src/models/*.ts` | All SQL. `content.ts` has `findAll`, `findTree`, `summarize`; `interactions.ts` has votes, bookmarks and suggestions; `notifications.ts` has `notify` and the inbox |
+| `src/models/*.ts` | All SQL. `content.ts` has `findAll`, `findTree`, `summarize`; `interactions.ts` has votes, bookmarks and suggestions; `notifications.ts` has `notify` and the inbox; `tags.ts` has tag votes, search, intersections and the `tagFilterSql`/`topicTagsSql` fragments |
 | `src/gitDatabase.ts` | Every git command (the only place that runs git) |
 | `src/pgDatabase.ts` | Connection pool; runs `sql/init.sql` on first connect (exits if it fails) |
-| `src/config.ts` | Settings from the environment; the server refuses to start without `ACCESS_TOKEN_SECRET` (32+ chars) or with a malformed `RATE_LIMIT_*` |
+| `src/config.ts` | Settings from the environment; the server refuses to start without `ACCESS_TOKEN_SECRET` (32+ chars) or with a malformed `RATE_LIMIT_*` or `TAG_*` |
 | `src/middleware/rateLimit.ts` | Rate limiters for login, sign-up, content writes and interactions |
 | `src/validation.ts` | `validate(schema, data)`: checks a request's body, query or params against the shared schemas (`shared/`) and returns the validated copy |
 | `src/pagination.ts` | `orderByColumn` whitelist and `limitOffset` clamping |
@@ -44,6 +44,7 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 - **Avatars:** `bytea`, sent as base64. Inside JSON built by SQL, use `AVATAR_BASE64` (strips the line breaks `encode` adds).
 - **Schema changes:** edit `init.sql` (idempotent `IF NOT EXISTS` statements). There is no production data yet, so no migrations.
 - **Vote log:** `vote_events` is filled by the `interactions_vote_events` trigger, not by models, so any statement on a `vote` row is logged in its own transaction. Triggers make it append-only.
+- **Tags:** the same pattern. Models only write `tag_votes`; the `tag_votes_apply` trigger logs the vote in `tag_events` (append-only, `reject_log_change`) and recounts the tag's `contents_tags` row, locking it first so concurrent votes on one tag count each other. `contents_tags.visible` is a generated column (endorsements ≥ 1 and ≥ contests), and the filters use its partial index. Activation (`tags.activated_at`) is set by `Tags.activate` after each vote, since its threshold is a setting; expiry is never stored, but computed from a provisional tag's age (`expiredSql`). Every topic in `findTree` carries its `tags` (`topicTagsSql`, with the viewer's `userVote`), still in one query. A new topic's tags are checked before the content is inserted and written after git succeeds (`prepareTopicTags`/`applyTopicTags`), since the log can't be rolled back.
 - **Notifications:** controllers call `notify()` (`models/notifications.ts`) once an action's Postgres and git writes have both succeeded, so a notification never points to something rolled back. Its recipient comes from SQL (`recipientOf`: the author of what it's about, or the suggester for an answer to a suggestion), and a `CHECK` keeps anyone from being told about their own action. A failed notification is logged and doesn't fail the action. A new kind of event (phase 2's critique answers and disputes) is a new `NotificationType`, a `recipientOf` entry and a case in the frontend's `describeNotification`.
 - **Unique indexes:** they prevent duplicate up/down votes, bookmarks and poll votes; a racing duplicate insert becomes a 409.
 
@@ -66,11 +67,11 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 | `POST /logout` | required | Revokes every token of the user (204) |
 | `GET /users/self` | required | Current user, with the topic they're promoting |
 | `GET /users/:name` | — | Anyone's public profile (`pid`, `name`, `avatar`, `created_at`), by name ignoring case; registered after `/users/self`, so "self" is a reserved name |
-| `GET /topics?page&pageSize&orderBy&with_count` | optional | Topic list, each with its top 3 posts and stats |
+| `GET /topics?page&pageSize&orderBy&with_count&tags` | optional | Topic list, each with its top 3 posts, stats and `tags`; `tags=a,b` keeps those having all of them (none when one doesn't exist) |
 | `GET /topics/:id` | optional | One topic with all its posts ranked; 404 for non-topics |
 | `GET /contents?authorId&page&pageSize` | optional | A user's contents, for the profile: `{ contents, count }` |
 | `GET /contents/bookmarked?page&pageSize` | required | The user's bookmarks, same shape |
-| `POST /contents` | required | Create a topic, post or critique (the type follows from the parent's depth) |
+| `POST /contents` | required | Create a topic, post or critique (the type follows from the parent's depth); a topic takes `tags`, a list of names |
 | `GET /contents/:id` | optional | A content; for posts, `history`, `interactionCounts` (poll `votes`, `suggestions` in any state and `critiques`) and (for the author) pending `suggestions` |
 | `GET /contents/:id/:hash` | optional | A post version: `body`, `critiques` made on it or earlier, `versions` and `lineages` (see below), and `base` for a pending suggestion |
 | `PATCH /contents/:id` | required | Edit a post: a commit for the author, a suggestion for anyone else |
@@ -80,6 +81,10 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 | `GET /notifications?page&pageSize&unread` | required | The user's notifications, newest first: `{ notifications, count, unread }`, each with `type`, `read`, `actor`, `content` (the post or topic it's about), `topic_id`, `subject` (the critique, post or clone made) and `suggestion` |
 | `GET /notifications/unread` | required | `{ unread }`, what the navbar polls |
 | `POST /notifications/read` | required | Marks `{ ids }`, or all without them, as read; only the user's own. Returns `{ read, unread }` |
+| `GET /tags?q&page&pageSize` | — | Tags whose slug contains `q` (those starting with it first, then the most used): `{ tags, count }`, each with `slug`, `name`, `provisional` and `topics`. Aliases and expired tags are left out |
+| `GET /tags/:slugs` | — | One tag or an intersection (`a,b`): `{ tags, canonical, topics, related }`; `canonical` is the list with aliases replaced, `related` the tags those topics have most. 404 when a tag doesn't exist or expired |
+| `POST /topics/:id/tags` | required | `{ tag, value }`: endorse (1), contest (-1) or withdraw (0); endorsing a tag the topic lacks proposes it, one that doesn't exist creates it. 403 for accounts in probation (except on their own topics) or creating one too early, 429 over the daily creation limit. Returns the topic's `tags` |
+| `GET /topics/:id/tags/history` | — | The topic's `tag_events`, oldest first: `{ id, voter, tag, name, from, to, created_at }`, voters numbered per topic |
 | `GET /topics/:id/votes` | — | The poll's history from `vote_events`, oldest first: `{ id, voter, from, to, created_at }`, with voters numbered per topic (not named until sign-up asks consent for public votes) |
 
 `lineages` maps each earlier version that critiques were made on to the list of commits from it to the requested one, along the post's first-parent history. `versions` holds the text of every commit in those lists. The frontend follows each critiqued passage through those edits (see `frontend/AGENTS.md`).
@@ -91,7 +96,7 @@ Lists that include topics (`toFeed`) return topics with their posts, posts with 
 `npm test` runs both Vitest projects; `npm run test:unit` and `npm run test:integration` run one. See the root `AGENTS.md` for how the database is provided.
 
 - **Integration tests go through the API** with the helpers in `test/support/api.ts` (`signUp`, `createTopic`, `createPost`, `edit`, `critique`, `interact`…), never through models directly, so routing, auth, SQL and git are exercised together.
-- **Rate limits are off in tests** (`vitest.config.ts`), since helpers sign up many users from one address. `rateLimit.test.ts` turns them on with low values and acts as different clients through `X-Forwarded-For`.
+- **Rate limits are off in tests** (`vitest.config.ts`), since helpers sign up many users from one address. `rateLimit.test.ts` turns them on with low values and acts as different clients through `X-Forwarded-For`. Likewise new accounts may create tags (`TAG_MIN_ACCOUNT_DAYS=0`); `tagLimits.test.ts` uses the defaults and ages users with SQL, and `tags.test.ts` raises the daily creation limit.
 - **Data is per file, not per test.** Tests in a file share a database, so make what each test needs (helpers generate unique names and titles) and don't assume a table is empty; a test that counts everything goes in its own file (e.g. `topics.test.ts`).
 - **Unit tests import modules directly.** Mock `@/pgDatabase` (`vi.mock`) when a module under test imports it, or the pool will try to connect.
 

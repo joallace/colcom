@@ -83,4 +83,18 @@ describe("settings", () => {
     vi.spyOn(process, "exit").mockImplementation((() => { throw new Error("exit") }) as any)
     expect(() => parseRateLimit("X", value, "1/1s")).toThrow("exit")
   })
+
+  it("reads counts as whole numbers, with a fallback and a minimum", async () => {
+    const { parseCount } = await load()
+    expect(parseCount("X", "7", 3)).toBe(7)
+    expect(parseCount("X", " 0 ", 3)).toBe(0)
+    expect(parseCount("X", undefined, 3)).toBe(3)
+    expect(parseCount("X", "", 3, 1)).toBe(3)
+  })
+
+  it.each([["-1", 0], ["1.5", 0], ["three", 0], ["0", 1]])("refuses to start with the count %j (minimum %i)", async (value, min) => {
+    const { parseCount } = await load()
+    vi.spyOn(process, "exit").mockImplementation((() => { throw new Error("exit") }) as any)
+    expect(() => parseCount("X", value, 3, min)).toThrow("exit")
+  })
 })

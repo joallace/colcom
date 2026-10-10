@@ -19,6 +19,8 @@ export default defineConfig({
       RATE_LIMIT_SIGN_UP: "off",
       RATE_LIMIT_CONTENTS: "off",
       RATE_LIMIT_INTERACTIONS: "off",
+      // Every test user is brand new; tagLimits.test.ts turns it on
+      TAG_MIN_ACCOUNT_DAYS: "0",
       DB_POOL: "4",
       // git must not read the developer's configuration (signing, hooks, default branch…), and
       // needs an identity for merge commits, as the Docker image sets one globally

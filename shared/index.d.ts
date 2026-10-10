@@ -13,6 +13,8 @@ export interface Limits {
   critiqueBody: { max: number }
   message: { max: number }
   quote: { max: number, context: number }
+  tag: { min: number, max: number }
+  tags: { seed: number, perTopic: number, filter: number }
   page: { max: number }
   pageSize: { default: number, max: number }
   orderBy: { max: number }
@@ -32,18 +34,21 @@ export interface SchemaData {
   signUp: { name: string, email: string, pass: string, avatar: string }
   login: { login: string, pass: string }
   content: { parent_id?: number, [key: string]: unknown }
-  topic: { title: string, body?: string, config: { answers: string[], allowMultipleAnswers?: boolean } }
+  topic: { title: string, body?: string, config: { answers: string[], allowMultipleAnswers?: boolean }, tags: string[] }
   post: { title: string, parent_id: number, body: string, config: { answer?: string } }
   critique: { title: string, parent_id: number, body: string, config: CritiqueConfig }
   critiqueConfig: CritiqueConfig
   edit: { body: string, message: string }
   clone: { title: string }
   interaction: { content_id: number, type: "up" | "down" | "vote" | "bookmark" | "promote" }
+  tagVote: { tag: string, value: 1 | -1 | 0 }
   readNotifications: { ids?: number[] }
   notifications: { page: number, pageSize: number, unread: boolean }
-  list: { page: number, pageSize: number, orderBy: string, authorId?: string, [key: string]: unknown }
+  list: { page: number, pageSize: number, orderBy: string, authorId?: string, tags?: string, [key: string]: unknown }
+  tagList: { q: string, page: number, pageSize: number }
   contentParams: { id: number }
   versionParams: { id: number, hash: string }
+  tagParams: { slugs: string }
   userParams: { name: string }
 }
 
@@ -84,3 +89,7 @@ export function fieldErrors(errors: FieldError[]): Record<string, string>
 export function byteLength(value: string): number
 export const formats: Record<"email" | "commit" | "uuid" | "png", RegExp | ((value: string) => boolean)>
 export function ucs2length(value: string): number
+// A tag's identity: accents dropped, lowercase, words joined by "-"
+export function tagSlug(name: string): string
+export const TAG_NAME_PATTERN: string
+export const TAG_SLUG_PATTERN: string

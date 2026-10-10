@@ -19,6 +19,10 @@ export const DEFAULT_LIMITS = Object.freeze({
   // The commit message of an edit or suggestion
   message: Object.freeze({ max: 200 }),
   quote: Object.freeze({ max: 5_000, context: 32 }),
+  // A tag's name, and so its slug (tags.js), which has the same length
+  tag: Object.freeze({ min: 2, max: 32 }),
+  // Tags given when creating a topic, distinct tags proposed on one topic, and tags combined in a filter
+  tags: Object.freeze({ seed: 5, perTopic: 10, filter: 5 }),
 
   page: Object.freeze({ max: 1_000_000 }),
   pageSize: Object.freeze({ default: 10, max: 100 }),

@@ -60,6 +60,20 @@ export const parseRateLimit = (name: string, value: string | undefined, fallback
   return { max: Number(match[1]), windowMs: Number(match[2]) * UNITS[match[3]] }
 }
 
+// A whole number of at least `min`, or the fallback when unset
+export const parseCount = (name: string, value: string | undefined, fallback: number, min = 0): number => {
+  const setting = value?.trim()
+  if (!setting)
+    return fallback
+
+  if (!/^\d+$/.test(setting) || Number(setting) < min) {
+    logger.fatal(`[config.ts] ${name} must be a whole number of at least ${min}. Got "${setting}".`)
+    process.exit(1)
+  }
+
+  return Number(setting)
+}
+
 export default Object.freeze({
   accessTokenSecret,
   corsOrigins: parseOrigins(process.env.CORS_ORIGIN, isProduction),
@@ -73,5 +87,16 @@ export default Object.freeze({
     contents: parseRateLimit("RATE_LIMIT_CONTENTS", process.env.RATE_LIMIT_CONTENTS, "30/10m"),
     // Votes, bookmarks and promotions per user; toggling makes several per action
     interactions: parseRateLimit("RATE_LIMIT_INTERACTIONS", process.env.RATE_LIMIT_INTERACTIONS, "300/10m")
+  }),
+  // What keeps tags from being spammed: creating one is limited, using one is free
+  tags: Object.freeze({
+    // How old an account must be to create tags and to vote on other people's topics' tags
+    minAccountDays: parseCount("TAG_MIN_ACCOUNT_DAYS", process.env.TAG_MIN_ACCOUNT_DAYS, 7),
+    // New tags per user per day
+    createPerDay: parseCount("TAG_CREATE_PER_DAY", process.env.TAG_CREATE_PER_DAY, 3, 1),
+    // A new tag is provisional until it shows on this many topics, by at least two authors…
+    activationTopics: parseCount("TAG_ACTIVATION_TOPICS", process.env.TAG_ACTIVATION_TOPICS, 3, 1),
+    // …and expires if it isn't active after this many days
+    provisionalDays: parseCount("TAG_PROVISIONAL_DAYS", process.env.TAG_PROVISIONAL_DAYS, 30, 1)
   })
 })
