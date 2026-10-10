@@ -102,6 +102,23 @@ describe("resolving a suggestion's conflicts", () => {
     })
   })
 
+  // `.frame` is a reading width wide, so in the wide column it would sit at the column's start
+  it("chooses in the wide column and reviews in the reading one, as /write does", async () => {
+    mockApi()
+    const { container } = renderPage()
+
+    fireEvent.click(await screen.findByLabelText("manter a sua versão"))
+    const page = container.querySelector(".content.resolve")
+    expect(page.classList.contains("wide")).toBe(true)
+
+    fireEvent.click(screen.getByRole("button", { name: "revisar o resultado" }))
+    expect(await screen.findByText("comparando com a versão atual do post:")).toBeTruthy()
+    expect(container.querySelector(".content.resolve").classList.contains("wide")).toBe(false)
+
+    fireEvent.click(screen.getByRole("button", { name: "refazer as escolhas" }))
+    expect(container.querySelector(".content.resolve").classList.contains("wide")).toBe(true)
+  })
+
   it("starts over from the post's current version when it changed meanwhile", async () => {
     const moved = { status: 409, body: { message: "O post foi alterado enquanto os conflitos eram resolvidos.", errorLocationCode: "GIT:MERGE:HEAD_MOVED" } }
     const fetch = mockApi({ sidesResponses: [sides(), sides(NEW_HEAD, doc("Intro.", "Middle.", "Taxes should fall, now.", "End."))], merges: [moved, { status: 204 }] })
