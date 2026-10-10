@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import Meta from "@/pages/Meta"
 import { UserContext } from "@/context/UserContext"
+import { storeToken } from "../support/session"
 
 
 vi.mock("@/hooks/useBreakpoint", () => ({ default: () => true }))
@@ -24,13 +25,16 @@ function mockApi(groups) {
   return fetch
 }
 
-const renderAs = user => render(
-  <UserContext.Provider value={{ user, updatePromoted: () => { } }}>
-    <MemoryRouter initialEntries={["/meta"]}>
-      <Meta />
-    </MemoryRouter>
-  </UserContext.Provider>
-)
+const renderAs = user => {
+  storeToken(user)
+  return render(
+    <UserContext.Provider value={{ user, updatePromoted: () => { } }}>
+      <MemoryRouter initialEntries={["/meta"]}>
+        <Meta />
+      </MemoryRouter>
+    </UserContext.Provider>
+  )
+}
 
 describe("the meta page", () => {
   it("shows the foundational topics under their groups, in order", async () => {
@@ -46,7 +50,7 @@ describe("the meta page", () => {
     expect(within(screen.getByRole("region", { name: "Funcionamento" })).getByText("O colcom promove o consenso?")).toBeInTheDocument()
     // The header's link, and each topic's pill
     expect(screen.getAllByRole("link", { name: "Meta" }).map(link => link.getAttribute("href"))).toEqual(Array(4).fill("/t/meta"))
-    expect(fetch).toHaveBeenCalledWith("http://api.test/meta", { headers: { Authorization: "Bearer token" } })
+    expect(fetch).toHaveBeenCalledWith("http://api.test/meta", expect.objectContaining({ method: "GET", headers: { Authorization: "Bearer token" } }))
     expect(document.title).toBe("meta · colcom")
   })
 

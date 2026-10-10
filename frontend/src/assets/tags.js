@@ -1,4 +1,4 @@
-import env from "@/assets/enviroment"
+import api, { ApiError } from "@/assets/api"
 import { tagSlug } from "@colcom/shared"
 
 export { tagSlug }
@@ -20,18 +20,13 @@ export const toggleTag = (slugs, slug) => slugs.includes(slug) ? slugs.filter(ot
 export const TAG_RULE = "uma tag aparece enquanto tiver pelo menos tantos apoios quanto contestações."
 
 // Endorses (1), contests (-1) or withdraws (0). Returns { tags } (the topic's, updated) or { error }.
-export async function voteOnTag(token, topicId, tag, value) {
+export async function voteOnTag(topicId, tag, value) {
   try {
-    const res = await fetch(`${env.apiAddress}/topics/${topicId}/tags`, {
-      method: "post",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-      body: JSON.stringify({ tag, value })
-    })
-    const data = await res.json()
-
-    return res.ok ? { tags: data.tags } : { error: data.message }
+    return { tags: (await api.post(`/topics/${topicId}/tags`, { tag, value })).tags }
   }
   catch (err) {
+    if (err instanceof ApiError)
+      return { error: err.message }
     console.error(err)
     return { error: "Não foi possível se conectar ao colcom." }
   }
@@ -39,8 +34,12 @@ export async function voteOnTag(token, topicId, tag, value) {
 
 // Tags whose slug contains what was typed, for autocomplete
 export async function searchTags(query, { pageSize = 6, signal } = {}) {
-  const res = await fetch(`${env.apiAddress}/tags?q=${encodeURIComponent(query)}&pageSize=${pageSize}`, { signal })
-  if (!res.ok)
-    return []
-  return (await res.json()).tags
+  try {
+    return (await api.get(`/tags?q=${encodeURIComponent(query)}&pageSize=${pageSize}`, { signal })).tags
+  }
+  catch (err) {
+    if (err instanceof ApiError)
+      return []
+    throw err
+  }
 }

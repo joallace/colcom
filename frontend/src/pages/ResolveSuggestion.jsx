@@ -7,7 +7,7 @@ import Alert from "@/components/primitives/Alert"
 import Input from "@/components/primitives/Input"
 import LoadingButton from "@/components/primitives/LoadingButton"
 import Spinner from "@/components/primitives/Spinner"
-import env from "@/assets/enviroment"
+import api, { ApiError } from "@/assets/api"
 import { describe, validate } from "@/assets/validation"
 import { loginPath } from "@/assets/returnTo"
 import { conflictContexts, conflictsOf, mergeChunks, resolveChunks } from "@/assets/mergeConflicts"
@@ -49,24 +49,26 @@ export default function ResolveSuggestion() {
       return
 
     const load = async () => {
-      const headers = { "Authorization": `Bearer ${user.accessToken}` }
       try {
-        const [sidesRes, postRes] = await Promise.all([
-          fetch(`${env.apiAddress}/contents/${pid}/${hash}/merge`, { headers }),
-          fetch(`${env.apiAddress}/contents/${pid}?omit_body`, { headers })
+        const [sides, post] = await Promise.all([
+          api.get(`/contents/${pid}/${hash}/merge`),
+          // Only the title and the suggestion's message come from it, so the page does without
+          api.get(`/contents/${pid}?omit_body`).catch(err => {
+            if (err instanceof ApiError)
+              return undefined
+            throw err
+          })
         ])
-        const [sides, post] = await Promise.all([sidesRes.json(), postRes.json()])
 
-        if (!sidesRes.ok) {
-          setLoaded({ request, user, error: sides.message })
-          return
-        }
-
-        if (postRes.ok)
+        if (post)
           document.title = `incorporando uma sugestão a "${post.title}" · colcom`
-        setLoaded({ request, user, sides, post: postRes.ok ? post : undefined })
+        setLoaded({ request, user, sides, post })
       }
       catch (err) {
+        if (err instanceof ApiError) {
+          setLoaded({ request, user, error: err.message })
+          return
+        }
         console.error(err)
         setLoaded({ request, user, error: "Não foi possível carregar a sugestão." })
       }
@@ -106,22 +108,15 @@ export default function ResolveSuggestion() {
 
     try {
       setIsSending(true)
-      const res = await fetch(`${env.apiAddress}/contents/${pid}/${hash}/merge`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.accessToken}` },
-        body: JSON.stringify(values)
-      })
-
-      if (res.ok) {
-        navigate(postPath)
-        return
-      }
-
-      const data = await res.json()
-      setError(data.message)
-      setHeadMoved(data.errorLocationCode === "GIT:MERGE:HEAD_MOVED")
+      await api.post(`/contents/${pid}/${hash}/merge`, values)
+      navigate(postPath)
     }
     catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message)
+        setHeadMoved(err.errorLocationCode === "GIT:MERGE:HEAD_MOVED")
+        return
+      }
       console.error(err)
       setError("Não foi possível incorporar a sugestão.")
     }

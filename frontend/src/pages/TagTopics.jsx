@@ -2,9 +2,9 @@ import React from "react"
 import { useLocation, useNavigate, useParams } from "react-router"
 import { PiX } from "react-icons/pi"
 
-import env from "@/assets/enviroment"
 import { tagPath, tagsFromPath, toggleTag } from "@/assets/tags"
 import TagPill from "@/components/content/TagPill"
+import useApiResource from "@/hooks/useApiResource"
 import TopicTree from "@/pages/TopicTree"
 
 
@@ -17,45 +17,20 @@ export default function TagTopics() {
   const navigate = useNavigate()
   const slugs = tagsFromPath(param)
   const key = slugs.join(",")
-  // What was fetched, and for which tags: it's loading until that's what is asked for
-  const [info, setInfo] = React.useState({})
+  const { data, error: refusal } = useApiResource(`/tags/${key}`)
+  const error = refusal && (
+    refusal.status === 404 ? "tag não encontrada." : refusal.status ? "tags inválidas." : "não foi possível se conectar ao colcom."
+  )
 
   React.useEffect(() => {
-    const controller = new AbortController()
-
-    const fetchInfo = async () => {
-      try {
-        const res = await fetch(`${env.apiAddress}/tags/${key}`, { signal: controller.signal })
-        const data = await res.json()
-
-        if (!res.ok) {
-          setInfo({ key, error: res.status === 404 ? "tag não encontrada." : "tags inválidas." })
-          return
-        }
-
-        // A merged tag's page is its tag's
-        if (data.canonical !== key) {
-          navigate(tagPath(data.canonical.split(",")), { replace: true })
-          return
-        }
-
-        setInfo({ key, data })
-        document.title = `${data.tags.map(tag => tag.name).join(" + ")} · colcom`
-      }
-      catch (err) {
-        if (err.name !== "AbortError") {
-          console.error(err)
-          setInfo({ key, error: "não foi possível se conectar ao colcom." })
-        }
-      }
-    }
-
-    fetchInfo()
-    return () => controller.abort()
-  }, [key, navigate])
-
-  const loaded = info.key === key ? info : {}
-  const { data, error } = loaded
+    if (!data)
+      return
+    // A merged tag's page is its tag's
+    if (data.canonical !== key)
+      navigate(tagPath(data.canonical.split(",")), { replace: true })
+    else
+      document.title = `${data.tags.map(tag => tag.name).join(" + ")} · colcom`
+  }, [data, key, navigate])
 
   return (
     // Remounted for every set of tags, so the page count is asked for again
@@ -64,7 +39,7 @@ export default function TagTopics() {
         {error ?
           <p className="tagRule">{error}</p>
           :
-          data &&
+          data?.canonical === key &&
           <>
             {/* The pills are the title: links are phrasing content, so they can be in a heading */}
             <h1 className="tagSet">

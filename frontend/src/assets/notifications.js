@@ -1,4 +1,4 @@
-import env from "@/assets/enviroment"
+import api, { ApiError } from "@/assets/api"
 
 
 // What a notification says (after the actor's name) and where it leads. `target` is the title of
@@ -34,27 +34,31 @@ export const UNREAD_EVENT = "colcom:unread-notifications"
 
 export const announceUnread = unread => window.dispatchEvent(new CustomEvent(UNREAD_EVENT, { detail: unread }))
 
-const authHeaders = token => ({ "Authorization": `Bearer ${token}` })
-
-export async function fetchUnread(token) {
-  const res = await fetch(`${env.apiAddress}/notifications/unread`, { headers: authHeaders(token) })
-  return res.ok ? (await res.json()).unread : undefined
+// The count, or undefined when the API refuses
+export async function fetchUnread() {
+  try {
+    return (await api.get("/notifications/unread")).unread
+  }
+  catch (err) {
+    if (err instanceof ApiError)
+      return undefined
+    throw err
+  }
 }
 
 // Marks the given notifications as read, or all of them without `ids`, and announces the new count
-export async function markRead(token, ids) {
-  const res = await fetch(`${env.apiAddress}/notifications/read`, {
-    method: "post",
-    headers: { ...authHeaders(token), "Content-Type": "application/json" },
-    body: JSON.stringify(ids ? { ids } : {}),
+export async function markRead(ids) {
+  let unread
+  try {
     // Clicking a notification navigates away right after marking it
-    keepalive: true
-  })
+    ({ unread } = await api.post("/notifications/read", ids ? { ids } : {}, { keepalive: true }))
+  }
+  catch (err) {
+    if (err instanceof ApiError)
+      return undefined
+    throw err
+  }
 
-  if (!res.ok)
-    return undefined
-
-  const { unread } = await res.json()
   announceUnread(unread)
   return unread
 }

@@ -10,10 +10,11 @@ React 19 + React Router 7 + TipTap 3, built with Vite 8. Read the root [`AGENTS.
 | `src/components/content/` | Topic, Post and Critique, their compact previews for the profile and bookmarks (`ContentList`, `PostPreview`, `CritiquePreview`), `CritiquePopover`, and tags (`TagPill`, `TagList`, `TagInput`) |
 | `src/components/Editor/` | The TipTap editor, its extensions, menus and the chart node |
 | `src/components/primitives/` | `Frame` (the card every content is drawn in), `Modal`, `Popover`, `Pagination`, voting buttons… |
-| `src/assets/` | Logic shared across components: `anchoring.js`, `textDiff.js`, `textIndex.js`, the custom `highlight.js` mark, `validation.js`, and `scss/` |
-| `src/context/` | `UserContext`/`UserProvider` (the logged-in user and token, from `localStorage`; `logout` revokes the session on the API and forgets it without waiting, and the session is checked again on returning to the tab) and `ChartContext`/`ChartProvider` |
+| `src/assets/` | Logic shared across components: the API client `api.js`, `anchoring.js`, `textDiff.js`, `textIndex.js`, the custom `highlight.js` mark, `validation.js`, and `scss/` |
+| `src/hooks/` | `useApiResource` (page loads), `usePageParam`, `useToLogin`, `useUnreadNotifications`, `useBreakpoint` |
+| `src/context/` | `UserContext`/`UserProvider` (the logged-in user and token, from `localStorage`; `logout` revokes the session on the API and forgets it without waiting, the session is checked again on returning to the tab, and it logs out when the API refuses a request's token) and `ChartContext`/`ChartProvider` |
 
-`@/` is an alias for `src/`. The API address is `import.meta.env.VITE_API_ADDRESS` (`assets/enviroment.js`), or when unset `http://localhost:3000` in dev and the relative `/api` in a build (nginx proxies it on the same origin). It is only ever prefixed to fetch paths, so a relative address works. nginx's CSP (`nginx/headers.conf`) allows only same-origin scripts, styles, fonts and requests, plus `data:` images, and no eval: anything loaded from elsewhere must be added there.
+`@/` is an alias for `src/`. The API address is `import.meta.env.VITE_API_ADDRESS` (`assets/enviroment.js`), or when unset `http://localhost:3000` in dev and the relative `/api` in a build (nginx proxies it on the same origin). Only `assets/api.js` prefixes it to paths, so a relative address works. nginx's CSP (`nginx/headers.conf`) allows only same-origin scripts, styles, fonts and requests, plus `data:` images, and no eval: anything loaded from elsewhere must be added there.
 
 ## The editor (TipTap 3)
 
@@ -63,6 +64,16 @@ At `/topics/:tid/posts/:pid/suggestions/:hash`, for the post's author. It loads 
 - **Reviewing.** The result opens in an editable editor compared with the post's current version. Like the post's edits, the editor hands its content over on blur, before the button's click.
 - **Sending.** `{ body, head }` goes to `POST …/merge`. A `GIT:MERGE:HEAD_MOVED` refusal (the post changed meanwhile) offers to start over, loading the sides again.
 
+## Talking to the API
+
+Every request goes through `assets/api.js`; nothing else calls `fetch`.
+
+- **`api.get(path, opts)`, `api.post/patch(path, body, opts)`** take a path (`/contents/1`), send the body as JSON and return the parsed answer (`undefined` for a 204 or an empty body). Other options (`signal`, `keepalive`) go to `fetch`.
+- **The token** is read from `localStorage` on each request, its single source of truth (`UserProvider` writes and removes it there; `user.accessToken` only identifies whose data was loaded). `auth: false` sends none (login and sign-up); `token` sends a given one (logging out, after it's forgotten).
+- **A refusal** throws an `ApiError` with `status`, the body's `message`, `action`, `key`, `errors` and `errorLocationCode`, and the whole body in `data` (for `responseErrors(err.data)`). A failed connection throws `fetch`'s own error, so `err instanceof ApiError` tells a refusal from no connection.
+- **A 401 to a request that sent the stored token** dispatches `SESSION_ENDED_EVENT`, and `UserProvider` logs out: the backend answers a revoked or expired token so, and a page must not take anonymous data as the user's. Login and sign-up send no token, so a wrong password never logs anyone out.
+- **Page loads** use `hooks/useApiResource(path, { deps })`: `{ data, error, isLoading, setData, reload }`. A null path waits (e.g. while `user` is undefined); it fetches again when `deps` change (by default the path), aborting the previous request, and `data`/`error` are only ever the answer to what's asked now. The path is read when the deps change, so a part left out of them (TopicTree's `with_count`) doesn't refetch. Requests made by actions (votes, forms) and the post page's versions call `api` directly.
+
 ## Forms
 
 Forms validate with the schemas the API uses (`shared/`, see the root `AGENTS.md`) through `assets/validation.js`, before sending anything:
@@ -101,5 +112,5 @@ Forms validate with the schemas the API uses (`shared/`, see the root `AGENTS.md
 
 - **Logic first.** Keep logic that can be tested without React in `src/assets/` (as `groupOverlappingMarks` is), and test it there.
 - **The real editor works in jsdom.** `new Editor({ extensions: getExtensions(), … })` renders marks and decorations; `test/editor/` does this.
-- **API calls are stubbed** with `vi.stubGlobal("fetch", …)`; `test/setup.js` restores globals and clears `localStorage` after each test. The API address in tests is `http://api.test`.
+- **API calls are stubbed** with `vi.stubGlobal("fetch", …)`; `test/setup.js` restores globals and clears `localStorage` after each test. The API address in tests is `http://api.test`. A test providing a user through `UserContext` stores its token too (`storeToken` in `test/support/session.js`), since the client reads it from `localStorage`.
 - **Pages need their providers:** `UserContext`, `ChartProvider` (charts) and a `MemoryRouter` with the page's route, as in `test/pages/PostPage.test.jsx`.

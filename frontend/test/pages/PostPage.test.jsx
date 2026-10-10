@@ -221,7 +221,7 @@ describe("PostPage", () => {
     const fetch = mockApi({ [V2]: { body: html, critiques: [], versions: {}, lineages: {} } })
     const get = fetch.getMockImplementation()
     fetch.mockImplementation(async (url, options) => {
-      if (options?.method !== "post")
+      if (options?.method !== "POST")
         return get(url, options)
       const sent = JSON.parse(options.body)
       const created = { ...sent, id: 30, author: "bob", upvotes: 0, downvotes: 0, created_at: new Date().toISOString() }
@@ -258,8 +258,8 @@ describe("PostPage", () => {
     fireEvent.blur(body)
     fireEvent.click(publish)
 
-    await waitFor(() => expect(fetch).toHaveBeenCalledWith("http://api.test/contents", expect.objectContaining({ method: "post" })))
-    const sent = JSON.parse(fetch.mock.calls.find(([, options]) => options?.method === "post")[1].body)
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith("http://api.test/contents", expect.objectContaining({ method: "POST" })))
+    const sent = JSON.parse(fetch.mock.calls.find(([, options]) => options?.method === "POST")[1].body)
     expect(sent).toMatchObject({ parent_id: 2, config: { commit: V2, from: chartPos, to: chartPos + 1, quote: { exact: CHART_TEXT } } })
     await waitFor(() => expect(container.querySelector(".ProseMirror .chart")).toHaveAttribute("data-highlight", "definitive"))
     expect(container.querySelector(".ProseMirror .chart")).toHaveAttribute("data-commit-index", "0")
@@ -294,7 +294,7 @@ describe("accepting a suggestion", () => {
   async function accept(merge) {
     const fetch = mockApi({ ...VERSIONS, [SUGGESTION]: { body: SUGGESTED_HTML, critiques: [], versions: {}, lineages: {}, base: { commit: V2, body: V2_HTML } } }, { ...POST, suggestions })
     const original = fetch.getMockImplementation()
-    fetch.mockImplementation(async (url, options) => options?.method === "post" ?
+    fetch.mockImplementation(async (url, options) => options?.method === "POST" ?
       { ok: merge.status < 300, status: merge.status, json: async () => merge.body } : original(url, options))
     renderPage("/topics/1/posts/2", { pid: "a", accessToken: "token" })
 
@@ -315,7 +315,7 @@ describe("accepting a suggestion", () => {
     const fetch = await accept({ status: 409, body: { message: "A sugestão altera trechos…", errorLocationCode: "GIT:MERGE:CONFLICT" } })
 
     expect(await screen.findByText("resolving conflicts")).toBeInTheDocument()
-    expect(fetch).toHaveBeenCalledWith(`http://api.test/contents/2/${SUGGESTION}/merge`, expect.objectContaining({ method: "post" }))
+    expect(fetch).toHaveBeenCalledWith(`http://api.test/contents/2/${SUGGESTION}/merge`, expect.objectContaining({ method: "POST" }))
   })
 
   it("says why it couldn't be merged otherwise", async () => {

@@ -26,7 +26,7 @@ export default function useUnreadNotifications() {
       if (document.visibilityState === "hidden")
         return
       try {
-        const count = await fetchUnread(token)
+        const count = await fetchUnread()
         if (!cancelled && count !== undefined)
           setUnread({ token, count })
       }

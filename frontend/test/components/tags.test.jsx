@@ -8,6 +8,7 @@ import TagList from "@/components/content/TagList"
 import TagInput from "@/components/content/TagInput"
 import TopicModal from "@/components/content/TopicModal"
 import { UserContext } from "@/context/UserContext"
+import { storeToken } from "../support/session"
 
 
 const API = "http://api.test"
@@ -20,7 +21,7 @@ function mockApi({ found = [], onVote = () => ({ tags: [] }) } = {}) {
     const { pathname } = new URL(url)
     if (pathname === "/tags")
       return { ok: true, status: 200, json: async () => ({ tags: found, count: found.length }) }
-    if (/^\/topics\/\d+\/tags$/.test(pathname) && options.method === "post") {
+    if (/^\/topics\/\d+\/tags$/.test(pathname) && options.method === "POST") {
       const result = onVote(JSON.parse(options.body))
       return { ok: !result.message, status: result.message ? 403 : 200, json: async () => result }
     }
@@ -30,11 +31,14 @@ function mockApi({ found = [], onVote = () => ({ tags: [] }) } = {}) {
   return fetch
 }
 
-const renderWithUser = (ui, user = { accessToken: "token" }) => render(
-  <UserContext.Provider value={{ user }}>
-    <MemoryRouter>{ui}</MemoryRouter>
-  </UserContext.Provider>
-)
+const renderWithUser = (ui, user = { accessToken: "token" }) => {
+  storeToken(user)
+  return render(
+    <UserContext.Provider value={{ user }}>
+      <MemoryRouter>{ui}</MemoryRouter>
+    </UserContext.Provider>
+  )
+}
 
 describe("a topic's tags", () => {
   it("shows the visible ones as links to their pages, styled by status and by the viewer's vote", () => {

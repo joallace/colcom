@@ -1,51 +1,37 @@
 import React from "react"
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 
-import env from "@/assets/enviroment"
 import Topic from "@/components/content/Topic"
+import NoResponse from "@/components/primitives/NoResponse"
 import Spinner from "@/components/primitives/Spinner"
 import useUser from "@/context/UserContext"
+import useApiResource from "@/hooks/useApiResource"
 
 
 export default function TopicPage() {
-  const [topicData, setTopicData] = React.useState({})
-  const [isLoading, setIsLoading] = React.useState(true)
   const { user } = useUser()
   const { id } = useParams()
-
+  const { data, error, isLoading } = useApiResource(user !== undefined ? `/topics/${id}` : null, { deps: [user, id] })
 
   React.useEffect(() => {
-    const fetchTopic = async () => {
-      const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
-      try {
-        setIsLoading(true)
-        const url = `${env.apiAddress}/topics/${id}`
-        const res = await fetch(url, { method: "get", headers })
-        const data = await res.json()
-
-        if (data) {
-          setTopicData(data)
-          document.title = `${data.title} · colcom`
-        }
-      }
-      catch (err) {
-        console.error(err)
-      }
-      finally {
-        setIsLoading(false)
-      }
-    }
-
-    if (user !== undefined)
-      fetchTopic()
-  }, [user, id])
+    if (data)
+      document.title = `${data.title} · colcom`
+    else if (error)
+      document.title = "tópico não encontrado · colcom"
+  }, [data, error])
 
   return (
-    <div className={`content ${isLoading ? "centered" : "tree"}`}>
+    <div className={`content ${isLoading || error ? "centered" : "tree"}`}>
       {isLoading ?
         <Spinner />
         :
-        <Topic {...topicData} showBody />
+        error ?
+          <NoResponse>
+            {error.status === 404 ? "tópico não encontrado." : "não foi possível carregar o tópico."}
+            {" "}<Link to="/">ver os tópicos</Link>
+          </NoResponse>
+          :
+          <Topic {...data} showBody />
       }
     </div>
   )

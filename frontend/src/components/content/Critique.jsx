@@ -14,7 +14,7 @@ import Alert from "@/components/primitives/Alert"
 import { submitVote } from "@/assets/interactions"
 import { Author, Relevance } from "@/components/content/Metrics"
 import useBreakpoint from "@/hooks/useBreakpoint"
-import env from "@/assets/enviroment"
+import api, { ApiError } from "@/assets/api"
 import useUser from "@/context/UserContext"
 import { describe, validate } from "@/assets/validation"
 import { readableText } from "@/assets/textIndex"
@@ -124,27 +124,17 @@ export default function Critique({
     try {
       setIsLoading(true)
       setErrorMessage("")
-      const url = `${env.apiAddress}/contents`
-
-      const res = await fetch(url, {
-        method: "post",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.accessToken}` },
-        body: JSON.stringify(values)
-      })
-
-      const data = await res.json()
-
-      if (res.ok) {
-        setCritiques(prev => [...prev, { ...data, author_avatar: user.avatar }])
-        setShowCritique(false)
-      }
-      else {
-        setError(true)
-        setErrorMessage(data.message?.toLowerCase())
-      }
+      const data = await api.post("/contents", values)
+      setCritiques(prev => [...prev, { ...data, author_avatar: user.avatar }])
+      setShowCritique(false)
     }
     catch (err) {
-      console.error(err)
+      if (err instanceof ApiError) {
+        setError(true)
+        setErrorMessage(err.data.message?.toLowerCase())
+      }
+      else
+        console.error(err)
     }
     finally {
       setIsLoading(false)

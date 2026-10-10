@@ -46,17 +46,22 @@ function LoginPage() {
   return <p>login page{search}</p>
 }
 
-const renderPage = (url, user) => render(
-  <UserContext.Provider value={{ user }}>
-    <MemoryRouter initialEntries={[url]}>
-      <Routes>
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/users/:name" element={<Profile />} />
-        <Route path="/login" element={<LoginPage />} />
-      </Routes>
-    </MemoryRouter>
-  </UserContext.Provider>
-)
+const renderPage = (url, user) => {
+  // The API client reads the token where UserProvider keeps it
+  if (user?.accessToken)
+    localStorage.setItem("accessToken", user.accessToken)
+  return render(
+    <UserContext.Provider value={{ user }}>
+      <MemoryRouter initialEntries={[url]}>
+        <Routes>
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/users/:name" element={<Profile />} />
+          <Route path="/login" element={<LoginPage />} />
+        </Routes>
+      </MemoryRouter>
+    </UserContext.Provider>
+  )
+}
 
 describe("Profile", () => {
   it("shows the logged in user on /profile", async () => {
@@ -65,7 +70,7 @@ describe("Profile", () => {
 
     expect(await screen.findByText("você ainda não publicou nenhum conteúdo.")).toBeInTheDocument()
     expect(screen.getByText("alice")).toBeInTheDocument()
-    expect(fetch).toHaveBeenCalledWith(`${API}/contents?authorId=a1&page=1&pageSize=5`, { method: "get", headers: { Authorization: "Bearer token-123" } })
+    expect(fetch).toHaveBeenCalledWith(`${API}/contents?authorId=a1&page=1&pageSize=5`, expect.objectContaining({ method: "GET", headers: { Authorization: "Bearer token-123" } }))
   })
 
   it("sends logged out visitors of /profile to the login", async () => {
@@ -81,8 +86,8 @@ describe("Profile", () => {
 
     expect(await screen.findByText("Post by bob silva")).toBeInTheDocument()
     expect(screen.getAllByText("bob silva")[0]).toHaveClass("username")
-    expect(fetch).toHaveBeenCalledWith(`${API}/users/bob%20silva`)
-    expect(fetch).toHaveBeenCalledWith(`${API}/contents?authorId=b2&page=1&pageSize=5`, { method: "get", headers: {} })
+    expect(fetch).toHaveBeenCalledWith(`${API}/users/bob%20silva`, expect.objectContaining({ method: "GET" }))
+    expect(fetch).toHaveBeenCalledWith(`${API}/contents?authorId=b2&page=1&pageSize=5`, expect.objectContaining({ method: "GET", headers: {} }))
   })
 
   it("names someone else when they have published nothing", async () => {

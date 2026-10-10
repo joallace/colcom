@@ -30,7 +30,7 @@ function TagCuration({ topicId, tags, setTags }) {
     }
 
     setPending(true)
-    const result = await voteOnTag(user.accessToken, topicId, name, value)
+    const result = await voteOnTag(topicId, name, value)
     setPending(false)
 
     if (result.error)

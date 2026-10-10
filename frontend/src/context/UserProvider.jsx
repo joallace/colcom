@@ -1,50 +1,44 @@
 import React from "react"
 
-import env from "@/assets/enviroment"
+import api, { ApiError, getToken, SESSION_ENDED_EVENT, TOKEN_KEY } from "@/assets/api"
 import { UserContext } from "@/context/UserContext"
 
 
-// The user of the stored token, or null when there's no token or the API refuses it
+// The user of the stored token, or null when there's no token or the API refuses it (the client
+// has then already announced the session's end)
 const requestUser = async () => {
-  const accessToken = localStorage.getItem("accessToken")
+  const accessToken = getToken()
 
   if (!accessToken)
     return null
 
-  const url = `${env.apiAddress}/users/self`
-  const res = await fetch(url, {
-    method: "get",
-    headers: { "Authorization": `Bearer ${accessToken}` },
-  })
-  const data = await res.json()
-
-  if (res.status === 401) {
-    localStorage.removeItem("accessToken")
-    return null
+  try {
+    return { ...await api.get("/users/self"), accessToken }
   }
-
-  return { ...data, accessToken }
+  catch (err) {
+    if (err instanceof ApiError && err.status === 401)
+      return null
+    throw err
+  }
 }
 
 export default function UserProvider({ children }) {
   // Without a token there's no one to fetch: logged out (null) rather than still loading (undefined)
-  const [user, setUser] = React.useState(() => localStorage.getItem("accessToken") ? undefined : null)
+  const [user, setUser] = React.useState(() => getToken() ? undefined : null)
 
-  const clearUser = () => { localStorage.removeItem("accessToken"); setUser(null) }
+  const clearUser = () => { localStorage.removeItem(TOKEN_KEY); setUser(null) }
 
   // Revokes the session on the API (all of the user's sessions, on every device) and forgets it
   // here at once, without waiting: a failed or slow request must not keep anyone logged in
   const logout = () => {
-    const accessToken = localStorage.getItem("accessToken")
+    const accessToken = getToken()
     clearUser()
 
     if (!accessToken)
       return Promise.resolve()
 
-    return fetch(`${env.apiAddress}/logout`, {
-      method: "post",
-      headers: { "Authorization": `Bearer ${accessToken}` },
-    }).catch(err => console.error(err))
+    // Already forgotten here, so the token is passed along
+    return api.post("/logout", undefined, { token: accessToken }).catch(err => console.error(err))
   }
 
   const fetchUser = async () => setUser(await requestUser())
@@ -54,8 +48,12 @@ export default function UserProvider({ children }) {
   }
 
   React.useEffect(() => {
-    if (localStorage.getItem("accessToken"))
-      requestUser().then(setUser)
+    if (getToken())
+      requestUser().then(setUser, err => console.error(err))
+
+    // The API refused a request's token (see assets/api.js): the session ended elsewhere or expired
+    const endSession = () => { localStorage.removeItem(TOKEN_KEY); setUser(null) }
+    window.addEventListener(SESSION_ENDED_EVENT, endSession)
 
     // Coming back to the tab, check the session still holds: it may have been ended on another
     // device or tab. Only an ended one changes the state, so pages don't reload their data.
@@ -71,7 +69,10 @@ export default function UserProvider({ children }) {
       }
     }
     document.addEventListener("visibilitychange", recheck)
-    return () => document.removeEventListener("visibilitychange", recheck)
+    return () => {
+      window.removeEventListener(SESSION_ENDED_EVENT, endSession)
+      document.removeEventListener("visibilitychange", recheck)
+    }
   }, [])
 
   return (

@@ -7,7 +7,7 @@ import PixelArtEditor from "@/components/primitives/PixelArtEditor"
 import { blankGrid, serializeGridToBase64png } from "@/assets/pixelArt"
 import Alert from "@/components/primitives/Alert"
 import { UserContext } from "@/context/UserContext"
-import env from "@/assets/enviroment"
+import api, { ApiError, TOKEN_KEY } from "@/assets/api"
 import { formErrors, limits, responseErrors } from "@/assets/validation"
 import { returnPath } from "@/assets/returnTo"
 
@@ -92,27 +92,11 @@ export default function Login() {
     try {
       setIsLoading(true)
       setFormErrorMessage("")
-      const url = `${env.apiAddress}/${isSignUp ? "users" : "login"}`
+      // No token: a wrong password is a 401 too, and must not end anyone's session
+      const data = await api.post(`/${isSignUp ? "users" : "login"}`, values(), { auth: false })
 
-      const res = await fetch(url, {
-        method: "post",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values())
-      })
-
-      const data = await res.json()
-
-      if (res.status >= 400) {
-        if (data.name === "ValidationError") {
-          const found = data.errors ? responseErrors(data) : ALREADY_USED[data.key] ? { [data.key]: ALREADY_USED[data.key] } : {}
-          setErrors(Object.fromEntries(Object.entries(found).map(([key, message]) => [toFormKey(key), message])))
-        }
-        setFormErrorMessage(data.message.toLowerCase())
-        return
-      }
-
-      if (data.accessToken) {
-        localStorage.setItem("accessToken", data.accessToken)
+      if (data?.accessToken) {
+        localStorage.setItem(TOKEN_KEY, data.accessToken)
         fetchUser()
       }
 
@@ -123,6 +107,15 @@ export default function Login() {
         navigate(returnPath(searchParams.get("returnTo")), { replace: true, state: state?.returnState })
     }
     catch (err) {
+      if (err instanceof ApiError) {
+        const { data } = err
+        if (data.name === "ValidationError") {
+          const found = data.errors ? responseErrors(data) : ALREADY_USED[data.key] ? { [data.key]: ALREADY_USED[data.key] } : {}
+          setErrors(Object.fromEntries(Object.entries(found).map(([key, message]) => [toFormKey(key), message])))
+        }
+        setFormErrorMessage(err.message.toLowerCase())
+        return
+      }
       setFormErrorMessage("Não foi possível se conectar ao colcom. Por favor, verifique sua conexão.")
       console.error(err)
     }

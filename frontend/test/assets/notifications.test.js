@@ -52,8 +52,8 @@ describe("markRead", () => {
     const listener = vi.fn()
     window.addEventListener(UNREAD_EVENT, listener)
 
-    expect(await markRead("token", [1, 2])).toBe(3)
-    expect(fetch).toHaveBeenCalledWith(`${API}/notifications/read`, expect.objectContaining({ method: "post", body: JSON.stringify({ ids: [1, 2] }) }))
+    expect(await markRead([1, 2])).toBe(3)
+    expect(fetch).toHaveBeenCalledWith(`${API}/notifications/read`, expect.objectContaining({ method: "POST", body: JSON.stringify({ ids: [1, 2] }) }))
     expect(listener.mock.calls[0][0].detail).toBe(3)
 
     window.removeEventListener(UNREAD_EVENT, listener)
@@ -63,7 +63,7 @@ describe("markRead", () => {
     const fetch = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ read: 4, unread: 0 }) }))
     vi.stubGlobal("fetch", fetch)
 
-    expect(await markRead("token")).toBe(0)
+    expect(await markRead()).toBe(0)
     expect(fetch.mock.calls[0][1].body).toBe("{}")
   })
 })

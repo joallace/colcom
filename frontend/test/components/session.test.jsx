@@ -10,6 +10,7 @@ import UserProvider from "@/context/UserProvider"
 import Login from "@/pages/Login"
 import VotingButtons from "@/components/primitives/VotingButtons"
 import { submitVote } from "@/assets/interactions"
+import api, { SESSION_ENDED_EVENT } from "@/assets/api"
 import useToLogin from "@/hooks/useToLogin"
 
 
@@ -56,7 +57,7 @@ describe("UserProvider", () => {
     render(<UserProvider><ShowUser /></UserProvider>)
 
     await waitFor(() => expect(screen.getByTestId("user")).toHaveTextContent('{"name":"alice","pid":"p1","accessToken":"token-123"}'))
-    expect(fetch).toHaveBeenCalledWith(`${API}/users/self`, { method: "get", headers: { Authorization: "Bearer token-123" } })
+    expect(fetch).toHaveBeenCalledWith(`${API}/users/self`, { method: "GET", headers: { Authorization: "Bearer token-123" } })
   })
 
   it("forgets a token the API refuses", async () => {
@@ -85,7 +86,7 @@ describe("UserProvider", () => {
 
     await userEvent.click(screen.getByText("sair de todos os dispositivos"))
 
-    expect(fetch).toHaveBeenLastCalledWith(`${API}/logout`, { method: "post", headers: { Authorization: "Bearer token-123" } })
+    expect(fetch).toHaveBeenLastCalledWith(`${API}/logout`, { method: "POST", headers: { Authorization: "Bearer token-123" } })
     expect(screen.getByTestId("user")).toHaveTextContent("null")
     expect(localStorage.getItem("accessToken")).toBeNull()
   })
@@ -109,6 +110,26 @@ describe("UserProvider", () => {
 
     await waitFor(() => expect(screen.getByTestId("user")).toHaveTextContent("null"))
     expect(localStorage.getItem("accessToken")).toBeNull()
+  })
+
+  it("logs out when any request's token is refused", async () => {
+    await renderLoggedIn()
+    mockFetch({ message: "Sessão encerrada." }, 401)
+
+    await expect(api.get("/contents/bookmarked")).rejects.toMatchObject({ status: 401 })
+
+    await waitFor(() => expect(screen.getByTestId("user")).toHaveTextContent("null"))
+    expect(localStorage.getItem("accessToken")).toBeNull()
+  })
+
+  it("stays logged in when a request is refused otherwise", async () => {
+    await renderLoggedIn()
+    mockFetch({ message: "Proibido." }, 403)
+
+    await expect(api.get("/contents/1/abc/merge")).rejects.toMatchObject({ status: 403 })
+
+    expect(screen.getByTestId("user")).toHaveTextContent("alice")
+    expect(localStorage.getItem("accessToken")).toBe("token-123")
   })
 
   it("keeps the user on returning to the tab while the session holds", async () => {
@@ -158,7 +179,7 @@ describe("Login", () => {
     await submit()
 
     await waitFor(() => expect(screen.getByText("home")).toBeInTheDocument())
-    expect(fetch).toHaveBeenCalledWith(`${API}/login`, expect.objectContaining({ method: "post", body: JSON.stringify({ login: "alice", pass: "secret" }) }))
+    expect(fetch).toHaveBeenCalledWith(`${API}/login`, expect.objectContaining({ method: "POST", body: JSON.stringify({ login: "alice", pass: "secret" }) }))
     expect(localStorage.getItem("accessToken")).toBe("new-token")
     expect(fetchUser).toHaveBeenCalled()
   })
@@ -220,6 +241,25 @@ describe("Login", () => {
 
     expect(await screen.findByText("combinação de login e senha inválida.")).toBeInTheDocument()
     expect(localStorage.getItem("accessToken")).toBeNull()
+  })
+
+  // A logged in user can open the login too: a wrong password must not end their session
+  it("keeps the stored session on a wrong password, and sends no token", async () => {
+    localStorage.setItem("accessToken", "token-123")
+    const fetch = mockFetch({ name: "UnauthorizedError", message: "Dados não conferem." }, 401)
+    const ended = vi.fn()
+    window.addEventListener(SESSION_ENDED_EVENT, ended)
+    const { login, pass, submit } = renderLogin()
+
+    await userEvent.type(login, "alice")
+    await userEvent.type(pass, "wrong")
+    await submit()
+
+    expect(await screen.findByText("dados não conferem.")).toBeInTheDocument()
+    expect(fetch.mock.calls[0][1].headers).not.toHaveProperty("Authorization")
+    expect(ended).not.toHaveBeenCalled()
+    expect(localStorage.getItem("accessToken")).toBe("token-123")
+    window.removeEventListener(SESSION_ENDED_EVENT, ended)
   })
 
   it("tells the user when the API can't be reached", async () => {
@@ -286,7 +326,7 @@ describe("submitVote", () => {
     await submitVote(vi.fn(), 5, "vote")
 
     expect(fetch).toHaveBeenCalledWith(`${API}/interactions`, {
-      method: "post",
+      method: "POST",
       headers: { "Content-Type": "application/json", Authorization: "Bearer token-123" },
       body: JSON.stringify({ content_id: 5, type: "vote" })
     })
