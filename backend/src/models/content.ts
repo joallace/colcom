@@ -91,7 +91,6 @@ async function validateUnique(value: string, field: keyof Content) {
   if (Number(results.rowCount) > 0) {
     throw new ValidationError({
       message: `O "${field}" informado já está sendo usado.`,
-      stack: new Error().stack,
       errorLocationCode: 'MODEL:USER:VALIDATE_UNIQUE:ALREADY_EXISTS',
       key: field,
     })
@@ -541,7 +540,6 @@ export async function getDataById(id: number, data: (keyof Content)[]): Promise<
     throw new NotFoundError({
       message: `O conteúdo com "id" de valor "${id}" não foi encontrado no sistema.`,
       action: 'Verifique se o "id" do conteúdo está digitado corretamente.',
-      stack: new Error().stack,
     })
   }
   return result.rows[0]

@@ -52,7 +52,6 @@ function validateCommit(commit: string) {
     throw new ValidationError({
       message: "Hash de commit inválido.",
       action: "Forneça um hash de commit válido.",
-      stack: new Error().stack,
       errorLocationCode: "GIT:VALIDATE_COMMIT:INVALID_HASH",
       key: "hash"
     })
@@ -153,7 +152,6 @@ async function advanceNow(repo: number, branch: string, build: (head: { commit: 
     message: "O texto foi alterado por outra pessoa ao mesmo tempo.",
     action: "Atualize a página e tente novamente.",
     statusCode: 409,
-    stack: new Error().stack,
     errorLocationCode: "GIT:ADVANCE:TOO_MANY_ATTEMPTS"
   })
 }
@@ -161,7 +159,6 @@ async function advanceNow(repo: number, branch: string, build: (head: { commit: 
 function branchExists(branch: string) {
   return new ValidationError({
     message: `O branch "${branch}" já existe.`,
-    stack: new Error().stack,
     errorLocationCode: "GIT:BRANCH:ALREADY_EXISTS",
     statusCode: 409
   })
@@ -203,7 +200,6 @@ async function update(content: IContent, author: any, body: string, message: str
       throw new ValidationError({
         message: "Nenhuma alteração foi feita no texto.",
         action: "Altere o conteúdo antes de enviar a edição.",
-        stack: new Error().stack,
         errorLocationCode: "GIT:UPDATE:NO_CHANGES"
       })
 
@@ -237,7 +233,6 @@ async function branch(content: IContent, commit: string) {
     throw new ValidationError({
       message: "Versão não encontrada.",
       action: "Forneça o hash de uma versão deste post.",
-      stack: new Error().stack,
       errorLocationCode: "GIT:BRANCH:COMMIT_NOT_FOUND",
       key: "hash"
     })
@@ -292,7 +287,6 @@ async function merge(content: IContent, commit: string, resolution?: { body: str
           message: "O post foi alterado enquanto os conflitos eram resolvidos.",
           action: "Resolva os conflitos novamente sobre a versão atual do post.",
           statusCode: 409,
-          stack: new Error().stack,
           errorLocationCode: "GIT:MERGE:HEAD_MOVED"
         })
 
@@ -314,7 +308,6 @@ async function merge(content: IContent, commit: string, resolution?: { body: str
             message: "A sugestão altera trechos que também foram alterados no post depois dela.",
             action: "Resolva os conflitos para aceitar a sugestão.",
             statusCode: 409,
-            stack: new Error().stack,
             errorLocationCode: "GIT:MERGE:CONFLICT"
           })
 

@@ -15,7 +15,6 @@ export function orderByColumn(key: string, columns: Record<string, string>): str
     throw new ValidationError({
       message: `Não é possível ordenar por "${key}".`,
       action: `Utilize um dos valores: ${Object.keys(columns).join(", ")}.`,
-      stack: new Error().stack,
       errorLocationCode: "PAGINATION:ORDER_BY_COLUMN:INVALID_KEY",
       key: "orderBy"
     })

@@ -51,7 +51,6 @@ async function validateUnique(value: string, field: keyof User) {
   if (Number(results.rowCount) > 0) {
     throw new ValidationError({
       message: `O "${field}" informado já está sendo usado.`,
-      stack: new Error().stack,
       errorLocationCode: 'MODEL:USER:VALIDATE_UNIQUE:ALREADY_EXISTS',
       key: field,
     })
@@ -129,7 +128,6 @@ export async function findByLogin(login: string, options = {}): Promise<User> {
     throw new NotFoundError({
       message: `O "${searchTerm}" informado não foi encontrado.`,
       action: `Verifique se o "${searchTerm}" foi digitado corretamente.`,
-      stack: new Error().stack,
       errorLocationCode: 'MODEL:USER:FIND_BY_LOGIN:NOT_FOUND',
       key: searchTerm,
     })
@@ -149,7 +147,6 @@ export async function findByPid(pid: string, options = {}): Promise<User> {
   if (result.length === 0) {
     throw new NotFoundError({
       message: `O id público fornecido não está atrelado a nenhum usuário.`,
-      stack: new Error().stack,
       errorLocationCode: 'MODEL:USER:FIND_BY_PID:NOT_FOUND',
       key: "pid",
     })
@@ -169,7 +166,6 @@ export async function findByName(name: string): Promise<User> {
     throw new NotFoundError({
       message: `Usuário não encontrado.`,
       action: `Verifique se o nome de usuário foi digitado corretamente.`,
-      stack: new Error().stack,
       errorLocationCode: 'MODEL:USER:FIND_BY_NAME:NOT_FOUND',
       key: "name",
     })

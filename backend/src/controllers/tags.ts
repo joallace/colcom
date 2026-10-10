@@ -21,21 +21,18 @@ const assertCanCreate = async (user: Voter, count: number) => {
     throw new ForbiddenError({
       message: `Contas com menos de ${plural(config.tags.minAccountDays, "dia", "dias")} não podem criar tags.`,
       action: "Use uma das tags existentes, ou espere alguns dias.",
-      stack: new Error().stack
     })
 
   if (await Tags.createdToday(user.id) + count > config.tags.createPerDay)
     throw new TooManyRequestsError({
       message: `Cada pessoa pode criar até ${plural(config.tags.createPerDay, "tag", "tags")} por dia.`,
       action: "Use uma das tags existentes, ou tente novamente amanhã.",
-      stack: new Error().stack
     })
 }
 
 const expired = (tag: ResolvedTag, key: string) => new ValidationError({
   message: `A tag "${tag.name}" expirou, pois poucos tópicos a usaram.`,
   action: "Escolha outra tag.",
-  stack: new Error().stack,
   key
 })
 
@@ -44,14 +41,12 @@ const expired = (tag: ResolvedTag, key: string) => new ValidationError({
 const reserved = (tag: ResolvedTag, key: string) => new ValidationError({
   message: `A tag "${tag.name}" é reservada aos tópicos fundamentais do colcom.`,
   action: "Escolha outra tag.",
-  stack: new Error().stack,
   statusCode: 403,
   key
 })
 
 const notATopic = () => new ValidationError({
   message: "Somente tópicos têm tags.",
-  stack: new Error().stack,
   errorLocationCode: "CONTROLLER:TAGS:NOT_A_TOPIC"
 })
 
@@ -136,7 +131,6 @@ export const voteOnTag: RequestHandler = async (req, res, next) => {
     if (user.id !== topic.author_id && !oldEnough(user))
       throw new ForbiddenError({
         message: `Contas com menos de ${plural(config.tags.minAccountDays, "dia", "dias")} só podem votar nas tags dos próprios tópicos.`,
-        stack: new Error().stack
       })
 
     const slug = tagSlug(name)
@@ -154,7 +148,6 @@ export const voteOnTag: RequestHandler = async (req, res, next) => {
       throw new ValidationError({
         message: "Esta tag não foi proposta para este tópico.",
         action: "Para propor uma tag, apoie-a.",
-        stack: new Error().stack,
         key: "tag"
       })
 
@@ -162,7 +155,6 @@ export const voteOnTag: RequestHandler = async (req, res, next) => {
       throw new ValidationError({
         message: `Um tópico pode ter até ${limits.tags.perTopic} tags propostas.`,
         action: "Apoie uma das tags já propostas.",
-        stack: new Error().stack,
         key: "tag"
       })
 
@@ -203,7 +195,6 @@ export const getTagIntersection: RequestHandler = async (req, res, next) => {
     if (!tags)
       throw new NotFoundError({
         message: requested.length === 1 ? "Tag não encontrada." : "Alguma dessas tags não existe.",
-        stack: new Error().stack
       })
 
     const { topics, related } = await Tags.intersection(tags.map(tag => tag.id))
@@ -227,7 +218,7 @@ export const getTagHistory: RequestHandler = async (req, res, next) => {
 
     // As the poll's history does
     if (topic.type !== "topic")
-      throw new NotFoundError({ message: "Tópico não encontrado.", stack: new Error().stack })
+      throw new NotFoundError({ message: "Tópico não encontrado." })
 
     res.status(200).json(await Tags.history(id))
   }

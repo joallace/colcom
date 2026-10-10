@@ -21,7 +21,6 @@ export function validate<Name extends SchemaName>(name: Name, data: unknown): Sc
     throw new ValidationError({
       message: describe(first),
       action: first.action,
-      stack: new Error().stack,
       errorLocationCode: `VALIDATION:${name.toUpperCase()}`,
       key: first.key,
       errors: errors.map(({ key, label, message }) => ({ key, label, message }))

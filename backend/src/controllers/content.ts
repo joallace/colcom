@@ -32,7 +32,6 @@ const validateCritiqueCommit = async (post: IContent, commit: string) => {
   if (!(await git.isInHistory(post, commit)))
     throw new ValidationError({
       message: "A versão criticada não pertence a este post.",
-      stack: new Error().stack,
       errorLocationCode: "CONTROLLER:CONTENT:VALIDATE_CRITIQUE_COMMIT:FOREIGN_COMMIT",
       key: "config.commit"
     })
@@ -46,7 +45,6 @@ const validateAnswer = (topicConfig: any, answer: string | undefined) => {
     throw new ValidationError({
       message: "Resposta: escolha uma das respostas do tópico.",
       action: `Utilize um dos valores: ${answers.join(", ")}.`,
-      stack: new Error().stack,
       errorLocationCode: "CONTROLLER:CONTENT:VALIDATE_ANSWER",
       key: "config.answer"
     })
@@ -59,13 +57,11 @@ const findOwnedSuggestion = async (content_id: number, commit: string, author_pi
     throw new NotFoundError({
       message: "Post não encontrado.",
       action: 'Verifique se o "id" fornecido está correto.',
-      stack: new Error().stack
     })
 
   if (author_pid !== content.author_id)
     throw new ForbiddenError({
       message: "Somente o autor do post pode aceitar ou rejeitar sugestões.",
-      stack: new Error().stack
     })
 
   const suggestion = await Interactions.findPendingSuggestion(content_id, commit)
@@ -74,7 +70,6 @@ const findOwnedSuggestion = async (content_id: number, commit: string, author_pi
     throw new NotFoundError({
       message: "Sugestão pendente não encontrada para este post.",
       action: 'Verifique se o "hash" fornecido está correto.',
-      stack: new Error().stack
     })
 
   return { content, suggestion }
@@ -121,7 +116,6 @@ export const createContent: RequestHandler = async (req, res, next) => {
     if (type === "critique" && parent.type !== "post")
       throw new ValidationError({
         message: "Somente posts podem ser criticados.",
-        stack: new Error().stack,
         errorLocationCode: "CONTROLLER:CONTENT:CREATE_CONTENT:CRITIQUE_PARENT",
         key: "parent_id"
       })
@@ -240,7 +234,6 @@ export const getTopicTree: RequestHandler = async (req, res, next) => {
       throw new NotFoundError({
         message: "Tópico não encontrado.",
         action: 'Verifique se o "id" fornecido está correto.',
-        stack: new Error().stack
       })
 
     res.status(200).json(topic)
@@ -263,7 +256,6 @@ export const getContent: RequestHandler = async (req, res, next) => {
       throw new NotFoundError({
         message: "Conteúdo não encontrado.",
         action: 'Verifique se o "id" fornecido está correto.',
-        stack: new Error().stack
       })
 
 
@@ -338,14 +330,12 @@ export const getVersion: RequestHandler = async (req, res, next) => {
       throw new NotFoundError({
         message: "Conteúdo não encontrado.",
         action: 'Verifique se o "id" fornecido está correto.',
-        stack: new Error().stack
       })
 
     if (content.type !== "post")
       throw new ValidationError({
         message: `Conteúdos do tipo "${content.type}" não têm histórico.`,
         action: 'Forneça um "id" de um "post".',
-        stack: new Error().stack
       })
 
     const repo = Number(content.parent_id)
@@ -406,14 +396,12 @@ export const updateContent: RequestHandler = async (req, res, next) => {
       throw new NotFoundError({
         message: "Conteúdo não encontrado.",
         action: 'Verifique se o "id" fornecido está correto.',
-        stack: new Error().stack
       })
 
     if (content.type !== "post")
       throw new ValidationError({
         message: `Conteúdos do tipo "${content.type}" não podem ser alterados.`,
         action: 'Forneça um "id" de um "post".',
-        stack: new Error().stack
       })
 
     const interactionId = content.author_id !== author_pid ?
@@ -458,7 +446,6 @@ export const clonePost: RequestHandler = async (req, res, next) => {
       throw new NotFoundError({
         message: "Post não encontrado.",
         action: 'Verifique se o "id" fornecido está correto.',
-        stack: new Error().stack
       })
 
     const result = await Content.create({ ...(<any>content), author_pid, title })

@@ -9,23 +9,7 @@ export interface FieldError {
 }
 
 
-interface BaseErrorType {
-  message: string,
-  stack?: string,
-  action: string,
-  statusCode: number,
-  errorId?: string,
-  requestId?: string,
-  context?: string,
-  errorLocationCode?: string,
-  key?: string,
-  type?: string,
-  databaseErrorCode?: string,
-  errors?: FieldError[]
-}
-
-
-interface BaseErrorParams {
+export interface ErrorParams {
   message?: string,
   stack?: string,
   action?: string,
@@ -40,10 +24,17 @@ interface BaseErrorParams {
   errors?: FieldError[]
 }
 
+interface ErrorDefaults {
+  message: string,
+  action: string,
+  statusCode: number
+}
 
-export class BaseError extends Error implements BaseErrorType {
+
+export class BaseError extends Error {
+  // errorHandler sends these as the response body, in this order, and `name` after them. `stack`
+  // isn't declared: a field would replace the one Error captures with undefined.
   message: string
-  stack?: string
   action: string
   statusCode: number
   errorId: string
@@ -55,143 +46,127 @@ export class BaseError extends Error implements BaseErrorType {
   databaseErrorCode?: string
   errors?: FieldError[]
 
-  constructor({
-    message,
-    stack,
-    action,
-    statusCode,
-    errorId,
-    requestId,
-    context,
-    errorLocationCode,
-    key,
-    type,
-    databaseErrorCode,
-    errors,
-  }: BaseErrorType) {
+  constructor(
+    { message, stack, action, statusCode, errorId, ...fields }: ErrorParams = {},
+    defaults: ErrorDefaults = {
+      message: 'Um erro interno não esperado aconteceu.',
+      action: "Informe ao suporte o valor encontrado no campo 'error_id'.",
+      statusCode: 500
+    }
+  ) {
     super()
     this.name = this.constructor.name
-    this.message = message
-    this.action = action
-    this.statusCode = statusCode || 500
+    this.message = message || defaults.message
+    this.action = action || defaults.action
+    this.statusCode = statusCode || defaults.statusCode
     this.errorId = errorId || randomUUID()
-    this.requestId = requestId
-    this.context = context
-    this.stack = stack
-    this.errorLocationCode = errorLocationCode
-    this.key = key
-    this.type = type
-    this.databaseErrorCode = databaseErrorCode
-    this.errors = errors
+    this.requestId = fields.requestId
+    this.context = fields.context
+    this.errorLocationCode = fields.errorLocationCode
+    this.key = fields.key
+    this.type = fields.type
+    this.databaseErrorCode = fields.databaseErrorCode
+    this.errors = fields.errors
+
+    // The stack points to where the error was created, without the constructors; one given (e.g.
+    // from the error this one replaces) is kept instead
+    if (stack)
+      this.stack = stack
+    else
+      Error.captureStackTrace(this, new.target)
   }
 }
 
+// Each class only sets its defaults; a status given explicitly wins, as for a ValidationError
+// built from an error express marked as exposable
 export class InternalServerError extends BaseError {
-  constructor({ message, action, requestId, errorId, statusCode, stack, errorLocationCode }: BaseErrorParams) {
-    super({
-      message: message || 'Um erro interno não esperado aconteceu.',
-      action: action || "Informe ao suporte o valor encontrado no campo 'error_id'.",
-      statusCode: statusCode || 500,
-      requestId: requestId,
-      errorId: errorId,
-      stack: stack,
-      errorLocationCode: errorLocationCode,
+  constructor(params: ErrorParams = {}) {
+    super(params, {
+      message: 'Um erro interno não esperado aconteceu.',
+      action: "Informe ao suporte o valor encontrado no campo 'error_id'.",
+      statusCode: 500
     })
   }
 }
 
 export class NotFoundError extends BaseError {
-  constructor({ message, action, requestId, errorId, stack, errorLocationCode, key }: BaseErrorParams) {
-    super({
-      message: message || 'Não foi possível encontrar este recurso no sistema.',
-      action: action || 'Verifique se o caminho (PATH) e o método (GET, POST, PUT, DELETE) estão corretos.',
-      statusCode: 404,
-      requestId: requestId,
-      errorId: errorId,
-      stack: stack,
-      errorLocationCode: errorLocationCode,
-      key: key,
+  constructor(params: ErrorParams = {}) {
+    super(params, {
+      message: 'Não foi possível encontrar este recurso no sistema.',
+      action: 'Verifique se o caminho (PATH) e o método (GET, POST, PUT, DELETE) estão corretos.',
+      statusCode: 404
     })
   }
 }
 
 export class ServiceError extends BaseError {
-  constructor({ message, action, stack, context, statusCode, errorLocationCode, databaseErrorCode }: BaseErrorParams) {
-    super({
-      message: message || 'Serviço indisponível no momento.',
-      action: action || 'Verifique se o serviço está disponível.',
-      stack: stack,
-      statusCode: statusCode || 503,
-      context: context,
-      errorLocationCode: errorLocationCode,
-      databaseErrorCode: databaseErrorCode,
+  constructor(params: ErrorParams = {}) {
+    super(params, {
+      message: 'Serviço indisponível no momento.',
+      action: 'Verifique se o serviço está disponível.',
+      statusCode: 503
     })
   }
 }
 
 export class ValidationError extends BaseError {
-  constructor({ message, action, stack, statusCode, context, errorLocationCode, key, type, errors }: BaseErrorParams) {
-    super({
-      message: message || 'Um erro de validação ocorreu.',
-      action: action || 'Ajuste os dados enviados e tente novamente.',
-      statusCode: statusCode || 400,
-      stack: stack,
-      context: context,
-      errorLocationCode: errorLocationCode,
-      key: key,
-      type: type,
-      errors: errors,
+  constructor(params: ErrorParams = {}) {
+    super(params, {
+      message: 'Um erro de validação ocorreu.',
+      action: 'Ajuste os dados enviados e tente novamente.',
+      statusCode: 400
     })
   }
 }
 
 export class UnauthorizedError extends BaseError {
-  constructor({ message, action, requestId, stack, errorLocationCode }: BaseErrorParams) {
-    super({
-      message: message || 'Usuário não autenticado.',
-      action: action || 'Verifique se você está autenticado com uma sessão ativa e tente novamente.',
-      statusCode: 401,
-      requestId: requestId,
-      stack: stack,
-      errorLocationCode: errorLocationCode,
+  constructor(params: ErrorParams = {}) {
+    super(params, {
+      message: 'Usuário não autenticado.',
+      action: 'Verifique se você está autenticado com uma sessão ativa e tente novamente.',
+      statusCode: 401
     })
   }
 }
 
 export class ForbiddenError extends BaseError {
-  constructor({ message, action, requestId, stack, errorLocationCode }: BaseErrorParams) {
-    super({
-      message: message || 'Você não possui permissão para executar esta ação.',
-      action: action || 'Verifique se você possui permissão para executar esta ação.',
-      statusCode: 403,
-      requestId: requestId,
-      stack: stack,
-      errorLocationCode: errorLocationCode,
+  constructor(params: ErrorParams = {}) {
+    super(params, {
+      message: 'Você não possui permissão para executar esta ação.',
+      action: 'Verifique se você possui permissão para executar esta ação.',
+      statusCode: 403
+    })
+  }
+}
+
+// The request was valid, but the state it was made against changed or already has what it adds
+// (a duplicate interaction, a branch that exists, a merge that conflicts)
+export class ConflictError extends BaseError {
+  constructor(params: ErrorParams = {}) {
+    super(params, {
+      message: 'A operação conflita com o estado atual do recurso.',
+      action: 'Atualize a página e tente novamente.',
+      statusCode: 409
     })
   }
 }
 
 export class TooManyRequestsError extends BaseError {
-  constructor({ message, action, context, stack, errorLocationCode }: BaseErrorParams) {
-    super({
-      message: message || 'Você realizou muitas requisições recentemente.',
-      action: action || 'Tente novamente mais tarde ou contate o suporte caso acredite que isso seja um erro.',
-      statusCode: 429,
-      context: context,
-      stack: stack,
-      errorLocationCode: errorLocationCode,
+  constructor(params: ErrorParams = {}) {
+    super(params, {
+      message: 'Você realizou muitas requisições recentemente.',
+      action: 'Tente novamente mais tarde ou contate o suporte caso acredite que isso seja um erro.',
+      statusCode: 429
     })
   }
 }
 
 export class UnprocessableEntityError extends BaseError {
-  constructor({ message, action, stack, errorLocationCode }: BaseErrorParams) {
-    super({
-      message: message || 'Não foi possível realizar esta operação.',
-      action: action || 'Os dados enviados estão corretos, porém não foi possível realizar esta operação.',
-      statusCode: 422,
-      stack: stack,
-      errorLocationCode: errorLocationCode,
+  constructor(params: ErrorParams = {}) {
+    super(params, {
+      message: 'Não foi possível realizar esta operação.',
+      action: 'Os dados enviados estão corretos, porém não foi possível realizar esta operação.',
+      statusCode: 422
     })
   }
 }

@@ -205,7 +205,6 @@ async function handleChange({ author_pid, content_id, type }: InteractionInsertR
         throw new ValidationError({
           message: "Só é possível votar em posts.",
           action: "Escolha o post que defende a sua resposta.",
-          stack: new Error().stack,
           errorLocationCode: "MODEL:INTERACTION:HANDLE:VOTE_NOT_ON_POST"
         })
 
@@ -234,7 +233,6 @@ async function handleChange({ author_pid, content_id, type }: InteractionInsertR
     default:
       throw new ValidationError({
         message: `O tipo de interação "${type}" não é válido.`,
-        stack: new Error().stack,
         errorLocationCode: 'MODEL:INTERACTION:HANDLE:INVALID_TYPE'
       })
   }
@@ -249,7 +247,6 @@ async function create({ author_pid, content_id, type, config = null }: Interacti
   //   throw new ValidationError({
   //     message: "Quantidade de colcoins insuficiente para realizar a ação.",
   //     action: "Atue na comunidade para ganhar mais colcoins!",
-  //     stack: new Error().stack,
   //     errorLocationCode: 'MODEL:INTERACTION:CREATE:INSUFFICIENT_BALANCE'
   //   })
 
@@ -279,7 +276,6 @@ async function create({ author_pid, content_id, type, config = null }: Interacti
         message: "Esta interação já foi registrada.",
         action: "Atualize a página para ver o estado atual.",
         statusCode: 409,
-        stack: new Error().stack,
         errorLocationCode: "MODEL:INTERACTION:CREATE:ALREADY_EXISTS"
       })
     throw err
