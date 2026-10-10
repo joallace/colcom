@@ -280,7 +280,9 @@ export default function Post({
       >
         <Editor
           initialContent={body}
-          groupedCritiques={groupedCritiques}
+          // Highlights over a suggestion would hide what it changes. Closing, accepting or rejecting
+          // it loads a version again, which remounts the post with its critiques
+          groupedCritiques={Number.isFinite(currentSuggestion) ? [] : groupedCritiques}
           content={content}
           setContent={setContent}
           setShowCritique={setShowCritique}
