@@ -102,6 +102,4 @@ Beyond the suite, show changes work rather than assume they do:
 - **Critique anchoring payload:** the version endpoint sends the text of every version between a critique's version and the one being read. Long histories will need the server-side `critique_anchors` cache planned for phase 3.
 - **Global title uniqueness:** content titles are unique across the whole site, critiques included.
 - **Frontend bug:** `relativeTime` doesn't round years ("1.04… ano").
-- **Backend bugs:**
-  - `GET /contents/:id/interactions` is unreachable: `GET /contents/:id/:hash` is registered first and takes "interactions" as a hash. `GET /users/:id/interactions` passes a user id as a content id. Nothing calls either yet.
 - **Unfinished features:** colcoins (the promote cost check is commented out) and prestige exist in the schema but aren't implemented. The README's to-do list is outdated.

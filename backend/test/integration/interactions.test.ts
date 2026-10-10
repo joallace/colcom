@@ -222,18 +222,3 @@ describe("POST /interactions", () => {
     expect(JSON.stringify(res.body)).not.toMatch(/foreign key|constraint/i)
   })
 })
-
-describe("GET /contents/:id/interactions", () => {
-  // Known bug: the content router's GET /contents/:id/:hash is registered first and takes
-  // "interactions" as a hash (400). Nothing calls this route yet. Drop `.fails` once it's fixed.
-  it.fails("lists a content's interactions with their authors", async () => {
-    const topic = await createTopic(alice)
-    await interact(alice, topic.id, "up")
-    await interact(bob, topic.id, "bookmark")
-
-    const res = await api().get(`/contents/${topic.id}/interactions`)
-
-    expect(res.status).toBe(200)
-    expect(res.body.map((interaction: any) => [interaction.author, interaction.type]).sort()).toEqual([[alice.name, "up"], [bob.name, "bookmark"]].sort())
-  })
-})

@@ -45,33 +45,6 @@ interface Interaction {
 }
 
 
-async function findAll({ where = "", values = [] as any[], orderBy = "" }): Promise<Interaction[]> {
-  const query = {
-    text: `
-      SELECT
-        i.id,
-        i.content_id,
-        i.type,
-        i.config,
-        i.created_at,
-        users.name as author,
-        users.pid as author_id,
-        users.avatar as author_avatar
-      FROM
-        interactions i
-      INNER JOIN
-        users ON users.id = i.author_id
-      WHERE ${where}
-      ${orderBy ? `ORDER BY ${orderBy}` : ""}
-      ;`,
-    values
-  }
-
-  const result = await db.query(query)
-  avatarToBase64("author_avatar", result)
-  return result.rows
-}
-
 // A post's suggestions its author hasn't answered yet, newest first
 async function pendingSuggestions(content_id: number): Promise<Interaction[]> {
   const query = {
@@ -405,7 +378,6 @@ async function removeById(interaction_id: number) {
 }
 
 export default Object.freeze({
-  findAll,
   handleChange,
   create,
   getUserContentInteractions,

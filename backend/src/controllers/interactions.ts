@@ -5,12 +5,6 @@ import Content from "@/models/content"
 import { contentNotFound } from "@/controllers/content"
 import { validate } from "@/validation"
 
-export const getContentInteractions: RequestHandler = async (req, res) => {
-  const content_id = req.params.id
-  const interactions = await Interactions.findAll({ where: "i.content_id = $1", values: [content_id] })
-  res.status(200).json(interactions)
-}
-
 export const handleInteraction: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user.pid
 
