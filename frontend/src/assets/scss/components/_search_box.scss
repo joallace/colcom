@@ -1,39 +1,91 @@
 @use "../abstracts/mixins";
 
-// The search field, in the navbar and atop the search page
+// The search field, in the navbar and atop the search page: its tags as pills, then what's typed
 .searchBox {
     position: relative;
-    display: flex;
-    align-items: center;
     width: 100%;
 
-    input {
-        width: 100%;
-        height: 2.5rem;
-        padding: 0 2.5rem 0 var(--space-3);
-        color: var(--text);
+    .searchField {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-1);
+        min-height: 2.5rem;
+        padding: var(--space-1) 2.5rem var(--space-1) var(--space-3);
         background: var(--surface);
         border: var(--stroke) solid var(--border);
-        border-radius: var(--radius-full);
-        outline: none;
+        border-radius: 1.25rem;
+        cursor: text;
         @include mixins.transition((border-color, box-shadow), var(--duration-base));
 
-        &::placeholder {
-            color: var(--text-muted);
-        }
-
-        &:hover:not(:focus) {
+        &:hover:not(:focus-within) {
             border-color: var(--green);
         }
 
-        &:focus {
+        &:focus-within {
             border-color: var(--orange);
             box-shadow: 0 0 0 3px var(--orange-tint);
         }
     }
 
-    button {
+    input {
+        flex: 1 1 6rem;
+        min-width: 6rem;
+        height: 1.75rem;
+        padding: 0;
+        color: var(--text);
+        background: none;
+        border: none;
+        outline: none;
+
+        &::placeholder {
+            color: var(--text-muted);
+        }
+
+        // Chrome's clear button would sit on the search button
+        &::-webkit-search-cancel-button {
+            appearance: none;
+        }
+    }
+
+    .searchTags {
+        display: contents;
+        list-style: none;
+
+        li {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: 0 var(--space-1) 0 var(--space-2);
+            font-size: var(--text-sm);
+            font-weight: 700;
+            color: var(--green-text);
+            background-color: var(--green-tint);
+            border-radius: var(--radius-full);
+        }
+
+        button {
+            display: flex;
+            padding: 0.125rem;
+            color: inherit;
+            background: none;
+            border: none;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+
+            &:hover {
+                background-color: var(--hover);
+            }
+
+            &:focus-visible {
+                @include mixins.focus-ring;
+            }
+        }
+    }
+
+    .searchSubmit {
         position: absolute;
+        top: 0.3125rem;
         right: var(--space-1);
         display: flex;
         padding: var(--space-2);
@@ -54,12 +106,29 @@
         }
     }
 
+    .tagSuggestions {
+        position: absolute;
+        z-index: var(--z-dropdown);
+        left: 0;
+        right: 0;
+        top: 100%;
+    }
+
     &.navSearch {
-        width: 16rem;
+        width: 18rem;
+
+        .searchField {
+            min-height: 2.25rem;
+            padding-top: 0.125rem;
+            padding-bottom: 0.125rem;
+        }
 
         input {
-            height: 2.25rem;
             font-size: var(--text-sm);
+        }
+
+        .searchSubmit {
+            top: 0.1875rem;
         }
     }
 }

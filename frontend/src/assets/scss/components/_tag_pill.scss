@@ -205,40 +205,41 @@
 // A tag field with its suggestions below it
 .tagInput {
     position: relative;
+}
 
-    .tagSuggestions {
-        display: grid;
-        margin: var(--space-1) 0 0;
-        padding: var(--space-1);
-        list-style: none;
-        background-color: var(--surface-raised);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        box-shadow: var(--shadow-md);
+// Tags suggested as one is typed: under a tag field, and under the search box after a "#"
+.tagSuggestions {
+    display: grid;
+    margin: var(--space-1) 0 0;
+    padding: var(--space-1);
+    list-style: none;
+    background-color: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
 
-        li {
-            display: flex;
-            justify-content: space-between;
-            gap: var(--space-3);
-            padding: var(--space-2);
-            border-radius: var(--radius-sm);
-            font-size: var(--text-sm);
-            cursor: pointer;
+    li {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--space-3);
+        padding: var(--space-2);
+        border-radius: var(--radius-sm);
+        font-size: var(--text-sm);
+        cursor: pointer;
 
-            &:hover,
-            &[aria-selected="true"] {
-                background-color: var(--hover);
-            }
-
-            &.create {
-                color: var(--green-text);
-            }
+        &:hover,
+        &[aria-selected="true"] {
+            background-color: var(--hover);
         }
 
-        .detail {
-            color: var(--text-muted);
-            font-size: var(--text-xs);
+        &.create {
+            color: var(--green-text);
         }
+    }
+
+    .detail {
+        color: var(--text-muted);
+        font-size: var(--text-xs);
     }
 }
 

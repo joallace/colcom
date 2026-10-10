@@ -15,7 +15,7 @@ export const search: RequestHandler = async (req, res) => {
   // As the topic list: only topics (and their posts) showing all of these tags; none when one doesn't exist
   const tags = slugs ? await resolveFilter(splitSlugs(slugs)) : undefined
   if (tags === null) {
-    res.status(200).json({ results: [], count: 0 })
+    res.status(200).json({ results: [], count: 0, tags: [] })
     return
   }
 
@@ -30,5 +30,6 @@ export const search: RequestHandler = async (req, res) => {
     .filter(hit => byId.has(hit.id))
     .map(hit => ({ ...byId.get(hit.id), excerpt: hit.excerpt }))
 
-  res.status(200).json({ results, count })
+  // The tags filtered by, named, so the search box shows them as they're written (an alias as its tag)
+  res.status(200).json({ results, count, tags: (tags ?? []).map(({ slug, name, provisional }) => ({ slug, name, provisional })) })
 }

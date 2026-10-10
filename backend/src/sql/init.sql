@@ -60,14 +60,17 @@ BEGIN
 END;
 $$;
 
+-- A first version of search also indexed tag names as words (`tag_names`, and `search` built on it);
+-- tags are now searched only as tags (search's `tags`). Remove this once no database predates it.
+ALTER TABLE contents DROP COLUMN IF EXISTS tag_names CASCADE;
+DROP FUNCTION IF EXISTS refresh_tag_names(INT);
+DROP FUNCTION IF EXISTS topic_tag_names(INT);
+
 -- What search reads: a post's `body` is only its summary, so `search_text` holds the plain text of
--- its latest version (written on every commit), and `tag_names` its topic's visible tags (a topic's
--- own, copied to its posts; kept by the tag_votes trigger). Titles weigh most, then tags, then text.
+-- its latest version (written on every commit). Titles weigh more than text.
 ALTER TABLE contents ADD COLUMN IF NOT EXISTS search_text TEXT;
-ALTER TABLE contents ADD COLUMN IF NOT EXISTS tag_names TEXT;
 ALTER TABLE contents ADD COLUMN IF NOT EXISTS search tsvector GENERATED ALWAYS AS (
     setweight(to_tsvector('colcom', title), 'A') ||
-    setweight(to_tsvector('colcom', COALESCE(tag_names, '')), 'B') ||
     setweight(to_tsvector('colcom', COALESCE(search_text, '')), 'D')
 ) STORED;
 
@@ -252,23 +255,6 @@ CREATE TABLE IF NOT EXISTS tag_events (
 
 CREATE INDEX IF NOT EXISTS tag_events_content_idx ON tag_events (content_id, id);
 
--- The names of the tags a topic shows, as search indexes them. A provisional tag that expires
--- (computed from its age, never stored) stays indexed until the topic's tags change again.
-CREATE OR REPLACE FUNCTION topic_tag_names(topic_id INT) RETURNS TEXT LANGUAGE sql STABLE AS $$
-    SELECT string_agg(tags.name, ' ' ORDER BY tags.name)
-    FROM contents_tags
-    INNER JOIN tags ON tags.id = contents_tags.tag_id
-    WHERE contents_tags.content_id = topic_id AND contents_tags.visible AND tags.alias_of IS NULL;
-$$;
-
--- Copies a topic's tag names to it and its posts, rewriting only the rows they changed
-CREATE OR REPLACE FUNCTION refresh_tag_names(topic_id INT) RETURNS VOID LANGUAGE sql AS $$
-    UPDATE contents SET tag_names = names.value
-    FROM (SELECT topic_tag_names(topic_id) AS value) AS names
-    WHERE (contents.id = topic_id OR (contents.parent_id = topic_id AND contents.type = 'post'))
-    AND contents.tag_names IS DISTINCT FROM names.value;
-$$;
-
 -- Like the vote log, written by a trigger so any statement on tag_votes is logged and counted in
 -- its own transaction
 CREATE OR REPLACE FUNCTION apply_tag_vote() RETURNS trigger LANGUAGE plpgsql AS $$
@@ -305,8 +291,6 @@ BEGIN
     -- A tag nobody votes for anymore is no longer proposed
     DELETE FROM contents_tags
     WHERE content_id = vote.content_id AND tag_id = vote.tag_id AND endorsements = 0 AND contests = 0;
-
-    PERFORM refresh_tag_names(vote.content_id);
 
     RETURN NULL;
 END;

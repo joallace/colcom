@@ -58,7 +58,7 @@ export interface SchemaData {
   notifications: { page: number, pageSize: number, unread: boolean }
   list: { page: number, pageSize: number, orderBy: string, authorId?: string, tags?: string, [key: string]: unknown }
   tagList: { q: string, page: number, pageSize: number }
-  search: { q: string, type?: "topic" | "post", tags?: string, page: number, pageSize: number }
+  search: { q?: string, type?: "topic" | "post", tags?: string, page: number, pageSize: number }
   contentParams: { id: number }
   versionParams: { id: number, hash: string }
   tagParams: { slugs: string }

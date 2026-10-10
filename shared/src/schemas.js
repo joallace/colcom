@@ -263,10 +263,12 @@ export function createSchemas(limits) {
     }
   }
 
-  // Full-text search over topics and posts: their titles, tags and texts
+  // Full-text search over topics and posts: words in their titles and texts, and tags (the "#tag"s
+  // typed in the search box) only through `tags`. Either may be left out, not both.
   const search = {
     type: "object",
-    required: ["q"],
+    if: { not: { required: ["tags"] } },
+    then: { required: ["q"] },
     additionalProperties: false,
     properties: {
       q: { type: "string", label: "busca", minLength: 1, maxLength: limits.search.max, notBlank: true },

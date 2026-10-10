@@ -15,13 +15,15 @@ const HEADLINE_OPTIONS = `StartSel=${MATCH_START}, StopSel=${MATCH_END}, MaxFrag
 
 export interface SearchHit {
   id: number,
-  excerpt: string,
+  // Null without a query
+  excerpt: string | null,
   total_count: number
 }
 
 interface SearchOptions {
-  // As people type it: words, "a phrase", or, -excluded (websearch_to_tsquery)
-  query: string,
+  // As people type it: words, "a phrase", or, -excluded (websearch_to_tsquery). Without one, only
+  // the tags filter, and the newest come first.
+  query?: string,
   // Topics and posts when omitted
   type?: SearchType,
   // Only topics showing all of these tags, and those topics' posts
@@ -30,12 +32,13 @@ interface SearchOptions {
   pageSize?: number
 }
 
-// A page of the topics and posts matching `query`, most relevant first: a match in the title weighs
-// most, then one in the tags (a post's are its topic's), then one in the text. Each comes with an
-// excerpt of its text around the matched words, and total_count, how many match across all pages.
+// A page of the topics and posts matching `query` in their titles or texts, most relevant first (a
+// match in the title weighs more). Tags never match as words: they only filter, through `tagIds`.
+// Each comes with an excerpt of its text around the matched words, and total_count, how many match
+// across all pages.
 async function search({ query, type, tagIds, page = 1, pageSize = 10 }: SearchOptions): Promise<SearchHit[]> {
   const params = queryParams()
-  const tsquery = `websearch_to_tsquery('colcom', ${params.add(query, "TEXT")})`
+  const tsquery = query ? `websearch_to_tsquery('colcom', ${params.add(query, "TEXT")})` : undefined
   const types = params.add(type ? [type] : ["topic", "post"], "TEXT[]")
   const tags = tagIds ? tagFilterSql("CASE WHEN contents.type = 'topic' THEN contents.id ELSE contents.parent_id END", params.add(tagIds)) : "TRUE"
 
@@ -45,12 +48,12 @@ async function search({ query, type, tagIds, page = 1, pageSize = 10 }: SearchOp
         SELECT
           contents.id,
           -- Normalised by the text's length, so a long post doesn't win by repeating a word
-          ts_rank(contents.search, ${tsquery}, 1) AS rank,
+          ${tsquery ? `ts_rank(contents.search, ${tsquery}, 1)` : "0"} AS rank,
           COUNT(*) OVER ()::INT AS total_count
         FROM
           contents
         WHERE
-          contents.search @@ ${tsquery}
+          ${tsquery ? `contents.search @@ ${tsquery}` : "TRUE"}
         AND
           contents.type = ANY(${types})
         AND
@@ -63,7 +66,7 @@ async function search({ query, type, tagIds, page = 1, pageSize = 10 }: SearchOp
       SELECT
         matches.id,
         matches.total_count,
-        ts_headline('colcom', COALESCE(contents.search_text, ''), ${tsquery}, '${HEADLINE_OPTIONS}') AS excerpt
+        ${tsquery ? `ts_headline('colcom', COALESCE(contents.search_text, ''), ${tsquery}, '${HEADLINE_OPTIONS}')` : "NULL"} AS excerpt
       FROM
         matches
       INNER JOIN
@@ -93,9 +96,7 @@ async function unindexed(limit: number): Promise<{ id: number, parent_id: number
 async function index(id: number, text: string) {
   await db.query({
     text: `
-      UPDATE contents SET
-        search_text = $2,
-        tag_names = topic_tag_names(CASE WHEN type = 'topic' THEN id WHEN type = 'post' THEN parent_id END)
+      UPDATE contents SET search_text = $2
       -- An edit meanwhile already indexed the newer text
       WHERE id = $1 AND search_text IS NULL
       ;`,

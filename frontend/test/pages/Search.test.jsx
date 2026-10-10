@@ -34,11 +34,26 @@ const post = {
   excerpt: "mais adiante, com quatro dias de trabalho"
 }
 
-function mockApi(answer = { results: [topic, post], count: 2 }) {
-  const fetch = vi.fn(async () => ({ ok: true, status: 200, json: async () => answer }))
+const TAGS = [
+  { slug: "politica", name: "Política", provisional: false, topics: 7 },
+  { slug: "trabalho", name: "Trabalho", provisional: false, topics: 3 }
+]
+
+// GET /search answers `answer`; GET /tags (the autocomplete) the TAGS containing `q`
+function mockApi(answer = { results: [topic, post], count: 2, tags: [] }) {
+  const fetch = vi.fn(async url => {
+    const { pathname, searchParams } = new URL(url)
+    const body = pathname === "/tags" ?
+      { tags: TAGS.filter(tag => tag.slug.includes(searchParams.get("q"))), count: 2 }
+      :
+      answer
+    return { ok: true, status: 200, json: async () => body }
+  })
   vi.stubGlobal("fetch", fetch)
   return fetch
 }
+
+const searches = fetch => fetch.mock.calls.map(([url]) => new URL(url)).filter(url => url.pathname === "/search")
 
 function Location() {
   const location = useLocation()
@@ -113,21 +128,31 @@ describe("Search", () => {
     expect(await screen.findByText("Busca: máximo de 200 caracteres.")).toBeInTheDocument()
   })
 
-  it("asks for nothing without a query", () => {
+  it("asks for nothing without a query or tags", () => {
     const fetch = mockApi()
     renderPage("/search")
 
-    expect(screen.getByText(/busque por título, tag ou trecho do texto/)).toBeInTheDocument()
+    expect(screen.getByText(/use # para buscar por tags/)).toBeInTheDocument()
     expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it("searches by tags alone, showing them named once the API answers", async () => {
+    const fetch = mockApi({ results: [topic], count: 1, tags: [{ slug: "politica", name: "Política", provisional: false }] })
+    renderPage("/search?tags=politica,trabalho")
+
+    expect(await screen.findByText("#Política #trabalho")).toBeInTheDocument()
+    expect(Object.fromEntries(searches(fetch)[0].searchParams)).toEqual({ tags: "politica,trabalho", page: "1", pageSize: "10" })
+    const pills = within(screen.getByRole("list", { name: "tags da busca" })).getAllByRole("listitem")
+    expect(pills.map(pill => pill.textContent)).toEqual(["#Política", "#trabalho"])
   })
 
   it("links each type to the same query", async () => {
     mockApi()
-    renderPage("/search?q=quatro&type=topic")
+    renderPage("/search?q=quatro&tags=trabalho&type=topic")
 
     const types = within(screen.getByRole("group", { name: "mostrar" }))
-    expect(types.getByRole("link", { name: "tudo" })).toHaveAttribute("href", "/search?q=quatro")
-    expect(types.getByRole("link", { name: "posts" })).toHaveAttribute("href", "/search?q=quatro&type=post")
+    expect(types.getByRole("link", { name: "tudo" })).toHaveAttribute("href", "/search?q=quatro&tags=trabalho")
+    expect(types.getByRole("link", { name: "posts" })).toHaveAttribute("href", "/search?q=quatro&tags=trabalho&type=post")
     expect(types.getByRole("link", { name: "tópicos" })).toHaveAttribute("aria-current", "page")
     await screen.findByText("A favor")
   })
@@ -136,7 +161,7 @@ describe("Search", () => {
     mockApi()
     renderPage("/search?q=quatro&type=post")
 
-    const field = screen.getByRole("searchbox", { name: "buscar" })
+    const field = screen.getByRole("combobox", { name: "buscar" })
     expect(field).toHaveValue("quatro")
     await userEvent.clear(field)
     await userEvent.type(field, "cinco dias{Enter}")
@@ -146,14 +171,87 @@ describe("Search", () => {
 })
 
 describe("SearchBox", () => {
+  const field = () => screen.getByRole("combobox", { name: "buscar" })
+  const pills = () => within(screen.queryByRole("list", { name: "tags da busca" }) ?? document.createElement("ul"))
+    .queryAllByRole("listitem").map(pill => pill.textContent)
+  const location = () => screen.getByTestId("location").textContent
+
   it("opens the search page with what was typed, trimmed, and ignores blanks", async () => {
     renderPage("/recent", <SearchBox />)
-    const field = screen.getByRole("searchbox", { name: "buscar" })
 
-    await userEvent.type(field, "   {Enter}")
-    expect(screen.getByTestId("location")).toHaveTextContent("/recent")
+    await userEvent.type(field(), "   {Enter}")
+    expect(location()).toBe("/recent")
 
-    await userEvent.type(field, " reforma {Enter}")
-    expect(screen.getByTestId("location")).toHaveTextContent("/search?q=reforma")
+    await userEvent.type(field(), " reforma {Enter}")
+    expect(location()).toBe("/search?q=reforma")
+  })
+
+  it("suggests tags only after a #", async () => {
+    const fetch = mockApi()
+    renderPage("/recent", <SearchBox />)
+
+    await userEvent.type(field(), "pol")
+    await new Promise(resolve => setTimeout(resolve, 250))
+    expect(screen.queryByRole("listbox")).toBeNull()
+    expect(fetch).not.toHaveBeenCalled()
+
+    await userEvent.type(field(), " #pol")
+    const options = within(await screen.findByRole("listbox", { name: "tags sugeridas" })).getAllByRole("option")
+    expect(options.map(option => option.textContent)).toEqual(["#Política7 tópicos"])
+    expect(field()).toHaveAttribute("aria-expanded", "true")
+  })
+
+  it("turns a picked tag into a pill, and searches the words and the tags' intersection", async () => {
+    mockApi()
+    renderPage("/recent", <SearchBox type="topic" />)
+
+    await userEvent.type(field(), "salário #pol")
+    await userEvent.click(await screen.findByRole("option", { name: /Política/ }))
+    expect(pills()).toEqual(["#Política"])
+    expect(field()).toHaveValue("salário ")
+
+    // Enter picks the highlighted suggestion while the list is open; then it searches
+    await userEvent.type(field(), "#tra")
+    await screen.findByRole("option", { name: /Trabalho/ })
+    await userEvent.keyboard("{ArrowDown}{Enter}")
+    expect(pills()).toEqual(["#Política", "#Trabalho"])
+    expect(screen.queryByRole("listbox")).toBeNull()
+
+    await userEvent.keyboard("{Enter}")
+    expect(location()).toBe("/search?q=sal%C3%A1rio&tags=politica%2Ctrabalho&type=topic")
+  })
+
+  it("doesn't offer a tag already picked, and Escape closes the suggestions", async () => {
+    mockApi()
+    renderPage("/recent", <SearchBox initialTags={[{ slug: "politica", name: "Política" }]} />)
+
+    await userEvent.type(field(), "#")
+    const options = within(await screen.findByRole("listbox")).getAllByRole("option")
+    expect(options.map(option => option.textContent)).toEqual(["#Trabalho3 tópicos"])
+
+    await userEvent.keyboard("{Escape}")
+    expect(screen.queryByRole("listbox")).toBeNull()
+  })
+
+  it("counts a #tag typed in full, and searches tags alone", async () => {
+    renderPage("/recent", <SearchBox />)
+
+    await userEvent.type(field(), "#Meio-Ambiente #politica")
+    await userEvent.click(screen.getByRole("button", { name: "buscar" }))
+    expect(location()).toBe("/search?tags=meio-ambiente%2Cpolitica")
+  })
+
+  it("removes a pill by its button or by Backspace at the start of the field", async () => {
+    mockApi()
+    renderPage("/recent", <SearchBox initialQuery="a" initialTags={[{ slug: "politica", name: "Política" }, { slug: "trabalho" }]} />)
+    expect(pills()).toEqual(["#Política", "#trabalho"])
+
+    await userEvent.click(screen.getByRole("button", { name: "remover #Política" }))
+    expect(pills()).toEqual(["#trabalho"])
+
+    field().setSelectionRange(0, 0)
+    await userEvent.keyboard("{Backspace}")
+    expect(pills()).toEqual([])
+    expect(field()).toHaveValue("a")
   })
 })

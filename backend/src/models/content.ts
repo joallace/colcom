@@ -138,8 +138,7 @@ async function validateUniqueTitle(title: string) {
   }
 }
 
-// `body` is the whole text: a post keeps only its summary, and search its plain text. A post also
-// starts with its topic's tag names, which the tag_votes trigger keeps from then on.
+// `body` is the whole text: a post keeps only its summary, and search its plain text
 async function create({ title, author_pid, parent_id, body, type, config }: ContentInsertRequest): Promise<Content> {
   // author_pid comes from a verified session (authHandler checks it against users) or the system account
   await validateUniqueTitle(title)
@@ -156,11 +155,10 @@ async function create({ title, author_pid, parent_id, body, type, config }: Cont
           body,
           type,
           config,
-          search_text,
-          tag_names
+          search_text
         )
       VALUES
-          ($1, $2, $3, $4, $5, $6, $7, CASE WHEN $5 = 'post' THEN topic_tag_names($3) END)
+          ($1, $2, $3, $4, $5, $6, $7)
       RETURNING
         ${RETURNED_COLUMNS}
     ;`,
