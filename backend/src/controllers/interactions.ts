@@ -29,7 +29,7 @@ export const getVoteHistory: RequestHandler = async (req, res) => {
   if (type !== "topic")
     throw new NotFoundError({
       message: "Tópico não encontrado.",
-      action: 'Verifique se o "id" fornecido está correto.',
+      action: 'Verifique se o "id" fornecido está correto.'
     })
 
   res.status(200).json(await Interactions.findVoteHistory(id))

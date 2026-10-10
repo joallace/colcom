@@ -56,12 +56,12 @@ const findOwnedSuggestion = async (content_id: number, commit: string, author_pi
   if (!content || content.type !== "post")
     throw new NotFoundError({
       message: "Post não encontrado.",
-      action: 'Verifique se o "id" fornecido está correto.',
+      action: 'Verifique se o "id" fornecido está correto.'
     })
 
   if (author_pid !== content.author_id)
     throw new ForbiddenError({
-      message: "Somente o autor do post pode aceitar ou rejeitar sugestões.",
+      message: "Somente o autor do post pode aceitar ou rejeitar sugestões."
     })
 
   const suggestion = await Interactions.findPendingSuggestion(content_id, commit)
@@ -69,7 +69,7 @@ const findOwnedSuggestion = async (content_id: number, commit: string, author_pi
   if (!suggestion)
     throw new NotFoundError({
       message: "Sugestão pendente não encontrada para este post.",
-      action: 'Verifique se o "hash" fornecido está correto.',
+      action: 'Verifique se o "hash" fornecido está correto.'
     })
 
   return { content, suggestion }
@@ -217,7 +217,7 @@ export const getTopicTree: RequestHandler = async (req, res) => {
   if (!topic)
     throw new NotFoundError({
       message: "Tópico não encontrado.",
-      action: 'Verifique se o "id" fornecido está correto.',
+      action: 'Verifique se o "id" fornecido está correto.'
     })
 
   res.status(200).json(topic)
@@ -234,7 +234,7 @@ export const getContent: RequestHandler = async (req, res) => {
   if (!content)
     throw new NotFoundError({
       message: "Conteúdo não encontrado.",
-      action: 'Verifique se o "id" fornecido está correto.',
+      action: 'Verifique se o "id" fornecido está correto.'
     })
 
 
@@ -298,13 +298,13 @@ export const getVersion: RequestHandler = async (req, res) => {
   if (!content)
     throw new NotFoundError({
       message: "Conteúdo não encontrado.",
-      action: 'Verifique se o "id" fornecido está correto.',
+      action: 'Verifique se o "id" fornecido está correto.'
     })
 
   if (content.type !== "post")
     throw new ValidationError({
       message: `Conteúdos do tipo "${content.type}" não têm histórico.`,
-      action: 'Forneça um "id" de um "post".',
+      action: 'Forneça um "id" de um "post".'
     })
 
   const repo = Number(content.parent_id)
@@ -359,13 +359,13 @@ export const updateContent: RequestHandler = async (req, res) => {
   if (!content)
     throw new NotFoundError({
       message: "Conteúdo não encontrado.",
-      action: 'Verifique se o "id" fornecido está correto.',
+      action: 'Verifique se o "id" fornecido está correto.'
     })
 
   if (content.type !== "post")
     throw new ValidationError({
       message: `Conteúdos do tipo "${content.type}" não podem ser alterados.`,
-      action: 'Forneça um "id" de um "post".',
+      action: 'Forneça um "id" de um "post".'
     })
 
   const interactionId = content.author_id !== author_pid ?
@@ -404,7 +404,7 @@ export const clonePost: RequestHandler = async (req, res) => {
   if (!content || content.type !== "post")
     throw new NotFoundError({
       message: "Post não encontrado.",
-      action: 'Verifique se o "id" fornecido está correto.',
+      action: 'Verifique se o "id" fornecido está correto.'
     })
 
   const result = await Content.create({ ...(<any>content), author_pid, title })

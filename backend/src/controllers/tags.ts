@@ -20,13 +20,13 @@ const assertCanCreate = async (user: Voter, count: number) => {
   if (!oldEnough(user))
     throw new ForbiddenError({
       message: `Contas com menos de ${plural(config.tags.minAccountDays, "dia", "dias")} não podem criar tags.`,
-      action: "Use uma das tags existentes, ou espere alguns dias.",
+      action: "Use uma das tags existentes, ou espere alguns dias."
     })
 
   if (await Tags.createdToday(user.id) + count > config.tags.createPerDay)
     throw new TooManyRequestsError({
       message: `Cada pessoa pode criar até ${plural(config.tags.createPerDay, "tag", "tags")} por dia.`,
-      action: "Use uma das tags existentes, ou tente novamente amanhã.",
+      action: "Use uma das tags existentes, ou tente novamente amanhã."
     })
 }
 
@@ -128,7 +128,7 @@ export const voteOnTag: RequestHandler = async (req, res) => {
   // A topic's author curates its tags from the start; everyone else once out of probation
   if (user.id !== topic.author_id && !oldEnough(user))
     throw new ForbiddenError({
-      message: `Contas com menos de ${plural(config.tags.minAccountDays, "dia", "dias")} só podem votar nas tags dos próprios tópicos.`,
+      message: `Contas com menos de ${plural(config.tags.minAccountDays, "dia", "dias")} só podem votar nas tags dos próprios tópicos.`
     })
 
   const slug = tagSlug(name)
@@ -182,7 +182,7 @@ export const getTagIntersection: RequestHandler = async (req, res) => {
 
   if (!tags)
     throw new NotFoundError({
-      message: requested.length === 1 ? "Tag não encontrada." : "Alguma dessas tags não existe.",
+      message: requested.length === 1 ? "Tag não encontrada." : "Alguma dessas tags não existe."
     })
 
   const { topics, related } = await Tags.intersection(tags.map(tag => tag.id))

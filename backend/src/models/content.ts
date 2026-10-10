@@ -539,7 +539,7 @@ export async function getDataById(id: number, data: (keyof Content)[]): Promise<
   if (result.rowCount === 0) {
     throw new NotFoundError({
       message: `O conteúdo com "id" de valor "${id}" não foi encontrado no sistema.`,
-      action: 'Verifique se o "id" do conteúdo está digitado corretamente.',
+      action: 'Verifique se o "id" do conteúdo está digitado corretamente.'
     })
   }
   return result.rows[0]
