@@ -1,7 +1,7 @@
 // The post page against a mocked API: the real editor, anchoring and highlights together
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { MemoryRouter, Route, Routes } from "react-router"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import PostPage from "@/pages/PostPage"
 import { UserContext } from "@/context/UserContext"
@@ -400,5 +400,105 @@ describe("accepting a suggestion", () => {
     await accept({ status: 409, body: { message: "O texto foi alterado por outra pessoa ao mesmo tempo." } })
 
     expect(await screen.findByText("O texto foi alterado por outra pessoa ao mesmo tempo.")).toBeInTheDocument()
+  })
+})
+
+describe("a critique's lifecycle", () => {
+  // Critique 10 alone on v2, made on v1 by "b"; the post is by "a"
+  const ten = { ...VERSIONS[V2].critiques[0], author_id: "b", status: "open", events: [] }
+  const versionsWith = (...critiques) => ({ ...VERSIONS, [V2]: { ...VERSIONS[V2], critiques } })
+
+  // The API answers POST /contents/10/events with `thread`, and records what it was sent
+  function mockEvents(versions, thread) {
+    const fetch = mockApi(versions)
+    const original = fetch.getMockImplementation()
+    fetch.mockImplementation(async (url, options) => options?.method === "POST" ?
+      { ok: true, status: 201, json: async () => thread } : original(url, options))
+    return fetch
+  }
+
+  const sent = fetch => JSON.parse(fetch.mock.calls.find(([, options]) => options?.method === "POST")[1].body)
+
+  // Critiques open from links here, which scroll to them; jsdom doesn't scroll
+  beforeEach(() => { Element.prototype.scrollIntoView = vi.fn() })
+  afterEach(() => { delete Element.prototype.scrollIntoView })
+
+  it("leaves closed critiques out of the highlights and lists them, with their state, under the post", async () => {
+    const resolved = { ...VERSIONS[V2].critiques[2], status: "resolved", events: [] }
+    mockApi(versionsWith(ten, resolved))
+    const { container } = renderPage()
+
+    await waitFor(() => expect(marks(container).length).toBeGreaterThan(0))
+    expect(marks(container).map(mark => [mark.textContent, mark.dataset.commitIndex])).toEqual([["fall for everyone", "0"]])
+
+    const list = (await screen.findByText("Críticas encerradas")).closest("section")
+    expect(list).toHaveTextContent("Critique 12")
+    expect(list).toHaveTextContent("resolvida")
+
+    fireEvent.click(screen.getByRole("button", { name: "Critique 12" }))
+    expect(await screen.findByText("quem criticou aceitou a resposta")).toBeInTheDocument()
+  })
+
+  it("lets the post's author rebut an open critique, and shows the answer", async () => {
+    const answered = {
+      id: 10,
+      status: "rebutted",
+      events: [{ id: 1, action: "rebut", from: "open", to: "rebutted", note: "Os números provam o contrário.", commit: null, suggestion: null, actor: { pid: "a", name: "alice", avatar: "" }, created_at: new Date().toISOString() }]
+    }
+    const fetch = mockEvents(versionsWith(ten), answered)
+    renderPage("/topics/1/posts/2?critique=10", { pid: "a", accessToken: "token" })
+
+    expect(await screen.findByText("aberta")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "retirar crítica" })).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "refutar" }))
+
+    // A rebuttal needs its reasons
+    fireEvent.click(screen.getByRole("button", { name: "refutar" }))
+    expect(await screen.findByText("campo obrigatório!", { exact: false })).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText("por que a crítica não procede"), { target: { value: "Os números provam o contrário." } })
+    fireEvent.click(screen.getByRole("button", { name: "refutar" }))
+
+    expect(await screen.findByText("refutada")).toBeInTheDocument()
+    expect(screen.getByText("refutou a crítica", { exact: false })).toBeInTheDocument()
+    expect(screen.getByText("Os números provam o contrário.")).toBeInTheDocument()
+    expect(sent(fetch)).toEqual({ action: "rebut", note: "Os números provam o contrário." })
+    expect(fetch).toHaveBeenCalledWith("http://api.test/contents/10/events", expect.objectContaining({ method: "POST" }))
+  })
+
+  it("addresses a critique with a version after the criticised one", async () => {
+    const fetch = mockEvents(versionsWith(ten), { id: 10, status: "addressed", events: [] })
+    renderPage("/topics/1/posts/2?critique=10", { pid: "a", accessToken: "token" })
+
+    fireEvent.click(await screen.findByRole("button", { name: "corrigir" }))
+    const versions = screen.getByLabelText("versão que corrige")
+    expect([...versions.options].map(option => option.value)).toEqual([V2])
+
+    fireEvent.click(screen.getByRole("button", { name: "marcar como corrigida" }))
+    expect(await screen.findByText("corrigida")).toBeInTheDocument()
+    expect(sent(fetch)).toEqual({ action: "address", commit: V2 })
+  })
+
+  it("lets the critic only withdraw an open critique, and accept or dispute an answer", async () => {
+    mockApi(versionsWith(ten))
+    const { unmount } = renderPage("/topics/1/posts/2?critique=10", { pid: "b", accessToken: "token" })
+
+    expect(await screen.findByRole("button", { name: "retirar crítica" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "refutar" })).toBeNull()
+    expect(screen.queryByRole("button", { name: "aceitar resposta" })).toBeNull()
+    unmount()
+
+    mockApi(versionsWith({ ...ten, status: "addressed" }))
+    renderPage("/topics/1/posts/2?critique=10", { pid: "b", accessToken: "token" })
+    expect(await screen.findByRole("button", { name: "aceitar resposta" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "contestar resposta" })).toBeInTheDocument()
+  })
+
+  it("offers no actions to anyone else", async () => {
+    mockApi(versionsWith(ten))
+    renderPage("/topics/1/posts/2?critique=10")
+
+    expect(await screen.findByText("aberta")).toBeInTheDocument()
+    expect(document.querySelector(".critiqueActions")).toBeNull()
   })
 })

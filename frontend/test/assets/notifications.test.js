@@ -40,8 +40,20 @@ describe("describeNotification", () => {
     expect(describeNotification(notification)).toMatchObject({ target: "Meu post", path: "/topics/2/posts/8", detail: "Minha versão" })
   })
 
+  it.each([
+    ["critique_addressed", "corrigiu o trecho que você criticou em"],
+    ["critique_rebutted", "refutou sua crítica a"],
+    ["critique_accepted", "aceitou sua resposta a uma crítica em"],
+    ["critique_disputed", "contestou sua resposta a uma crítica em"],
+    ["critique_withdrawn", "retirou uma crítica a"]
+  ])("opens the critique answered (%s) on the post's latest version", (type, action) => {
+    const notification = { ...base, type, subject: { id: 9, title: "Crítica", type: "critique", commit: "abc123" } }
+
+    expect(describeNotification(notification)).toEqual({ action, target: "Meu post", path: "/topics/2/posts/5?critique=9", detail: "Crítica" })
+  })
+
   it("still links a type it doesn't know (one added to the API later)", () => {
-    expect(describeNotification({ ...base, type: "critique_disputed" })).toMatchObject({ target: "Meu post", path: "/topics/2/posts/5" })
+    expect(describeNotification({ ...base, type: "critique_upheld" })).toMatchObject({ target: "Meu post", path: "/topics/2/posts/5" })
   })
 })
 

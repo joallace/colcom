@@ -19,6 +19,7 @@ import useUser from "@/context/UserContext"
 import { describe, validate } from "@/assets/validation"
 import { readableText } from "@/assets/textIndex"
 import useToLogin from "@/hooks/useToLogin"
+import CritiqueThread from "@/components/content/CritiqueThread"
 
 
 export default function Critique({
@@ -43,7 +44,14 @@ export default function Critique({
   anchor,
   isInGroup,
   highlightOnOpen = true,
-  quote
+  quote,
+  author_id,
+  status,
+  events,
+  // The criticised post's author and versions, for the critique's lifecycle (CritiqueThread)
+  postAuthorId,
+  history,
+  onThreadChange = () => { }
 }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const readOnly = !!body
@@ -219,6 +227,19 @@ export default function Critique({
       <Alert setter={setErrorMessage}>
         {errorMessage}
       </Alert>
+
+      {readOnly && id &&
+        <CritiqueThread
+          id={id}
+          status={status}
+          events={events}
+          critiqueCommit={config?.commit}
+          isAuthor={Boolean(user) && user.pid === postAuthorId}
+          isCritic={Boolean(user) && user.pid === author_id}
+          history={history}
+          onChange={thread => onThreadChange(id, thread)}
+        />
+      }
     </Frame>
   )
 }

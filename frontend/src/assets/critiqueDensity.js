@@ -1,3 +1,5 @@
+import { isClosedCritique } from "@colcom/shared"
+
 // Critique highlights are shaded by how many critiques cover each piece of text, so the most
 // disputed passages stand out at a glance. Counts are bucketed on a doubling scale (1, 2, 3–4,
 // 5–8, 9+): readers compare shades roughly, and exact counts are one click away.
@@ -53,7 +55,8 @@ export function densitySegments(marks) {
 export function groupOverlappingMarks(critiques) {
   const marks = critiques
     .map((critique, i) => ({ ...critique.anchor, index: i, relevance: relevanceScore(critique) }))
-    .filter(mark => mark.match !== "removed")
+    // A closed critique (resolved or withdrawn) asks nothing more of the text
+    .filter(mark => mark.match !== "removed" && !isClosedCritique(critiques[mark.index].status))
     .sort((a, b) => a.from - b.from)
 
   const groups = []

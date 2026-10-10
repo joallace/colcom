@@ -1,6 +1,14 @@
 import api, { ApiError } from "@/assets/api"
 
 
+const CRITIQUE_ANSWERS = {
+  critique_addressed: "corrigiu o trecho que você criticou em",
+  critique_rebutted: "refutou sua crítica a",
+  critique_accepted: "aceitou sua resposta a uma crítica em",
+  critique_disputed: "contestou sua resposta a uma crítica em",
+  critique_withdrawn: "retirou uma crítica a"
+}
+
 // What a notification says (after the actor's name) and where it leads. `target` is the title of
 // what it's about, shown as the link.
 export function describeNotification({ type, content, topic_id, subject, suggestion }) {
@@ -23,6 +31,18 @@ export function describeNotification({ type, content, topic_id, subject, suggest
       return { action: "respondeu ao seu tópico", target: content.title, path: `/topics/${topic_id}/posts/${subject.id}`, detail: subject.title }
     case "clone":
       return { action: "criou um post a partir do seu", target: content.title, path: `/topics/${topic_id}/posts/${subject.id}`, detail: subject.title }
+    // Answers about a critique open it on the post's latest version, where its thread is
+    case "critique_addressed":
+    case "critique_rebutted":
+    case "critique_accepted":
+    case "critique_disputed":
+    case "critique_withdrawn":
+      return {
+        action: CRITIQUE_ANSWERS[type],
+        target: content.title,
+        path: `${postPath}?${new URLSearchParams({ critique: subject.id })}`,
+        detail: subject.title
+      }
     default:
       return { action: "interagiu com", target: content.title, path: content.type === "topic" ? `/topics/${content.id}` : postPath }
   }

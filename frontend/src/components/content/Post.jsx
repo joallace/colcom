@@ -27,6 +27,7 @@ import { UserContext } from "@/context/UserContext"
 import { relativeTime } from "@/assets/util"
 import api, { ApiError } from "@/assets/api"
 import useToLogin from "@/hooks/useToLogin"
+import { fixableCritiques } from "@/assets/critiques"
 
 
 export default function Post({
@@ -45,6 +46,7 @@ export default function Post({
   interactionCounts,
   userTopicVote,
   fetchCommit,
+  critiques,
   groupedCritiques,
   alongsideCritique,
   setShowCritique,
@@ -75,6 +77,9 @@ export default function Post({
   // Why accepting a suggestion failed, shown under the post
   const [mergeError, setMergeError] = React.useState("")
   const { user } = React.useContext(UserContext)
+  // A suggestion may fix one of the viewer's own critiques of the post: merging it resolves the critique
+  const [fixedCritique, setFixedCritique] = React.useState("")
+  const fixable = user && user.pid !== author_id ? fixableCritiques(critiques, user.pid) : []
   const navigate = useNavigate()
   const toLogin = useToLogin()
 
@@ -244,7 +249,8 @@ export default function Post({
   }
 
   const submitEdition = async () => {
-    const values = { message: commitMessageRef?.current?.value.trim(), body: content }
+    const critique = fixable.some(({ id }) => String(id) === fixedCritique) ? Number(fixedCritique) : undefined
+    const values = { message: commitMessageRef?.current?.value.trim(), body: content, ...(critique ? { critique } : {}) }
     const invalid = invalidMessage("edit", values, "message")
 
     if (invalid) {
@@ -255,6 +261,10 @@ export default function Post({
     await sendFromModal(() => api.patch(`/contents/${id}`, values), data => {
       if (user?.pid === author_id)
         updatePostData(data)
+      setFixedCritique("")
+      // The fix is listed on the critique's thread
+      if (critique)
+        fetchCommit()
     })
   }
 
@@ -355,6 +365,15 @@ export default function Post({
             onChange={() => setModalError("")}
             errorMessage={modalError && `${modalError}!`}
           />
+          {fixable.length > 0 &&
+            <label className="fixedCritique">
+              esta sugestão corrige uma crítica sua?
+              <select value={fixedCritique} onChange={e => setFixedCritique(e.target.value)}>
+                <option value="">não</option>
+                {fixable.map(critique => <option key={critique.id} value={critique.id}>{critique.title}</option>)}
+              </select>
+            </label>
+          }
         </div>
         <div className="footer center">
           <button

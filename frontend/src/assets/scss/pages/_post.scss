@@ -102,7 +102,8 @@
     }
 }
 
-.removedCritiques {
+// Critiques with no highlight on the version shown: removed passages and closed critiques
+.critiqueList {
     margin-top: var(--space-6);
     padding: var(--space-4) var(--space-5);
     border: 1px solid var(--border);

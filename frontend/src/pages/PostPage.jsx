@@ -4,6 +4,7 @@ import { Link, useParams, useSearchParams } from 'react-router'
 import Post from "@/components/content/Post"
 import CritiqueFrame from "@/components/content/Critique"
 import CritiquePopover from "@/components/content/CritiquePopover"
+import { CritiqueStatus } from "@/components/content/CritiqueThread"
 import Modal from "@/components/primitives/Modal"
 import LoadingButton from "@/components/primitives/LoadingButton"
 import Spinner from "@/components/primitives/Spinner"
@@ -13,6 +14,24 @@ import useUser from "@/context/UserContext"
 import { relativeTime } from "@/assets/util"
 import { docFromHtml, projectCritiques, quoteFromRange } from "@/assets/anchoring"
 import { groupOverlappingMarks } from "@/assets/critiqueDensity"
+import { isClosedCritique } from "@/assets/critiques"
+
+
+// Critiques without a highlight on the version being read, each opening as a highlight would
+const CritiqueList = ({ heading, entries, open, className = "" }) => entries.length > 0 && (
+  <section className={`critiqueList ${className}`}>
+    <h3>{heading}</h3>
+    <ul>
+      {entries.map(({ critique, index }) =>
+        <li key={critique.id}>
+          <button data-critique-index={index} onClick={() => open(String(index))}>{critique.title}</button>
+          <span>por {critique.author}</span>
+          {isClosedCritique(critique.status) && <CritiqueStatus status={critique.status} />}
+        </li>
+      )}
+    </ul>
+  </section>
+)
 
 
 export default function PostPage() {
@@ -90,9 +109,16 @@ export default function PostPage() {
     [postBody, postCritiques, bodyCommit, critiqueHistory]
   )
   const groupedCritiques = React.useMemo(() => groupOverlappingMarks(critiques), [critiques])
-  const removedCritiques = critiques
-    .map((critique, index) => ({ critique, index }))
-    .filter(({ critique }) => critique.anchor.match === "removed")
+  // Listed under the post, since they have no highlight: critiques still waiting on something whose
+  // passage was removed, and closed ones (resolved or withdrawn), wherever their passage is
+  const indexedCritiques = critiques.map((critique, index) => ({ critique, index }))
+  const removedCritiques = indexedCritiques
+    .filter(({ critique }) => critique.anchor.match === "removed" && !isClosedCritique(critique.status))
+  const closedCritiques = indexedCritiques.filter(({ critique }) => isClosedCritique(critique.status))
+
+  // A critique's state and thread, after its author or critic acted on it
+  const updateThread = React.useCallback((id, { status, events }) =>
+    setPostCritiques(prev => prev.map(critique => critique.id === id ? { ...critique, status, events } : critique)), [])
 
   // The quote a critique being written will store, taken from the selection on the version being read
   const newCritiqueQuote = React.useMemo(
@@ -184,6 +210,9 @@ export default function PostPage() {
       isInGroup={isCritiqueGroup}
       highlightOnOpen={position === 0}
       quote={newCritiqueQuote}
+      postAuthorId={postData.author_id}
+      history={postData.history}
+      onThreadChange={updateThread}
       {...critiques[index]}
     />
   )
@@ -191,7 +220,8 @@ export default function PostPage() {
   const getPostFrame = React.useCallback(() => postTitleRef.current?.closest(".frame"), [])
 
   // The element marking where critiques are open (`showCritique`'s value): their highlight (a mark,
-  // or a chart, which carries it as attributes), or for a removed passage its entry in the list below the post.
+  // or a chart, which carries it as attributes), or for a removed passage or a closed critique its
+  // entry in the lists below the post.
   // Each segment of a group lists the group in its own order, so a group opened in another order
   // (from a link) is anchored at its first segment.
   const findCritiqueAnchor = React.useCallback(value => {
@@ -208,7 +238,7 @@ export default function PostPage() {
 
     return post?.querySelector(`mark[data-commit-index="${index}"], .chart[data-commit-index="${index}"]`)
       ?? (post && String(value).startsWith("[") ? sameGroup() : undefined)
-      ?? document.querySelector(`.removedCritiques [data-critique-index="${index}"]`)
+      ?? document.querySelector(`.critiqueList [data-critique-index="${index}"]`)
   }, [getPostFrame])
 
   const getCritiqueAnchor = React.useCallback(() =>
@@ -308,19 +338,8 @@ export default function PostPage() {
               resetState={[reset, setReset]}
             />
 
-            {removedCritiques.length > 0 &&
-              <section className="removedCritiques">
-                <h3>Críticas a trechos removidos do texto</h3>
-                <ul>
-                  {removedCritiques.map(({ critique, index }) =>
-                    <li key={critique.id}>
-                      <button data-critique-index={index} onClick={() => setShowCritique(String(index))}>{critique.title}</button>
-                      <span>por {critique.author}</span>
-                    </li>
-                  )}
-                </ul>
-              </section>
-            }
+            <CritiqueList heading="Críticas a trechos removidos do texto" entries={removedCritiques} open={setShowCritique} />
+            <CritiqueList heading="Críticas encerradas" entries={closedCritiques} open={setShowCritique} className="closedCritiques" />
           </div>
           {showCritique &&
             isDesktop ?

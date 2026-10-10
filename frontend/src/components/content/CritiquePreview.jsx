@@ -8,11 +8,12 @@ import { submitVote } from "@/assets/interactions"
 import { Author, Relevance } from "@/components/content/Metrics"
 import { readableText } from "@/assets/textIndex"
 import useToLogin from "@/hooks/useToLogin"
+import { CritiqueStatus } from "@/components/content/CritiqueThread"
 
 
 // A critique outside its post (profile, bookmarks): the post and passage it criticises. Its title
 // opens the post at the criticised version with the critique open.
-export default function CritiquePreview({ id, title, body, author, author_avatar, upvotes, downvotes, config, post, topic, userInteractions }) {
+export default function CritiquePreview({ id, title, body, author, author_avatar, upvotes, downvotes, config, status, post, topic, userInteractions }) {
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
   const toLogin = useToLogin()
@@ -45,7 +46,7 @@ export default function CritiquePreview({ id, title, body, author, author_avatar
       justify
     >
       <div className="contentContext">
-        criticando o post <Link to={postPath}>{post.title}</Link>
+        <CritiqueStatus status={status} /> criticando o post <Link to={postPath}>{post.title}</Link>
       </div>
       {config?.quote && <blockquote className="criticisedPassage">{readableText(config.quote.exact)}</blockquote>}
       <Editor initialContent={body} content={body} reset={body} bubbleMenuShouldShow={false} />
