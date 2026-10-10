@@ -91,7 +91,8 @@ Beyond the suite, show changes work rather than assume they do:
 ## Working conventions
 
 - UI text and API error messages are in **Portuguese**; code, comments, identifiers and commit messages in **English**.
-- Commit messages follow `type(scope): Subject` (`feat`, `fix`, `chore`, `refactor`, `style`; scope `frontend`/`backend` when it applies), with the subject in the third person present, capitalized and without a final period, as in `git log`: "fix(frontend): Restores title editing in Firefox prior to version 136", "chore: Adds AGENTS.md and CLAUDE.md files". The author usually commits: when a change is done, suggest its message; ask before committing and never push.
+- Commit messages follow `type(scope): Subject` (`feat`, `fix`, `chore`, `refactor`, `style`; scope `frontend`/`backend` when it applies), with the subject in the third person present, capitalized and without a final period, as in `git log`: "fix(frontend): Restores title editing in Firefox prior to version 136", "chore: Adds AGENTS.md and CLAUDE.md files".
+- Work on a branch off `main` (named like `ui/post-vote-share`) in your own `git worktree`, and commit there without asking when a change is done. Don't commit in the developer's checkout or on `main`, and never push or merge: the author reviews the branch and merges it into `main` ("chore: Merges ui/post-vote-share").
 - There is no deployed instance or production data yet: breaking changes are fine and data migrations aren't needed. Edit `init.sql` directly. Re-check this once an instance exists.
 - The developer often has the dev servers running (`bun --watch` on 3000, Vite on 5173); edits reload them. Don't kill processes you didn't start; find yours by port (`ss -ltnp`). Use separate ports (e.g. 3999, 5199, 5499) for your own servers and clean up after.
 - Avoid `git stash` on the developer's working tree; to compare with an older commit, use `git show <rev>:<path>`, or a temporary `git worktree`.
