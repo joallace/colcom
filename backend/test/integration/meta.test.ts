@@ -105,7 +105,14 @@ describe("once the instance started", () => {
         .send({ title: unique("Topic"), body: "<p>?</p>", config: { answers: [] }, tags: ["Política", "meta"] })
 
       expect(res.status).toBe(403)
-      expect(res.body).toEqual(expect.objectContaining({ key: "tags.1", message: expect.stringContaining("reservada") }))
+      expect(res.body).toEqual({
+        name: "ForbiddenError",
+        message: 'A tag "Meta" é reservada aos tópicos fundamentais do colcom.',
+        action: "Escolha outra tag.",
+        statusCode: 403,
+        errorId: expect.any(String),
+        key: "tags.1"
+      })
     })
 
     it("can't be proposed on another topic, even by its author", async () => {

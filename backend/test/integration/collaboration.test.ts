@@ -221,7 +221,14 @@ describe("suggestions", () => {
     const res = await api().post(`/contents/${post.id}/${suggestion.body.config.commit}/merge`).set(author.auth)
 
     expect(res.status).toBe(409)
-    expect(res.body.errorLocationCode).toBe("GIT:MERGE:CONFLICT")
+    expect(res.body).toEqual({
+      name: "ConflictError",
+      message: "A sugestão altera trechos que também foram alterados no post depois dela.",
+      action: "Resolva os conflitos para aceitar a sugestão.",
+      statusCode: 409,
+      errorId: expect.any(String),
+      errorLocationCode: "GIT:MERGE:CONFLICT"
+    })
     expect(await history(post.id)).toEqual(before)
     expect(await pendingSuggestions(post.id)).toHaveLength(1)
     // The failed merge left the post's branch where it was
@@ -301,7 +308,14 @@ describe("resolving a suggestion's conflicts", () => {
     const res = await resolve(post.id, commit, { body: "<p>Resolved.</p>", head })
 
     expect(res.status).toBe(409)
-    expect(res.body.errorLocationCode).toBe("GIT:MERGE:HEAD_MOVED")
+    expect(res.body).toEqual({
+      name: "ConflictError",
+      message: "O post foi alterado enquanto os conflitos eram resolvidos.",
+      action: "Resolva os conflitos novamente sobre a versão atual do post.",
+      statusCode: 409,
+      errorId: expect.any(String),
+      errorLocationCode: "GIT:MERGE:HEAD_MOVED"
+    })
     expect(await history(post.id)).toEqual(before)
     expect(await pendingSuggestions(post.id)).toHaveLength(1)
   })

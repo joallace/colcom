@@ -36,12 +36,11 @@ const expired = (tag: ResolvedTag, key: string) => new ValidationError({
   key
 })
 
-// Only the instance applies a reserved tag (src/meta.ts). A 403 that, unlike ForbiddenError, keeps
-// the field's key, for the topic form to show it on the tag
-const reserved = (tag: ResolvedTag, key: string) => new ValidationError({
+// Only the instance applies a reserved tag (src/meta.ts). The field's key lets the topic form show
+// it on the tag
+const reserved = (tag: ResolvedTag, key: string) => new ForbiddenError({
   message: `A tag "${tag.name}" é reservada aos tópicos fundamentais do colcom.`,
   action: "Escolha outra tag.",
-  statusCode: 403,
   key
 })
 

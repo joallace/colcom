@@ -1,6 +1,6 @@
 import db from "@/pgDatabase"
 import { avatarToBase64, getDataByPublicId } from "@/models/user"
-import { ValidationError } from "@/errors"
+import { ConflictError, ValidationError } from "@/errors"
 import Content from "@/models/content"
 
 
@@ -272,10 +272,9 @@ async function create({ author_pid, content_id, type, config = null }: Interacti
   const result = await db.query(query).catch(err => {
     // unique_violation: an identical request (e.g. a double click) already registered it
     if (err?.code === "23505")
-      throw new ValidationError({
+      throw new ConflictError({
         message: "Esta interação já foi registrada.",
         action: "Atualize a página para ver o estado atual.",
-        statusCode: 409,
         errorLocationCode: "MODEL:INTERACTION:CREATE:ALREADY_EXISTS"
       })
     throw err

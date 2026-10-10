@@ -6,7 +6,7 @@ import { cleanMerge } from "@colcom/shared"
 
 import { IContent } from "@/models/content"
 import logger from "@/logger"
-import { ValidationError } from "./errors"
+import { ConflictError, ValidationError } from "./errors"
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -148,19 +148,17 @@ async function advanceNow(repo: number, branch: string, build: (head: { commit: 
     await new Promise(resolve => setTimeout(resolve, Math.random() * Math.min(10 * 2 ** attempt, 500)))
   }
 
-  throw new ValidationError({
+  throw new ConflictError({
     message: "O texto foi alterado por outra pessoa ao mesmo tempo.",
     action: "Atualize a página e tente novamente.",
-    statusCode: 409,
     errorLocationCode: "GIT:ADVANCE:TOO_MANY_ATTEMPTS"
   })
 }
 
 function branchExists(branch: string) {
-  return new ValidationError({
+  return new ConflictError({
     message: `O branch "${branch}" já existe.`,
-    errorLocationCode: "GIT:BRANCH:ALREADY_EXISTS",
-    statusCode: 409
+    errorLocationCode: "GIT:BRANCH:ALREADY_EXISTS"
   })
 }
 
@@ -283,10 +281,9 @@ async function merge(content: IContent, commit: string, resolution?: { body: str
 
     if (resolution) {
       if (resolution.head !== head.commit)
-        throw new ValidationError({
+        throw new ConflictError({
           message: "O post foi alterado enquanto os conflitos eram resolvidos.",
           action: "Resolva os conflitos novamente sobre a versão atual do post.",
-          statusCode: 409,
           errorLocationCode: "GIT:MERGE:HEAD_MOVED"
         })
 
@@ -304,10 +301,9 @@ async function merge(content: IContent, commit: string, resolution?: { body: str
         const { base, head: ours, suggestion } = await sides(repo, head.commit, commit)
         const merged = cleanMerge(base.body, ours.body, suggestion.body)
         if (merged === undefined)
-          throw new ValidationError({
+          throw new ConflictError({
             message: "A sugestão altera trechos que também foram alterados no post depois dela.",
             action: "Resolva os conflitos para aceitar a sugestão.",
-            statusCode: 409,
             errorLocationCode: "GIT:MERGE:CONFLICT"
           })
 
