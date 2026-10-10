@@ -357,3 +357,82 @@ CREATE TABLE IF NOT EXISTS notifications (
 
 CREATE INDEX IF NOT EXISTS notifications_user_idx ON notifications (user_id, id DESC);
 CREATE INDEX IF NOT EXISTS notifications_unread_idx ON notifications (user_id) WHERE read_at IS NULL;
+
+-- A critique's lifecycle (shared/src/critiques.js): every answer, acceptance, dispute and withdrawal,
+-- and a critic's fix attached or merged. Its `contents.status` is the state the last event left it in,
+-- set by the trigger below, so the log is the only way a critique's state changes. `from_status` is
+-- the state the actor saw: an event taken from another state (someone acted first) is refused.
+-- `commit` is the version that addresses it; `suggestion_id` a fix the critic attached ('suggest')
+-- or the one the author merged ('merge').
+CREATE TABLE IF NOT EXISTS critique_events (
+    id BIGSERIAL PRIMARY KEY,
+    critique_id INT NOT NULL,
+    user_id INT NOT NULL,
+    action TEXT NOT NULL CHECK (action IN ('address', 'rebut', 'accept', 'dispute', 'withdraw', 'suggest', 'merge')),
+    from_status TEXT NOT NULL,
+    to_status TEXT NOT NULL,
+    note TEXT,
+    commit TEXT,
+    suggestion_id INT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    -- Critiques are only deleted when their git write fails (withRollback), before any event
+    FOREIGN KEY (critique_id) REFERENCES contents(id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (suggestion_id) REFERENCES interactions(id),
+    CHECK (to_status IN ('open', 'addressed', 'rebutted', 'resolved', 'in_review', 'upheld', 'withdrawn'))
+);
+
+CREATE INDEX IF NOT EXISTS critique_events_critique_idx ON critique_events (critique_id, id);
+
+-- The error the API turns into a 409: the critique's state changed since the actor saw it
+CREATE OR REPLACE FUNCTION apply_critique_event() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+    current TEXT;
+BEGIN
+    -- Locks the critique, so of two concurrent events the second sees the first's state
+    SELECT status INTO current FROM contents WHERE id = NEW.critique_id AND type = 'critique' FOR UPDATE;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'critique events go on critiques, and content % is not one', NEW.critique_id;
+    END IF;
+    IF current IS DISTINCT FROM NEW.from_status THEN
+        RAISE EXCEPTION 'critique % is %, not %', NEW.critique_id, current, NEW.from_status
+            USING ERRCODE = 'CC409';
+    END IF;
+    IF NEW.to_status <> NEW.from_status THEN
+        UPDATE contents SET status = NEW.to_status WHERE id = NEW.critique_id;
+    END IF;
+    RETURN NULL;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER critique_events_apply
+    AFTER INSERT ON critique_events
+    FOR EACH ROW EXECUTE FUNCTION apply_critique_event();
+
+CREATE OR REPLACE TRIGGER critique_events_append_only
+    BEFORE UPDATE OR DELETE ON critique_events
+    FOR EACH ROW EXECUTE FUNCTION reject_log_change();
+
+CREATE OR REPLACE TRIGGER critique_events_no_truncate
+    BEFORE TRUNCATE ON critique_events
+    FOR EACH STATEMENT EXECUTE FUNCTION reject_log_change();
+
+-- A critique's status changes only as its latest event says, so no statement (not even an operator's
+-- manual UPDATE) can change it without leaving a record
+CREATE OR REPLACE FUNCTION guard_critique_status() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    IF OLD.type = 'critique' AND NEW.status IS DISTINCT FROM OLD.status AND NOT EXISTS (
+        SELECT 1 FROM (
+            SELECT from_status, to_status FROM critique_events WHERE critique_id = OLD.id ORDER BY id DESC LIMIT 1
+        ) latest
+        WHERE latest.from_status = OLD.status AND latest.to_status = NEW.status
+    ) THEN
+        RAISE EXCEPTION 'a critique''s status only changes through critique_events';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER contents_critique_status
+    BEFORE UPDATE OF status ON contents
+    FOR EACH ROW EXECUTE FUNCTION guard_critique_status();

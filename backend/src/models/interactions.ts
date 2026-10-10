@@ -16,7 +16,9 @@ interface PromoteConfig {
 interface SuggestionConfig {
   message: string,
   accepted: boolean | null,
-  commit: string
+  commit: string,
+  // The critic's own critique this suggestion fixes: merging it resolves the critique
+  critique?: number
 }
 
 type Interaction = {
@@ -258,8 +260,8 @@ const moveTo = (id: number, content_id: number, author_pid: string) =>
   updated({ text: "UPDATE interactions SET content_id = $1 WHERE id = $2 RETURNING *;", values: [content_id, id] }, author_pid)
 
 // Records a suggestion's commit once git has written it, pending the author's answer
-const setSuggestionCommit = (id: number, { message, commit }: { message: string, commit: string }, author_pid: string) => {
-  const config: SuggestionConfig = { message, commit, accepted: null }
+const setSuggestionCommit = (id: number, { message, commit, critique }: Omit<SuggestionConfig, "accepted">, author_pid: string) => {
+  const config: SuggestionConfig = { message, commit, accepted: null, ...(critique ? { critique } : {}) }
   return updated({ text: "UPDATE interactions SET config = $1 WHERE id = $2 RETURNING *;", values: [config, id] }, author_pid)
 }
 

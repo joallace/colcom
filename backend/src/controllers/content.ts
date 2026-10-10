@@ -8,6 +8,7 @@ import { ValidationError, NotFoundError, ForbiddenError } from "@/errors"
 import { validate } from "@/validation"
 import { applyTopicTags, prepareTopicTags, resolveFilter, splitSlugs } from "@/controllers/tags"
 import Tags from "@/models/tags"
+import { recordSuggestedFix, resolveByFix, validateFixedCritique } from "@/controllers/critiques"
 import logger from "@/logger"
 
 
@@ -302,7 +303,7 @@ export const updateContent: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user.pid
 
   const { id: content_id } = validate("contentParams", req.params)
-  const { message, body } = validate("edit", req.body)
+  const { message, body, critique: critique_id } = validate("edit", req.body)
   const content = await findContentOrThrow(content_id)
 
   if (content.type !== "post")
@@ -310,6 +311,9 @@ export const updateContent: RequestHandler = async (req, res) => {
       message: `Conteúdos do tipo "${content.type}" não podem ser alterados.`,
       action: 'Forneça um "id" de um "post".'
     })
+
+  // A critic's fix for their critique
+  const critique = critique_id ? await validateFixedCritique(content, critique_id, author_pid) : undefined
 
   const interactionId = content.author_id !== author_pid ?
     (await Interactions.create({ author_pid, content_id, type: "suggestion" })).id
@@ -331,7 +335,9 @@ export const updateContent: RequestHandler = async (req, res) => {
     res.status(200).json({ ...result, commit })
   }
   else {
-    const result = await Interactions.setSuggestionCommit(interactionId, { message, commit }, author_pid)
+    const result = await Interactions.setSuggestionCommit(interactionId, { message, commit, critique: critique?.id }, author_pid)
+    if (critique)
+      await recordSuggestedFix(critique, interactionId, author_pid)
     await notify({ type: "suggestion", actor_pid: author_pid, content_id, interaction_id: interactionId })
     res.status(200).json(result)
   }
@@ -365,6 +371,8 @@ export const mergePost: RequestHandler = async (req, res) => {
   const merged = await git.merge(content, commit, resolution)
   await Content.updateById(content.id, await git.read(Number(content.parent_id), merged), author_pid)
   await Interactions.setSuggestionAccepted(suggestion.id, true, author_pid)
+  if (suggestion.type === "suggestion" && suggestion.config?.critique)
+    await resolveByFix(suggestion.config.critique, suggestion.id, merged, author_pid)
   await notify({ type: "suggestion_accepted", actor_pid: author_pid, content_id, interaction_id: suggestion.id })
 
   res.status(204).end()

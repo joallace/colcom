@@ -7,6 +7,7 @@ import { limitOffset, orderByColumn } from "@/pagination"
 import { tagFilterSql, topicTagsSql } from "@/models/tags"
 import { QueryParams, interactionCountSql, promotionCountSql, queryParams, userInteractionsSql } from "@/models/sql"
 import type { InteractionType } from "@/models/interactions"
+import { critiqueEventsSql } from "@/models/critiques"
 
 
 type ContentType = "topic" | "post" | "critique"
@@ -57,6 +58,8 @@ type ListedContent = Content & {
   promotions: number | null,
   userInteractions?: InteractionType[],
   total_count?: number,
+  // Critiques, when asked for (critiquesOf)
+  events?: unknown[],
   parent_title?: string,
   grandparent_id?: number | null
 }
@@ -194,11 +197,13 @@ interface FindAllOptions {
   // The user whose interactions with each content are included (userInteractions)
   userPid?: string,
   // Adds total_count, how many contents match the filter across all pages, so lists need no count query
-  withTotal?: boolean
+  withTotal?: boolean,
+  // Adds each critique's lifecycle `events`, oldest first
+  withEvents?: boolean
 }
 
 // Contents matching `filter`, which may also filter on the author (users.*)
-async function findAll(filter: Filter | undefined, { orderBy = "id", page = 1, pageSize = 10, omitBody = false, includeParentTitle = false, paginate = true, userPid, withTotal = false }: FindAllOptions = {}): Promise<ListedContent[]> {
+async function findAll(filter: Filter | undefined, { orderBy = "id", page = 1, pageSize = 10, omitBody = false, includeParentTitle = false, paginate = true, userPid, withTotal = false, withEvents = false }: FindAllOptions = {}): Promise<ListedContent[]> {
   const params = queryParams()
   const where = filter?.(params)
 
@@ -222,6 +227,7 @@ async function findAll(filter: Filter | undefined, { orderBy = "id", page = 1, p
         CASE WHEN contents.type = 'topic' THEN ${promotionCountSql("contents.id")} END as promotions
         ${userPid ? `, ${userInteractionsSql("contents.id", params.add(userPid, "UUID"))} AS "userInteractions"` : ""}
         ${withTotal ? ", COUNT(*) OVER ()::INT AS total_count" : ""}
+        ${withEvents ? `, CASE WHEN contents.type = 'critique' THEN ${critiqueEventsSql("contents.id")} END AS events` : ""}
       FROM
         contents
       INNER JOIN
@@ -309,11 +315,11 @@ async function findListByIds(ids: number[], userPid?: string): Promise<ListedCon
   return await findAll(params => `contents.id = ANY(${params.add(ids, "INT[]")})`, { includeParentTitle: true, paginate: false, userPid })
 }
 
-// Every critique of a post, oldest first, with the viewer's interactions
+// Every critique of a post, oldest first, with the viewer's interactions and its lifecycle's events
 async function critiquesOf(postId: number, userPid?: string): Promise<Extract<ListedContent, { type: "critique" }>[]> {
   const critiques = <Extract<ListedContent, { type: "critique" }>[]>await findAll(
     params => `contents.parent_id = ${params.add(postId, "INT")} AND contents.type = 'critique'`,
-    { paginate: false, userPid }
+    { paginate: false, userPid, withEvents: true }
   )
   return critiques.reverse()
 }

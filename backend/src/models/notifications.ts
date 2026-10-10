@@ -10,7 +10,13 @@ import { limitOffset } from "@/pagination"
 // - suggestion_accepted, suggestion_rejected: the post's author answered their suggestion (same)
 // - post: someone answered their topic (content: the topic, subject: the post)
 // - clone: someone made a new post from a version of theirs (content: their post, subject: the clone)
-export type NotificationType = "critique" | "suggestion" | "suggestion_accepted" | "suggestion_rejected" | "post" | "clone"
+// - critique_addressed, critique_rebutted: the post's author answered their critique (content: the
+//   post, subject: the critique)
+// - critique_accepted, critique_disputed, critique_withdrawn: the critic acted on a critique of their
+//   post (same)
+export type NotificationType =
+  | "critique" | "suggestion" | "suggestion_accepted" | "suggestion_rejected" | "post" | "clone"
+  | "critique_addressed" | "critique_rebutted" | "critique_accepted" | "critique_disputed" | "critique_withdrawn"
 
 export interface NotifyRequest {
   type: NotificationType,
@@ -21,14 +27,21 @@ export interface NotifyRequest {
 }
 
 // Who is told: the author of what the notification is about, except for an answer to a suggestion,
-// which goes to whoever suggested it. Each query selects `author_id`.
+// which goes to whoever suggested it, and an answer to a critique, to the critic. Each query selects
+// `author_id`.
 const recipientOf: Record<NotificationType, string> = {
   critique: "SELECT author_id FROM contents WHERE id = $3",
   suggestion: "SELECT author_id FROM contents WHERE id = $3",
   suggestion_accepted: "SELECT author_id FROM interactions WHERE id = $5",
   suggestion_rejected: "SELECT author_id FROM interactions WHERE id = $5",
   post: "SELECT author_id FROM contents WHERE id = $3",
-  clone: "SELECT author_id FROM contents WHERE id = $3"
+  clone: "SELECT author_id FROM contents WHERE id = $3",
+  // The post's author answered: the critic is told
+  critique_addressed: "SELECT author_id FROM contents WHERE id = $4",
+  critique_rebutted: "SELECT author_id FROM contents WHERE id = $4",
+  critique_accepted: "SELECT author_id FROM contents WHERE id = $3",
+  critique_disputed: "SELECT author_id FROM contents WHERE id = $3",
+  critique_withdrawn: "SELECT author_id FROM contents WHERE id = $3"
 }
 
 async function create({ type, actor_pid, content_id, subject_id, interaction_id }: NotifyRequest): Promise<void> {

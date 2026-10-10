@@ -9,6 +9,7 @@
 // - formats: `email`, `commit`, `uuid` and `png` (base64). See keywords.js.
 
 import { TAG_NAME_PATTERN, TAG_SLUG_PATTERN } from "./tags.js"
+import { CRITIQUE_ACTIONS } from "./critiques.js"
 import { HEX_COLOR_PATTERN, THEME_COLORS, THEME_PRESETS } from "./themes.js"
 
 const MAX_ID = 2_147_483_647 // Postgres' SERIAL
@@ -179,7 +180,26 @@ export function createSchemas(limits) {
     additionalProperties: false,
     properties: {
       body: postBody,
-      message: { type: "string", label: "descrição da alteração", minLength: 1, maxLength: limits.message.max, trimmed: true }
+      message: { type: "string", label: "descrição da alteração", minLength: 1, maxLength: limits.message.max, trimmed: true },
+      // A suggestion can be a critic's fix for their own critique: merging it resolves the critique
+      critique: id("crítica")
+    }
+  }
+
+  // An action on a critique (critiques.js). Addressing names the version that fixes it; rebutting
+  // and disputing need their reasons, as the public will judge them.
+  const critiqueEvent = {
+    type: "object",
+    required: ["action"],
+    additionalProperties: false,
+    allOf: [
+      { if: { properties: { action: { const: "address" } } }, then: { required: ["commit"] } },
+      { if: { properties: { action: { enum: ["rebut", "dispute"] } } }, then: { required: ["note"] } }
+    ],
+    properties: {
+      action: { type: "string", label: "ação", enum: Object.keys(CRITIQUE_ACTIONS) },
+      note: { type: "string", label: "justificativa", minLength: 1, maxLength: limits.critiqueNote.max, trimmed: true, notBlank: true },
+      commit: commit("versão que corrige")
     }
   }
 
@@ -346,7 +366,7 @@ export function createSchemas(limits) {
   }
 
   return {
-    body: { signUp, login, content, topic, post, critique, critiqueConfig, edit, resolution, clone, interaction, tagVote, readNotifications, settings },
+    body: { signUp, login, content, topic, post, critique, critiqueConfig, edit, critiqueEvent, resolution, clone, interaction, tagVote, readNotifications, settings },
     query: { list, tagList, search, notifications, contentParams, versionParams, tagParams, userParams }
   }
 }

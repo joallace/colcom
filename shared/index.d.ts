@@ -13,6 +13,7 @@ export interface Limits {
   critiqueBody: { max: number }
   message: { max: number }
   quote: { max: number, context: number }
+  critiqueNote: { max: number }
   tag: { min: number, max: number }
   tags: { seed: number, perTopic: number, filter: number }
   search: { max: number }
@@ -40,6 +41,15 @@ export interface CritiqueConfig {
   quote: { exact: string, prefix: string, suffix: string, start: number }
 }
 
+// A critique's lifecycle (critiques.js)
+export type CritiqueState = "open" | "addressed" | "rebutted" | "resolved" | "in_review" | "upheld" | "withdrawn"
+export type CritiqueAction = "address" | "rebut" | "accept" | "dispute" | "withdraw"
+export interface CritiqueRule {
+  by: "author" | "critic"
+  from: CritiqueState[]
+  to: CritiqueState
+}
+
 // A preset with some of its colors replaced (themes.js)
 export type ThemePreset = "colcom" | "claro" | "contraste"
 export type ThemeColor =
@@ -59,7 +69,8 @@ export interface SchemaData {
   post: { title: string, parent_id: number, body: string, config: PostConfig }
   critique: { title: string, parent_id: number, body: string, config: CritiqueConfig }
   critiqueConfig: CritiqueConfig
-  edit: { body: string, message: string }
+  edit: { body: string, message: string, critique?: number }
+  critiqueEvent: { action: CritiqueAction, note?: string, commit?: string }
   resolution: { body: string, head: string }
   clone: { title: string }
   interaction: { content_id: number, type: "up" | "down" | "vote" | "bookmark" | "promote" }
@@ -126,3 +137,9 @@ export function merge3(base: string, ours: string, theirs: string): MergeChunk[]
 export function cleanMerge(base: string, ours: string, theirs: string): string | undefined
 export function diffLines(a: string[], b: string[]): { start: number, end: number, lines: string[] }[]
 export function splitLines(text: string): string[]
+export const CRITIQUE_STATES: CritiqueState[]
+export const CLOSED_CRITIQUE_STATES: CritiqueState[]
+export const CRITIQUE_ACTIONS: Readonly<Record<CritiqueAction, CritiqueRule>>
+export function isClosedCritique(status: string): boolean
+// The actions someone may take on a critique in that state, as the post's author and/or its critic
+export function critiqueActions(status: string, roles?: { isAuthor?: boolean, isCritic?: boolean }): CritiqueAction[]
