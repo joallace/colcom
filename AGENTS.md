@@ -103,4 +103,4 @@ Beyond the suite, show changes work rather than assume they do:
 - **Global title uniqueness:** content titles are unique across the whole site, critiques included.
 - **Frontend bug:** `relativeTime` doesn't round years ("1.04… ano").
 - **Backend bug:** a clone's summary in Postgres is copied from the post as it is, not from the version cloned.
-- **Unfinished features:** colcoins (the promote cost check is commented out) and prestige exist in the schema but aren't implemented. The README's to-do list is outdated.
+- **Unfinished features:** colcoins (the promote cost check is commented out) and prestige exist in the schema but aren't implemented.
