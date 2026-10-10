@@ -74,7 +74,7 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 | `GET /contents?authorId&page&pageSize` | optional | A user's contents, for the profile: `{ contents, count }` |
 | `GET /contents/bookmarked?page&pageSize` | required | The user's bookmarks, same shape |
 | `POST /contents` | required | Create a topic, post or critique (the type follows from the parent's depth); a topic takes `tags`, a list of names |
-| `GET /contents/:id` | optional | A content; for posts, `history`, `interactionCounts` (poll `votes`, `suggestions` in any state and `critiques`) and (for the author) pending `suggestions` |
+| `GET /contents/:id` | optional | A content; for posts, `history`, `interactionCounts` (poll `votes`, the topic's `topicVotes`, `suggestions` in any state and `critiques`), `userTopicVote` (the post the viewer voted for in the topic, or null; logged in only) and (for the author) pending `suggestions` |
 | `GET /contents/:id/:hash` | optional | A post version: `body`, `critiques` made on it or earlier, `versions` and `lineages` (see below), and `base` for a pending suggestion |
 | `PATCH /contents/:id` | required | Edit a post: a commit for the author, a suggestion for anyone else |
 | `POST /contents/:id/:hash/merge` and `/reject` | required | The author accepts or rejects a pending suggestion. A merge without a body is automatic (409 `GIT:MERGE:CONFLICT` when both changed the same lines); with `{ body, head }` (the `resolution` schema) it commits the author's resolution, 409 `GIT:MERGE:HEAD_MOVED` if the post changed since `head` |
