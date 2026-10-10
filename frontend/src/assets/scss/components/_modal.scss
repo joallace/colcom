@@ -1,39 +1,42 @@
 @use "../abstracts/mixins";
 @use "../abstracts/variables";
 
-// Covers the page and centers the dialog in it
-.backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: var(--z-modal);
-    display: grid;
-    place-items: center;
-    padding: var(--space-4);
-    background-color: rgb(0 0 0 / 0.55);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
-    animation: fade-in var(--duration-base) var(--ease-out);
+// The page behind an open dialog doesn't scroll
+:root:has(dialog.modal[open]) {
+    overflow: hidden;
 }
 
-.modal {
+// A `<dialog>` opened with `showModal()`: the browser draws it and its backdrop in the top layer,
+// centered over the viewport, whatever element it's rendered in
+dialog.modal {
     --input-label-bg: var(--surface-raised);
 
     display: grid;
     gap: var(--space-4);
-    min-width: min(100%, 22rem);
-    max-width: 100%;
+    box-sizing: border-box;
+    min-width: min(100% - 2 * var(--space-4), 22rem);
+    max-width: calc(100% - 2 * var(--space-4));
     max-height: calc(100dvh - 2 * var(--space-4));
+    margin: auto;
     overflow: auto;
     overscroll-behavior: contain;
     padding: var(--space-5);
+    color: var(--text);
     background-color: var(--surface-raised);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     animation: rise-in var(--duration-slow) var(--ease-out);
 
+    &::backdrop {
+        background-color: rgb(0 0 0 / 0.55);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        animation: fade-in var(--duration-base) var(--ease-out);
+    }
+
     @media screen and (min-width: 0px) and (max-width: variables.$screen-sm) {
-        width: 100%;
+        width: calc(100% - 2 * var(--space-4));
         min-width: 0;
         max-height: 85dvh;
         padding: var(--space-4);
@@ -50,17 +53,28 @@
         line-height: var(--leading-tight);
         color: var(--green-text);
 
-        .icon {
+        &.untitled {
+            justify-content: flex-end;
+        }
+
+        // Not one of the outlined buttons: a bare icon
+        >.close {
             flex-shrink: 0;
-            box-sizing: content-box;
+            min-height: 0;
             padding: var(--space-1);
             margin: calc(-1 * var(--space-1)) calc(-1 * var(--space-1)) 0 0;
+            border: 0;
             border-radius: var(--radius-sm);
             font-size: var(--text-xl);
             color: var(--text-secondary);
 
             &:hover {
                 background-color: var(--hover);
+                color: var(--text);
+            }
+
+            &:active {
+                background-color: var(--pressed);
             }
         }
     }

@@ -18,15 +18,57 @@ describe("Modal", () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it("shows its title and content and closes from the X", async () => {
+  it("opens as a modal dialog named by its title", () => {
+    render(<Modal isOpen title="Crítica">conteúdo</Modal>)
+
+    const dialog = screen.getByRole("dialog", { name: "Crítica" })
+    expect(dialog).toHaveAttribute("open")
+    expect(dialog).toHaveTextContent("conteúdo")
+  })
+
+  it("closes from the X", async () => {
     const setIsOpen = vi.fn()
-    const { container } = render(<Modal isOpen setIsOpen={setIsOpen} title="Crítica">conteúdo</Modal>)
+    render(<Modal isOpen setIsOpen={setIsOpen} title="Crítica">conteúdo</Modal>)
 
-    expect(screen.getByText("Crítica")).toBeInTheDocument()
-    expect(screen.getByText("conteúdo")).toBeInTheDocument()
-
-    await userEvent.click(container.querySelector(".header svg"))
+    await userEvent.click(screen.getByRole("button", { name: "fechar" }))
     expect(setIsOpen).toHaveBeenCalledWith(false)
+  })
+
+  it("leaves closing on Escape to its parent", () => {
+    const setIsOpen = vi.fn()
+    render(<Modal isOpen setIsOpen={setIsOpen}>conteúdo</Modal>)
+
+    const cancel = new Event("cancel", { cancelable: true })
+    fireEvent(screen.getByRole("dialog"), cancel)
+    expect(cancel.defaultPrevented).toBe(true)
+    expect(setIsOpen).toHaveBeenCalledWith(false)
+  })
+
+  it("closes only the innermost of nested dialogs on Escape", () => {
+    const closeOuter = vi.fn()
+    const closeInner = vi.fn()
+    render(
+      <Modal isOpen setIsOpen={closeOuter} title="crítica">
+        <Modal isOpen setIsOpen={closeInner} title="gráfico">conteúdo</Modal>
+      </Modal>
+    )
+
+    fireEvent(screen.getByRole("dialog", { name: "gráfico" }), new Event("cancel", { cancelable: true }))
+    expect(closeInner).toHaveBeenCalledWith(false)
+    expect(closeOuter).not.toHaveBeenCalled()
+  })
+
+  // Rendered inside the critique popover or a node view, it must stay there: their handlers see
+  // its events, and the top layer, not its place in the DOM, puts it over the page
+  it("stays where it's rendered and closes before it's removed", () => {
+    const close = vi.spyOn(HTMLDialogElement.prototype, "close")
+    const { container, rerender } = render(<div className="popover"><Modal isOpen>conteúdo</Modal></div>)
+
+    expect(container.querySelector(".popover > dialog.modal")).toBeInTheDocument()
+
+    rerender(<div className="popover"><Modal>conteúdo</Modal></div>)
+    expect(close).toHaveBeenCalledOnce()
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
   })
 })
 
