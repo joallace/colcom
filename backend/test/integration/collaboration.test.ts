@@ -1,7 +1,7 @@
 // Editing posts, suggestions (edits by someone other than the author), merging and cloning
 import { beforeAll, describe, expect, it } from "vitest"
 
-import { api, AVATAR, createPost, createTopic, edit, history, latestCommit, signUp, TestUser } from "../support/api"
+import { api, AVATAR, createPost, createTopic, edit, history, latestCommit, signUp, TestUser, unique } from "../support/api"
 
 
 let author: TestUser, contributor: TestUser
@@ -366,7 +366,7 @@ describe("cloning a post", () => {
     const res = await api().post(`/contents/${post.id}/${first}/clone`).set(contributor.auth).send({ title: "A fork" })
 
     expect(res.status).toBe(200)
-    expect(res.body).toMatchObject({ type: "post", parent_id: post.parent_id, author_id: contributor.pid, title: "A fork" })
+    expect(res.body).toMatchObject({ type: "post", parent_id: post.parent_id, author_id: contributor.pid, title: "A fork", config: post.config })
 
     const cloneHistory = await history(res.body.id)
     expect(cloneHistory.map(version => version.commit)).toEqual([first])
@@ -376,6 +376,18 @@ describe("cloning a post", () => {
     const edited = await edit(contributor, res.body.id, "<p>The fork diverges.</p>")
     expect(edited.body.commit).toBeDefined()
     expect(await history(post.id)).toHaveLength(2)
+  })
+
+  // Known bug: the clone's summary is copied from the post as it is now, not from the chosen
+  // version. Drop `.fails` once it's fixed.
+  it.fails("summarizes the clone from the chosen version", async () => {
+    const post = await newPost()
+    const first = await latestCommit(post.id)
+    await edit(author, post.id, "<p>Second version.</p>")
+
+    const res = await api().post(`/contents/${post.id}/${first}/clone`).set(contributor.auth).send({ title: unique("Fork") })
+
+    expect(res.body.body).toBe("Alpha paragraph.")
   })
 
   it("requires a title", async () => {
