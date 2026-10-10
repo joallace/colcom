@@ -22,7 +22,7 @@ import { describe, limits, validate } from "@/assets/validation"
 import Input from "@/components/primitives/Input"
 import LoadingButton from "@/components/primitives/LoadingButton"
 import { submitVote } from "@/assets/interactions"
-import { Author, Interactions, Relevance } from "@/components/content/Metrics"
+import { Author, Interactions, PollShare, Relevance } from "@/components/content/Metrics"
 import { UserContext } from "@/context/UserContext"
 import { relativeTime } from "@/assets/util"
 import api, { ApiError } from "@/assets/api"
@@ -43,6 +43,7 @@ export default function Post({
   downvotes,
   suggestions,
   interactionCounts,
+  userTopicVote,
   fetchCommit,
   groupedCritiques,
   alongsideCritique,
@@ -60,6 +61,10 @@ export default function Post({
   const initialVoteState = userInteractions?.filter(v => v === "up" || v === "down")[0]
   const [relevanceVote, setRelevanceVote] = React.useState(initialVoteState)
   const [definitiveVote, setDefinitiveVote] = React.useState(userInteractions?.includes("vote"))
+  // Whether the viewer has voted here since loading, which moved any vote they had on another post
+  const [voteMovedHere, setVoteMovedHere] = React.useState(false)
+  if (definitiveVote && !voteMovedHere)
+    setVoteMovedHere(true)
   const [content, setContent] = React.useState(body)
   const [modal, setModal] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
@@ -191,18 +196,24 @@ export default function Post({
 
   const getMetrics = () => {
     // The counts as loaded, followed by the viewer's own votes since
+    const votedHere = Boolean(userInteractions?.includes("vote"))
+    // A vote on another post of the topic still counts in the poll, until voting here moves it
+    const votedElsewhere = userTopicVote != null && !votedHere && !voteMovedHere
+    const pollVotes = (interactionCounts?.votes ?? 0) + Boolean(definitiveVote) - votedHere
+    const topicVotes = (interactionCounts?.topicVotes ?? 0) + (Boolean(definitiveVote) || votedElsewhere) - (votedHere || userTopicVote != null)
+
     const interactions = {
       up: upvotes + (relevanceVote === "up") - (initialVoteState === "up"),
       down: downvotes + (relevanceVote === "down") - (initialVoteState === "down"),
-      votes: (interactionCounts?.votes ?? 0) + Boolean(definitiveVote) - Boolean(userInteractions?.includes("vote")),
       critiques: interactionCounts?.critiques,
       suggestions: interactionCounts?.suggestions
     }
 
     return [
       <Author key="author" name={author} avatar={author_avatar} />,
+      <PollShare key="poll" votes={pollVotes} total={topicVotes} />,
       <Relevance key="relevance" {...{ initialVoteState, relevanceVote, upvotes, downvotes }}/>,
-      <Interactions key="interactions" counts={interactions} heading="interações com o post" />
+      <Interactions key="interactions" counts={interactions} heading="interações com o post" omit={["votes"]} />
     ]
   }
 

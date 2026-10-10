@@ -46,6 +46,19 @@ export const Relevance = ({ initialVoteState, relevanceVote, upvotes, downvotes 
   )
 }
 
+// A post's share of its topic's poll, counted as the viewer's own vote stands now
+export const PollShare = ({ votes, total }) => {
+  if (!total)
+    return <><Focus>0</Focus> votos na enquete</>
+
+  return (
+    <span className="pollShare" title={`${votes} de ${total} voto${total === 1 ? "" : "s"}`}>
+      <Focus>{toPercentageStr(votes / total)}</Focus>
+      {" "}do{total === 1 ? "" : "s"} <Focus>{total}</Focus> voto{total === 1 ? "" : "s"} da enquete
+    </span>
+  )
+}
+
 export const Promotions = ({ userIsPromoting, topicId, userPromotingTopicId, promotionCount }) => {
   const removeOrAddPromote = userIsPromoting ?
     -(userPromotingTopicId !== topicId)
@@ -69,9 +82,12 @@ const INTERACTION_TYPES = [
   ["suggestions", "sugestões"]
 ]
 
-// The total of `counts` (keyed as INTERACTION_TYPES), which opens how much of each it holds
-export const Interactions = ({ counts = {}, heading = "interações" }) => {
-  const items = INTERACTION_TYPES.map(([type, label]) => ({ type, label, count: counts[type] ?? 0 }))
+// The total of `counts` (keyed as INTERACTION_TYPES), which opens how much of each it holds; the
+// types in `omit` are neither added nor listed (a post's poll votes are its PollShare instead)
+export const Interactions = ({ counts = {}, heading = "interações", omit = [] }) => {
+  const items = INTERACTION_TYPES
+    .filter(([type]) => !omit.includes(type))
+    .map(([type, label]) => ({ type, label, count: counts[type] ?? 0 }))
   const total = items.reduce((sum, { count }) => sum + count, 0)
 
   return (

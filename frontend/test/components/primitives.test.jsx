@@ -165,6 +165,14 @@ describe("Metrics", () => {
     ])
     expect(rows.filter(row => row.classList.contains("none")).map(row => row.querySelector("dt").textContent)).toEqual(["votos na enquete", "sugestões"])
   })
+
+  it("neither adds nor lists the omitted types", async () => {
+    render(<Interactions counts={{ up: 3, votes: 5, critiques: 2 }} omit={["votes"]} />)
+
+    await userEvent.click(screen.getByRole("button", { name: "5 interações" }))
+    const rows = [...screen.getByRole("dialog").querySelectorAll("dl > div")]
+    expect(rows.map(row => row.querySelector("dt").textContent)).not.toContain("votos na enquete")
+  })
 })
 
 describe("PostSummary", () => {

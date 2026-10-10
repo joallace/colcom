@@ -267,21 +267,78 @@ describe("PostPage", () => {
 })
 
 describe("the post's interactions", () => {
-  it("add up its votes, critiques and suggestions, and open how many of each", async () => {
-    mockApi(VERSIONS, { ...POST, upvotes: 2, downvotes: 1, interactionCounts: { votes: 3, critiques: 4, suggestions: 0 } })
+  it("add up its relevance marks, critiques and suggestions, and open how many of each", async () => {
+    mockApi(VERSIONS, { ...POST, upvotes: 2, downvotes: 1, interactionCounts: { votes: 3, topicVotes: 5, critiques: 4, suggestions: 0 } })
     renderPage()
 
-    fireEvent.click(await screen.findByRole("button", { name: "10 interações" }))
+    // The poll votes are the post's share of the poll instead
+    fireEvent.click(await screen.findByRole("button", { name: "7 interações" }))
 
     const breakdown = screen.getByRole("dialog", { name: "interações com o post" })
     const rows = [...breakdown.querySelectorAll("dl > div")].map(row => [row.querySelector("dt").textContent, row.querySelector("dd").textContent])
     expect(rows).toEqual([
       ["marcações de relevante", "2"],
       ["marcações de não relevante", "1"],
-      ["votos na enquete", "3"],
       ["críticas", "4"],
       ["sugestões", "0"]
     ])
+  })
+})
+
+describe("the post's share of the poll", () => {
+  const share = () => document.querySelector(".frame .pollShare")
+
+  it("is its votes over the topic's, with the exact numbers on hover", async () => {
+    mockApi(VERSIONS, { ...POST, interactionCounts: { votes: 12, topicVotes: 40, critiques: 0, suggestions: 0 } })
+    renderPage()
+
+    await waitFor(() => expect(share()).toHaveTextContent("30% dos 40 votos da enquete"))
+    expect(share()).toHaveAttribute("title", "12 de 40 votos")
+  })
+
+  it("speaks of one vote in the singular and of none when the poll is empty", async () => {
+    mockApi(VERSIONS, { ...POST, interactionCounts: { votes: 1, topicVotes: 1, critiques: 0, suggestions: 0 } })
+    const { unmount } = renderPage()
+    await waitFor(() => expect(share()).toHaveTextContent("100% do 1 voto da enquete"))
+    unmount()
+
+    mockApi(VERSIONS, { ...POST, interactionCounts: { votes: 0, topicVotes: 0, critiques: 0, suggestions: 0 } })
+    renderPage()
+    expect(await screen.findByText("votos na enquete", { exact: false })).toHaveTextContent("0 votos na enquete")
+  })
+
+  // The viewer, bob, votes here and withdraws it; `before` is the post they had voted for in the topic
+  async function voteAndWithdraw(before, counts) {
+    localStorage.setItem("accessToken", "token")
+    const userInteractions = before === POST.id ? ["vote"] : []
+    const fetch = mockApi(VERSIONS, { ...POST, userInteractions, userTopicVote: before, interactionCounts: { ...counts, critiques: 0, suggestions: 0 } })
+    renderPage("/topics/1/posts/2", { accessToken: "token", pid: "b", name: "bob" })
+
+    await waitFor(() => expect(share()).toBeTruthy())
+    const seen = [share().getAttribute("title")]
+    const radio = () => document.querySelector(".frame .votingButtons input[type='radio']")
+    for (let i = 0; i < 2; i++) {
+      fireEvent.click(radio())
+      await waitFor(() => expect(share().getAttribute("title")).not.toBe(seen.at(-1)))
+      seen.push(share().getAttribute("title"))
+      // The button takes no click until the vote is sent
+      await waitFor(() => expect(fetch.mock.calls.filter(([, options]) => options?.method === "POST")).toHaveLength(i + 1))
+      await act(async () => {})
+    }
+    localStorage.removeItem("accessToken")
+    return seen
+  }
+
+  it("counts a new vote in the post and in the poll", async () => {
+    expect(await voteAndWithdraw(null, { votes: 1, topicVotes: 4 })).toEqual(["1 de 4 votos", "2 de 5 votos", "1 de 4 votos"])
+  })
+
+  it("moves a vote from another post without changing the poll's total, and withdraws it from both", async () => {
+    expect(await voteAndWithdraw(7, { votes: 1, topicVotes: 4 })).toEqual(["1 de 4 votos", "2 de 4 votos", "1 de 3 votos"])
+  })
+
+  it("withdraws the viewer's vote here from both, and casts it back", async () => {
+    expect(await voteAndWithdraw(POST.id, { votes: 2, topicVotes: 4 })).toEqual(["2 de 4 votos", "1 de 3 votos", "2 de 4 votos"])
   })
 })
 
