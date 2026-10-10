@@ -139,8 +139,10 @@ export default function ResolveSuggestion() {
       </div>
     )
 
+  // Choosing needs room for the two sides; the review is one post, in the reading column the
+  // frame is sized for (as in /write), so it's centered rather than left at the wide column's start
   return (
-    <div className="content wide resolve">
+    <div className={`content resolve${result === undefined ? " wide" : ""}`}>
       <div className="topicName">
         incorporando {suggestion ?
           <>a sugestão &quot;<strong>{suggestion.config.message}</strong>&quot; de <strong>{suggestion.author}</strong></>
