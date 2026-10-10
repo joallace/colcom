@@ -1,8 +1,8 @@
 import React from "react"
 import { Navigate, useLocation, useParams } from "react-router"
 
-import env from "@/assets/enviroment"
 import useUser from "@/context/UserContext"
+import useApiResource from "@/hooks/useApiResource"
 import usePageParam from "@/hooks/usePageParam"
 import { loginPath } from "@/assets/returnTo"
 import { relativeTime, userPath } from "@/assets/util"
@@ -20,68 +20,19 @@ export default function Profile() {
   const location = useLocation()
   const { user } = useUser()
   const [page, setPage] = usePageParam()
-  // The profile fetched by name (null when there's no such user) and the contents fetched for a profile
-  // and page; each is loading until it's what is asked for
-  const [fetchedUser, setFetchedUser] = React.useState({})
-  const [loaded, setLoaded] = React.useState({})
-  const profile = name ? (fetchedUser.name === name ? fetchedUser.profile : undefined) : user
+  // Anyone's profile is fetched by name; one that can't be had is no such user (null)
+  const fetched = useApiResource(name ? userPath(name) : null)
+  const profile = name ? (fetched.error ? null : fetched.data) : user
   const isOwn = profile && profile.pid === user?.pid
-  const isLoading = !profile || loaded.pid !== profile.pid || loaded.page !== page
   // The viewer's interactions come with the contents, so wait to know who's viewing
   const viewerKnown = user !== undefined
-
-  React.useEffect(() => {
-    if (!name)
-      return
-
-    let ignore = false
-    const fetchProfile = async () => {
-      let profile = null
-      try {
-        const res = await fetch(`${env.apiAddress}${userPath(name)}`)
-        if (res.ok)
-          profile = await res.json()
-      }
-      catch (err) {
-        console.error(err)
-      }
-      if (!ignore)
-        setFetchedUser({ name, profile })
-    }
-
-    fetchProfile()
-    return () => { ignore = true }
-  }, [name])
-
   const pid = profile?.pid
-  const accessToken = user?.accessToken
-  React.useEffect(() => {
-    if (!pid || !viewerKnown)
-      return
-
-    let ignore = false
-    const fetchUserContent = async () => {
-      let contents = [], maxIndex = 0
-      try {
-        const url = `${env.apiAddress}/contents?authorId=${pid}&page=${page + 1}&pageSize=${PAGE_SIZE}`
-        const res = await fetch(url, { method: "get", headers: accessToken ? { "Authorization": `Bearer ${accessToken}` } : {} })
-        const data = await res.json()
-
-        if (res.ok) {
-          contents = data.contents
-          maxIndex = Math.ceil(data.count / PAGE_SIZE) - 1
-        }
-      }
-      catch (err) {
-        console.error(err)
-      }
-      if (!ignore)
-        setLoaded({ pid, page, contents, maxIndex })
-    }
-
-    fetchUserContent()
-    return () => { ignore = true }
-  }, [pid, page, accessToken, viewerKnown])
+  const contents = useApiResource(
+    pid && viewerKnown ? `/contents?authorId=${pid}&page=${page + 1}&pageSize=${PAGE_SIZE}` : null,
+    { deps: [pid, page, user?.accessToken, viewerKnown] }
+  )
+  const isLoading = !profile || contents.isLoading
+  const maxIndex = contents.data ? Math.ceil(contents.data.count / PAGE_SIZE) - 1 : 0
 
   React.useEffect(() => {
     document.title = `${name ?? "Perfil"} · colcom`
@@ -111,8 +62,8 @@ export default function Profile() {
             </div>
             <div className="tree">
               <hr className="separator"/>
-              {loaded.contents?.length > 0 ?
-                <ContentList contents={loaded.contents} />
+              {contents.data?.contents.length > 0 ?
+                <ContentList contents={contents.data.contents} />
                 :
                 <NoResponse>{isOwn ? "você ainda não publicou" : `${profile.name} ainda não publicou`} nenhum conteúdo.</NoResponse>
               }
@@ -121,7 +72,7 @@ export default function Profile() {
               path={name ? userPath(name) : "/profile"}
               state={[page, setPage]}
               isLoading={isLoading}
-              maxIndex={loaded.maxIndex}
+              maxIndex={maxIndex}
             />
           </>
           :

@@ -8,6 +8,7 @@ import Notifications from "@/pages/Notifications"
 import { UserContext } from "@/context/UserContext"
 import useUnreadNotifications from "@/hooks/useUnreadNotifications"
 import { announceUnread } from "@/assets/notifications"
+import { storeToken } from "../support/session"
 
 
 const API = "http://api.test"
@@ -55,16 +56,19 @@ function Where() {
   return <p>at {pathname}{search}</p>
 }
 
-const renderPage = (user = USER) => render(
-  <UserContext.Provider value={{ user }}>
-    <MemoryRouter initialEntries={["/notifications"]}>
-      <Routes>
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="*" element={<Where />} />
-      </Routes>
-    </MemoryRouter>
-  </UserContext.Provider>
-)
+const renderPage = (user = USER) => {
+  storeToken(user)
+  return render(
+    <UserContext.Provider value={{ user }}>
+      <MemoryRouter initialEntries={["/notifications"]}>
+        <Routes>
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="*" element={<Where />} />
+        </Routes>
+      </MemoryRouter>
+    </UserContext.Provider>
+  )
+}
 
 const readCalls = fetch => fetch.mock.calls.filter(([url]) => url === `${API}/notifications/read`)
 
@@ -83,7 +87,7 @@ describe("the notifications page", () => {
     expect(acceptedItem).not.toHaveClass("unread")
     expect(acceptedItem).toHaveTextContent("bob aceitou sua sugestão para Meu post")
 
-    expect(fetch).toHaveBeenCalledWith(`${API}/notifications?page=1&pageSize=20`, { headers: { Authorization: "Bearer token-1" } })
+    expect(fetch).toHaveBeenCalledWith(`${API}/notifications?page=1&pageSize=20`, expect.objectContaining({ headers: { Authorization: "Bearer token-1" } }))
   })
 
   it("marks one as read when it's opened, and goes where it leads", async () => {
@@ -141,18 +145,21 @@ describe("useUnreadNotifications", () => {
     return <span data-testid="unread">{useUnreadNotifications()}</span>
   }
 
-  const renderBadge = user => render(
-    <UserContext.Provider value={{ user }}>
-      <MemoryRouter><Badge /></MemoryRouter>
-    </UserContext.Provider>
-  )
+  const renderBadge = user => {
+    storeToken(user)
+    return render(
+      <UserContext.Provider value={{ user }}>
+        <MemoryRouter><Badge /></MemoryRouter>
+      </UserContext.Provider>
+    )
+  }
 
   it("asks the API for the logged in user's count", async () => {
     const fetch = mockApi({ unread: 4 })
     renderBadge(USER)
 
     await waitFor(() => expect(screen.getByTestId("unread")).toHaveTextContent("4"))
-    expect(fetch).toHaveBeenCalledWith(`${API}/notifications/unread`, { headers: { Authorization: "Bearer token-1" } })
+    expect(fetch).toHaveBeenCalledWith(`${API}/notifications/unread`, expect.objectContaining({ headers: { Authorization: "Bearer token-1" } }))
   })
 
   it("follows what a page announces", async () => {

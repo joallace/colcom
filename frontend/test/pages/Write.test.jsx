@@ -20,7 +20,7 @@ const TOPICS = {
 function mockApi() {
   const fetch = vi.fn(async (url, options) => {
     const { pathname } = new URL(url)
-    if (options?.method === "post" && pathname === "/contents")
+    if (options?.method === "POST" && pathname === "/contents")
       return { ok: true, status: 201, json: async () => ({ id: 42 }) }
     const topic = TOPICS[pathname.match(/^\/contents\/(\d+)$/)?.[1]]
     if (topic)
@@ -57,7 +57,7 @@ describe("Write", () => {
     expect(await screen.findByRole("link", { name: "Should taxes fall?" })).toHaveAttribute("href", "/topics/1")
     expect(screen.getByLabelText("sim")).toBeInTheDocument()
     expect(screen.getByLabelText("não")).toBeInTheDocument()
-    expect(fetch).toHaveBeenCalledWith(`${API}/contents/1?omit_body`)
+    expect(fetch).toHaveBeenCalledWith(`${API}/contents/1?omit_body`, expect.objectContaining({ method: "GET" }))
   })
 
   it("uses the topic in the router state without fetching it", async () => {
@@ -75,7 +75,7 @@ describe("Write", () => {
     renderPage({ pathname: "/write", search: "?topic=1", state: TOPICS[2] })
 
     expect(await screen.findByRole("link", { name: "Should taxes fall?" })).toBeInTheDocument()
-    expect(fetch).toHaveBeenCalledWith(`${API}/contents/1?omit_body`)
+    expect(fetch).toHaveBeenCalledWith(`${API}/contents/1?omit_body`, expect.objectContaining({ method: "GET" }))
   })
 
   it("says so when no topic is given, without asking the API", async () => {
@@ -147,7 +147,7 @@ describe("Write", () => {
     fireEvent.click(screen.getByRole("button", { name: "publicar" }))
 
     expect(await screen.findByText("post page /topics/1/posts/42")).toBeInTheDocument()
-    const [, options] = fetch.mock.calls.find(([, options]) => options?.method === "post")
+    const [, options] = fetch.mock.calls.find(([, options]) => options?.method === "POST")
     expect(JSON.parse(options.body)).toEqual({ title: "Yes, they should", body: "<p>Because.</p>", config: { answer: "sim" }, parent_id: 1 })
     await waitFor(() => expect(localStorage.getItem("draft:1:title")).toBeNull())
     expect(localStorage.getItem("draft:1:body")).toBeNull()

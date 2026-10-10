@@ -2,52 +2,27 @@ import React from "react"
 
 import NoResponse from "@/components/primitives/NoResponse"
 import Spinner from "@/components/primitives/Spinner"
-import env from "@/assets/enviroment"
 import Pagination from "@/components/primitives/Pagination"
 import ContentList from "@/components/content/ContentList"
 import useUser from "@/context/UserContext"
+import useApiResource from "@/hooks/useApiResource"
 import usePageParam from "@/hooks/usePageParam"
 
 
 const PAGE_SIZE = 5
 
 export default function Bookmarked() {
-  const [contents, setContents] = React.useState([])
   const [page, setPage] = usePageParam()
   const [maxIndex, setMaxIndex] = React.useState()
-  // What the shown contents were fetched for; it's loading until that's what is asked for
-  const [loaded, setLoaded] = React.useState({})
   const { user } = useUser()
-  const isLoading = loaded.user !== user || loaded.page !== page
+  const { data, error, isLoading } = useApiResource(user ? `/contents/bookmarked?page=${page + 1}&pageSize=${PAGE_SIZE}` : null, { deps: [user, page] })
+  const contents = data?.contents ?? []
 
-  React.useEffect(() => {
-    const fetchBookmarked = async () => {
-      const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
-      try {
-        const url = `${env.apiAddress}/contents/bookmarked?page=${page + 1}&pageSize=${PAGE_SIZE}`
-        const res = await fetch(url, { method: "get", headers })
-        const data = await res.json()
-
-        if (res.ok) {
-          setContents(data.contents)
-          setMaxIndex(prev => prev ?? Math.ceil(data.count / PAGE_SIZE) - 1)
-        }
-        else {
-          setContents([])
-          setMaxIndex(0)
-        }
-      }
-      catch (err) {
-        console.error(err)
-      }
-      finally {
-        setLoaded({ user, page })
-      }
-    }
-
-    if(user)
-      fetchBookmarked()
-  }, [user, page])
+  // Changing pages doesn't change the total; a failure leaves a single page
+  if (maxIndex === undefined && data)
+    setMaxIndex(Math.ceil(data.count / PAGE_SIZE) - 1)
+  else if (error && maxIndex !== 0)
+    setMaxIndex(0)
 
   React.useEffect(() => {
     document.title = "colcom: conteúdos salvos"

@@ -8,7 +8,7 @@ import Modal from "@/components/primitives/Modal"
 import LoadingButton from "@/components/primitives/LoadingButton"
 import Spinner from "@/components/primitives/Spinner"
 import useBreakpoint from "@/hooks/useBreakpoint"
-import env from "@/assets/enviroment"
+import api, { ApiError } from "@/assets/api"
 import useUser from "@/context/UserContext"
 import { relativeTime } from "@/assets/util"
 import { docFromHtml, projectCritiques, quoteFromRange } from "@/assets/anchoring"
@@ -53,8 +53,6 @@ export default function PostPage() {
   }
 
   const fetchCommitBody = async (commit = commitFromUrl()) => {
-    const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
-
     if (!commit)
       return
 
@@ -63,10 +61,9 @@ export default function PostPage() {
 
     try {
       setIsLoading(true)
-      const res = await fetch(`${env.apiAddress}/contents/${pid}/${commit}`, { headers })
-      const data = await res.json()
+      const data = await api.get(`/contents/${pid}/${commit}`)
 
-      if (res.ok && data && request === latestRequest.current) {
+      if (data && request === latestRequest.current) {
         setPostBody(data.body)
         setBodyCommit(commit)
         setPostCritiques(data.critiques)
@@ -77,7 +74,9 @@ export default function PostPage() {
       }
     }
     catch (err) {
-      console.error(err)
+      // A refused version leaves the one shown
+      if (!(err instanceof ApiError))
+        console.error(err)
     }
     finally {
       if (request === latestRequest.current)
@@ -140,15 +139,12 @@ export default function PostPage() {
 
   React.useEffect(() => {
     const fetchPost = async () => {
-      const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
       try {
         setIsLoading(true)
-        const url = `${env.apiAddress}/contents/${pid}?omit_body&include_parent_title`
-        const res = await fetch(url, { method: "get", headers })
-        const data = await res.json()
+        const data = await api.get(`/contents/${pid}?omit_body&include_parent_title`)
 
         // The version itself is loaded by the effect above, once the history is known
-        if (res.ok && data) {
+        if (data) {
           document.title = `${data.title} · colcom`
           setPostData(data)
         }
@@ -156,7 +152,8 @@ export default function PostPage() {
           setIsLoading(false)
       }
       catch (err) {
-        console.error(err)
+        if (!(err instanceof ApiError))
+          console.error(err)
         setIsLoading(false)
       }
     }

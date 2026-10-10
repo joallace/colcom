@@ -25,7 +25,7 @@ import { submitVote } from "@/assets/interactions"
 import { Author, Interactions, Relevance } from "@/components/content/Metrics"
 import { UserContext } from "@/context/UserContext"
 import { relativeTime } from "@/assets/util"
-import env from "@/assets/enviroment"
+import api, { ApiError } from "@/assets/api"
 import useToLogin from "@/hooks/useToLogin"
 
 
@@ -137,26 +137,22 @@ export default function Post({
       description: "aceitar sugestão",
       icons: PiCheck,
       onClick: async () => {
-        const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
         const suggestionCommit = suggestions[currentSuggestion].config.commit
         try {
           setIsLoading(true)
-          const res = await fetch(`${env.apiAddress}/contents/${id}/${suggestionCommit}/merge`, { method: "post", headers })
-
-          if (res.ok)
-            setPostData(prev => ({ ...prev, suggestions: suggestions.filter((_, i) => i !== currentSuggestion) }))
-          else {
-            const data = await res.json()
-            // It changes passages the author also changed since: they choose what stays on its own page
-            if (data.errorLocationCode === "GIT:MERGE:CONFLICT") {
-              navigate(`/topics/${parent_id}/posts/${id}/suggestions/${suggestionCommit}`)
-              return
-            }
-            setMergeError(data.message)
-          }
+          await api.post(`/contents/${id}/${suggestionCommit}/merge`)
+          setPostData(prev => ({ ...prev, suggestions: suggestions.filter((_, i) => i !== currentSuggestion) }))
         }
         catch (err) {
-          console.error(err)
+          if (!(err instanceof ApiError))
+            console.error(err)
+          // It changes passages the author also changed since: they choose what stays on its own page
+          else if (err.errorLocationCode === "GIT:MERGE:CONFLICT") {
+            navigate(`/topics/${parent_id}/posts/${id}/suggestions/${suggestionCommit}`)
+            return
+          }
+          else
+            setMergeError(err.message)
         }
         finally {
           setIsLoading(false)
@@ -169,16 +165,15 @@ export default function Post({
       description: "rejeitar sugestão",
       icons: PiTrash,
       onClick: async () => {
-        const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
         try {
           setIsLoading(true)
-          const res = await fetch(`${env.apiAddress}/contents/${id}/${suggestions[currentSuggestion].config.commit}/reject`, { method: "post", headers })
-
-          if (res.ok)
-            setPostData(prev => ({ ...prev, suggestions: suggestions.filter((_, i) => i !== currentSuggestion) }))
+          await api.post(`/contents/${id}/${suggestions[currentSuggestion].config.commit}/reject`)
+          setPostData(prev => ({ ...prev, suggestions: suggestions.filter((_, i) => i !== currentSuggestion) }))
         }
         catch (err) {
-          console.error(err)
+          // A refusal leaves the suggestion listed, as before
+          if (!(err instanceof ApiError))
+            console.error(err)
         }
         finally {
           setCurrentSuggestion(undefined)
@@ -218,27 +213,17 @@ export default function Post({
   }
 
   // Sends an edit or a clone, keeping the modal open with the API's message when it's refused
-  const sendFromModal = async (url, method, values, onSuccess) => {
+  const sendFromModal = async (send, onSuccess) => {
     try {
       setIsLoading(true)
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.accessToken}` },
-        body: JSON.stringify(values)
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setModalError(data.message?.toLowerCase())
-        return
-      }
-
-      onSuccess(data)
+      onSuccess(await send())
       setModal(false)
     }
     catch (err) {
+      if (err instanceof ApiError) {
+        setModalError(err.data.message?.toLowerCase())
+        return
+      }
       console.error(err)
       setModal(false)
     }
@@ -256,7 +241,7 @@ export default function Post({
       return
     }
 
-    await sendFromModal(`${env.apiAddress}/contents/${id}`, "PATCH", values, data => {
+    await sendFromModal(() => api.patch(`/contents/${id}`, values), data => {
       if (user?.pid === author_id)
         updatePostData(data)
     })
@@ -271,7 +256,7 @@ export default function Post({
       return
     }
 
-    await sendFromModal(`${env.apiAddress}/contents/${id}/${commit}/clone`, "POST", values, data =>
+    await sendFromModal(() => api.post(`/contents/${id}/${commit}/clone`, values), data =>
       navigate(`/topics/${data.parent_id}/posts/${data.id}`))
   }
 

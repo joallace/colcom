@@ -2,42 +2,20 @@ import React from "react"
 import { Link } from "react-router"
 
 import NoResponse from "@/components/primitives/NoResponse"
-import env from "@/assets/enviroment"
 import Topic from "@/components/content/Topic"
 import Spinner from "@/components/primitives/Spinner"
 import useUser from "@/context/UserContext"
+import useApiResource from "@/hooks/useApiResource"
 
 
 // The foundational topics, where everyone decides how colcom should be and work. The instance opens
 // them and the API sends them in their groups and order (backend/src/metaTopics.ts), so this page
 // lists them whole, with no pagination.
 export default function Meta() {
-  const [groups, setGroups] = React.useState([])
-  // Who the shown groups were fetched for; it's loading until that's who is viewing
-  const [loaded, setLoaded] = React.useState({})
   const { user } = useUser()
-  const isLoading = loaded.user !== user
-
-  React.useEffect(() => {
-    const fetchMeta = async () => {
-      const headers = user ? { "Authorization": `Bearer ${user.accessToken}` } : undefined
-      try {
-        const res = await fetch(`${env.apiAddress}/meta`, { headers })
-        const data = await res.json()
-        setGroups(res.ok ? data.groups.filter(group => group.topics.length > 0) : [])
-      }
-      catch (err) {
-        console.error(err)
-        setGroups([])
-      }
-      finally {
-        setLoaded({ user })
-      }
-    }
-
-    if (user !== undefined)
-      fetchMeta()
-  }, [user])
+  // Fetched again for whoever is viewing (their votes and bookmarks); a failure shows no groups
+  const { data, isLoading } = useApiResource(user !== undefined ? "/meta" : null, { deps: [user] })
+  const groups = data?.groups.filter(group => group.topics.length > 0) ?? []
 
   React.useEffect(() => {
     document.title = "meta · colcom"

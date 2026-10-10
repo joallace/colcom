@@ -4,7 +4,7 @@ import { Link, useNavigate, useLocation, useSearchParams } from "react-router"
 import { default as Editor } from "@/components/Editor"
 import Frame from "@/components/primitives/Frame"
 import Input from "@/components/primitives/Input"
-import env from "@/assets/enviroment"
+import api, { ApiError } from "@/assets/api"
 import useUser from "@/context/UserContext"
 import Alert from "@/components/primitives/Alert"
 import LoadingButton from "@/components/primitives/LoadingButton"
@@ -12,6 +12,7 @@ import NoResponse from "@/components/primitives/NoResponse"
 import Spinner from "@/components/primitives/Spinner"
 import { describe, validate } from "@/assets/validation"
 import { clearDraft, loadDraft, saveDraft } from "@/assets/drafts"
+import useApiResource from "@/hooks/useApiResource"
 import useToLogin from "@/hooks/useToLogin"
 
 const isId = value => /^[1-9]\d*$/.test(value ?? "")
@@ -24,35 +25,15 @@ export default function Write() {
   const topicId = searchParams.get("topic")
   const valid = isId(topicId)
   const fromState = valid && state?.id != null && String(state.id) === topicId && state.config ? state : undefined
-  // The topic fetched by id (null when there's none); it's loading until it's the one asked for
-  const [fetched, setFetched] = React.useState({})
-  const topic = fromState ?? (fetched.id === topicId ? fetched.topic : undefined)
-
-  React.useEffect(() => {
-    if (!valid || fromState)
-      return
-
-    let ignore = false
-    const fetchTopic = async () => {
-      let topic = null
-      try {
-        const res = await fetch(`${env.apiAddress}/contents/${topicId}?omit_body`)
-        if (res.ok) {
-          const data = await res.json()
-          if (data.type === "topic")
-            topic = { id: data.id, title: data.title, config: data.config ?? {} }
-        }
-      }
-      catch (err) {
-        console.error(err)
-      }
-      if (!ignore)
-        setFetched({ id: topicId, topic })
-    }
-
-    fetchTopic()
-    return () => { ignore = true }
-  }, [topicId, valid, fromState])
+  // The topic fetched by id: null when there's none (or it isn't a topic), undefined while loading
+  const fetched = useApiResource(valid && !fromState ? `/contents/${topicId}?omit_body` : null)
+  const { data, error } = fetched
+  const fetchedTopic = React.useMemo(() => data?.type === "topic" ?
+    { id: data.id, title: data.title, config: data.config ?? {} }
+    :
+    (data || error) ? null : undefined,
+  [data, error])
+  const topic = fromState ?? fetchedTopic
 
   React.useEffect(() => {
     if (!valid || topic === null)
@@ -115,26 +96,15 @@ function WriteForm({ topic }) {
 
     try {
       setIsLoading(true)
-      const url = `${env.apiAddress}/contents`
-
-      const res = await fetch(url, {
-        method: "post",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.accessToken}` },
-        body: JSON.stringify(values)
-      })
-
-      const data = await res.json()
-
-      if (res.status >= 400) {
-        setErrorMessage(data.message.toLowerCase())
-        return
-      }
-
+      const data = await api.post("/contents", values)
       clearDraft(topic.id)
       navigate(`/topics/${topic.id}/posts/${data.id}`)
     }
     catch (err) {
-      console.error(err)
+      if (err instanceof ApiError)
+        setErrorMessage(err.message.toLowerCase())
+      else
+        console.error(err)
     }
     finally {
       setIsLoading(false)

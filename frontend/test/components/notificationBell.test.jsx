@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import NotificationBell from "@/components/layout/NotificationBell"
 import { UserContext } from "@/context/UserContext"
+import { storeToken } from "../support/session"
 
 
 const API = "http://api.test"
@@ -46,16 +47,19 @@ function Where() {
   return <p>at {pathname}{search}</p>
 }
 
-const renderBell = () => render(
-  <UserContext.Provider value={{ user: USER }}>
-    <MemoryRouter initialEntries={["/"]}>
-      <NotificationBell />
-      <Routes>
-        <Route path="*" element={<Where />} />
-      </Routes>
-    </MemoryRouter>
-  </UserContext.Provider>
-)
+const renderBell = () => {
+  storeToken(USER)
+  return render(
+    <UserContext.Provider value={{ user: USER }}>
+      <MemoryRouter initialEntries={["/"]}>
+        <NotificationBell />
+        <Routes>
+          <Route path="*" element={<Where />} />
+        </Routes>
+      </MemoryRouter>
+    </UserContext.Provider>
+  )
+}
 
 const listCalls = fetch => fetch.mock.calls.filter(([url]) => new URL(url).pathname === "/notifications")
 

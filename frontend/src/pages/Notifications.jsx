@@ -6,53 +6,34 @@ import NoResponse from "@/components/primitives/NoResponse"
 import Spinner from "@/components/primitives/Spinner"
 import Pagination from "@/components/primitives/Pagination"
 import NotificationItem from "@/components/content/NotificationItem"
-import env from "@/assets/enviroment"
 import { markRead, announceUnread } from "@/assets/notifications"
 import { loginPath } from "@/assets/returnTo"
 import useUser from "@/context/UserContext"
+import useApiResource from "@/hooks/useApiResource"
 import usePageParam from "@/hooks/usePageParam"
 
 
 const PAGE_SIZE = 20
 
 export default function Notifications() {
-  const [notifications, setNotifications] = React.useState([])
-  const [unread, setUnread] = React.useState(0)
   const [page, setPage] = usePageParam()
-  const [maxIndex, setMaxIndex] = React.useState()
-  // What the shown notifications were fetched for; it's loading until that's what is asked for
-  const [loaded, setLoaded] = React.useState({})
   const { user } = useUser()
   const location = useLocation()
-  const isLoading = loaded.user !== user || loaded.page !== page
+  const { data, isLoading, setData } = useApiResource(user ? `/notifications?page=${page + 1}&pageSize=${PAGE_SIZE}` : null, { deps: [user, page] })
+  const notifications = data?.notifications ?? []
+  const unread = data?.unread ?? 0
+  // The last count known, kept while the next page loads
+  const [maxIndex, setMaxIndex] = React.useState()
+  const loadedMaxIndex = data && Math.ceil(data.count / PAGE_SIZE) - 1
+  if (loadedMaxIndex !== undefined && loadedMaxIndex !== maxIndex)
+    setMaxIndex(loadedMaxIndex)
 
+  // Once per load, not when marking some read changes the data: markRead announces those
+  const announceLoaded = React.useEffectEvent(() => data && announceUnread(data.unread))
   React.useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const url = `${env.apiAddress}/notifications?page=${page + 1}&pageSize=${PAGE_SIZE}`
-        const res = await fetch(url, { headers: { "Authorization": `Bearer ${user.accessToken}` } })
-        const data = await res.json()
-
-        if (res.ok) {
-          setNotifications(data.notifications)
-          setUnread(data.unread)
-          setMaxIndex(Math.ceil(data.count / PAGE_SIZE) - 1)
-          announceUnread(data.unread)
-        }
-        else
-          setNotifications([])
-      }
-      catch (err) {
-        console.error(err)
-      }
-      finally {
-        setLoaded({ user, page })
-      }
-    }
-
-    if (user)
-      fetchNotifications()
-  }, [user, page])
+    if (!isLoading)
+      announceLoaded()
+  }, [isLoading])
 
   React.useEffect(() => {
     document.title = "colcom: notificações"
@@ -61,21 +42,23 @@ export default function Notifications() {
   if (user === null)
     return <Navigate to={loginPath(location)} replace />
 
-  const markShownRead = ids => setNotifications(prev => prev.map(n => !ids || ids.includes(n.id) ? { ...n, read: true } : n))
+  const markShownRead = (ids, unread) => setData(prev => ({
+    ...prev,
+    notifications: prev.notifications.map(n => !ids || ids.includes(n.id) ? { ...n, read: true } : n),
+    unread: unread ?? prev.unread
+  }))
 
   const openNotification = notification => {
     if (notification.read)
       return
     markShownRead([notification.id])
-    markRead(user.accessToken, [notification.id])
+    markRead([notification.id])
   }
 
   const readAll = async () => {
-    const count = await markRead(user.accessToken)
-    if (count !== undefined) {
-      markShownRead()
-      setUnread(count)
-    }
+    const count = await markRead()
+    if (count !== undefined)
+      markShownRead(undefined, count)
   }
 
   return (

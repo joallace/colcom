@@ -1,13 +1,12 @@
-import React from "react"
 import { Link } from "react-router"
 import { PiBellFill } from "react-icons/pi"
 
 import Popover from "@/components/primitives/Popover"
 import Spinner from "@/components/primitives/Spinner"
 import NotificationItem from "@/components/content/NotificationItem"
-import env from "@/assets/enviroment"
 import { markRead } from "@/assets/notifications"
 import useUser from "@/context/UserContext"
+import useApiResource from "@/hooks/useApiResource"
 import useUnreadNotifications from "@/hooks/useUnreadNotifications"
 
 
@@ -18,36 +17,14 @@ const unreadLabel = unread => `${unread} não lida${unread === 1 ? "" : "s"}`
 // The latest notifications, fetched each time the popover opens (it's mounted only while open)
 function LatestNotifications({ close }) {
   const { user } = useUser()
-  const token = user.accessToken
+  // Another account's would never do
+  const { data, error, isLoading } = useApiResource(`/notifications?page=1&pageSize=${LATEST_COUNT}`, { deps: [user.accessToken] })
   // undefined while loading, null when it failed
-  const [notifications, setNotifications] = React.useState()
-
-  React.useEffect(() => {
-    let cancelled = false
-
-    const fetchLatest = async () => {
-      try {
-        const res = await fetch(`${env.apiAddress}/notifications?page=1&pageSize=${LATEST_COUNT}`, {
-          headers: { "Authorization": `Bearer ${token}` }
-        })
-        const data = res.ok ? await res.json() : undefined
-        if (!cancelled)
-          setNotifications(data?.notifications ?? null)
-      }
-      catch (err) {
-        console.error(err)
-        if (!cancelled)
-          setNotifications(null)
-      }
-    }
-
-    fetchLatest()
-    return () => { cancelled = true }
-  }, [token])
+  const notifications = isLoading ? undefined : error ? null : data.notifications
 
   const openNotification = notification => {
     if (!notification.read)
-      markRead(token, [notification.id])
+      markRead([notification.id])
   }
 
   return (

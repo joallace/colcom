@@ -7,9 +7,8 @@ import LoadingButton from "@/components/primitives/LoadingButton"
 import Alert from "@/components/primitives/Alert"
 import TagInput from "@/components/content/TagInput"
 import { tagSlug } from "@/assets/tags"
-import env from "@/assets/enviroment"
+import api, { ApiError } from "@/assets/api"
 import { formErrors, limits, responseErrors } from "@/assets/validation"
-import useUser from "@/context/UserContext"
 
 export default function TopicModal({ isOpen, setIsOpen }) {
   const [title, setTitle] = React.useState("")
@@ -22,7 +21,6 @@ export default function TopicModal({ isOpen, setIsOpen }) {
   const [errorMessage, setErrorMessage] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
   const navigate = useNavigate()
-  const { user } = useUser()
 
   // There's always one empty input for the next answer, and extra empty ones at the end are dropped
   const withNextInput = list => {
@@ -82,29 +80,20 @@ export default function TopicModal({ isOpen, setIsOpen }) {
     try {
       setIsLoading(true)
       setErrorMessage("")
-      const url = `${env.apiAddress}/contents`
-
-      const res = await fetch(url, {
-        method: "post",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${user.accessToken}` },
-        body: JSON.stringify(values)
-      })
-
-      const data = await res.json()
-
-      if (res.status >= 400) {
-        if (data.errors)
-          showErrors(responseErrors(data), filled)
-        else
-          setErrorMessage(data.message.toLowerCase())
-        return
-      }
+      const data = await api.post("/contents", values)
       setIsOpen(false)
 
       if(data?.id)
         navigate(`/topics/${data.id}`)
     }
     catch (err) {
+      if (err instanceof ApiError) {
+        if (err.errors)
+          showErrors(responseErrors(err.data), filled)
+        else
+          setErrorMessage(err.message.toLowerCase())
+        return
+      }
       setErrorMessage("Não foi possível se conectar ao colcom. Por favor, verifique sua conexão.")
       console.error(err)
     }
