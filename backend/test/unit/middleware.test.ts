@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import authHandler from "@/middleware/authHandler"
 import errorHandler from "@/middleware/errorHandler"
-import { ForbiddenError, NotFoundError } from "@/errors"
+import { ConflictError, ForbiddenError, NotFoundError } from "@/errors"
 import User from "@/models/user"
 
 // authHandler asks the database for the user's current token version
@@ -120,6 +120,32 @@ describe("errorHandler", () => {
       errorId: expect.any(String),
       key: "id"
     })
+  })
+
+  // Express 5 passes a rejected promise to the error handler: controllers don't catch to call next
+  it("gets the errors async handlers throw", async () => {
+    const app = appWith(async () => {
+      await Promise.resolve()
+      throw new ConflictError({ message: "Já existe.", errorLocationCode: "HERE" })
+    })
+    const res = await request(app).get("/")
+
+    expect(res.status).toBe(409)
+    expect(res.body).toEqual({
+      name: "ConflictError",
+      message: "Já existe.",
+      action: "Atualize a página e tente novamente.",
+      statusCode: 409,
+      errorId: expect.any(String),
+      errorLocationCode: "HERE"
+    })
+  })
+
+  it("hides what async handlers throw that isn't ours", async () => {
+    const res = await request(appWith(async () => { throw new Error("pg detail") })).get("/")
+    expect(res.status).toBe(500)
+    expect(res.body.name).toBe("InternalServerError")
+    expect(JSON.stringify(res.body)).not.toContain("pg detail")
   })
 
   it("keeps the status of each error class", async () => {

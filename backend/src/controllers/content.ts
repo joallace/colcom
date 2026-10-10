@@ -100,414 +100,354 @@ const toFeed = async (contents: any[], author_pid?: string) => {
 const totalOf = async (contents: any[], page: number, countAlone: () => Promise<number>) =>
   contents[0]?.total_count ?? (page > 1 ? await countAlone() : 0)
 
-export const createContent: RequestHandler = async (req, res, next) => {
+export const createContent: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user.pid
 
-  try {
-    const { parent_id } = validate("content", req.body)
-    const parent = parent_id ? await Content.getDataById(parent_id, ["parent_id", "type", "config"]) : null
+  const { parent_id } = validate("content", req.body)
+  const parent = parent_id ? await Content.getDataById(parent_id, ["parent_id", "type", "config"]) : null
 
-    const type = !parent ?
-      "topic"
-      :
-      parent.parent_id ? "critique" : "post"
+  const type = !parent ?
+    "topic"
+    :
+    parent.parent_id ? "critique" : "post"
 
-    // Answers to a critique belong to its lifecycle (address, rebut, dispute), not to nested critiques
-    if (type === "critique" && parent.type !== "post")
-      throw new ValidationError({
-        message: "Somente posts podem ser criticados.",
-        errorLocationCode: "CONTROLLER:CONTENT:CREATE_CONTENT:CRITIQUE_PARENT",
-        key: "parent_id"
-      })
+  // Answers to a critique belong to its lifecycle (address, rebut, dispute), not to nested critiques
+  if (type === "critique" && parent.type !== "post")
+    throw new ValidationError({
+      message: "Somente posts podem ser criticados.",
+      errorLocationCode: "CONTROLLER:CONTENT:CREATE_CONTENT:CRITIQUE_PARENT",
+      key: "parent_id"
+    })
 
-    const { title, body, config, tags } = <any>validate(type, req.body)
+  const { title, body, config, tags } = <any>validate(type, req.body)
 
-    // Checked before anything is written; written once the topic exists, as the tag log can't be
-    // rolled back
-    const preparedTags = type === "topic" ? await prepareTopicTags(tags, author_pid) : undefined
+  // Checked before anything is written; written once the topic exists, as the tag log can't be
+  // rolled back
+  const preparedTags = type === "topic" ? await prepareTopicTags(tags, author_pid) : undefined
 
-    if (type === "post")
-      validateAnswer(parent.config, (<any>config).answer)
+  if (type === "post")
+    validateAnswer(parent.config, (<any>config).answer)
 
-    if (type === "critique")
-      await validateCritiqueCommit(<IContent>await Content.findById(<number>parent_id), (<any>config).commit)
+  if (type === "critique")
+    await validateCritiqueCommit(<IContent>await Content.findById(<number>parent_id), (<any>config).commit)
 
-    const content: ContentInsertRequest = {
-      title,
-      author_pid,
-      parent_id,
-      body: type === "post" ? summarize(<string>body) : body,
-      type,
-      config
-    }
-
-    const result = await Content.create(content)
-    result.body = body
-    await withRollback(() => git.create(result, res.locals.user), () => Content.removeById(result.id))
-
-    if (preparedTags) {
-      // The topic is there either way: a tag that fails (a race on the daily limit) isn't worth losing it
-      try {
-        await applyTopicTags(result.id, preparedTags, author_pid)
-      }
-      catch (err) {
-        logger.error(err, `[content.ts] Failed to tag topic ${result.id}`)
-      }
-    }
-
-    // A critique is news for the post's author, a post for the topic's
-    if (type !== "topic")
-      await notify({ type, actor_pid: author_pid, content_id: <number>parent_id, subject_id: result.id })
-
-    res.status(201).json(preparedTags ? { ...result, tags: await Tags.ofTopic(result.id, author_pid) } : result)
+  const content: ContentInsertRequest = {
+    title,
+    author_pid,
+    parent_id,
+    body: type === "post" ? summarize(<string>body) : body,
+    type,
+    config
   }
-  catch (err) {
-    next(err)
+
+  const result = await Content.create(content)
+  result.body = body
+  await withRollback(() => git.create(result, res.locals.user), () => Content.removeById(result.id))
+
+  if (preparedTags) {
+    // The topic is there either way: a tag that fails (a race on the daily limit) isn't worth losing it
+    try {
+      await applyTopicTags(result.id, preparedTags, author_pid)
+    }
+    catch (err) {
+      logger.error(err, `[content.ts] Failed to tag topic ${result.id}`)
+    }
   }
+
+  // A critique is news for the post's author, a post for the topic's
+  if (type !== "topic")
+    await notify({ type, actor_pid: author_pid, content_id: <number>parent_id, subject_id: result.id })
+
+  res.status(201).json(preparedTags ? { ...result, tags: await Tags.ofTopic(result.id, author_pid) } : result)
 }
 
-export const getContents: RequestHandler = async (req, res, next) => {
+export const getContents: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user?.pid
 
-  try {
-    const { page, pageSize, orderBy, authorId } = validate("list", req.query)
-    const where = authorId ? {
-      where: "users.pid = $1",
-      values: [authorId]
-    } : {}
+  const { page, pageSize, orderBy, authorId } = validate("list", req.query)
+  const where = authorId ? {
+    where: "users.pid = $1",
+    values: [authorId]
+  } : {}
 
-    const contents = await Content.findAll({ page, pageSize, orderBy, includeParentTitle: true, userPid: author_pid, withTotal: true, ...where })
-    const count = await totalOf(contents, page, () => Content.count(where))
-    res.status(200).json({ contents: await toFeed(contents, author_pid), count })
-  }
-  catch (err) {
-    next(err)
-  }
+  const contents = await Content.findAll({ page, pageSize, orderBy, includeParentTitle: true, userPid: author_pid, withTotal: true, ...where })
+  const count = await totalOf(contents, page, () => Content.count(where))
+  res.status(200).json({ contents: await toFeed(contents, author_pid), count })
 }
 
-export const getContentTree: RequestHandler = async (req, res, next) => {
+export const getContentTree: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user?.pid
   const getCount = "with_count" in req.query
 
-  try {
-    const { page, pageSize, orderBy, tags: slugs } = validate("list", req.query)
+  const { page, pageSize, orderBy, tags: slugs } = validate("list", req.query)
 
-    if (!slugs) {
-      const contents = await Content.findTree({ page, pageSize, orderBy, childLimit: TOPIC_PREVIEW_POSTS, userPid: author_pid })
-      res.status(200).json({ tree: contents, count: getCount ? (await Content.getCount("topic")) : undefined })
-      return
-    }
-
-    // Topics showing all of these tags; none when one of them doesn't exist
-    const tags = await resolveFilter(splitSlugs(slugs))
-    if (!tags) {
-      res.status(200).json({ tree: [], count: getCount ? 0 : undefined })
-      return
-    }
-
-    const values = [tags.map(tag => tag.id)]
-    const contents = await Content.findTree({
-      where: `topics.type = 'topic' AND ${tagFilterSql("topics.id", "$1")}`,
-      values,
-      page,
-      pageSize,
-      orderBy,
-      childLimit: TOPIC_PREVIEW_POSTS,
-      userPid: author_pid
-    })
-    const count = getCount ? await Content.count({ where: `contents.type = 'topic' AND ${tagFilterSql("contents.id", "$1")}`, values }) : undefined
-    res.status(200).json({ tree: contents, count })
+  if (!slugs) {
+    const contents = await Content.findTree({ page, pageSize, orderBy, childLimit: TOPIC_PREVIEW_POSTS, userPid: author_pid })
+    res.status(200).json({ tree: contents, count: getCount ? (await Content.getCount("topic")) : undefined })
+    return
   }
-  catch (err) {
-    next(err)
+
+  // Topics showing all of these tags; none when one of them doesn't exist
+  const tags = await resolveFilter(splitSlugs(slugs))
+  if (!tags) {
+    res.status(200).json({ tree: [], count: getCount ? 0 : undefined })
+    return
   }
+
+  const values = [tags.map(tag => tag.id)]
+  const contents = await Content.findTree({
+    where: `topics.type = 'topic' AND ${tagFilterSql("topics.id", "$1")}`,
+    values,
+    page,
+    pageSize,
+    orderBy,
+    childLimit: TOPIC_PREVIEW_POSTS,
+    userPid: author_pid
+  })
+  const count = getCount ? await Content.count({ where: `contents.type = 'topic' AND ${tagFilterSql("contents.id", "$1")}`, values }) : undefined
+  res.status(200).json({ tree: contents, count })
 }
 
-export const getTopicTree: RequestHandler = async (req, res, next) => {
+export const getTopicTree: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user?.pid
 
-  try {
-    const { id } = validate("contentParams", req.params)
-    const [topic] = await Content.findTree({ where: "topics.id = $1 AND topics.type = 'topic'", values: [id], pageSize: 1, userPid: author_pid })
+  const { id } = validate("contentParams", req.params)
+  const [topic] = await Content.findTree({ where: "topics.id = $1 AND topics.type = 'topic'", values: [id], pageSize: 1, userPid: author_pid })
 
-    if (!topic)
-      throw new NotFoundError({
-        message: "Tópico não encontrado.",
-        action: 'Verifique se o "id" fornecido está correto.',
-      })
+  if (!topic)
+    throw new NotFoundError({
+      message: "Tópico não encontrado.",
+      action: 'Verifique se o "id" fornecido está correto.',
+    })
 
-    res.status(200).json(topic)
-  }
-  catch (err) {
-    next(err)
-  }
+  res.status(200).json(topic)
 }
 
-export const getContent: RequestHandler = async (req, res, next) => {
+export const getContent: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user?.pid
   const omitBody = "omit_body" in req.query
   const includeParentTitle = "include_parent_title" in req.query
 
-  try {
-    const { id: content_id } = validate("contentParams", req.params)
-    const content = await Content.findById(content_id, { omitBody, includeParentTitle })
+  const { id: content_id } = validate("contentParams", req.params)
+  const content = await Content.findById(content_id, { omitBody, includeParentTitle })
 
-    if (!content)
-      throw new NotFoundError({
-        message: "Conteúdo não encontrado.",
-        action: 'Verifique se o "id" fornecido está correto.',
-      })
-
-
-    const userInteractions = author_pid ? (await Interactions.getUserContentInteractions({ author_pid, content_id })).map(v => v.type) : undefined
-
-    res.status(200).json({
-      ...content,
-      userInteractions,
-      history: content.type === "post" ? await git.log(content) : undefined,
-      interactionCounts: content.type === "post" ? await Content.interactionCounts(content_id) : undefined,
-      suggestions: content.type === "post" && author_pid === content.author_id ?
-        await Interactions.findAll({
-          where: `i.content_id = $1 AND i.type='suggestion' AND i.config->>'accepted' IS NULL`,
-          values: [content_id],
-          orderBy: "i.id DESC"
-        })
-        :
-        undefined
-    })
-  }
-  catch (err) {
-    next(err)
-  }
-}
-
-export const getBookmarkedContent: RequestHandler = async (req, res, next) => {
-  const author_pid = res.locals.user?.pid
-
-  try {
-    const { page, pageSize } = validate("list", req.query)
-    const contents = await Content.findAll({
-      where: `
-      contents.id IN (
-        SELECT
-          content_id AS id
-        FROM
-          interactions
-        INNER JOIN
-          users ON users.id = interactions.author_id
-        WHERE
-          interactions.type = 'bookmark'
-        AND
-          users.pid = $1
-      )
-      `,
-      values: [author_pid],
-      page,
-      pageSize,
-      includeParentTitle: true,
-      userPid: author_pid,
-      withTotal: true
+  if (!content)
+    throw new NotFoundError({
+      message: "Conteúdo não encontrado.",
+      action: 'Verifique se o "id" fornecido está correto.',
     })
 
-    const count = await totalOf(contents, page, () =>
-      Interactions.getCount(`interactions.type = 'bookmark' AND users.pid = $1`, [author_pid], "INNER JOIN users ON users.id = interactions.author_id"))
 
-    res.status(200).json({ contents: await toFeed(contents, author_pid), count })
-  }
-  catch (err) {
-    next(err)
-  }
-}
+  const userInteractions = author_pid ? (await Interactions.getUserContentInteractions({ author_pid, content_id })).map(v => v.type) : undefined
 
-export const getVersion: RequestHandler = async (req, res, next) => {
-  const author_pid = res.locals.user?.pid
-
-  try {
-    const { id: content_id, hash: commit } = validate("versionParams", req.params)
-    const content = await Content.findById(content_id)
-
-    if (!content)
-      throw new NotFoundError({
-        message: "Conteúdo não encontrado.",
-        action: 'Verifique se o "id" fornecido está correto.',
+  res.status(200).json({
+    ...content,
+    userInteractions,
+    history: content.type === "post" ? await git.log(content) : undefined,
+    interactionCounts: content.type === "post" ? await Content.interactionCounts(content_id) : undefined,
+    suggestions: content.type === "post" && author_pid === content.author_id ?
+      await Interactions.findAll({
+        where: `i.content_id = $1 AND i.type='suggestion' AND i.config->>'accepted' IS NULL`,
+        values: [content_id],
+        orderBy: "i.id DESC"
       })
-
-    if (content.type !== "post")
-      throw new ValidationError({
-        message: `Conteúdos do tipo "${content.type}" não têm histórico.`,
-        action: 'Forneça um "id" de um "post".',
-      })
-
-    const repo = Number(content.parent_id)
-    const body = await git.read(repo, commit)
-
-    // The version may also be a pending suggestion, which descends from the post's history too
-    const versionAncestors = await git.ancestors(repo, commit)
-    const critiques = (await Content.findAll({
-      where: "contents.parent_id = $1 AND contents.type = 'critique'",
-      values: [content_id],
-      paginate: false,
-      userPid: author_pid
-    }))
-      .filter(critique => versionAncestors.has((<any>critique.config)?.commit))
-      .reverse()
-
-    // For each earlier version critiques were made on, the versions from it to this one, along the
-    // post's line of history, and their texts. The client follows each passage through every edit
-    // in order, so a passage removed at some point stays removed, whatever text comes later.
-    const history = (await git.firstParentHistory(repo, commit)).reverse()
-    const lineages: Record<string, string[]> = {}
-    const versions: Record<string, string> = {}
-
-    for (const critiqueCommit of new Set(critiques.map(critique => String((<any>critique.config).commit)))) {
-      if (critiqueCommit === commit)
-        continue
-
-      // A critique made off this line (e.g. on a merged suggestion's own commit) is compared directly
-      const start = history.indexOf(critiqueCommit)
-      lineages[critiqueCommit] = start === -1 ? [critiqueCommit, commit] : history.slice(start)
-
-      for (const version of lineages[critiqueCommit])
-        if (version !== commit && versions[version] === undefined)
-          versions[version] = await git.read(repo, version)
-    }
-
-    // A pending suggestion also comes with the version it was made on, to show what it changes
-    const isSuggestion = Boolean(await Interactions.findPendingSuggestion(content_id, commit))
-    const baseCommit = isSuggestion ? await git.mergeBase(content, commit) : undefined
-    const base = baseCommit ? { commit: baseCommit, body: await git.read(repo, baseCommit) } : undefined
-
-    res.status(200).json({ body, critiques, versions, lineages, base })
-  }
-  catch (err) {
-    next(err)
-  }
-}
-
-export const updateContent: RequestHandler = async (req, res, next) => {
-  const author_pid = res.locals.user.pid
-
-  try {
-    const { id: content_id } = validate("contentParams", req.params)
-    const { message, body } = validate("edit", req.body)
-    const content = await Content.findById(content_id)
-
-    if (!content)
-      throw new NotFoundError({
-        message: "Conteúdo não encontrado.",
-        action: 'Verifique se o "id" fornecido está correto.',
-      })
-
-    if (content.type !== "post")
-      throw new ValidationError({
-        message: `Conteúdos do tipo "${content.type}" não podem ser alterados.`,
-        action: 'Forneça um "id" de um "post".',
-      })
-
-    const interactionId = content.author_id !== author_pid ?
-      (await Interactions.create({ author_pid, content_id, type: "suggestion" })).id
       :
       undefined
-
-    let commit
-    try {
-      commit = await git.update(content, res.locals.user, body, message, interactionId)
-    }
-    catch (err) {
-      if (interactionId !== undefined)
-        await Interactions.removeById(interactionId)
-      throw err
-    }
-
-    if (interactionId === undefined) {
-      const result = await Content.updateById(content.id, body, author_pid)
-      res.status(200).json({ ...result, commit })
-    }
-    else {
-      const result = await Interactions.updateById({ id: interactionId, field: "config", config: { message, commit, accepted: null }, author_pid })
-      await notify({ type: "suggestion", actor_pid: author_pid, content_id, interaction_id: interactionId })
-      res.status(200).json(result)
-    }
-  }
-  catch (err) {
-    next(err)
-  }
+  })
 }
 
-export const clonePost: RequestHandler = async (req, res, next) => {
+export const getBookmarkedContent: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user?.pid
 
+  const { page, pageSize } = validate("list", req.query)
+  const contents = await Content.findAll({
+    where: `
+    contents.id IN (
+      SELECT
+        content_id AS id
+      FROM
+        interactions
+      INNER JOIN
+        users ON users.id = interactions.author_id
+      WHERE
+        interactions.type = 'bookmark'
+      AND
+        users.pid = $1
+    )
+    `,
+    values: [author_pid],
+    page,
+    pageSize,
+    includeParentTitle: true,
+    userPid: author_pid,
+    withTotal: true
+  })
+
+  const count = await totalOf(contents, page, () =>
+    Interactions.getCount(`interactions.type = 'bookmark' AND users.pid = $1`, [author_pid], "INNER JOIN users ON users.id = interactions.author_id"))
+
+  res.status(200).json({ contents: await toFeed(contents, author_pid), count })
+}
+
+export const getVersion: RequestHandler = async (req, res) => {
+  const author_pid = res.locals.user?.pid
+
+  const { id: content_id, hash: commit } = validate("versionParams", req.params)
+  const content = await Content.findById(content_id)
+
+  if (!content)
+    throw new NotFoundError({
+      message: "Conteúdo não encontrado.",
+      action: 'Verifique se o "id" fornecido está correto.',
+    })
+
+  if (content.type !== "post")
+    throw new ValidationError({
+      message: `Conteúdos do tipo "${content.type}" não têm histórico.`,
+      action: 'Forneça um "id" de um "post".',
+    })
+
+  const repo = Number(content.parent_id)
+  const body = await git.read(repo, commit)
+
+  // The version may also be a pending suggestion, which descends from the post's history too
+  const versionAncestors = await git.ancestors(repo, commit)
+  const critiques = (await Content.findAll({
+    where: "contents.parent_id = $1 AND contents.type = 'critique'",
+    values: [content_id],
+    paginate: false,
+    userPid: author_pid
+  }))
+    .filter(critique => versionAncestors.has((<any>critique.config)?.commit))
+    .reverse()
+
+  // For each earlier version critiques were made on, the versions from it to this one, along the
+  // post's line of history, and their texts. The client follows each passage through every edit
+  // in order, so a passage removed at some point stays removed, whatever text comes later.
+  const history = (await git.firstParentHistory(repo, commit)).reverse()
+  const lineages: Record<string, string[]> = {}
+  const versions: Record<string, string> = {}
+
+  for (const critiqueCommit of new Set(critiques.map(critique => String((<any>critique.config).commit)))) {
+    if (critiqueCommit === commit)
+      continue
+
+    // A critique made off this line (e.g. on a merged suggestion's own commit) is compared directly
+    const start = history.indexOf(critiqueCommit)
+    lineages[critiqueCommit] = start === -1 ? [critiqueCommit, commit] : history.slice(start)
+
+    for (const version of lineages[critiqueCommit])
+      if (version !== commit && versions[version] === undefined)
+        versions[version] = await git.read(repo, version)
+  }
+
+  // A pending suggestion also comes with the version it was made on, to show what it changes
+  const isSuggestion = Boolean(await Interactions.findPendingSuggestion(content_id, commit))
+  const baseCommit = isSuggestion ? await git.mergeBase(content, commit) : undefined
+  const base = baseCommit ? { commit: baseCommit, body: await git.read(repo, baseCommit) } : undefined
+
+  res.status(200).json({ body, critiques, versions, lineages, base })
+}
+
+export const updateContent: RequestHandler = async (req, res) => {
+  const author_pid = res.locals.user.pid
+
+  const { id: content_id } = validate("contentParams", req.params)
+  const { message, body } = validate("edit", req.body)
+  const content = await Content.findById(content_id)
+
+  if (!content)
+    throw new NotFoundError({
+      message: "Conteúdo não encontrado.",
+      action: 'Verifique se o "id" fornecido está correto.',
+    })
+
+  if (content.type !== "post")
+    throw new ValidationError({
+      message: `Conteúdos do tipo "${content.type}" não podem ser alterados.`,
+      action: 'Forneça um "id" de um "post".',
+    })
+
+  const interactionId = content.author_id !== author_pid ?
+    (await Interactions.create({ author_pid, content_id, type: "suggestion" })).id
+    :
+    undefined
+
+  let commit
   try {
-    const { id: content_id, hash: commit } = validate("versionParams", req.params)
-    const { title } = validate("clone", req.body)
-    const content = await Content.findById(content_id)
+    commit = await git.update(content, res.locals.user, body, message, interactionId)
+  }
+  catch (err) {
+    if (interactionId !== undefined)
+      await Interactions.removeById(interactionId)
+    throw err
+  }
 
-    if (!content || content.type !== "post")
-      throw new NotFoundError({
-        message: "Post não encontrado.",
-        action: 'Verifique se o "id" fornecido está correto.',
-      })
-
-    const result = await Content.create({ ...(<any>content), author_pid, title })
-    await withRollback(() => git.branch(result, commit), () => Content.removeById(result.id))
-    await notify({ type: "clone", actor_pid: author_pid, content_id, subject_id: result.id })
-
+  if (interactionId === undefined) {
+    const result = await Content.updateById(content.id, body, author_pid)
+    res.status(200).json({ ...result, commit })
+  }
+  else {
+    const result = await Interactions.updateById({ id: interactionId, field: "config", config: { message, commit, accepted: null }, author_pid })
+    await notify({ type: "suggestion", actor_pid: author_pid, content_id, interaction_id: interactionId })
     res.status(200).json(result)
   }
-  catch (err) {
-    next(err)
-  }
 }
 
-export const mergePost: RequestHandler = async (req, res, next) => {
+export const clonePost: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user?.pid
 
-  try {
-    const { id: content_id, hash: commit } = validate("versionParams", req.params)
-    // A body is the author's resolution of the conflicts (see getMergeSides); without one, the merge is automatic
-    const resolution = req.body && Object.keys(req.body).length > 0 ? validate("resolution", req.body) : undefined
-    const { content, suggestion } = await findOwnedSuggestion(content_id, commit, author_pid)
+  const { id: content_id, hash: commit } = validate("versionParams", req.params)
+  const { title } = validate("clone", req.body)
+  const content = await Content.findById(content_id)
 
-    const merged = await git.merge(content, commit, resolution)
-    await Content.updateById(content.id, await git.read(Number(content.parent_id), merged), author_pid)
-    await Interactions.setSuggestionAccepted(suggestion.id, true, author_pid)
-    await notify({ type: "suggestion_accepted", actor_pid: author_pid, content_id, interaction_id: suggestion.id })
+  if (!content || content.type !== "post")
+    throw new NotFoundError({
+      message: "Post não encontrado.",
+      action: 'Verifique se o "id" fornecido está correto.',
+    })
 
-    res.status(204).end()
-  }
-  catch (err) {
-    next(err)
-  }
+  const result = await Content.create({ ...(<any>content), author_pid, title })
+  await withRollback(() => git.branch(result, commit), () => Content.removeById(result.id))
+  await notify({ type: "clone", actor_pid: author_pid, content_id, subject_id: result.id })
+
+  res.status(200).json(result)
+}
+
+export const mergePost: RequestHandler = async (req, res) => {
+  const author_pid = res.locals.user?.pid
+
+  const { id: content_id, hash: commit } = validate("versionParams", req.params)
+  // A body is the author's resolution of the conflicts (see getMergeSides); without one, the merge is automatic
+  const resolution = req.body && Object.keys(req.body).length > 0 ? validate("resolution", req.body) : undefined
+  const { content, suggestion } = await findOwnedSuggestion(content_id, commit, author_pid)
+
+  const merged = await git.merge(content, commit, resolution)
+  await Content.updateById(content.id, await git.read(Number(content.parent_id), merged), author_pid)
+  await Interactions.setSuggestionAccepted(suggestion.id, true, author_pid)
+  await notify({ type: "suggestion_accepted", actor_pid: author_pid, content_id, interaction_id: suggestion.id })
+
+  res.status(204).end()
 }
 
 // What the author needs to resolve a suggestion that conflicts with the post: the post as it is
 // (`head`, whose commit goes back with the resolution), the suggestion, and the version it was made on
-export const getMergeSides: RequestHandler = async (req, res, next) => {
+export const getMergeSides: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user?.pid
 
-  try {
-    const { id: content_id, hash: commit } = validate("versionParams", req.params)
-    const { content } = await findOwnedSuggestion(content_id, commit, author_pid)
+  const { id: content_id, hash: commit } = validate("versionParams", req.params)
+  const { content } = await findOwnedSuggestion(content_id, commit, author_pid)
 
-    res.status(200).json(await git.mergeSides(content, commit))
-  }
-  catch (err) {
-    next(err)
-  }
+  res.status(200).json(await git.mergeSides(content, commit))
 }
 
-export const rejectSuggestion: RequestHandler = async (req, res, next) => {
+export const rejectSuggestion: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user?.pid
 
-  try {
-    const { id: content_id, hash: commit } = validate("versionParams", req.params)
-    const { suggestion } = await findOwnedSuggestion(content_id, commit, author_pid)
-    const result = await Interactions.setSuggestionAccepted(suggestion.id, false, author_pid)
-    await notify({ type: "suggestion_rejected", actor_pid: author_pid, content_id, interaction_id: suggestion.id })
+  const { id: content_id, hash: commit } = validate("versionParams", req.params)
+  const { suggestion } = await findOwnedSuggestion(content_id, commit, author_pid)
+  const result = await Interactions.setSuggestionAccepted(suggestion.id, false, author_pid)
+  await notify({ type: "suggestion_rejected", actor_pid: author_pid, content_id, interaction_id: suggestion.id })
 
-    res.status(200).json(result)
-  }
-  catch (err) {
-    next(err)
-  }
+  res.status(200).json(result)
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { api } from "../support/api"
+import { api, createPost, createTopic, signUp, unique } from "../support/api"
 
 
 describe("the server", () => {
@@ -47,5 +47,44 @@ describe("the server", () => {
     expect(res.body).toMatchObject({ name: "NotFoundError", statusCode: 404, message: `A rota ${method} ${path} não existe.` })
     expect(res.body.action).toBeTruthy()
     expect(res.body).not.toHaveProperty("stack")
+  })
+
+  // Express 5 sends a rejected async handler's error to errorHandler, so handlers don't catch it
+  describe("an error thrown by an async handler", () => {
+    it("is answered as JSON with its status", async () => {
+      const user = await signUp()
+      const topic = await createTopic(user)
+      const post = await createPost(user, topic.id)
+
+      const res = await api().get(`/topics/${post.id}`)
+
+      expect(res.status).toBe(404)
+      expect(res.body).toEqual({
+        name: "NotFoundError",
+        message: "Tópico não encontrado.",
+        action: 'Verifique se o "id" fornecido está correto.',
+        statusCode: 404,
+        errorId: expect.stringMatching(/^[0-9a-f-]{36}$/)
+      })
+    })
+
+    it("keeps its key and location", async () => {
+      const user = await signUp()
+      const topic = await createTopic(user, { answers: ["sim", "não"] })
+
+      const res = await api().post("/contents").set(user.auth)
+        .send({ parent_id: topic.id, title: unique("Post"), body: "<p>Talvez.</p>", config: { answer: "talvez" } })
+
+      expect(res.status).toBe(400)
+      expect(res.body).toEqual({
+        name: "ValidationError",
+        message: "Resposta: escolha uma das respostas do tópico.",
+        action: "Utilize um dos valores: sim, não.",
+        statusCode: 400,
+        errorId: expect.any(String),
+        errorLocationCode: "CONTROLLER:CONTENT:VALIDATE_ANSWER",
+        key: "config.answer"
+      })
+    })
   })
 })

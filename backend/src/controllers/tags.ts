@@ -113,115 +113,95 @@ export async function resolveFilter(slugs: string[]): Promise<ResolvedTag[] | nu
 
 export const splitSlugs = (slugs: string) => slugs.split(",")
 
-export const voteOnTag: RequestHandler = async (req, res, next) => {
+export const voteOnTag: RequestHandler = async (req, res) => {
   const pid = res.locals.user.pid
 
-  try {
-    const { id } = validate("contentParams", req.params)
-    const { tag: name, value } = validate("tagVote", req.body)
-    const topic = await Content.getDataById(id, ["type", "author_id"])
+  const { id } = validate("contentParams", req.params)
+  const { tag: name, value } = validate("tagVote", req.body)
+  const topic = await Content.getDataById(id, ["type", "author_id"])
 
-    if (topic.type !== "topic")
-      throw notATopic()
+  if (topic.type !== "topic")
+    throw notATopic()
 
-    const user = await Tags.voter(pid)
+  const user = await Tags.voter(pid)
 
-    // A topic's author curates its tags from the start; everyone else once out of probation
-    if (user.id !== topic.author_id && !oldEnough(user))
-      throw new ForbiddenError({
-        message: `Contas com menos de ${plural(config.tags.minAccountDays, "dia", "dias")} só podem votar nas tags dos próprios tópicos.`,
-      })
+  // A topic's author curates its tags from the start; everyone else once out of probation
+  if (user.id !== topic.author_id && !oldEnough(user))
+    throw new ForbiddenError({
+      message: `Contas com menos de ${plural(config.tags.minAccountDays, "dia", "dias")} só podem votar nas tags dos próprios tópicos.`,
+    })
 
-    const slug = tagSlug(name)
-    let tag = (await Tags.resolve([slug])).get(slug)
-    const proposed = await Tags.proposed(id)
+  const slug = tagSlug(name)
+  let tag = (await Tags.resolve([slug])).get(slug)
+  const proposed = await Tags.proposed(id)
 
-    if (tag?.expired)
-      throw expired(tag, "tag")
+  if (tag?.expired)
+    throw expired(tag, "tag")
 
-    // Neither proposed, endorsed nor contested: it stays exactly where the instance put it
-    if (tag?.reserved)
-      throw reserved(tag, "tag")
+  // Neither proposed, endorsed nor contested: it stays exactly where the instance put it
+  if (tag?.reserved)
+    throw reserved(tag, "tag")
 
-    if (value !== 1 && (!tag || !proposed.has(tag.id)))
-      throw new ValidationError({
-        message: "Esta tag não foi proposta para este tópico.",
-        action: "Para propor uma tag, apoie-a.",
-        key: "tag"
-      })
+  if (value !== 1 && (!tag || !proposed.has(tag.id)))
+    throw new ValidationError({
+      message: "Esta tag não foi proposta para este tópico.",
+      action: "Para propor uma tag, apoie-a.",
+      key: "tag"
+    })
 
-    if (value === 1 && !(tag && proposed.has(tag.id)) && proposed.size >= limits.tags.perTopic)
-      throw new ValidationError({
-        message: `Um tópico pode ter até ${limits.tags.perTopic} tags propostas.`,
-        action: "Apoie uma das tags já propostas.",
-        key: "tag"
-      })
+  if (value === 1 && !(tag && proposed.has(tag.id)) && proposed.size >= limits.tags.perTopic)
+    throw new ValidationError({
+      message: `Um tópico pode ter até ${limits.tags.perTopic} tags propostas.`,
+      action: "Apoie uma das tags já propostas.",
+      key: "tag"
+    })
 
-    let tagId = tag?.id
-    if (!tagId) {
-      await assertCanCreate(user, 1)
-      tagId = await Tags.create(slug, name.trim(), user.id)
-    }
-
-    await Tags.vote(id, tagId, user.id, value)
-    await Tags.activate(tagId)
-
-    res.status(200).json({ tags: await Tags.ofTopic(id, pid) })
+  let tagId = tag?.id
+  if (!tagId) {
+    await assertCanCreate(user, 1)
+    tagId = await Tags.create(slug, name.trim(), user.id)
   }
-  catch (err) {
-    next(err)
-  }
+
+  await Tags.vote(id, tagId, user.id, value)
+  await Tags.activate(tagId)
+
+  res.status(200).json({ tags: await Tags.ofTopic(id, pid) })
 }
 
-export const getTags: RequestHandler = async (req, res, next) => {
-  try {
-    const { q, page, pageSize } = validate("tagList", req.query)
-    res.status(200).json(await Tags.search(tagSlug(q), page, pageSize))
-  }
-  catch (err) {
-    next(err)
-  }
+export const getTags: RequestHandler = async (req, res) => {
+  const { q, page, pageSize } = validate("tagList", req.query)
+  res.status(200).json(await Tags.search(tagSlug(q), page, pageSize))
 }
 
 // One tag or an intersection: the tags, how many topics have them all, and the tags those topics
 // have most, to narrow it down. `canonical` is the list without aliases, where the page should be.
-export const getTagIntersection: RequestHandler = async (req, res, next) => {
-  try {
-    const { slugs } = validate("tagParams", req.params)
-    const requested = splitSlugs(slugs)
-    const tags = await resolveFilter(requested)
+export const getTagIntersection: RequestHandler = async (req, res) => {
+  const { slugs } = validate("tagParams", req.params)
+  const requested = splitSlugs(slugs)
+  const tags = await resolveFilter(requested)
 
-    if (!tags)
-      throw new NotFoundError({
-        message: requested.length === 1 ? "Tag não encontrada." : "Alguma dessas tags não existe.",
-      })
-
-    const { topics, related } = await Tags.intersection(tags.map(tag => tag.id))
-
-    res.status(200).json({
-      tags: tags.map(({ slug, name, provisional }) => ({ slug, name, provisional })),
-      canonical: tags.map(tag => tag.slug).join(","),
-      topics,
-      related
+  if (!tags)
+    throw new NotFoundError({
+      message: requested.length === 1 ? "Tag não encontrada." : "Alguma dessas tags não existe.",
     })
-  }
-  catch (err) {
-    next(err)
-  }
+
+  const { topics, related } = await Tags.intersection(tags.map(tag => tag.id))
+
+  res.status(200).json({
+    tags: tags.map(({ slug, name, provisional }) => ({ slug, name, provisional })),
+    canonical: tags.map(tag => tag.slug).join(","),
+    topics,
+    related
+  })
 }
 
-export const getTagHistory: RequestHandler = async (req, res, next) => {
-  try {
-    const { id } = validate("contentParams", req.params)
-    const topic = await Content.getDataById(id, ["type"])
+export const getTagHistory: RequestHandler = async (req, res) => {
+  const { id } = validate("contentParams", req.params)
+  const topic = await Content.getDataById(id, ["type"])
 
-    // As the poll's history does
-    if (topic.type !== "topic")
-      throw new NotFoundError({ message: "Tópico não encontrado." })
+  // As the poll's history does
+  if (topic.type !== "topic")
+    throw new NotFoundError({ message: "Tópico não encontrado." })
 
-    res.status(200).json(await Tags.history(id))
-  }
-  catch (err) {
-    next(err)
-  }
+  res.status(200).json(await Tags.history(id))
 }
