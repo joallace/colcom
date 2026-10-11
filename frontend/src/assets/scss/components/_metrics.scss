@@ -21,11 +21,11 @@
     @media screen and (max-width: variables.$screen-sm) {
         display: grid;
         justify-items: left;
-        border-left: var(--stroke) solid var(--green);
+        border-left: var(--stroke) solid var(--primary);
         padding-left: var(--space-2);
 
         &.critique {
-            border-color: var(--orange);
+            border-color: var(--accent);
         }
     }
 }
@@ -39,7 +39,7 @@
     color: var(--text);
 
     img {
-        border: 1px solid var(--green);
+        border: 1px solid var(--primary);
         border-radius: 2px;
         image-rendering: pixelated;
         width: 16px;

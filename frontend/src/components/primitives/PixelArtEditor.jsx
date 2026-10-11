@@ -12,7 +12,7 @@ import {
 } from "react-icons/pi"
 
 import Input from "@/components/primitives/Input"
-import { defaultOrange, defaultGreen, defaultYellow, defaultBlue, defaultFontColor } from "@/assets/scss/_export.module.scss"
+import { palette1, palette2, palette3, palette4, defaultFontColor } from "@/assets/scss/_export.module.scss"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import { GRID_SIZE, blankGrid } from "@/assets/pixelArt"
 
@@ -28,9 +28,7 @@ export default function PixelArtEditor({ gridState, error, popError = () => { } 
   const [showGrid, setShowGrid] = React.useState(true)
   const isDesktop = useBreakpoint("md")
 
-  const colors = [
-    defaultFontColor, defaultOrange, defaultGreen, defaultYellow, defaultBlue
-  ]
+  const colors = [defaultFontColor, palette1, palette2, palette3, palette4]
 
   const saveState = React.useCallback((currentGrid) => {
     setUndoStack(stack => [...stack.slice(-99), currentGrid])

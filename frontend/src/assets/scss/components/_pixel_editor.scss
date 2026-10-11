@@ -51,7 +51,7 @@
 
             &.selected {
                 border-color: var(--text);
-                box-shadow: 0 0 0 2px var(--orange-text);
+                box-shadow: 0 0 0 2px var(--accent-text);
                 transform: scale(1.12);
             }
         }
@@ -79,13 +79,13 @@
             }
 
             &.selected {
-                background: var(--orange);
-                border-color: var(--orange);
+                background: var(--accent);
+                border-color: var(--accent);
                 color: var(--text-on-fill);
             }
 
             &.error:not(:disabled) {
-                border-color: var(--red);
+                border-color: var(--danger);
             }
 
             svg {
@@ -99,7 +99,7 @@
         display: grid;
         width: min-content;
         grid-template-columns: repeat(16, 16px);
-        border: var(--stroke) solid var(--green);
+        border: var(--stroke) solid var(--primary);
         border-radius: var(--radius-sm);
         overflow: hidden;
         cursor: crosshair;
@@ -147,7 +147,7 @@
         }
 
         &.error {
-            border-color: var(--red);
+            border-color: var(--danger);
         }
     }
 }

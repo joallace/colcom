@@ -98,7 +98,7 @@ describe("PATCH /users/self", () => {
     const user = await signUp()
     expect((await api().get("/users/self").set(user.auth)).body.theme).toBeNull()
 
-    const theme = { preset: "claro", colors: { bg: "#ffffff", "orange-text": "#a34500" } }
+    const theme = { preset: "claro", colors: { bg: "#ffffff", "accent-text": "#a34500", "chart-5": "#6e4a9e" } }
     const res = await api().patch("/users/self").set(user.auth).send({ theme })
     expect(res.status).toBe(200)
     expect(res.body).toEqual({ theme })

@@ -21,6 +21,7 @@ import {
   Tooltip,
   Legend
 } from "recharts"
+import { CHART_COLORS } from "@colcom/shared"
 
 import useTheme from "@/context/ThemeContext"
 import { toPercentageStr } from "@/assets/util"
@@ -44,9 +45,9 @@ const mobileMargin = {
 export default function Chart({ type, data = [{}], width, height, isLegendOn = true, ...remainingProps }) {
   const isDesktop = useBreakpoint()
 
-  // Series follow the theme, so they stay legible on its surfaces
+  // Series follow the theme, which sets each one's color
   const { colors } = useTheme()
-  const COLORS = [colors.orange, colors.green, colors.yellow, colors.blue, colors.text]
+  const COLORS = CHART_COLORS.map(key => colors[key])
   const RADIAN = Math.PI / 180
   const tooltipStyle = {
     backgroundColor: colors["surface-raised"],
@@ -179,7 +180,7 @@ export default function Chart({ type, data = [{}], width, height, isLegendOn = t
           <XAxis type="number" dataKey="0x" name="stature"/>
           <YAxis type="number" dataKey="0y" name="weight"/>
           <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={tooltipStyle} itemStyle={{ color: colors.text }} />
-          <Scatter data={data} fill={colors.orange} />
+          <Scatter data={data} fill={COLORS[0]} />
         </ScatterChart>
       )
     case "radar":

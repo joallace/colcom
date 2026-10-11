@@ -40,7 +40,7 @@
             }
 
             &.selected {
-                border-color: var(--orange);
+                border-color: var(--accent);
             }
 
             .swatches {
@@ -74,7 +74,7 @@
         summary {
             cursor: pointer;
             font-weight: 700;
-            color: var(--green-text);
+            color: var(--primary-text);
         }
 
         > p {
@@ -84,17 +84,69 @@
 
         fieldset {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-            gap: var(--space-2) var(--space-4);
+            gap: var(--space-3);
             margin-top: var(--space-3);
         }
     }
 
-    .colorField {
+    // A role's name and where it shows, beside its colors; below them when the line is too narrow
+    .colorRow {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        gap: var(--space-2);
-        min-height: 2rem;
+        justify-content: space-between;
+        gap: var(--space-2) var(--space-4);
+
+        & + .colorRow {
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--border);
+        }
+
+        &.changed .colorName > span {
+            font-weight: 700;
+        }
+    }
+
+    .colorName {
+        display: grid;
+        gap: var(--space-1);
+        flex: 1 1 10rem;
+        min-width: 0;
+
+        > span {
+            font-size: var(--text-sm);
+        }
+
+        small {
+            color: var(--text-muted);
+            font-size: var(--text-xs);
+            line-height: var(--leading-normal);
+
+            b {
+                color: var(--text-secondary);
+            }
+        }
+    }
+
+    .colorFields {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-1) var(--space-2);
+    }
+
+    // The swatch with its reset button beside it, whose place is kept so the swatches stay aligned,
+    // and its caption below
+    .colorField {
+        display: grid;
+        grid-template-columns: 2rem 1.75rem;
+        align-items: center;
+
+        > small {
+            grid-column: 1;
+            color: var(--text-muted);
+            font-size: var(--text-xs);
+            text-align: center;
+        }
 
         input[type=color] {
             flex: none;
@@ -122,22 +174,15 @@
             }
         }
 
-        label {
-            font-size: var(--text-sm);
-        }
-
-        &.changed label {
-            font-weight: 700;
-        }
-
         .resetColor {
             display: inline-flex;
+            justify-self: start;
             padding: var(--space-1);
             border: none;
             color: var(--text-muted);
 
             &:hover {
-                color: var(--orange-text);
+                color: var(--accent-text);
                 background-color: var(--hover);
             }
         }
@@ -145,9 +190,9 @@
 
     .contrastWarning {
         padding: var(--space-3) var(--space-4);
-        border-left: var(--stroke) solid var(--orange);
+        border-left: var(--stroke) solid var(--accent);
         border-radius: var(--radius-sm);
-        background-color: var(--orange-tint);
+        background-color: var(--accent-tint);
         font-size: var(--text-sm);
 
         p {

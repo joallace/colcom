@@ -15,7 +15,7 @@ describe("presets", () => {
   })
 
   it("start from the stylesheet's colors", () => {
-    expect(PRESETS.colcom.colors).toMatchObject({ bg: "#1a0e06", text: "#efe6dc", orange: "#bc5200", "red-text": "#ff6a4d" })
+    expect(PRESETS.colcom.colors).toMatchObject({ bg: "#1a0e06", text: "#efe6dc", accent: "#bc5200", "danger-text": "#ff6a4d", "chart-4": "#4da8c1" })
   })
 
   it.each(THEME_PRESETS)("%s is readable", preset => {
@@ -68,6 +68,12 @@ describe("contrast", () => {
       "texto discreto sobre menus e campos", "texto discreto sobre barra de navegação"
     ])
     expect(problems[0]).toMatchObject({ min: 4.5, ratio: expect.any(Number) })
+  })
+
+  it("checks the charts' series and the role colors by their names", () => {
+    const problems = contrastProblems({ ...PRESETS.colcom.colors, "chart-2": "#1a0e06", accent: "#ffffff" })
+
+    expect(problems.map(p => p.label)).toEqual(["texto branco sobre cor de destaque", "série 2 dos gráficos sobre fundo"])
   })
 })
 

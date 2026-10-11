@@ -13,17 +13,26 @@ $text: #efe6dc;
 $text-secondary: #c4b5a5;
 $text-muted: #9a8a7a;
 
-// Brand: the strong tones fill and outline (white text on them is at least 4.5:1 on orange and red,
-// 3.7:1 on green, so only bold labels go on it; assets/themes.js checks 3:1); the light ones
+// Roles: the primary color (outlines, headings), the accent (what reacts to the pointer and focus,
+// and critiques), danger (errors, removals) and the highlight (the passage being critiqued). The
+// strong tones fill and outline (white text on them is at least 4.5:1 on the accent and danger,
+// 3.7:1 on the primary, so only bold labels go on it; assets/themes.js checks 3:1); the -text ones
 // are for text and icons on the dark surfaces, where the strong ones lack contrast
-$green: #669100;
-$green-light: #8db43a;
-$orange: #bc5200;
-$orange-light: #e07a2e;
-$red: #be2400;
-$red-light: #ff6a4d;
-$yellow: #cdcd00;
-$blue: #4da8c1;
+$primary: #669100;
+$primary-text: #8db43a;
+$accent: #bc5200;
+$accent-text: #e07a2e;
+$danger: #be2400;
+$danger-text: #ff6a4d;
+$highlight: #cdcd00;
+
+// Charts' series, in order (Chart.jsx); also the pixel editor's palette
+$chart-1: #bc5200;
+$chart-2: #669100;
+$chart-3: #cdcd00;
+$chart-4: #4da8c1;
+$chart-5: #a98bd4;
+$chart-6: #d9729f;
 
 $navbar-height: 3.5rem;
 

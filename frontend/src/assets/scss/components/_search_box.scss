@@ -19,12 +19,12 @@
         @include mixins.transition((border-color, box-shadow), var(--duration-base));
 
         &:hover:not(:focus-within) {
-            border-color: var(--green);
+            border-color: var(--primary);
         }
 
         &:focus-within {
-            border-color: var(--orange);
-            box-shadow: 0 0 0 3px var(--orange-tint);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-tint);
         }
     }
 
@@ -59,8 +59,8 @@
             padding: 0 var(--space-1) 0 var(--space-2);
             font-size: var(--text-sm);
             font-weight: 700;
-            color: var(--green-text);
-            background-color: var(--green-tint);
+            color: var(--primary-text);
+            background-color: var(--primary-tint);
             border-radius: var(--radius-full);
         }
 
@@ -97,7 +97,7 @@
         @include mixins.transition((color, background-color));
 
         &:hover {
-            color: var(--green-text);
+            color: var(--primary-text);
             background-color: var(--hover);
         }
 
@@ -143,7 +143,7 @@
         padding: 0 0.125em;
         color: inherit;
         font-weight: 700;
-        background-color: var(--green-tint);
+        background-color: var(--primary-tint);
         border-radius: var(--radius-sm);
     }
 }

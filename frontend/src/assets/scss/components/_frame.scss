@@ -41,7 +41,7 @@
         >.title {
             width: 100%;
             margin: var(--space-3) 0;
-            color: var(--green-text);
+            color: var(--primary-text);
             font-size: var(--text-title);
             font-weight: 900;
             line-height: var(--leading-tight);
@@ -54,7 +54,7 @@
                 color: inherit;
 
                 &:hover {
-                    color: var(--orange-text);
+                    color: var(--accent-text);
                 }
             }
 
@@ -62,7 +62,7 @@
                 cursor: pointer;
 
                 &.active {
-                    color: var(--yellow);
+                    color: var(--highlight);
                 }
             }
 
@@ -72,19 +72,19 @@
 
                 &.critique {
                     &:empty:before {
-                        color: var(--orange-text);
+                        color: var(--accent-text);
                     }
                 }
 
                 &.error {
                     &:empty:before {
-                        color: var(--red-text);
+                        color: var(--danger-text);
                     }
                 }
 
                 &:empty:before {
                     content: attr(placeholder);
-                    color: var(--green-text);
+                    color: var(--primary-text);
                     opacity: 0.55;
                 }
             }
@@ -141,15 +141,15 @@
     // Maybe the critique color will be accordingly to the user's vote.
     &.critique {
         .title {
-            color: var(--orange-text);
+            color: var(--accent-text);
 
             textarea {
-                color: var(--orange-text);
+                color: var(--accent-text);
             }
         }
 
         .bracket {
-            border-color: var(--orange);
+            border-color: var(--accent);
         }
 
         // Shown on critiques made against an earlier version of the post
@@ -164,15 +164,15 @@
             blockquote {
                 margin: 0;
                 padding: var(--space-1) var(--space-3);
-                border-left: var(--stroke) solid var(--orange);
+                border-left: var(--stroke) solid var(--accent);
                 border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-                background-color: var(--orange-tint);
+                background-color: var(--accent-tint);
                 font-style: italic;
                 color: var(--text-secondary);
             }
 
             a {
-                color: var(--orange-text);
+                color: var(--accent-text);
                 font-weight: 700;
                 width: fit-content;
 
@@ -195,7 +195,7 @@
 
     border-style: solid;
     border-width: 0 0 0 var(--stroke);
-    border-color: var(--green);
+    border-color: var(--primary);
 
     @media screen and (min-width: 0px) and (max-width: variables.$screen-sm) {
         margin-right: var(--space-1);
@@ -261,11 +261,11 @@
     }
 
     &.critique {
-        border-color: var(--orange);
+        border-color: var(--accent);
     }
 
     &.error {
-        border-color: var(--red) !important;
+        border-color: var(--danger) !important;
     }
 
     &.reverse {

@@ -50,18 +50,18 @@
     }
 
     .up {
-        color: var(--green-text);
+        color: var(--primary-text);
 
         &:hover {
-            color: hsl(from var(--green-text) h s calc(l + 8));
+            color: hsl(from var(--primary-text) h s calc(l + 8));
         }
     }
 
     .down {
-        color: var(--orange-text);
+        color: var(--accent-text);
 
         &:hover {
-            color: hsl(from var(--orange-text) h s calc(l + 8));
+            color: hsl(from var(--accent-text) h s calc(l + 8));
         }
     }
 }

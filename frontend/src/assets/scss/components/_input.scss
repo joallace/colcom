@@ -11,7 +11,7 @@
         padding: 0 var(--space-3);
         color: var(--text);
         background: transparent;
-        border: var(--stroke) solid var(--green);
+        border: var(--stroke) solid var(--primary);
         border-radius: var(--radius-md);
         outline: none;
         @include mixins.transition((border-color, box-shadow), var(--duration-base));
@@ -21,7 +21,7 @@
         }
 
         &:hover:not(:focus) {
-            border-color: var(--green-text);
+            border-color: var(--primary-text);
         }
 
         // The label moves onto the border once there's something written, or the input is focused
@@ -29,24 +29,24 @@
         &:focus+label {
             top: 0;
             font-size: var(--text-xs);
-            color: var(--green-text);
+            color: var(--primary-text);
             background: var(--input-label-bg);
         }
 
         &:focus {
-            border-color: var(--orange);
-            box-shadow: 0 0 0 3px var(--orange-tint);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-tint);
         }
 
         &:focus+label {
-            color: var(--orange-text);
+            color: var(--accent-text);
         }
 
         &.error {
-            border-color: var(--red);
+            border-color: var(--danger);
 
             &:focus {
-                box-shadow: 0 0 0 3px var(--red-tint);
+                box-shadow: 0 0 0 3px var(--danger-tint);
             }
         }
     }
@@ -69,7 +69,7 @@
             color var(--duration-base) var(--ease-out);
 
         &.error {
-            color: var(--red-text);
+            color: var(--danger-text);
         }
     }
 }

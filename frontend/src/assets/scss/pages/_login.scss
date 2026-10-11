@@ -19,10 +19,10 @@
         span {
             font-size: var(--text-title);
             font-weight: 900;
-            color: var(--green-text);
+            color: var(--primary-text);
 
             &>span {
-                color: var(--orange-text);
+                color: var(--accent-text);
             }
         }
     }
@@ -49,10 +49,10 @@
                 a {
                     white-space: nowrap;
                     font-weight: bold;
-                    color: var(--green-text);
+                    color: var(--primary-text);
 
                     &:hover {
-                        color: var(--orange-text);
+                        color: var(--accent-text);
                     }
                 }
             }

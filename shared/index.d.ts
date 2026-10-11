@@ -54,7 +54,8 @@ export interface CritiqueRule {
 export type ThemePreset = "colcom" | "claro" | "contraste"
 export type ThemeColor =
   "bg" | "surface" | "surface-raised" | "navbar" | "text" | "text-secondary" | "text-muted" |
-  "green" | "green-text" | "orange" | "orange-text" | "red" | "red-text" | "yellow" | "blue"
+  "primary" | "primary-text" | "accent" | "accent-text" | "danger" | "danger-text" | "highlight" | ChartColor
+export type ChartColor = "chart-1" | "chart-2" | "chart-3" | "chart-4" | "chart-5" | "chart-6"
 export interface Theme {
   preset: ThemePreset
   colors?: Partial<Record<ThemeColor, string>>
@@ -130,6 +131,7 @@ export const TAG_NAME_PATTERN: string
 export const TAG_SLUG_PATTERN: string
 export const THEME_PRESETS: ThemePreset[]
 export const THEME_COLORS: ThemeColor[]
+export const CHART_COLORS: ChartColor[]
 export const HEX_COLOR_PATTERN: string
 // A three-way merge of documents stored one block per line (merge.js)
 export type MergeChunk = { type: "ok", text: string } | { type: "conflict", base: string, ours: string, theirs: string }

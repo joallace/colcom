@@ -74,7 +74,7 @@
 
         // Unread ones stand out with a tint and a dot, not with color alone
         &.unread {
-            background-color: var(--orange-tint);
+            background-color: var(--accent-tint);
             color: var(--text);
 
             &::before {
@@ -85,7 +85,7 @@
                 width: 0.5rem;
                 height: 0.5rem;
                 border-radius: var(--radius-full);
-                background-color: var(--orange-text);
+                background-color: var(--accent-text);
             }
         }
     }
@@ -131,6 +131,6 @@
         justify-self: center;
         padding: var(--space-1) var(--space-2);
         font-weight: 700;
-        color: var(--green-text);
+        color: var(--primary-text);
     }
 }

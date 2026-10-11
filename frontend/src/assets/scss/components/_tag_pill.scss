@@ -57,21 +57,21 @@
 
     // Applied by the instance only (the "meta" tag): nobody votes on it
     &.reserved {
-        border-color: var(--orange);
-        color: var(--orange-text);
+        border-color: var(--accent);
+        color: var(--accent-text);
     }
 
     // The viewer's own vote
     &.endorsed {
         border-color: transparent;
-        background-color: var(--green-tint);
-        color: var(--green-text);
+        background-color: var(--primary-tint);
+        color: var(--primary-text);
     }
 
     &.contested {
         border-color: transparent;
-        background-color: var(--red-tint);
-        color: var(--red-text);
+        background-color: var(--danger-tint);
+        color: var(--danger-text);
     }
 
     &.action {
@@ -174,19 +174,19 @@
 
         &:hover {
             background-color: var(--hover);
-            color: var(--green-text);
+            color: var(--primary-text);
         }
 
         &.contest:hover {
-            color: var(--red-text);
+            color: var(--danger-text);
         }
 
         &[aria-pressed="true"] {
-            color: var(--green-text);
+            color: var(--primary-text);
         }
 
         &.contest[aria-pressed="true"] {
-            color: var(--red-text);
+            color: var(--danger-text);
         }
 
         &:disabled {
@@ -197,7 +197,7 @@
 
     .tagError {
         margin: 0;
-        color: var(--red-text);
+        color: var(--danger-text);
         font-size: var(--text-xs);
     }
 }
@@ -233,7 +233,7 @@
         }
 
         &.create {
-            color: var(--green-text);
+            color: var(--primary-text);
         }
     }
 
@@ -270,7 +270,7 @@
 
             &:hover {
                 background: none;
-                color: var(--red-text);
+                color: var(--danger-text);
             }
         }
     }
@@ -281,7 +281,7 @@
     }
 
     .error {
-        color: var(--red-text);
+        color: var(--danger-text);
         font-size: var(--text-xs);
     }
 }

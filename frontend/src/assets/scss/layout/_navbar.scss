@@ -61,7 +61,7 @@ nav {
                 bottom: 0.125rem;
                 height: 2px;
                 border-radius: var(--radius-full);
-                background-color: var(--green-text);
+                background-color: var(--primary-text);
                 transform: scaleX(0);
                 @include mixins.transition(transform, var(--duration-base));
             }
@@ -71,7 +71,7 @@ nav {
             }
 
             &.active {
-                color: var(--green-text);
+                color: var(--primary-text);
 
                 &::after {
                     transform: scaleX(1);
@@ -106,7 +106,7 @@ nav {
         }
 
         &:hover .avatar {
-            border-color: var(--orange-text);
+            border-color: var(--accent-text);
         }
     }
 
@@ -175,7 +175,7 @@ nav {
                 height: 1.125rem;
                 padding: 0 var(--space-1);
                 border-radius: var(--radius-full);
-                background-color: var(--red);
+                background-color: var(--danger);
                 color: var(--text-on-fill);
                 font-size: var(--text-xs);
                 font-weight: 700;

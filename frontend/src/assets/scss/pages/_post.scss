@@ -64,7 +64,7 @@
                 font-size: var(--text-xs);
 
                 .dot {
-                    color: var(--green-text);
+                    color: var(--primary-text);
                 }
             }
         }
@@ -141,12 +141,12 @@
         cursor: pointer;
         border-radius: var(--radius-sm);
         text-decoration: underline dotted;
-        text-decoration-color: var(--orange-text);
+        text-decoration-color: var(--accent-text);
         text-underline-offset: 0.2em;
         @include mixins.transition(color);
 
         &:hover {
-            color: var(--orange-text);
+            color: var(--accent-text);
         }
 
         &:focus-visible {
@@ -183,7 +183,7 @@
         padding: 0 0.25rem;
         border-radius: var(--radius-full);
         border: 2px solid var(--bg);
-        background-color: var(--orange);
+        background-color: var(--accent);
         color: var(--text-on-fill);
         font-size: 0.6875rem;
         font-weight: 700;

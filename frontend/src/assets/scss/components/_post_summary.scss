@@ -17,10 +17,10 @@
         font-weight: 400;
 
         &:hover .percentageBar {
-            border-left-color: var(--orange-text);
+            border-left-color: var(--accent-text);
 
             &::before {
-                background-color: var(--orange-fill);
+                background-color: var(--accent-fill);
             }
         }
 
@@ -89,14 +89,14 @@
 
         // The post the user voted for
         &.chosen {
-            border-left-color: var(--green-text);
+            border-left-color: var(--primary-text);
 
             &::before {
-                background-color: var(--green-fill);
+                background-color: var(--primary-fill);
             }
 
             span:last-child {
-                color: var(--green-text);
+                color: var(--primary-text);
                 font-weight: 700;
             }
         }
@@ -189,7 +189,7 @@
         div {
             height: 100%;
             border-radius: inherit;
-            background-color: var(--orange);
+            background-color: var(--accent);
             transform-origin: left;
             animation: grow-x var(--duration-slow) var(--ease-out);
         }

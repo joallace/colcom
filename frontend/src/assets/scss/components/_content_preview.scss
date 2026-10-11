@@ -11,16 +11,16 @@
     }
 
     a:hover {
-        color: var(--orange-text);
+        color: var(--accent-text);
     }
 }
 
 .criticisedPassage {
     margin: 0 0 var(--space-3);
     padding: var(--space-2) var(--space-3);
-    border-left: var(--stroke) solid var(--orange);
+    border-left: var(--stroke) solid var(--accent);
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    background-color: var(--orange-tint);
+    background-color: var(--accent-tint);
     font-style: italic;
     color: var(--text-secondary);
 }

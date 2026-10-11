@@ -6,8 +6,8 @@
 // The state's badge: orange while it waits for the post's author, yellow for the critic, red when
 // the critic didn't accept the answer, green once resolved and muted once withdrawn
 .critiqueStatus {
-    --status-color: var(--orange);
-    --status-text: var(--orange-text);
+    --status-color: var(--accent);
+    --status-text: var(--accent-text);
 
     display: inline-block;
     padding: 0 var(--space-2);
@@ -22,19 +22,19 @@
 
     &[data-status="addressed"],
     &[data-status="rebutted"] {
-        --status-color: var(--yellow);
+        --status-color: var(--highlight);
         --status-text: var(--text);
     }
 
     &[data-status="in_review"],
     &[data-status="upheld"] {
-        --status-color: var(--red);
-        --status-text: var(--red-text);
+        --status-color: var(--danger);
+        --status-text: var(--danger-text);
     }
 
     &[data-status="resolved"] {
-        --status-color: var(--green);
-        --status-text: var(--green-text);
+        --status-color: var(--primary);
+        --status-text: var(--primary-text);
     }
 
     &[data-status="withdrawn"] {
@@ -65,7 +65,7 @@
     }
 
     a {
-        color: var(--orange-text);
+        color: var(--accent-text);
 
         &:hover {
             text-decoration: underline;
@@ -156,7 +156,7 @@
 
     .error {
         font-size: var(--text-xs);
-        color: var(--red-text);
+        color: var(--danger-text);
     }
 
     .buttons {

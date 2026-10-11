@@ -24,9 +24,9 @@
             }
 
             &.active {
-                color: var(--green-text);
-                border-color: var(--green);
-                background-color: var(--green-tint);
+                color: var(--primary-text);
+                border-color: var(--primary);
+                background-color: var(--primary-tint);
             }
         }
     }

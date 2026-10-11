@@ -33,7 +33,7 @@
 }
 
 .avatar {
-    border: var(--stroke) solid var(--green);
+    border: var(--stroke) solid var(--primary);
     border-radius: var(--radius-md);
     image-rendering: pixelated;
     @include mixins.transition((border-color, transform));
@@ -49,7 +49,7 @@
     @include mixins.transition((color, background-color, transform));
 
     &:hover {
-        color: var(--orange-text) !important;
+        color: var(--accent-text) !important;
     }
 }
 

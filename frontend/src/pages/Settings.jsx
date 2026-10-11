@@ -5,14 +5,14 @@ import { THEME_PRESETS } from "@colcom/shared"
 import LoadingButton from "@/components/primitives/LoadingButton"
 import { ApiError } from "@/assets/api"
 import {
-  COLOR_GROUPS, contrastProblems, DEFAULT_THEME, isDefaultTheme, PRESETS, sameTheme, themeColors, withColors
+  COLOR_GROUPS, COLOR_LABELS, contrastProblems, DEFAULT_THEME, isDefaultTheme, PRESETS, sameTheme, themeColors, withColors
 } from "@/assets/themes"
 import useTheme from "@/context/ThemeContext"
 import useUser from "@/context/UserContext"
 
 
 // The colors each preset's card shows
-const SWATCHES = ["bg", "surface", "text", "green", "orange", "red"]
+const SWATCHES = ["bg", "surface", "text", "primary", "accent", "danger"]
 
 // Picks and edits the theme. The whole site previews it while it's changed and not saved.
 export default function Settings() {
@@ -98,15 +98,27 @@ export default function Settings() {
           {COLOR_GROUPS.map(group => (
             <fieldset key={group.name}>
               <legend>{group.name}</legend>
-              {Object.entries(group.colors).map(([key, label]) => (
-                <div key={key} className={`colorField${draft.colors?.[key] ? " changed" : ""}`}>
-                  <input type="color" id={`color-${key}`} value={colors[key]} onChange={e => setColor(key, e.target.value)} />
-                  <label htmlFor={`color-${key}`}>{label}</label>
-                  {draft.colors?.[key] &&
-                    <button className="resetColor" title={`restaurar ${label}`} aria-label={`restaurar ${label}`} onClick={() => resetColor(key)}>
-                      <PiArrowCounterClockwiseBold />
-                    </button>
-                  }
+              {group.rows.map(row => (
+                <div key={row.name} className={`colorRow${row.colors.some(key => draft.colors?.[key]) ? " changed" : ""}`}>
+                  <div className="colorName">
+                    <span>{row.name}</span>
+                    {[row.hint].flat().map((hint, i) => (
+                      <small key={hint}>{Array.isArray(row.hint) && <b>{row.captions[i]}: </b>}{hint}</small>
+                    ))}
+                  </div>
+                  <div className="colorFields">
+                    {row.colors.map((key, i) => (
+                      <div key={key} className="colorField">
+                        <input type="color" aria-label={COLOR_LABELS[key]} value={colors[key]} onChange={e => setColor(key, e.target.value)} />
+                        {draft.colors?.[key] &&
+                          <button className="resetColor" title={`restaurar ${COLOR_LABELS[key]}`} aria-label={`restaurar ${COLOR_LABELS[key]}`} onClick={() => resetColor(key)}>
+                            <PiArrowCounterClockwiseBold />
+                          </button>
+                        }
+                        {row.captions && <small aria-hidden="true">{row.captions[i]}</small>}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </fieldset>

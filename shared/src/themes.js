@@ -4,10 +4,14 @@
 // so the API can check what it stores.
 export const THEME_PRESETS = ["colcom", "claro", "contraste"]
 
+// Named by what they're used for, not by hue, since any of them may be any color
+export const CHART_COLORS = ["chart-1", "chart-2", "chart-3", "chart-4", "chart-5", "chart-6"]
+
 export const THEME_COLORS = [
   "bg", "surface", "surface-raised", "navbar",
   "text", "text-secondary", "text-muted",
-  "green", "green-text", "orange", "orange-text", "red", "red-text", "yellow", "blue"
+  "primary", "primary-text", "accent", "accent-text", "danger", "danger-text", "highlight",
+  ...CHART_COLORS
 ]
 
 // What <input type="color"> gives: six lowercase hex digits

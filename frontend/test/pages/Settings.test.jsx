@@ -128,6 +128,23 @@ describe("Settings", () => {
     expect(screen.queryByRole("status")).not.toBeInTheDocument()
   })
 
+  it("names the colors by what they paint, each fill beside its text, and lets every chart series change", async () => {
+    cleanRoot()
+    mockApi()
+    renderPage(null)
+
+    expect(screen.getByText("primária")).toBeInTheDocument()
+    expect(screen.getByLabelText("cor primária")).toHaveValue(PRESETS.colcom.colors.primary)
+    expect(screen.getByLabelText("texto primário")).toHaveValue(PRESETS.colcom.colors["primary-text"])
+    expect(screen.getByText(/títulos, página atual/)).toBeInTheDocument()
+
+    fireEvent.input(screen.getByLabelText("série 6 dos gráficos"), { target: { value: "#123456" } })
+    expect(root.style.getPropertyValue("--chart-6")).toBe("#123456")
+
+    await userEvent.click(screen.getByRole("button", { name: "salvar" }))
+    expect(JSON.parse(localStorage.getItem(THEME_KEY)).theme).toEqual({ preset: "colcom", colors: { "chart-6": "#123456" } })
+  })
+
   it("shows the API's refusal and keeps the account's theme", async () => {
     cleanRoot()
     mockApi(400)

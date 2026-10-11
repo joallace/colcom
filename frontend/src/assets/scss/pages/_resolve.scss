@@ -32,14 +32,14 @@
         margin: 0;
         padding: var(--space-4);
         background-color: var(--surface);
-        border: var(--stroke) solid var(--orange);
+        border: var(--stroke) solid var(--accent);
         border-radius: var(--radius-md);
 
         legend {
             padding: 0 var(--space-2);
             font-size: var(--text-sm);
             font-weight: 700;
-            color: var(--orange-text);
+            color: var(--accent-text);
         }
     }
 
@@ -80,8 +80,8 @@
 
         &.kept {
             border-style: solid;
-            border-color: var(--green);
-            background-color: var(--green-tint);
+            border-color: var(--primary);
+            background-color: var(--primary-tint);
         }
 
         .removed {
