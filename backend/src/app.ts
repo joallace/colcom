@@ -8,6 +8,7 @@ import notificationsRouter from "@/routes/notifications"
 import tagsRouter from "@/routes/tags"
 import metaRouter from "@/routes/meta"
 import searchRouter from "@/routes/search"
+import podiumRouter from "@/routes/podium"
 import errorHandler from "@/middleware/errorHandler"
 import { NotFoundError } from "@/errors"
 
@@ -26,6 +27,7 @@ app.use(notificationsRouter)
 app.use(tagsRouter)
 app.use(metaRouter)
 app.use(searchRouter)
+app.use(podiumRouter)
 
 app.get("/", (req, res) => {
   res.send("I'm alive!")

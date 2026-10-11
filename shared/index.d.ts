@@ -82,6 +82,7 @@ export interface SchemaData {
   list: { page: number, pageSize: number, orderBy: string, authorId?: string, type?: "topic" | "post" | "critique", tags?: string, [key: string]: unknown }
   tagList: { q: string, page: number, pageSize: number }
   search: { q?: string, type?: "topic" | "post", tags?: string, page: number, pageSize: number }
+  podium: { type: "topic" | "post", period: PodiumPeriod }
   contentParams: { id: number }
   versionParams: { id: number, hash: string }
   tagParams: { slugs: string }
@@ -145,3 +146,7 @@ export const CRITIQUE_ACTIONS: Readonly<Record<CritiqueAction, CritiqueRule>>
 export function isClosedCritique(status: string): boolean
 // The actions someone may take on a critique in that state, as the post's author and/or its critic
 export function critiqueActions(status: string, roles?: { isAuthor?: boolean, isCritic?: boolean }): CritiqueAction[]
+// How many the podium ranks, and each period's length in days (null: every vote counts)
+export type PodiumPeriod = "week" | "month" | "all"
+export const PODIUM_SIZE: number
+export const PODIUM_PERIODS: Readonly<Record<PodiumPeriod, number | null>>

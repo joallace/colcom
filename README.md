@@ -54,6 +54,8 @@ The [meta space](#meta) puts colcom's own mission up for debate. The proposal it
 
 **Notifications.** The bell in the navbar tells you about critiques, suggestions and clones of your posts, new posts in your topics, and answers to your suggestions.
 
+**Podium.** `/podium` shows side by side the users with the most prestige and the topics or posts the community found most relevant: up votes minus down votes cast in the last week, month or ever, without the author's own. Equal scores share a place. Nothing awards prestige yet, so that side stays empty until the scoring system lands.
+
 ### Meta
 
 `/meta` is where the people using an instance decide how colcom itself should be and work. Every instance opens the same foundational topics, authored by a system account and tagged with the reserved "Meta" tag:
@@ -92,7 +94,7 @@ The ranking colcom plans takes its cue from Pol.is and X's Community Notes: a po
 
 ## Status and roadmap
 
-colcom works end to end: topics, posts with versions, suggestions with conflict resolution, clones, critiques that follow the text, polls with an auditable history, tags, notifications and the meta space. It has unit and integration test suites, and Docker deployment with HTTPS and backups.
+colcom works end to end: topics, posts with versions, suggestions with conflict resolution, clones, critiques that follow the text, polls with an auditable history, tags, notifications, the podium and the meta space. It has unit and integration test suites, and Docker deployment with HTTPS and backups.
 
 **It is not ready for an open, large-scale instance.** Anyone can make several accounts, so a poll can be swung by one person, and there is no moderation yet. The [backlog](TODO.md) ranks what's missing by how much harm it does. Its top items are protection against fake accounts (proof-of-work, email verification, probation for new accounts, invite chains for the first pilot), community moderation through random juries, and LGPD compliance (account deletion, data export, explicit consent for public votes).
 

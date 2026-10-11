@@ -251,9 +251,10 @@ const updated = async (query: { text: string, values: unknown[] }, author_pid: s
   return { ...result.rows[0], author_id: author_pid }
 }
 
-// Turns a relevance vote over
+// Turns a relevance vote over. It's a new judgement, so it counts as cast now: the podium counts the
+// votes cast over a period
 const setType = (id: number, type: "up" | "down", author_pid: string) =>
-  updated({ text: "UPDATE interactions SET type = $1 WHERE id = $2 RETURNING *;", values: [type, id] }, author_pid)
+  updated({ text: "UPDATE interactions SET type = $1, created_at = NOW() WHERE id = $2 RETURNING *;", values: [type, id] }, author_pid)
 
 // Moves a poll vote or a promotion to another content
 const moveTo = (id: number, content_id: number, author_pid: string) =>

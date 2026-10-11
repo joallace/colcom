@@ -49,8 +49,8 @@ export default function Navbar() {
             {isLargeScreen &&
               <>
                 •
-                <li key="leaderboard">
-                  <NavLink to="/leaderboard">pódio</NavLink>
+                <li key="podium">
+                  <NavLink to="/podium">pódio</NavLink>
                 </li>
                 •
                 <li key="meta">

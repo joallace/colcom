@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router"
 import { describe, expect, it, vi } from "vitest"
@@ -8,6 +8,7 @@ import Alert from "@/components/primitives/Alert"
 import LoadingButton from "@/components/primitives/LoadingButton"
 import Pagination from "@/components/primitives/Pagination"
 import Frame from "@/components/primitives/Frame"
+import Standings from "@/components/primitives/Standings"
 import PostSummary from "@/components/content/PostSummary"
 import { Author, Interactions, PostCount, Promotions, Relevance } from "@/components/content/Metrics"
 
@@ -289,5 +290,32 @@ describe("Pagination", () => {
   it("only shows existing pages when there are fewer than 5", () => {
     renderPagination({ index: 0, maxIndex: 2 })
     expect(pages().map(link => link.textContent)).toEqual(["1", "2", "3"])
+  })
+})
+
+describe("Standings", () => {
+  const renderStandings = positions => {
+    const entries = positions.map((position, index) => ({ key: index, position, name: `n${index}` }))
+    render(<Standings entries={entries} label="ranking" renderEntry={entry => entry.name} renderScore={entry => `+${entry.key}`} />)
+    return within(screen.getByRole("list", { name: "ranking" })).getAllByRole("listitem")
+  }
+
+  it("puts the first three on the steps, the first in the middle, and the rest in rows, in ranking order", () => {
+    const items = renderStandings([1, 2, 3, 4, 5])
+
+    expect(items.map(item => item.className)).toEqual(["step slot1 place1", "step slot2 place2", "step slot3 place3", "row", "row"])
+    expect(items.map(item => item.textContent)).toEqual(["n01º+0", "n12º+1", "n23º+2", "4ºn3+3", "5ºn4+4"])
+  })
+
+  it("gives a shared position to everyone holding it, and so the same step", () => {
+    const items = renderStandings([1, 1, 3, 3])
+
+    expect(items.map(item => item.getAttribute("value"))).toEqual(["1", "1", "3", "3"])
+    expect(items[1]).toHaveClass("place1")
+    expect(items[3]).toHaveTextContent("3º")
+  })
+
+  it("stands one or two on the steps there are", () => {
+    expect(renderStandings([1, 2]).map(item => item.className)).toEqual(["step slot1 place1", "step slot2 place2"])
   })
 })

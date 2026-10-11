@@ -11,6 +11,7 @@
 import { TAG_NAME_PATTERN, TAG_SLUG_PATTERN } from "./tags.js"
 import { CRITIQUE_ACTIONS } from "./critiques.js"
 import { HEX_COLOR_PATTERN, THEME_COLORS, THEME_PRESETS } from "./themes.js"
+import { PODIUM_PERIODS } from "./podium.js"
 
 const MAX_ID = 2_147_483_647 // Postgres' SERIAL
 
@@ -332,6 +333,16 @@ export function createSchemas(limits) {
     }
   }
 
+  // The podium's topics or posts, ranked by the relevance votes cast over a period (podium.js)
+  const podium = {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      type: { type: "string", label: "tipo", enum: ["topic", "post"], default: "topic", messages: { enum: "escolha tópicos ou posts" } },
+      period: { type: "string", label: "período", enum: Object.keys(PODIUM_PERIODS), default: "week", messages: { enum: "escolha semana, mês ou sempre" } }
+    }
+  }
+
   const notifications = {
     type: "object",
     additionalProperties: false,
@@ -369,6 +380,6 @@ export function createSchemas(limits) {
 
   return {
     body: { signUp, login, content, topic, post, critique, critiqueConfig, edit, critiqueEvent, resolution, clone, interaction, tagVote, readNotifications, settings },
-    query: { list, tagList, search, notifications, contentParams, versionParams, tagParams, userParams }
+    query: { list, tagList, search, podium, notifications, contentParams, versionParams, tagParams, userParams }
   }
 }

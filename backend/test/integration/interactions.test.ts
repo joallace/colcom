@@ -41,7 +41,9 @@ describe("relevance votes (up and down)", () => {
 
     const switched = await interact(bob, topic.id, "down")
     expect(switched.status).toBe(200)
-    expect(switched.body).toEqual({ ...created.body, type: "down" })
+    // The same row, but cast anew (the podium counts votes by when they were cast)
+    expect(switched.body).toEqual({ ...created.body, type: "down", created_at: expect.any(String) })
+    expect(Date.parse(switched.body.created_at)).toBeGreaterThanOrEqual(Date.parse(created.body.created_at))
 
     const removed = await interact(bob, topic.id, "down")
     expect(removed.status).toBe(204)

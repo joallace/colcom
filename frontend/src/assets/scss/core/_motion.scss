@@ -39,6 +39,13 @@
     }
 }
 
+// The podium's steps rising from the floor (set `transform-origin: bottom`)
+@keyframes grow-y {
+    from {
+        transform: scaleY(0);
+    }
+}
+
 @keyframes spin {
     to {
         transform: rotate(360deg);

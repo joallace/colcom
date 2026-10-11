@@ -10,7 +10,7 @@ import Login from "@/pages/Login"
 import TopicPage from "@/pages/TopicPage"
 import Bookmarked from "@/pages/Bookmarked"
 import Profile from "@/pages/Profile"
-import Leaderboard from "@/pages/Leaderboard"
+import Podium from "@/pages/Podium"
 import Notifications from "@/pages/Notifications"
 import TagTopics from "@/pages/TagTopics"
 import Meta from "@/pages/Meta"
@@ -29,7 +29,7 @@ function App() {
         <Route path="/" element={<Navigate to="/promoted" />} />
         <Route path="/promoted" element={<TopicTree orderBy="promotions" />} />
         <Route path="/recent" element={<TopicTree orderBy="id" />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/podium" element={<Podium />} />
         <Route path="/meta" element={<Meta />} />
         <Route path="/search" element={<Search />} />
         <Route path="/bookmarked" element={<Bookmarked />} />

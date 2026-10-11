@@ -79,6 +79,8 @@ CREATE INDEX IF NOT EXISTS contents_search_idx ON contents USING GIN (search);
 CREATE INDEX IF NOT EXISTS contents_parent_id_idx ON contents (parent_id);
 CREATE INDEX IF NOT EXISTS interactions_content_type_idx ON interactions (content_id, type);
 CREATE INDEX IF NOT EXISTS interactions_author_content_idx ON interactions (author_id, content_id);
+-- The podium counts the up and down votes cast over a period
+CREATE INDEX IF NOT EXISTS interactions_relevance_created_idx ON interactions (created_at) WHERE type IN ('up', 'down');
 
 -- A user can react (up or down), bookmark and vote at most once per content
 CREATE UNIQUE INDEX IF NOT EXISTS interactions_unique_reaction_idx ON interactions (author_id, content_id) WHERE type IN ('up', 'down');

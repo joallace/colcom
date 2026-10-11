@@ -24,6 +24,7 @@
 @use "components/post_summary";
 @use "components/search_box";
 @use "components/spinner";
+@use "components/standings";
 @use "components/tag_pill";
 @use "components/text_editor";
 @use "components/topic_modal";
@@ -32,6 +33,7 @@
 @use "pages/login";
 @use "pages/meta";
 @use "pages/notifications";
+@use "pages/podium";
 @use "pages/post";
 @use "pages/profile";
 @use "pages/resolve";

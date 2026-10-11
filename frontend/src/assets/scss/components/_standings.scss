@@ -1,0 +1,154 @@
+@use "../abstracts/mixins";
+
+// A ranking (primitives/Standings): the first three on a podium's steps, the first in the middle
+// and each step as tall as its position, then the rest in rows. One list, so it's read in order.
+.standings {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: var(--space-2);
+
+    // The steps share the first row, standing on its bottom edge
+    >.step {
+        grid-row: 1;
+        align-self: end;
+        min-width: 0;
+        display: grid;
+        justify-items: center;
+        gap: var(--space-2);
+        text-align: center;
+
+        &.slot1 {
+            grid-column: 2;
+        }
+
+        &.slot2 {
+            grid-column: 1;
+        }
+
+        &.slot3 {
+            grid-column: 3;
+        }
+
+        >.standingEntry {
+            width: 100%;
+            animation: rise-in var(--duration-slow) var(--ease-out) backwards;
+            animation-delay: calc(var(--duration-slow) * 0.5);
+        }
+    }
+
+    .stepBlock {
+        width: 100%;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        gap: var(--space-1);
+        padding: var(--space-3) var(--space-2);
+        background-color: var(--surface-raised);
+        border: 1px solid var(--border);
+        border-top: var(--stroke) solid var(--border-strong);
+        border-bottom: none;
+        border-radius: var(--radius-md) var(--radius-md) 0 0;
+        transform-origin: bottom;
+        animation: grow-y var(--duration-slow) var(--ease-spring) backwards;
+
+        .standingPosition {
+            font-size: var(--text-2xl);
+            font-weight: 900;
+            line-height: var(--leading-tight);
+        }
+
+        .standingScore {
+            display: grid;
+            justify-items: center;
+            gap: var(--space-1);
+            font-weight: 700;
+        }
+    }
+
+    // Shared positions share heights
+    .place1 .stepBlock {
+        min-height: 8rem;
+        border-top-color: var(--primary);
+        background-color: var(--primary-tint);
+
+        .standingPosition {
+            color: var(--primary-text);
+        }
+    }
+
+    .place2 .stepBlock {
+        min-height: 6rem;
+    }
+
+    .place3 .stepBlock {
+        min-height: 4.5rem;
+    }
+
+    // The floor the steps stand on: the grid's second row, so the rows under it start on the third
+    &::after {
+        content: "";
+        grid-row: 2;
+        grid-column: 1 / -1;
+        border-top: var(--stroke) solid var(--border-strong);
+    }
+
+    >.row {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-3) var(--space-2);
+        border-bottom: 1px solid var(--border);
+
+        .standingPosition {
+            font-weight: 900;
+            color: var(--text-muted);
+        }
+
+        .standingScore {
+            display: grid;
+            justify-items: end;
+            font-weight: 700;
+        }
+    }
+
+    .standingName {
+        font-weight: 700;
+        overflow-wrap: anywhere;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        overflow: hidden;
+    }
+
+    .standingScore svg {
+        vertical-align: -0.125em;
+        margin-left: var(--space-1);
+    }
+
+    .standingVotes {
+        font-size: var(--text-xs);
+        font-weight: 400;
+        color: var(--text-muted);
+        white-space: nowrap;
+
+        svg {
+            margin: 0 0.1em 0 0;
+        }
+    }
+
+    // Read by screen readers only
+    .visuallyHidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+}

@@ -1,0 +1,139 @@
+@use "../abstracts/variables";
+
+// The podium page (pages/Podium): users by prestige beside topics or posts by relevance, split down
+// the middle; on smaller screens one above the other
+.podiumHeader {
+    display: grid;
+    gap: var(--space-2);
+
+    h1 {
+        margin: 0;
+        font-size: var(--text-title);
+    }
+
+    p {
+        margin: 0;
+        color: var(--text-secondary);
+    }
+}
+
+.podiumColumns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: var(--space-4);
+
+    >.podiumColumn {
+        padding: 0 var(--space-6);
+
+        &:first-child {
+            padding-left: 0;
+        }
+
+        &:last-child {
+            padding-right: 0;
+        }
+
+        +.podiumColumn {
+            border-left: 1px solid var(--border);
+        }
+    }
+
+    @media screen and (max-width: variables.$screen-lg) {
+        grid-template-columns: minmax(0, 1fr);
+        margin-top: 0;
+
+        >.podiumColumn {
+            padding: 0;
+
+            +.podiumColumn {
+                border-left: none;
+                border-top: 1px solid var(--border);
+                margin-top: var(--space-6);
+                padding-top: var(--space-6);
+            }
+        }
+    }
+}
+
+.podiumColumn {
+    display: grid;
+    gap: var(--space-5);
+    align-content: start;
+
+    >header {
+        display: grid;
+        gap: var(--space-3);
+
+        h2 {
+            margin: 0;
+            font-size: var(--text-xl);
+        }
+
+        p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: var(--text-sm);
+        }
+    }
+
+    >.spinner {
+        justify-self: center;
+    }
+}
+
+// The heading, and what it ranks (topics or posts) beside it. On the heading's baseline, so it's level
+// with the other column's
+.podiumColumnTitle {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+}
+
+// Who or what each entry is: the avatar above the name on a step, beside it in a row
+.standingUser {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+
+    .avatar {
+        width: 3.5rem;
+        height: 3.5rem;
+    }
+
+    .row & {
+        flex-direction: row;
+
+        .avatar {
+            width: 2rem;
+            height: 2rem;
+        }
+    }
+}
+
+.standingContent {
+    display: grid;
+    gap: var(--space-1);
+    min-width: 0;
+}
+
+.standingDetail {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+
+    a {
+        color: var(--text-secondary);
+    }
+
+    .step & {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        overflow: hidden;
+    }
+}

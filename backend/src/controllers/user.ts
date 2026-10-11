@@ -16,7 +16,7 @@ export const createUser: RequestHandler = async (req, res) => {
   res.status(201).json(result)
 }
 
-// Maybe will be used for a leaderboard
+// Every user, a page at a time. The podium ranks them by prestige on its own (GET /podium/users)
 export const getUsers: RequestHandler = async (req, res) => {
   const { page, pageSize, orderBy } = validate("list", req.query)
   const contents = await User.findAll({ page, pageSize, orderBy })
