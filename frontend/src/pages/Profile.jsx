@@ -47,8 +47,12 @@ export default function Profile() {
     pid && viewerKnown ? `/contents?authorId=${pid}${type ? `&type=${type}` : ""}&page=${page + 1}&pageSize=${PAGE_SIZE}` : null,
     { deps: [pid, type, page, user?.accessToken, viewerKnown] }
   )
-  const isLoading = !profile || contents.isLoading
-  const maxIndex = contents.data ? Math.ceil(contents.data.count / PAGE_SIZE) - 1 : 0
+  // Changing pages doesn't change the total, so the pagination stays while another page loads;
+  // another type or user asks for it again
+  const listKey = `${pid}:${type}`
+  const [total, setTotal] = React.useState({ key: null, maxIndex: undefined })
+  if (contents.data && total.key !== listKey)
+    setTotal({ key: listKey, maxIndex: Math.ceil(contents.data.count / PAGE_SIZE) - 1 })
 
   React.useEffect(() => {
     document.title = `${name ?? "Perfil"} · colcom`
@@ -67,7 +71,8 @@ export default function Profile() {
   return (
     <div className="centered content">
       {
-        !isLoading ?
+        // Only the profile holds back the whole page; its contents load under the pills
+        profile ?
           <>
             <div className="profileCard">
               <img className="avatar" src={`data:image/png;base64,${profile.avatar}`} alt="" />
@@ -81,17 +86,23 @@ export default function Profile() {
                 <hr className="separator"/>
                 <FilterPills options={PROFILE_TYPES} value={type} pathFor={typePath} />
               </header>
-              {contents.data?.contents.length > 0 ?
-                <ContentList contents={contents.data.contents} />
+              {!contents.data ?
+                contents.error ?
+                  <NoResponse>não foi possível se conectar ao colcom.</NoResponse>
+                  :
+                  <Spinner />
                 :
-                <NoResponse>{isOwn ? "você ainda não publicou" : `${profile.name} ainda não publicou`} {shown.none}.</NoResponse>
+                contents.data.contents.length > 0 ?
+                  <ContentList contents={contents.data.contents} />
+                  :
+                  <NoResponse>{isOwn ? "você ainda não publicou" : `${profile.name} ainda não publicou`} {shown.none}.</NoResponse>
               }
             </div>
             <Pagination
               path={typePath(type)}
               state={[page, setPage]}
-              isLoading={isLoading}
-              maxIndex={maxIndex}
+              isLoading={contents.isLoading}
+              maxIndex={total.key === listKey ? total.maxIndex : undefined}
             />
           </>
           :

@@ -1,5 +1,5 @@
 // The profile page against a mocked API: the logged in user's (/profile) and anyone's (/users/:name)
-import { render, screen, within } from "@testing-library/react"
+import { fireEvent, render, screen, within } from "@testing-library/react"
 import { MemoryRouter, Route, Routes, useLocation } from "react-router"
 import { describe, expect, it, vi } from "vitest"
 
@@ -110,6 +110,23 @@ describe("Profile", () => {
     expect(types.getByRole("link", { name: "críticas" })).toHaveAttribute("aria-current", "page")
     expect(types.getByRole("link", { name: "tudo" })).toHaveAttribute("href", "/users/bob%20silva")
     expect(types.getByRole("link", { name: "tópicos" })).toHaveAttribute("href", "/users/bob%20silva?type=topic")
+  })
+
+  it("keeps the profile and the pills in place while another type loads", async () => {
+    const fetch = mockApi()
+    const { container } = renderPage("/users/bob%20silva", null)
+    expect(await screen.findByText("Post by bob silva")).toBeInTheDocument()
+
+    // The next contents never arrive
+    const answer = fetch.getMockImplementation()
+    fetch.mockImplementation(async (url, options) =>
+      new URL(url).searchParams.get("type") ? new Promise(() => {}) : answer(url, options))
+    fireEvent.click(screen.getByRole("link", { name: "críticas" }))
+
+    expect(await screen.findByRole("link", { name: "críticas" })).toHaveAttribute("aria-current", "page")
+    expect(screen.queryByText("Post by bob silva")).not.toBeInTheDocument()
+    expect(container.querySelector(".profileCard")).toBeInTheDocument()
+    expect(container.querySelector(".tree > .spinner")).toBeInTheDocument()
   })
 
   it("shows everything for an unknown type", async () => {
