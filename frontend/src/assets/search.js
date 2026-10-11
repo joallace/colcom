@@ -2,11 +2,11 @@
 
 import { tagSlug } from "@colcom/shared"
 
-// What each result is filtered to: the key is the URL's `type`, absent for everything
+// What each result is filtered to: the value is the URL's `type`, absent for everything
 export const SEARCH_TYPES = [
-  { type: undefined, label: "tudo" },
-  { type: "topic", label: "tópicos" },
-  { type: "post", label: "posts" }
+  { value: undefined, label: "tudo" },
+  { value: "topic", label: "tópicos" },
+  { value: "post", label: "posts" }
 ]
 
 // The API marks the matched words of an excerpt with these private-use characters (models/search.ts)

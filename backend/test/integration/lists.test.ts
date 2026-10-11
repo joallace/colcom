@@ -132,6 +132,23 @@ describe("GET /contents (a user's profile)", () => {
     expect(byDate.body.contents.map((content: any) => content.id)).toEqual([made.id, post.id, topic.id])
   })
 
+  it("filters by type, counting only that type", async () => {
+    for (const [type, id] of [["topic", topic.id], ["post", post.id], ["critique", made.id]] as const) {
+      const res = await api().get("/contents").query({ authorId: author.pid, type })
+      expect(res.status).toBe(200)
+      expect(res.body.contents.map((content: any) => content.id)).toEqual([id])
+      expect(res.body.count).toBe(1)
+    }
+
+    const pastTheEnd = await api().get("/contents").query({ authorId: author.pid, type: "post", page: 3 })
+    expect(pastTheEnd.body).toEqual({ contents: [], count: 1 })
+  })
+
+  it("refuses an unknown type", async () => {
+    const res = await api().get("/contents").query({ authorId: author.pid, type: "suggestion" })
+    expect(res.status).toBe(400)
+  })
+
   it("is empty for a user without contents", async () => {
     const nobody = await signUp()
     const res = await api().get("/contents").query({ authorId: nobody.pid })

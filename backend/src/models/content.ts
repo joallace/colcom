@@ -270,8 +270,20 @@ async function countAll(filter: Filter | undefined): Promise<number> {
   return result.rows[0].count
 }
 
-const byAuthor = (authorPid?: string): Filter | undefined =>
-  authorPid ? params => `users.pid = ${params.add(authorPid, "UUID")}` : undefined
+interface ListFilter {
+  authorPid?: string,
+  type?: ContentType
+}
+
+// One author's contents (the profile), of one type or all; everything without either
+const listFilter = ({ authorPid, type }: ListFilter): Filter | undefined => {
+  if (!authorPid && !type)
+    return undefined
+  return params => [
+    authorPid && `users.pid = ${params.add(authorPid, "UUID")}`,
+    type && `contents.type = ${params.add(type, "TEXT")}`
+  ].filter(Boolean).join(" AND ")
+}
 
 interface PageOptions {
   page?: number,
@@ -279,12 +291,12 @@ interface PageOptions {
 }
 
 // A page of every content, or of one author's (the profile), each with its parent's title and total_count
-async function findList({ authorPid, ...options }: PageOptions & { authorPid?: string, orderBy?: string, userPid?: string }): Promise<ListedContent[]> {
-  return await findAll(byAuthor(authorPid), { ...options, includeParentTitle: true, withTotal: true })
+async function findList({ authorPid, type, ...options }: PageOptions & ListFilter & { orderBy?: string, userPid?: string }): Promise<ListedContent[]> {
+  return await findAll(listFilter({ authorPid, type }), { ...options, includeParentTitle: true, withTotal: true })
 }
 
-async function countList({ authorPid }: { authorPid?: string } = {}): Promise<number> {
-  return await countAll(byAuthor(authorPid))
+async function countList(filter: ListFilter = {}): Promise<number> {
+  return await countAll(listFilter(filter))
 }
 
 const bookmarkedBy = (userPid: string): Filter => params => `

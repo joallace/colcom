@@ -1,6 +1,7 @@
 import React from "react"
-import { Link, useSearchParams } from "react-router"
+import { useSearchParams } from "react-router"
 
+import FilterPills from "@/components/primitives/FilterPills"
 import NoResponse from "@/components/primitives/NoResponse"
 import Spinner from "@/components/primitives/Spinner"
 import Pagination from "@/components/primitives/Pagination"
@@ -20,7 +21,7 @@ export default function Search() {
   const [page, setPage] = usePageParam()
   const q = (params.get("q") ?? "").trim()
   const tags = tagsFromSearch(params.get("tags"))
-  const type = SEARCH_TYPES.find(option => option.type === params.get("type"))?.type
+  const type = SEARCH_TYPES.find(option => option.value === params.get("type"))?.value
   const searched = q !== "" || tags.length > 0
   // What's searched, whatever the page: a new search asks for its total again
   const searchKey = searchPath({ q, type, tags })
@@ -56,18 +57,7 @@ export default function Search() {
           type={type}
           autoFocus={!searched}
         />
-        <div className="searchTypes" role="group" aria-label="mostrar">
-          {SEARCH_TYPES.map(option => (
-            <Link
-              key={option.label}
-              to={searchPath({ q, tags, type: option.type })}
-              className={option.type === type ? "active" : undefined}
-              aria-current={option.type === type ? "page" : undefined}
-            >
-              {option.label}
-            </Link>
-          ))}
-        </div>
+        <FilterPills options={SEARCH_TYPES} value={type} pathFor={value => searchPath({ q, tags, type: value })} />
       </header>
       {!searched ?
         <NoResponse>busque por título ou trecho do texto, e use # para buscar por tags.</NoResponse>

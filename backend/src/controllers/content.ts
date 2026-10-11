@@ -183,10 +183,10 @@ export const createContent: RequestHandler = async (req, res) => {
 export const getContents: RequestHandler = async (req, res) => {
   const author_pid = res.locals.user?.pid
 
-  const { page, pageSize, orderBy, authorId } = validate("list", req.query)
+  const { page, pageSize, orderBy, authorId, type } = validate("list", req.query)
 
-  const contents = await Content.findList({ authorPid: authorId, page, pageSize, orderBy, userPid: author_pid })
-  const count = await totalOf(contents, page, () => Content.countList({ authorPid: authorId }))
+  const contents = await Content.findList({ authorPid: authorId, type, page, pageSize, orderBy, userPid: author_pid })
+  const count = await totalOf(contents, page, () => Content.countList({ authorPid: authorId, type }))
   res.status(200).json({ contents: await toFeed(contents, author_pid), count })
 }
 

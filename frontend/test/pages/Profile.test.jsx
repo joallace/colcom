@@ -1,5 +1,5 @@
 // The profile page against a mocked API: the logged in user's (/profile) and anyone's (/users/:name)
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import { MemoryRouter, Route, Routes, useLocation } from "react-router"
 import { describe, expect, it, vi } from "vitest"
 
@@ -33,7 +33,9 @@ function mockApi() {
       return { ok: true, status: 200, json: async () => user }
     if (pathname === "/contents") {
       const author = [ALICE, BOB].find(user => user.pid === searchParams.get("authorId"))
-      return { ok: true, status: 200, json: async () => ({ contents: author === BOB ? [post(BOB)] : [], count: author === BOB ? 1 : 0 }) }
+      // Bob has a single post
+      const has = author === BOB && [null, "post"].includes(searchParams.get("type"))
+      return { ok: true, status: 200, json: async () => ({ contents: has ? [post(BOB)] : [], count: has ? 1 : 0 }) }
     }
     return { ok: false, status: 404, json: async () => ({ message: "Usuário não encontrado." }) }
   })
@@ -95,6 +97,28 @@ describe("Profile", () => {
     renderPage("/users/alice", { ...BOB, accessToken: "token-456" })
 
     expect(await screen.findByText("alice ainda não publicou nenhum conteúdo.")).toBeInTheDocument()
+  })
+
+  it("filters the contents by type, from the address", async () => {
+    const fetch = mockApi()
+    renderPage("/users/bob%20silva?type=critique", null)
+
+    expect(await screen.findByText("bob silva ainda não publicou nenhuma crítica.")).toBeInTheDocument()
+    expect(fetch).toHaveBeenCalledWith(`${API}/contents?authorId=b2&type=critique&page=1&pageSize=5`, expect.anything())
+
+    const types = within(screen.getByRole("group", { name: "mostrar" }))
+    expect(types.getByRole("link", { name: "críticas" })).toHaveAttribute("aria-current", "page")
+    expect(types.getByRole("link", { name: "tudo" })).toHaveAttribute("href", "/users/bob%20silva")
+    expect(types.getByRole("link", { name: "tópicos" })).toHaveAttribute("href", "/users/bob%20silva?type=topic")
+  })
+
+  it("shows everything for an unknown type", async () => {
+    const fetch = mockApi()
+    renderPage("/profile?type=suggestion", { ...ALICE, accessToken: "token-123" })
+
+    expect(await screen.findByText("você ainda não publicou nenhum conteúdo.")).toBeInTheDocument()
+    expect(fetch).toHaveBeenCalledWith(`${API}/contents?authorId=a1&page=1&pageSize=5`, expect.anything())
+    expect(screen.getByRole("link", { name: "tudo" })).toHaveAttribute("aria-current", "page")
   })
 
   it("says so for an unknown name", async () => {

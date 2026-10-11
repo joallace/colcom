@@ -35,3 +35,9 @@
 hr.separator {
     margin: var(--space-2) 0 0;
 }
+
+// The separator under the card and what the contents are filtered to
+.profileContentsHeader {
+    display: grid;
+    gap: var(--space-4);
+}

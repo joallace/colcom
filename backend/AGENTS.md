@@ -75,7 +75,7 @@ Imports use the `@/` alias (`tsconfig` paths, rewritten by `tsc-alias` at build)
 | `GET /users/:name` | — | Anyone's public profile (`pid`, `name`, `avatar`, `created_at`), by name ignoring case; registered after `/users/self`, so "self" is a reserved name |
 | `GET /topics?page&pageSize&orderBy&with_count&tags` | optional | Topic list, each with its top 3 posts, stats and `tags`; `tags=a,b` keeps those having all of them (none when one doesn't exist) |
 | `GET /topics/:id` | optional | One topic with all its posts ranked; 404 for non-topics |
-| `GET /contents?authorId&page&pageSize` | optional | A user's contents, for the profile: `{ contents, count }` |
+| `GET /contents?authorId&type&page&pageSize` | optional | A user's contents, for the profile: `{ contents, count }`; `type=topic\|post\|critique` keeps one type |
 | `GET /contents/bookmarked?page&pageSize` | required | The user's bookmarks, same shape |
 | `POST /contents` | required | Create a topic, post or critique (the type follows from the parent's depth); a topic takes `tags`, a list of names |
 | `GET /contents/:id` | optional | A content; for posts, `history`, `interactionCounts` (poll `votes`, the topic's `topicVotes`, `suggestions` in any state and `critiques`), `userTopicVote` (the post the viewer voted for in the topic, or null; logged in only) and (for the author) pending `suggestions` |

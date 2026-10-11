@@ -1,5 +1,5 @@
 import React from "react"
-import { Navigate, useLocation, useParams } from "react-router"
+import { Navigate, useLocation, useParams, useSearchParams } from "react-router"
 
 import useUser from "@/context/UserContext"
 import useApiResource from "@/hooks/useApiResource"
@@ -8,18 +8,34 @@ import { loginPath } from "@/assets/returnTo"
 import { relativeTime, userPath } from "@/assets/util"
 import Spinner from "@/components/primitives/Spinner"
 import Focus from "@/components/primitives/Focus"
+import FilterPills from "@/components/primitives/FilterPills"
 import NoResponse from "@/components/primitives/NoResponse"
 import Pagination from "@/components/primitives/Pagination"
 import ContentList from "@/components/content/ContentList"
 
 const PAGE_SIZE = 5
 
-// The logged in user's profile (/profile) or anyone's (/users/:name)
+// What the contents are filtered to: the value is the URL's `type`, absent for everything; `none`
+// ends the sentence saying there's nothing of it
+const PROFILE_TYPES = [
+  { value: undefined, label: "tudo", none: "nenhum conteúdo" },
+  { value: "topic", label: "tópicos", none: "nenhum tópico" },
+  { value: "post", label: "posts", none: "nenhum post" },
+  { value: "critique", label: "críticas", none: "nenhuma crítica" }
+]
+
+// The logged in user's profile (/profile) or anyone's (/users/:name), `?type=` narrowing their contents
 export default function Profile() {
   const { name } = useParams()
   const location = useLocation()
+  const [params] = useSearchParams()
   const { user } = useUser()
   const [page, setPage] = usePageParam()
+  const shown = PROFILE_TYPES.find(option => option.value === params.get("type")) ?? PROFILE_TYPES[0]
+  const type = shown.value
+  const basePath = name ? userPath(name) : "/profile"
+  // The first page of the profile showing `value`
+  const typePath = value => value ? `${basePath}?type=${value}` : basePath
   // Anyone's profile is fetched by name; one that can't be had is no such user (null)
   const fetched = useApiResource(name ? userPath(name) : null)
   const profile = name ? (fetched.error ? null : fetched.data) : user
@@ -28,8 +44,8 @@ export default function Profile() {
   const viewerKnown = user !== undefined
   const pid = profile?.pid
   const contents = useApiResource(
-    pid && viewerKnown ? `/contents?authorId=${pid}&page=${page + 1}&pageSize=${PAGE_SIZE}` : null,
-    { deps: [pid, page, user?.accessToken, viewerKnown] }
+    pid && viewerKnown ? `/contents?authorId=${pid}${type ? `&type=${type}` : ""}&page=${page + 1}&pageSize=${PAGE_SIZE}` : null,
+    { deps: [pid, type, page, user?.accessToken, viewerKnown] }
   )
   const isLoading = !profile || contents.isLoading
   const maxIndex = contents.data ? Math.ceil(contents.data.count / PAGE_SIZE) - 1 : 0
@@ -61,15 +77,18 @@ export default function Profile() {
               </div>
             </div>
             <div className="tree">
-              <hr className="separator"/>
+              <header className="profileContentsHeader">
+                <hr className="separator"/>
+                <FilterPills options={PROFILE_TYPES} value={type} pathFor={typePath} />
+              </header>
               {contents.data?.contents.length > 0 ?
                 <ContentList contents={contents.data.contents} />
                 :
-                <NoResponse>{isOwn ? "você ainda não publicou" : `${profile.name} ainda não publicou`} nenhum conteúdo.</NoResponse>
+                <NoResponse>{isOwn ? "você ainda não publicou" : `${profile.name} ainda não publicou`} {shown.none}.</NoResponse>
               }
             </div>
             <Pagination
-              path={name ? userPath(name) : "/profile"}
+              path={typePath(type)}
               state={[page, setPage]}
               isLoading={isLoading}
               maxIndex={maxIndex}

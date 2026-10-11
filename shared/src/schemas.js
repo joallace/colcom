@@ -292,6 +292,8 @@ export function createSchemas(limits) {
       pageSize: { type: "integer", label: "tamanho da página", minimum: 1, maximum: limits.pageSize.max, default: limits.pageSize.default },
       orderBy: { type: "string", label: "ordenação", minLength: 1, maxLength: limits.orderBy.max, default: "id" },
       authorId: { type: "string", label: "autor", format: "uuid" },
+      // One type of content (the profile's filter)
+      type: { type: "string", label: "tipo", enum: ["topic", "post", "critique"], messages: { enum: "escolha tópicos, posts ou críticas" } },
       // Comma-separated slugs: topics having all of them
       tags: {
         type: "string",
