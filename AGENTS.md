@@ -33,7 +33,7 @@ More specific guides: [`backend/AGENTS.md`](backend/AGENTS.md) and [`frontend/AG
 |---|---|---|---|
 | topic | none | `{ answers: ["sim", "não", …] }` | A git repo; the poll's possible answers |
 | post | a topic | `{ answer }` | A branch in the topic's repo; defends one answer |
-| critique | a post | `{ commit, from, to, quote: { exact, prefix, suffix, start } }` | Anchored to the exact version it criticised; critiques of critiques are refused; `status` is its lifecycle's state (below) |
+| critique | a post | `{ commit, from, to, quote: { exact, prefix, suffix, start } }` | Anchored to the exact version it criticised; critiques of critiques, and of one's own post, are refused; `status` is its lifecycle's state (below) |
 
 Interactions (`interactions.type`): `up`/`down` (relevance, mutually exclusive), `vote` (the poll: one per user per topic, on a post; the row holds only the current vote, and a trigger appends every cast, change and removal to `vote_events`, which rejects UPDATE, DELETE and TRUNCATE, served at `GET /topics/:id/votes`), `bookmark`, `promote` (a topic, valid until the end of the day), `suggestion` (an edit proposed by someone other than the author; `config: { commit, message, accepted }`).
 

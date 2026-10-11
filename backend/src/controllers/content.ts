@@ -146,7 +146,15 @@ export const createContent: RequestHandler = async (req, res) => {
     })
   else {
     const { title, parent_id, body, config } = validate("critique", req.body)
-    await validateCritiqueCommit(await findContentOrThrow(parent_id, "post"), config.commit)
+    const post = await findContentOrThrow(parent_id, "post")
+    // An author improves their own post by editing it; critiques come from everyone else
+    if (post.author_id === author_pid)
+      throw new ForbiddenError({
+        message: "Você não pode criticar o seu próprio post.",
+        action: "Edite o post para mudar o que quiser nele.",
+        errorLocationCode: "CONTROLLER:CONTENT:CREATE_CONTENT:OWN_POST"
+      })
+    await validateCritiqueCommit(post, config.commit)
     content = { type: "critique", title, parent_id, body, config, author_pid }
   }
 

@@ -88,14 +88,14 @@ describe("GET /topics (answer totals)", () => {
 
 describe("GET /contents (a user's profile)", () => {
   let author: TestUser, other: TestUser
-  let topic: any, post: any, made: any
+  let topic: any, post: any, made: any, criticised: any
 
   beforeAll(async () => {
     [author, other] = await Promise.all([signUp(), signUp()])
+    criticised = await createPost(other, (await createTopic(other)).id)
     topic = await createTopic(author)
     post = await createPost(author, topic.id)
-    made = (await critique(author, post.id, critiqueConfig(await latestCommit(post.id)))).body
-    await createTopic(other)
+    made = (await critique(author, criticised.id, critiqueConfig(await latestCommit(criticised.id)))).body
   })
 
   it("lists every type of content, each with what it needs to be shown", async () => {
@@ -105,7 +105,7 @@ describe("GET /contents (a user's profile)", () => {
     expect(res.body.count).toBe(3)
 
     const [critiqueItem, postItem, topicItem] = res.body.contents
-    expect(critiqueItem).toMatchObject({ id: made.id, type: "critique", post: { id: post.id, title: post.title }, topic: { id: topic.id } })
+    expect(critiqueItem).toMatchObject({ id: made.id, type: "critique", post: { id: criticised.id, title: criticised.title }, topic: { id: criticised.parent_id } })
     expect(postItem).toMatchObject({ id: post.id, type: "post", topic: { id: topic.id, title: topic.title } })
     expect(topicItem).toMatchObject({ id: topic.id, type: "topic", children: [{ id: post.id }], childrenStats: { count: 1 } })
     for (const item of res.body.contents)

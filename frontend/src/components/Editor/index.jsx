@@ -26,6 +26,8 @@ export default function Editor({
   critiquesVisible,
   tableConfig = { maxRows: 20, maxColumns: 10 },
   bubbleMenuShouldShow = true,
+  // Whether the reader may criticise this text (not its author)
+  canCritique = true,
   tempHighlight = [],
   // The version this content is compared against, its changes highlighted (reviewing a suggestion)
   diffBase,
@@ -188,7 +190,7 @@ export default function Editor({
   return (
     <>
       {!alongsideCritique &&
-        <BubbleMenu editor={editor} readOnly={!isEditable} setShowCritique={setShowCritique} shouldShow={bubbleMenuShouldShow} />
+        <BubbleMenu editor={editor} readOnly={!isEditable} setShowCritique={setShowCritique} canCritique={canCritique} shouldShow={bubbleMenuShouldShow} />
       }
 
       <FloatingMenu

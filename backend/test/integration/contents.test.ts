@@ -227,6 +227,18 @@ describe("creating a critique", () => {
     expect(res.body).toMatchObject({ key: "config.commit", message: "Versão criticada: versão inválida." })
   })
 
+  it("refuses a critique of the critic's own post", async () => {
+    const topic = await createTopic(bob)
+    const post = await createPost(alice, topic.id)
+    const commit = await latestCommit(post.id)
+
+    const res = await critique(alice, post.id, critiqueConfig(commit))
+
+    expect(res.status).toBe(403)
+    expect(res.body).toMatchObject({ message: "Você não pode criticar o seu próprio post.", errorLocationCode: "CONTROLLER:CONTENT:CREATE_CONTENT:OWN_POST" })
+    expect((await api().get(`/contents/${post.id}/${commit}`)).body.critiques).toEqual([])
+  })
+
   it("refuses critiques of critiques", async () => {
     const topic = await createTopic(alice)
     const post = await createPost(alice, topic.id)

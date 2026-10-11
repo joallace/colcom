@@ -308,6 +308,8 @@ export default function Post({
           setContent={setContent}
           setShowCritique={setShowCritique}
           bubbleMenuShouldShow={bubbleMenuShouldShow}
+          // An author changes their own post by editing it
+          canCritique={author_id !== user?.pid}
           tempHighlight={tempHighlight}
           diffBase={diffBase}
           reset={reset}

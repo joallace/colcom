@@ -28,7 +28,7 @@ describe("GET /contents/:id/:hash", () => {
     const c1 = await critique(critic, post.id, critiqueConfig(v1))
     const v2 = (await edit(author, post.id, "<p>First paragraph.</p><p>Second, edited.</p>")).body.commit
     const c2 = await critique(critic, post.id, critiqueConfig(v2))
-    const c3 = await critique(author, post.id, critiqueConfig(v1, "Second", { from: 20, to: 26, prefix: "First paragraph.\n", suffix: " paragraph.", start: 17 }))
+    const c3 = await critique(critic, post.id, critiqueConfig(v1, "Second", { from: 20, to: 26, prefix: "First paragraph.\n", suffix: " paragraph.", start: 17 }))
 
     const atV1 = await version(post.id, v1)
     expect(atV1.status).toBe(200)

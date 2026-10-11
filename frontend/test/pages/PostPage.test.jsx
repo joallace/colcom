@@ -216,6 +216,30 @@ describe("PostPage", () => {
     expect(await screen.findByText("Critique 20")).toBeInTheDocument()
   })
 
+  it("offers criticising a selection to readers, but not to the post's author", async () => {
+    const html = p("Taxes should fall for everyone.") + chart()
+    mockApi({ [V2]: { body: html, critiques: [], versions: {}, lineages: {} } })
+    // A chart, since jsdom can't measure where a text selection is to place the menu over it
+    const select = async container => {
+      await waitFor(() => expect(container.querySelector(".ProseMirror .chart")).not.toBeNull())
+      const post = container.querySelector(".ProseMirror").editor
+      let chartPos
+      post.state.doc.forEach((node, pos) => { if (node.type.name === "chart") chartPos = pos })
+      act(() => { post.commands.setNodeSelection(chartPos) })
+    }
+
+    const reader = renderPage("/topics/1/posts/2", { accessToken: "token", pid: "b", name: "bob" })
+    await select(reader.container)
+    expect(await screen.findByRole("button", { name: "criticar" })).toBeInTheDocument()
+    reader.unmount()
+
+    const author = renderPage("/topics/1/posts/2", { accessToken: "token", pid: "a", name: "alice" })
+    await select(author.container)
+    // The bubble menu shows after a debounce: give it the time it would take
+    await act(() => new Promise(resolve => setTimeout(resolve, 400)))
+    expect(screen.queryByRole("button", { name: "criticar" })).toBeNull()
+  })
+
   it("publishes a critique of a chart and highlights the chart", async () => {
     const html = p("Taxes should fall for everyone.") + chart() + p("Public spending must be reviewed.")
     const fetch = mockApi({ [V2]: { body: html, critiques: [], versions: {}, lineages: {} } })

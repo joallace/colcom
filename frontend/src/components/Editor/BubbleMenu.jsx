@@ -19,22 +19,24 @@ const hasTextSelection = ({ state, from, to }) =>
 const hasFocus = ({ view, element }) => view.hasFocus() || element.contains(document.activeElement)
 
 
-export default function EditorBubbleMenu({ editor, shouldShow = true, readOnly, setShowCritique }) {
+export default function EditorBubbleMenu({ editor, shouldShow = true, readOnly, canCritique = true, setShowCritique }) {
   // Hooks must run on every render, before the early return
   const toLogin = useToLogin()
   const { user } = useUser()
   const active = useActiveFormats(editor)
+  // Read only, criticising is all the menu offers
+  const isShown = shouldShow && (!readOnly || canCritique)
 
   // TipTap's bubble menu leaves timers running after it unmounts (its 250 ms update debounce,
   // focus and resize handlers). One firing later shows the menu's now empty element again, stuck
   // over the text where it was. Refusing to show once the menu is no longer rendered stops that.
   const isRendered = React.useRef(false)
   React.useLayoutEffect(() => {
-    isRendered.current = Boolean(editor && shouldShow)
+    isRendered.current = Boolean(editor && isShown)
     return () => { isRendered.current = false }
   })
 
-  if (!editor || !shouldShow)
+  if (!editor || !isShown)
     return
 
   return (

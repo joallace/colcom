@@ -105,7 +105,6 @@ describe("who is told", () => {
     const owner = await signUp()
     const topic = await createTopic(owner)
     const post = await createPost(owner, topic.id)
-    expect((await critique(owner, post.id, critiqueConfig(await latestCommit(post.id)))).status).toBe(201)
     expect((await edit(owner, post.id, "<p>Rewritten.</p>")).status).toBe(200)
     expect((await api().post(`/contents/${post.id}/${await latestCommit(post.id)}/clone`).set(owner.auth).send({ title: unique("Clone") })).status).toBe(200)
 
