@@ -41,3 +41,9 @@ hr.separator {
     display: grid;
     gap: var(--space-4);
 }
+
+.centeredSpinner{
+    display: flex;
+    place-content: center;
+    height: 100%;
+}

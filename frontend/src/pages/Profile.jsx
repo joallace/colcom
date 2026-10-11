@@ -83,14 +83,16 @@ export default function Profile() {
             </div>
             <div className="tree">
               <header className="profileContentsHeader">
-                <hr className="separator"/>
+                <hr className="separator" />
                 <FilterPills options={PROFILE_TYPES} value={type} pathFor={typePath} />
               </header>
               {!contents.data ?
                 contents.error ?
                   <NoResponse>não foi possível se conectar ao colcom.</NoResponse>
                   :
-                  <Spinner />
+                  <div className="centeredSpinner">
+                    <Spinner />
+                  </div>
                 :
                 contents.data.contents.length > 0 ?
                   <ContentList contents={contents.data.contents} />
