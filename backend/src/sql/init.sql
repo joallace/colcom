@@ -391,8 +391,10 @@ CREATE OR REPLACE FUNCTION apply_critique_event() RETURNS trigger LANGUAGE plpgs
 DECLARE
     current TEXT;
 BEGIN
-    -- Locks the critique, so of two concurrent events the second sees the first's state
-    SELECT status INTO current FROM contents WHERE id = NEW.critique_id AND type = 'critique' FOR UPDATE;
+    -- Locks the critique, so of two concurrent events the second sees the first's state. NO KEY
+    -- UPDATE, as the status update itself takes: FOR UPDATE would also wait for the key share each
+    -- concurrent event's foreign key check holds on the critique, and two of them would deadlock.
+    SELECT status INTO current FROM contents WHERE id = NEW.critique_id AND type = 'critique' FOR NO KEY UPDATE;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'critique events go on critiques, and content % is not one', NEW.critique_id;
     END IF;
@@ -438,3 +440,229 @@ $$;
 CREATE OR REPLACE TRIGGER contents_critique_status
     BEFORE UPDATE OF status ON contents
     FOR EACH ROW EXECUTE FUNCTION guard_critique_status();
+
+-- Prestige, after Genius' IQ: what someone earns when another person confirms their contribution
+-- (a critique that led to a fix, an answer the critic accepted, a suggestion merged). Never for
+-- writing a lot or for votes, which would reward volume and one side's approval. Each kind of award
+-- is a rule worth an amount the operator may change (UPDATE prestige_rules); every award keeps the
+-- amount it was given, so changing a rule never rewrites anyone's history.
+CREATE TABLE IF NOT EXISTS prestige_rules (
+    reason TEXT PRIMARY KEY,
+    amount INT NOT NULL
+);
+
+-- The reasons are PRESTIGE_REASONS in shared/src/prestige.js
+INSERT INTO prestige_rules (reason, amount) VALUES
+    -- The critic, when their critique is resolved by a fix: the author's, which the critic
+    -- accepted, or the critic's own, which the author merged
+    ('critique_fixed', 10),
+    -- The post's author, when the critic accepts their fix…
+    ('fix_accepted', 5),
+    -- …or their rebuttal
+    ('rebuttal_accepted', 5),
+    -- Whoever suggested an edit, when the post's author merges it (critique_fixed instead when it
+    -- fixed their own critique)
+    ('suggestion_merged', 5),
+    -- The post's author, for merging someone's suggestion
+    ('suggestion_adopted', 1)
+ON CONFLICT DO NOTHING;
+
+-- How much can be earned, so accounts can't farm prestige from each other: `user` caps the points
+-- anyone earns in a window, `pair` how many awards anyone earns from the same person in one. A null
+-- cap lifts the limit. The backend writes them from PRESTIGE_LIMIT and PRESTIGE_PAIR_LIMIT (.env) at
+-- every start (Prestige.applyLimits); these are the defaults.
+CREATE TABLE IF NOT EXISTS prestige_limits (
+    name TEXT PRIMARY KEY CHECK (name IN ('user', 'pair')),
+    cap INT CHECK (cap > 0),
+    window_seconds INT NOT NULL CHECK (window_seconds > 0)
+);
+
+INSERT INTO prestige_limits (name, cap, window_seconds) VALUES
+    ('user', 200, 86400),
+    ('pair', 5, 2592000)
+ON CONFLICT DO NOTHING;
+
+-- Every award, so each point of anyone's prestige can be explained: by which rule, confirmed by
+-- whom (`counterpart_id`), about what and from which event. `amount` is what was credited: the
+-- rule's `rule_amount`, or less when a limit (`limited`) held it back, logged all the same so the
+-- profile shows it. `content_id` is the critique, or the post a suggestion was merged into;
+-- `critique_event_id` or `suggestion_id` the event that earned it.
+CREATE TABLE IF NOT EXISTS prestige_events (
+    id BIGSERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    reason TEXT NOT NULL,
+    amount INT NOT NULL,
+    rule_amount INT NOT NULL,
+    limited TEXT CHECK (limited IN ('user', 'pair')),
+    counterpart_id INT,
+    content_id INT,
+    critique_event_id BIGINT,
+    suggestion_id INT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (reason) REFERENCES prestige_rules(reason),
+    FOREIGN KEY (counterpart_id) REFERENCES users(id),
+    FOREIGN KEY (content_id) REFERENCES contents(id),
+    FOREIGN KEY (critique_event_id) REFERENCES critique_events(id),
+    FOREIGN KEY (suggestion_id) REFERENCES interactions(id),
+    -- No one confirms their own contribution
+    CHECK (user_id IS DISTINCT FROM counterpart_id)
+);
+
+-- A user's awards: their total, the limits' windows and their profile's history
+CREATE INDEX IF NOT EXISTS prestige_events_user_idx ON prestige_events (user_id, created_at);
+-- The podium sums what was earned over a period
+CREATE INDEX IF NOT EXISTS prestige_events_created_idx ON prestige_events (created_at);
+-- An event awards each person each rule at most once
+CREATE UNIQUE INDEX IF NOT EXISTS prestige_events_critique_event_idx ON prestige_events (critique_event_id, user_id, reason) WHERE critique_event_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS prestige_events_suggestion_idx ON prestige_events (suggestion_id, user_id, reason) WHERE suggestion_id IS NOT NULL;
+
+CREATE OR REPLACE TRIGGER prestige_events_append_only
+    BEFORE UPDATE OR DELETE ON prestige_events
+    FOR EACH ROW EXECUTE FUNCTION reject_log_change();
+
+CREATE OR REPLACE TRIGGER prestige_events_no_truncate
+    BEFORE TRUNCATE ON prestige_events
+    FOR EACH STATEMENT EXECUTE FUNCTION reject_log_change();
+
+-- users.prestige is the sum of the user's awards, recomputed on each one
+CREATE OR REPLACE FUNCTION prestige_of(earner INT) RETURNS INT LANGUAGE sql STABLE AS $$
+    SELECT COALESCE(SUM(amount), 0)::INT FROM prestige_events WHERE user_id = earner;
+$$;
+
+CREATE OR REPLACE FUNCTION apply_prestige_event() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    UPDATE users SET prestige = prestige_of(NEW.user_id) WHERE id = NEW.user_id;
+    RETURN NULL;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER prestige_events_apply
+    AFTER INSERT ON prestige_events
+    FOR EACH ROW EXECUTE FUNCTION apply_prestige_event();
+
+-- No statement (not even an operator's manual UPDATE) gives or takes prestige without an award that
+-- explains it
+CREATE OR REPLACE FUNCTION guard_prestige() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    IF NEW.prestige IS DISTINCT FROM prestige_of(NEW.id) THEN
+        RAISE EXCEPTION 'a user''s prestige only changes through prestige_events';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+-- Databases made before the ledger, when nothing awarded prestige: what was set by hand goes.
+-- Remove this once no database predates it.
+UPDATE users SET prestige = prestige_of(id) WHERE prestige IS DISTINCT FROM prestige_of(id);
+
+CREATE OR REPLACE TRIGGER users_prestige
+    BEFORE INSERT OR UPDATE OF prestige ON users
+    FOR EACH ROW EXECUTE FUNCTION guard_prestige();
+
+-- Awards `rule` to `earner`, as confirmed by `counterpart`, within the limits: nothing once `earner`
+-- had the pair cap's awards from `counterpart` in its window, and no more than what's left of their
+-- own cap. Penalties (phase 3's verdicts) are never limited. The caller locks both users' rows
+-- first, so concurrent awards to the same people count each other.
+CREATE OR REPLACE FUNCTION award_prestige(earner INT, rule TEXT, counterpart INT, content INT, critique_event BIGINT, suggestion INT)
+RETURNS VOID LANGUAGE plpgsql AS $$
+DECLARE
+    worth INT := (SELECT amount FROM prestige_rules WHERE reason = rule);
+    credited INT := worth;
+    held TEXT;
+    pair prestige_limits;
+    own prestige_limits;
+BEGIN
+    -- A rule set to 0 is switched off
+    IF earner IS NULL OR earner = counterpart OR COALESCE(worth, 0) = 0 THEN
+        RETURN;
+    END IF;
+
+    SELECT * INTO pair FROM prestige_limits WHERE name = 'pair';
+    SELECT * INTO own FROM prestige_limits WHERE name = 'user';
+
+    IF worth > 0 AND pair.cap IS NOT NULL AND counterpart IS NOT NULL AND (
+        SELECT COUNT(*) FROM prestige_events
+        WHERE user_id = earner AND counterpart_id = counterpart AND amount > 0
+        AND created_at > now() - make_interval(secs => pair.window_seconds)
+    ) >= pair.cap THEN
+        credited := 0;
+        held := 'pair';
+    END IF;
+
+    IF credited > 0 AND own.cap IS NOT NULL THEN
+        credited := LEAST(credited, GREATEST(0, own.cap - (
+            SELECT COALESCE(SUM(amount), 0) FROM prestige_events
+            WHERE user_id = earner AND amount > 0
+            AND created_at > now() - make_interval(secs => own.window_seconds)
+        )));
+        IF credited < worth THEN
+            held := 'user';
+        END IF;
+    END IF;
+
+    INSERT INTO prestige_events (user_id, reason, amount, rule_amount, limited, counterpart_id, content_id, critique_event_id, suggestion_id)
+    VALUES (earner, rule, credited, worth, held, counterpart, content, critique_event, suggestion);
+END;
+$$;
+
+-- What a critique's resolution earns (shared/src/critiques.js): the critic, for a critique fixed by
+-- the author (and accepted) or by the critic's own fix (merged); the post's author, for a fix or a
+-- rebuttal the critic accepted. A resolved critique stays resolved, so it's awarded once. Runs after
+-- critique_events_apply (triggers fire by name), which refuses an event from a stale state.
+CREATE OR REPLACE FUNCTION award_critique_prestige() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+    critic INT;
+    author INT;
+    fixed BOOLEAN := NEW.action = 'merge' OR (NEW.action = 'accept' AND NEW.from_status = 'addressed');
+BEGIN
+    IF NEW.to_status <> 'resolved' OR NEW.from_status = 'resolved' THEN
+        RETURN NULL;
+    END IF;
+
+    SELECT made.author_id, post.author_id INTO critic, author
+    FROM contents AS made
+    INNER JOIN contents AS post ON post.id = made.parent_id
+    WHERE made.id = NEW.critique_id;
+
+    -- In a fixed order, so two awards to the same people wait for each other without deadlocking.
+    -- NO KEY UPDATE, as the prestige update itself takes: FOR UPDATE would also wait for the key
+    -- share a concurrent insert's foreign key check holds on the actor, while it waits for this
+    -- event's critique row.
+    PERFORM 1 FROM users WHERE id IN (critic, author) ORDER BY id FOR NO KEY UPDATE;
+
+    IF fixed THEN
+        PERFORM award_prestige(critic, 'critique_fixed', author, NEW.critique_id, NEW.id, NEW.suggestion_id);
+    END IF;
+    IF NEW.action = 'accept' THEN
+        PERFORM award_prestige(author, CASE WHEN fixed THEN 'fix_accepted' ELSE 'rebuttal_accepted' END, critic, NEW.critique_id, NEW.id, NULL);
+    END IF;
+    RETURN NULL;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER critique_events_prestige
+    AFTER INSERT ON critique_events
+    FOR EACH ROW EXECUTE FUNCTION award_critique_prestige();
+
+-- What merging a suggestion earns: its author, unless it fixed their critique (whose 'merge' event,
+-- recorded first, gave them critique_fixed), and the post's author, for taking it
+CREATE OR REPLACE FUNCTION award_suggestion_prestige() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+    author INT := (SELECT author_id FROM contents WHERE id = NEW.content_id);
+BEGIN
+    PERFORM 1 FROM users WHERE id IN (NEW.author_id, author) ORDER BY id FOR NO KEY UPDATE;
+
+    IF NOT EXISTS (SELECT 1 FROM critique_events WHERE suggestion_id = NEW.id AND action = 'merge') THEN
+        PERFORM award_prestige(NEW.author_id, 'suggestion_merged', author, NEW.content_id, NULL, NEW.id);
+    END IF;
+    PERFORM award_prestige(author, 'suggestion_adopted', NEW.author_id, NEW.content_id, NULL, NEW.id);
+    RETURN NULL;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER interactions_prestige
+    AFTER UPDATE OF config ON interactions
+    FOR EACH ROW
+    WHEN (NEW.type = 'suggestion' AND NEW.config->>'accepted' = 'true' AND OLD.config->>'accepted' IS DISTINCT FROM 'true')
+    EXECUTE FUNCTION award_suggestion_prestige();

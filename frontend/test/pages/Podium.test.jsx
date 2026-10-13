@@ -47,7 +47,8 @@ const renderAt = url => render(
 )
 
 const standings = async name => within(await screen.findByRole("list", { name })).getAllByRole("listitem")
-const contentRequests = fetch => fetch.mock.calls.map(([url]) => url).filter(url => url.includes("/podium/contents"))
+const requests = (fetch, path) => fetch.mock.calls.map(([url]) => url).filter(url => url.includes(path))
+const contentRequests = fetch => requests(fetch, "/podium/contents")
 
 describe("the podium page", () => {
   it("shows the users with the most prestige beside the week's most relevant topics", async () => {
@@ -71,7 +72,10 @@ describe("the podium page", () => {
     expect(within(topics[0]).getByRole("link", { name: "alice" })).toHaveAttribute("href", "/users/alice")
 
     expect(screen.getByText(/recebidos nos últimos 7 dias; o voto do próprio autor não conta/)).toBeInTheDocument()
+    expect(screen.getByText(/Prestígio conquistado nos últimos 7 dias/)).toBeInTheDocument()
+    expect(within(screen.getByRole("region", { name: "prestígio" })).getByRole("link", { name: "Como funciona" })).toHaveAttribute("href", "/prestige")
     expect(contentRequests(fetch)).toEqual(["http://api.test/podium/contents?type=topic&period=week"])
+    expect(requests(fetch, "/podium/users")).toEqual(["http://api.test/podium/users?period=week"])
     expect(document.title).toBe("pódio · colcom")
   })
 
@@ -94,22 +98,27 @@ describe("the podium page", () => {
 
     expect(await screen.findByText("+5")).toBeInTheDocument()
     expect(screen.getByText(/recebidos desde o início/)).toBeInTheDocument()
+    expect(screen.getByText(/Prestígio conquistado desde o início/)).toBeInTheDocument()
     expect(contentRequests(fetch)).toEqual([
       "http://api.test/podium/contents?type=topic&period=week",
       "http://api.test/podium/contents?type=post&period=week",
       "http://api.test/podium/contents?type=post&period=all"
     ])
-    // The users don't depend on either
-    expect(fetch.mock.calls.filter(([url]) => url.endsWith("/podium/users"))).toHaveLength(1)
+    // The users follow the period, not the type
+    expect(requests(fetch, "/podium/users")).toEqual(["http://api.test/podium/users?period=week", "http://api.test/podium/users?period=all"])
   })
 
   it("says why a column is empty, offering every vote when a period had none", async () => {
     mockApi({ users: [], contents: {} })
     renderAt("/podium?period=month")
 
-    expect(await screen.findByText("ninguém conquistou prestígio ainda.")).toBeInTheDocument()
-    expect(await screen.findByText(/nenhum tópico recebeu mais votos de relevância a favor que contra nos últimos 30 dias/)).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: "ver desde o início" })).toHaveAttribute("href", "/podium?period=all")
+    const users = screen.getByRole("region", { name: "prestígio" })
+    expect(await within(users).findByText(/ninguém conquistou prestígio nos últimos 30 dias/)).toBeInTheDocument()
+    expect(within(users).getByRole("link", { name: "ver desde o início" })).toHaveAttribute("href", "/podium?period=all")
+
+    const contents = screen.getByRole("region", { name: "relevância" })
+    expect(await within(contents).findByText(/nenhum tópico recebeu mais votos de relevância a favor que contra nos últimos 30 dias/)).toBeInTheDocument()
+    expect(within(contents).getByRole("link", { name: "ver desde o início" })).toHaveAttribute("href", "/podium?period=all")
   })
 
   it("doesn't offer every vote when it already counts them", async () => {

@@ -34,27 +34,41 @@ interface PodiumContent {
   topic?: { id: number, title: string }
 }
 
-// The users with the most prestige, the oldest account first among equals. Nobody without any is
-// ranked, nor `excludedId` (the system account, which doesn't take part).
-async function topUsers(size: number, excludedId?: number): Promise<PodiumUser[]> {
+// The users who earned the most prestige in the last `days` days (ever, when null: their total), the
+// oldest account first among equals. Only a positive balance is ranked, and never `excludedId` (the
+// system account, which doesn't take part).
+async function topUsers({ days, size, excludedId }: { days: number | null, size: number, excludedId?: number }): Promise<PodiumUser[]> {
   const params = queryParams()
-  const excluded = excludedId === undefined ? "" : `AND id <> ${params.add(excludedId, "INT")}`
+  const since = days === null ? "" : `WHERE created_at > NOW() - make_interval(days => ${params.add(days, "INT")})`
+  const excluded = excludedId === undefined ? "" : `AND users.id <> ${params.add(excludedId, "INT")}`
 
   const result = await db.query({
     text: `
+      WITH earned AS (
+        SELECT
+          user_id,
+          SUM(amount)::INT AS prestige
+        FROM
+          prestige_events
+        ${since}
+        GROUP BY
+          user_id
+      )
       SELECT
-        RANK() OVER (ORDER BY prestige DESC)::INT AS position,
-        pid,
-        name,
-        avatar,
-        prestige
+        RANK() OVER (ORDER BY earned.prestige DESC)::INT AS position,
+        users.pid,
+        users.name,
+        users.avatar,
+        earned.prestige
       FROM
-        users
+        earned
+      INNER JOIN
+        users ON users.id = earned.user_id
       WHERE
-        prestige > 0
+        earned.prestige > 0
       ${excluded}
       ORDER BY
-        prestige DESC, id
+        earned.prestige DESC, users.id
       LIMIT ${params.add(size, "INT")}
       ;`,
     values: params.values

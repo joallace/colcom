@@ -144,7 +144,7 @@ describe("GET /users/:name", () => {
     const res = await api().get(`/users/${user.name.toUpperCase()}`)
 
     expect(res.status).toBe(200)
-    expect(res.body).toEqual({ pid: user.pid, name: user.name, avatar: AVATAR, created_at: expect.any(String) })
+    expect(res.body).toEqual({ pid: user.pid, name: user.name, avatar: AVATAR, prestige: 0, created_at: expect.any(String) })
   })
 
   it("finds names with spaces", async () => {

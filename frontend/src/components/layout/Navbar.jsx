@@ -69,9 +69,11 @@ export default function Navbar() {
               {isDesktop &&
                 <>
                   <div className="balance">
-                    <span>
-                      {user.prestige}<PiMedalFill title="prestígio" />
-                    </span>
+                    <Link to="/profile?type=prestige" title="seu histórico de prestígio">
+                      <span>
+                        {user.prestige}<PiMedalFill title="prestígio" />
+                      </span>
+                    </Link>
                     {/*
                     <span>
                       {user.colcoins}<PiCoinsFill title="colcoins" />
@@ -92,6 +94,7 @@ export default function Navbar() {
                   "balance": {
                     description: `prestígio: ${user.prestige}`,
                     icons: PiMedalFill,
+                    onClick: () => { navigate("/profile?type=prestige") },
                     hide: isDesktop
                   },
                   "bookmarked": {

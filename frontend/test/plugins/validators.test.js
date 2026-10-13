@@ -42,6 +42,8 @@ const CASES = [
   ["list", { page: "3", with_count: "", authorId: "not-a-uuid" }],
   ["list", { page: "0", pageSize: "1000", orderBy: "" }],
   ["notifications", { unread: "true", page: "2", extra: "x" }],
+  ["pages", { page: "2", pageSize: "0", extra: "x" }],
+  ["podium", { period: "year" }],
   ["contentParams", { id: "12abc" }],
   ["versionParams", { id: "1", hash: "abcdef0" }],
   ["userParams", { name: "self" }],

@@ -1,5 +1,6 @@
 import React from "react"
-import { Navigate, useLocation, useParams, useSearchParams } from "react-router"
+import { Link, Navigate, useLocation, useParams, useSearchParams } from "react-router"
+import { PiMedalFill } from "react-icons/pi"
 
 import useUser from "@/context/UserContext"
 import useApiResource from "@/hooks/useApiResource"
@@ -12,19 +13,22 @@ import FilterPills from "@/components/primitives/FilterPills"
 import NoResponse from "@/components/primitives/NoResponse"
 import Pagination from "@/components/primitives/Pagination"
 import ContentList from "@/components/content/ContentList"
+import PrestigeHistory from "@/components/content/PrestigeHistory"
 
 const PAGE_SIZE = 5
 
-// What the contents are filtered to: the value is the URL's `type`, absent for everything; `none`
-// ends the sentence saying there's nothing of it
+// What the profile lists: the value is the URL's `type`, absent for every content; `none` ends the
+// sentence saying there's nothing of it. `prestige` lists how the user earned their prestige instead.
 const PROFILE_TYPES = [
   { value: undefined, label: "tudo", none: "nenhum conteúdo" },
   { value: "topic", label: "tópicos", none: "nenhum tópico" },
   { value: "post", label: "posts", none: "nenhum post" },
-  { value: "critique", label: "críticas", none: "nenhuma crítica" }
+  { value: "critique", label: "críticas", none: "nenhuma crítica" },
+  { value: "prestige", label: "prestígio" }
 ]
 
-// The logged in user's profile (/profile) or anyone's (/users/:name), `?type=` narrowing their contents
+// The logged in user's profile (/profile) or anyone's (/users/:name), `?type=` narrowing their
+// contents or, with `prestige`, showing where each point of their prestige came from
 export default function Profile() {
   const { name } = useParams()
   const location = useLocation()
@@ -33,6 +37,7 @@ export default function Profile() {
   const [page, setPage] = usePageParam()
   const shown = PROFILE_TYPES.find(option => option.value === params.get("type")) ?? PROFILE_TYPES[0]
   const type = shown.value
+  const isPrestige = type === "prestige"
   const basePath = name ? userPath(name) : "/profile"
   // The first page of the profile showing `value`
   const typePath = value => value ? `${basePath}?type=${value}` : basePath
@@ -43,10 +48,11 @@ export default function Profile() {
   // The viewer's interactions come with the contents, so wait to know who's viewing
   const viewerKnown = user !== undefined
   const pid = profile?.pid
-  const contents = useApiResource(
-    pid && viewerKnown ? `/contents?authorId=${pid}${type ? `&type=${type}` : ""}&page=${page + 1}&pageSize=${PAGE_SIZE}` : null,
-    { deps: [pid, type, page, user?.accessToken, viewerKnown] }
-  )
+  const listPath = isPrestige ?
+    `${userPath(profile?.name)}/prestige?page=${page + 1}&pageSize=${PAGE_SIZE}`
+    :
+    `/contents?authorId=${pid}${type ? `&type=${type}` : ""}&page=${page + 1}&pageSize=${PAGE_SIZE}`
+  const contents = useApiResource(pid && viewerKnown ? listPath : null, { deps: [pid, type, page, user?.accessToken, viewerKnown] })
   // Changing pages doesn't change the total, so the pagination stays while another page loads;
   // another type or user asks for it again
   const listKey = `${pid}:${type}`
@@ -79,6 +85,9 @@ export default function Profile() {
               <div className="profileInfo">
                 <Focus className="username">{profile.name}</Focus>
                 <span>se juntou em <Focus>{new Date(profile.created_at).toLocaleDateString('pt-BR')}</Focus>, há <Focus>{relativeTime(profile.created_at)}</Focus></span>
+                <Link to={typePath("prestige")} className="profilePrestige">
+                  <PiMedalFill aria-hidden="true" /><Focus>{profile.prestige ?? 0}</Focus> de prestígio
+                </Link>
               </div>
             </div>
             <div className="tree">
@@ -94,10 +103,22 @@ export default function Profile() {
                     <Spinner />
                   </div>
                 :
-                contents.data.contents.length > 0 ?
-                  <ContentList contents={contents.data.contents} />
+                isPrestige ?
+                  <>
+                    <p className="prestigeIntro">
+                      Cada ponto vem de uma contribuição que outra pessoa confirmou. <Link to="/prestige">Como funciona o prestígio</Link>
+                    </p>
+                    {contents.data.events.length > 0 ?
+                      <PrestigeHistory events={contents.data.events} />
+                      :
+                      <NoResponse>{isOwn ? "você ainda não conquistou" : `${profile.name} ainda não conquistou`} prestígio.</NoResponse>
+                    }
+                  </>
                   :
-                  <NoResponse>{isOwn ? "você ainda não publicou" : `${profile.name} ainda não publicou`} {shown.none}.</NoResponse>
+                  contents.data.contents.length > 0 ?
+                    <ContentList contents={contents.data.contents} />
+                    :
+                    <NoResponse>{isOwn ? "você ainda não publicou" : `${profile.name} ainda não publicou`} {shown.none}.</NoResponse>
               }
             </div>
             <Pagination

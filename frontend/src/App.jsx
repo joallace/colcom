@@ -11,6 +11,7 @@ import TopicPage from "@/pages/TopicPage"
 import Bookmarked from "@/pages/Bookmarked"
 import Profile from "@/pages/Profile"
 import Podium from "@/pages/Podium"
+import Prestige from "@/pages/Prestige"
 import Notifications from "@/pages/Notifications"
 import TagTopics from "@/pages/TagTopics"
 import Meta from "@/pages/Meta"
@@ -30,6 +31,7 @@ function App() {
         <Route path="/promoted" element={<TopicTree orderBy="promotions" />} />
         <Route path="/recent" element={<TopicTree orderBy="id" />} />
         <Route path="/podium" element={<Podium />} />
+        <Route path="/prestige" element={<Prestige />} />
         <Route path="/meta" element={<Meta />} />
         <Route path="/search" element={<Search />} />
         <Route path="/bookmarked" element={<Bookmarked />} />

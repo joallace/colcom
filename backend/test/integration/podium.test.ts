@@ -1,12 +1,13 @@
 // The podium ranks everything in the database, so it has a file of its own, and each test starts
-// with no relevance votes and nobody's prestige
+// with no relevance votes. Prestige can't be taken back (its ledger is append-only), so the users'
+// tests come after the contents' and each builds on what the ones before it awarded.
 import { beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { PODIUM_SIZE } from "@colcom/shared"
 
 import db from "@/pgDatabase"
 import { ensureMeta, SYSTEM_USER } from "@/meta"
 
-import { api, createPost, createTopic, interact, signUp, TestUser } from "../support/api"
+import { api, createPost, createTopic, interact, mergeSuggestion, resolveCritique, signUp, TestUser } from "../support/api"
 
 
 let author: TestUser
@@ -19,7 +20,6 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await db.query("DELETE FROM interactions WHERE type IN ('up', 'down');")
-  await db.query("UPDATE users SET prestige = 0;")
 })
 
 // The first `ups` voters (from `from` on) vote it up, and the next `downs` vote it down
@@ -34,8 +34,13 @@ async function vote(contentId: number, ups: number, downs = 0, from = 0) {
 const age = (contentId: number, days: number) =>
   db.query("UPDATE interactions SET created_at = now() - make_interval(days => $2) WHERE content_id = $1 AND type IN ('up', 'down');", [contentId, days])
 
-const setPrestige = (user: TestUser, prestige: number) =>
-  db.query("UPDATE users SET prestige = $2 WHERE pid = $1;", [user.pid, prestige])
+// As if `pid` had been awarded `amount` prestige `days` ago. Awards can only be added, never changed,
+// so one in the past is written as such.
+const earned = (pid: string, amount: number, days = 0) =>
+  db.query(`
+    INSERT INTO prestige_events (user_id, reason, amount, rule_amount, created_at)
+    SELECT id, 'critique_fixed', $2, $2, now() - make_interval(days => $3) FROM users WHERE pid = $1;
+  `, [pid, amount, days])
 
 async function contents(query: Record<string, string> = {}) {
   const res = await api().get("/podium/contents").query(query)
@@ -43,8 +48,8 @@ async function contents(query: Record<string, string> = {}) {
   return res.body.contents
 }
 
-async function users() {
-  const res = await api().get("/podium/users")
+async function users(query: Record<string, string> = {}) {
+  const res = await api().get("/podium/users").query(query)
   expect(res.status, JSON.stringify(res.body)).toBe(200)
   return res.body.users
 }
@@ -159,27 +164,65 @@ describe("GET /podium/contents", () => {
 })
 
 describe("GET /podium/users", () => {
-  it("ranks users by prestige, equals on the same position and the oldest account first", async () => {
-    const [oldest, middle, newest] = [await signUp(), await signUp(), await signUp()]
-    await setPrestige(newest, 5)
-    await setPrestige(middle, 9)
-    await setPrestige(oldest, 5)
+  it("leaves out who has no prestige, so there's no one before anyone earns any", async () => {
+    expect(await users()).toEqual([])
+    expect(await users({ period: "all" })).toEqual([])
+  })
+
+  it("ranks users by the prestige they earned, equals on the same position and the oldest account first", async () => {
+    const [oldest, middle, newest, host] = [await signUp(), await signUp(), await signUp(), await signUp()]
+    // `middle` critiques a post of `oldest`, who fixes it: 10 and 5. `newest` has a suggestion
+    // merged by `host`: 5 and 1.
+    await resolveCritique(oldest, middle)
+    await mergeSuggestion(host, newest)
 
     const ranked = await users()
 
-    expect(standings(ranked)).toEqual([[middle.pid, 1], [oldest.pid, 2], [newest.pid, 2]])
-    expect(ranked[0]).toEqual({ position: 1, pid: middle.pid, name: middle.name, avatar: expect.any(String), prestige: 9 })
+    expect(standings(ranked)).toEqual([[middle.pid, 1], [oldest.pid, 2], [newest.pid, 2], [host.pid, 4]])
+    expect(ranked[0]).toEqual({ position: 1, pid: middle.pid, name: middle.name, avatar: expect.any(String), prestige: 10 })
   })
 
-  it("leaves out who has no prestige, so there's no one before anyone earns any", async () => {
-    expect(await users()).toEqual([])
+  it("counts only the prestige earned in the period, the last week by default", async () => {
+    const [veteran, regular, penalised] = [await signUp(), await signUp(), await signUp()]
+    await earned(veteran.pid, 100, 40)
+    await earned(regular.pid, 30, 20)
+    await earned(regular.pid, 2)
+    // Penalties (phase 3) can leave a balance at or below zero, which isn't ranked
+    await earned(penalised.pid, 4, 10)
+    await earned(penalised.pid, -6)
+
+    const theirs = async (period?: string) => (await users(period ? { period } : {}))
+      .filter((user: { pid: string }) => [veteran.pid, regular.pid, penalised.pid].includes(user.pid))
+      .map((user: { pid: string, prestige: number }) => [user.pid, user.prestige])
+
+    expect(await theirs()).toEqual([[regular.pid, 2]])
+    expect(await theirs("week")).toEqual([[regular.pid, 2]])
+    expect(await theirs("month")).toEqual([[regular.pid, 32]])
+    expect(await theirs("all")).toEqual([[veteran.pid, 100], [regular.pid, 32]])
   })
 
   it("leaves out the system account", async () => {
     await ensureMeta()
-    await db.query("UPDATE users SET prestige = 100 WHERE email = $1;", [SYSTEM_USER.email])
-    await setPrestige(author, 1)
+    const { rows: [system] } = await db.query("SELECT pid FROM users WHERE email = $1;", [SYSTEM_USER.email])
+    await earned(system.pid, 1000)
+    await earned(author.pid, 1000)
 
-    expect(standings(await users())).toEqual([[author.pid, 1]])
+    const ranked = await users()
+
+    expect(ranked[0]).toMatchObject({ pid: author.pid, position: 1 })
+    expect(ranked.map((user: { pid: string }) => user.pid)).not.toContain(system.pid)
+  })
+
+  it(`ranks at most ${PODIUM_SIZE}`, async () => {
+    for (let i = 0; i <= PODIUM_SIZE; i++)
+      await earned((await signUp()).pid, 1)
+
+    expect(await users({ period: "all" })).toHaveLength(PODIUM_SIZE)
+  })
+
+  it("refuses an unknown period", async () => {
+    const res = await api().get("/podium/users").query({ period: "year" })
+    expect(res.status).toBe(400)
+    expect(res.body.key).toBe("period")
   })
 })

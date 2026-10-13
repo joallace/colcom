@@ -4,7 +4,8 @@
 // pending), clones, critiques (including ones whose passage was later changed or removed, on charts,
 // lists and across paragraphs; answered, accepted, disputed, withdrawn and resolved by a merged fix,
 // on "Lula ou Bolsonaro?"), votes changed and withdrawn, posts in two meta topics, notifications
-// read and unread, and tags (active, provisional, contested, hidden by contests and withdrawn).
+// read and unread, tags (active, provisional, contested, hidden by contests and withdrawn), and the
+// prestige that the accepted fixes and merged suggestions award, which the API grants by itself.
 // The four-day week post (log in as elisa_prado) has a chart critiqued and then altered, and its
 // latest commit has two pending suggestions that conflict with it, for the resolution page.
 // Run it with the backend up: `npm run seed`, or `API=http://host:port npm run seed`.

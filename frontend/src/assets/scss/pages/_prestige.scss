@@ -1,0 +1,114 @@
+// Prestige: the page explaining it (pages/Prestige) and a profile's history (content/PrestigeHistory)
+.prestigePage {
+    display: grid;
+    gap: var(--space-6);
+    margin-top: var(--space-4);
+
+    section {
+        display: grid;
+        gap: var(--space-3);
+
+        h2 {
+            margin: 0;
+            font-size: var(--text-xl);
+        }
+
+        p,
+        ul {
+            margin: 0;
+            color: var(--text-secondary);
+        }
+    }
+}
+
+.prestigeHeader {
+    display: grid;
+    gap: var(--space-2);
+
+    h1 {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin: 0;
+        font-size: var(--text-title);
+    }
+
+    p {
+        margin: 0;
+        color: var(--text-secondary);
+    }
+}
+
+// What a rule or an award credited: positive in the primary color, a penalty in the danger color,
+// nothing (an award a limit held back) muted
+.prestigeAmount {
+    flex-shrink: 0;
+    min-width: 3.5rem;
+    font-size: var(--text-lg);
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    color: var(--primary-text);
+
+    &.negative {
+        color: var(--danger-text);
+    }
+
+    &.none {
+        color: var(--text-muted);
+    }
+}
+
+.prestigeRules,
+.prestigeHistory {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-1);
+
+    li {
+        display: flex;
+        align-items: baseline;
+        gap: var(--space-3);
+        padding: var(--space-3);
+        border-radius: var(--radius-md);
+        background-color: var(--surface);
+        color: var(--text-secondary);
+    }
+
+    p {
+        margin: 0;
+    }
+}
+
+.prestigeHistory {
+    li {
+        animation: fade-in var(--duration-base) var(--ease-out);
+    }
+
+    strong {
+        color: var(--text);
+    }
+
+    a {
+        font-weight: 700;
+    }
+
+    .detail {
+        margin-top: var(--space-1);
+        color: var(--text-muted);
+        font-size: var(--text-sm);
+        overflow-wrap: anywhere;
+
+        a {
+            color: var(--text-secondary);
+        }
+    }
+}
+
+// Above a profile's history: what it is, and where the rules are
+.prestigeIntro {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}

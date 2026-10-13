@@ -9,8 +9,22 @@ import { UserContext } from "@/context/UserContext"
 
 const API = "http://api.test"
 
-const ALICE = { pid: "a1", name: "alice", avatar: "AAAA", created_at: "2026-01-01T00:00:00Z" }
-const BOB = { pid: "b2", name: "bob silva", avatar: "BBBB", created_at: "2026-02-01T00:00:00Z" }
+const ALICE = { pid: "a1", name: "alice", avatar: "AAAA", prestige: 0, created_at: "2026-01-01T00:00:00Z" }
+const BOB = { pid: "b2", name: "bob silva", avatar: "BBBB", prestige: 10, created_at: "2026-02-01T00:00:00Z" }
+
+// Bob's awards, newest first: one held back by the limit on awards from one person
+const BOB_AWARDS = [
+  {
+    id: 2, reason: "suggestion_merged", amount: 0, rule_amount: 5, limited: "pair", created_at: "2026-03-02T00:00:00Z",
+    counterpart: { pid: "a1", name: "alice" }, critique: null, post: { id: 6, title: "Contra" }, topic: { id: 1, title: "Tópico" },
+    suggestion: { id: 9, message: "Corrige a data" }
+  },
+  {
+    id: 1, reason: "critique_fixed", amount: 10, rule_amount: 10, limited: null, created_at: "2026-03-01T00:00:00Z",
+    counterpart: { pid: "a1", name: "alice" }, critique: { id: 7, title: "Falta a fonte" }, post: { id: 6, title: "Contra" }, topic: { id: 1, title: "Tópico" },
+    suggestion: null
+  }
+]
 
 const post = (author) => ({
   type: "post",
@@ -31,6 +45,11 @@ function mockApi() {
     const user = [ALICE, BOB].find(user => pathname === `/users/${encodeURIComponent(user.name)}`)
     if (user)
       return { ok: true, status: 200, json: async () => user }
+    const earner = [ALICE, BOB].find(user => pathname === `/users/${encodeURIComponent(user.name)}/prestige`)
+    if (earner) {
+      const events = earner === BOB ? BOB_AWARDS : []
+      return { ok: true, status: 200, json: async () => ({ prestige: earner.prestige, events, count: events.length }) }
+    }
     if (pathname === "/contents") {
       const author = [ALICE, BOB].find(user => user.pid === searchParams.get("authorId"))
       // Bob has a single post
@@ -136,6 +155,44 @@ describe("Profile", () => {
     expect(await screen.findByText("você ainda não publicou nenhum conteúdo.")).toBeInTheDocument()
     expect(fetch).toHaveBeenCalledWith(`${API}/contents?authorId=a1&page=1&pageSize=5`, expect.anything())
     expect(screen.getByRole("link", { name: "tudo" })).toHaveAttribute("aria-current", "page")
+  })
+
+  it("shows the user's prestige, leading to where it came from", async () => {
+    mockApi()
+    renderPage("/users/bob%20silva", null)
+
+    const total = await screen.findByRole("link", { name: "10 de prestígio" })
+    expect(total).toHaveAttribute("href", "/users/bob%20silva?type=prestige")
+  })
+
+  it("lists where each point of someone's prestige came from", async () => {
+    const fetch = mockApi()
+    renderPage("/users/bob%20silva?type=prestige", null)
+
+    const history = await screen.findByRole("list", { name: "histórico de prestígio" })
+    const [held, fixed] = within(history).getAllByRole("listitem")
+
+    expect(fixed).toHaveTextContent("+10crítica que levou a uma correção: Falta a fonte")
+    expect(within(fixed).getByRole("link", { name: "Falta a fonte" })).toHaveAttribute("href", "/topics/1/posts/6?critique=7")
+    expect(fixed).toHaveTextContent("em Contra")
+    expect(fixed).toHaveTextContent("corrigida por alice")
+    expect(within(fixed).getByRole("link", { name: "alice" })).toHaveAttribute("href", "/users/alice")
+
+    expect(held).toHaveTextContent("+0sugestão incorporada: Contra")
+    expect(held).toHaveTextContent("Corrige a data")
+    expect(within(held).getByRole("link", { name: "0 de 5 creditados: limite de prêmios da mesma pessoa" })).toHaveAttribute("href", "/prestige")
+
+    expect(screen.getByRole("link", { name: "Como funciona o prestígio" })).toHaveAttribute("href", "/prestige")
+    expect(screen.getByRole("link", { name: "prestígio" })).toHaveAttribute("aria-current", "page")
+    expect(fetch).toHaveBeenCalledWith(`${API}/users/bob%20silva/prestige?page=1&pageSize=5`, expect.anything())
+    expect(fetch.mock.calls.some(([url]) => url.includes("/contents"))).toBe(false)
+  })
+
+  it("says when the user hasn't earned any prestige", async () => {
+    mockApi()
+    renderPage("/profile?type=prestige", { ...ALICE, accessToken: "token-123" })
+
+    expect(await screen.findByText("você ainda não conquistou prestígio.")).toBeInTheDocument()
   })
 
   it("says so for an unknown name", async () => {

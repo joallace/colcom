@@ -84,6 +84,11 @@ describe("settings", () => {
     expect(() => parseRateLimit("X", value, "1/1s")).toThrow("exit")
   })
 
+  it("limits prestige to 200 a day, and to 5 awards from one person every 30 days, by default", async () => {
+    const { default: config } = await load()
+    expect(config.prestige).toEqual({ user: { max: 200, windowMs: 86_400_000 }, pair: { max: 5, windowMs: 30 * 86_400_000 } })
+  })
+
   it("reads counts as whole numbers, with a fallback and a minimum", async () => {
     const { parseCount } = await load()
     expect(parseCount("X", "7", 3)).toBe(7)

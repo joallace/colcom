@@ -343,6 +343,16 @@ export function createSchemas(limits) {
     }
   }
 
+  // A page of a list that has no filters (a user's prestige history)
+  const pages = {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      page: list.properties.page,
+      pageSize: list.properties.pageSize
+    }
+  }
+
   const notifications = {
     type: "object",
     additionalProperties: false,
@@ -380,6 +390,6 @@ export function createSchemas(limits) {
 
   return {
     body: { signUp, login, content, topic, post, critique, critiqueConfig, edit, critiqueEvent, resolution, clone, interaction, tagVote, readNotifications, settings },
-    query: { list, tagList, search, podium, notifications, contentParams, versionParams, tagParams, userParams }
+    query: { list, tagList, search, podium, pages, notifications, contentParams, versionParams, tagParams, userParams }
   }
 }

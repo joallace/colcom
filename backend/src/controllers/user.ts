@@ -48,11 +48,12 @@ export const loginUser: RequestHandler = async (req, res) => {
     })
 }
 
-// Anyone's public profile; their contents come from GET /contents?authorId=<pid>
+// Anyone's public profile; their contents come from GET /contents?authorId=<pid>, and how they
+// earned their prestige from GET /users/:name/prestige
 export const getUser: RequestHandler = async (req, res) => {
   const { name } = validate("userParams", req.params)
-  const { pid, name: userName, avatar, created_at } = await User.findByName(name)
-  res.status(200).json({ pid, name: userName, avatar, created_at })
+  const { pid, name: userName, avatar, prestige, created_at } = await User.findByName(name)
+  res.status(200).json({ pid, name: userName, avatar, prestige, created_at })
 }
 
 export const getCurrentUser: RequestHandler = async (req, res) => {

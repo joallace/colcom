@@ -6,9 +6,11 @@ import { systemUserId } from "@/meta"
 import { validate } from "@/validation"
 
 
-// The users with the most prestige, but not the system account: its topics are the instance's own
+// The users who earned the most prestige over the period, but not the system account: its topics
+// are the instance's own
 export const getPodiumUsers: RequestHandler = async (req, res) => {
-  const users = await Podium.topUsers(PODIUM_SIZE, await systemUserId())
+  const { period } = validate("podium", req.query)
+  const users = await Podium.topUsers({ days: PODIUM_PERIODS[period], size: PODIUM_SIZE, excludedId: await systemUserId() })
   res.status(200).json({ users })
 }
 

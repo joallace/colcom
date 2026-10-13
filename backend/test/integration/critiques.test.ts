@@ -263,6 +263,7 @@ describe("the log", () => {
     await expect(db.query("UPDATE contents SET status = 'resolved' WHERE id = $1", [critiqueId])).rejects.toThrow(/critique_events/)
     await expect(db.query("UPDATE critique_events SET note = 'x' WHERE critique_id = $1", [critiqueId])).rejects.toThrow(/append-only/)
     await expect(db.query("DELETE FROM critique_events WHERE critique_id = $1", [critiqueId])).rejects.toThrow(/append-only/)
-    await expect(db.query("TRUNCATE critique_events")).rejects.toThrow(/append-only/)
+    // CASCADE, since the prestige ledger refers to the log: it's append-only too
+    await expect(db.query("TRUNCATE critique_events CASCADE")).rejects.toThrow(/append-only/)
   })
 })

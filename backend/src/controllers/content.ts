@@ -378,9 +378,11 @@ export const mergePost: RequestHandler = async (req, res) => {
 
   const merged = await git.merge(content, commit, resolution)
   await Content.updateById(content.id, await git.read(Number(content.parent_id), merged), author_pid)
-  await Interactions.setSuggestionAccepted(suggestion.id, true, author_pid)
+  // The critique first: accepting the suggestion awards its author prestige for it, unless it
+  // resolved their critique, which was awarded instead (award_suggestion_prestige in init.sql)
   if (suggestion.type === "suggestion" && suggestion.config?.critique)
     await resolveByFix(suggestion.config.critique, suggestion.id, merged, author_pid)
+  await Interactions.setSuggestionAccepted(suggestion.id, true, author_pid)
   await notify({ type: "suggestion_accepted", actor_pid: author_pid, content_id, interaction_id: suggestion.id })
 
   res.status(204).end()

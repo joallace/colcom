@@ -9,6 +9,7 @@ import tagsRouter from "@/routes/tags"
 import metaRouter from "@/routes/meta"
 import searchRouter from "@/routes/search"
 import podiumRouter from "@/routes/podium"
+import prestigeRouter from "@/routes/prestige"
 import errorHandler from "@/middleware/errorHandler"
 import { NotFoundError } from "@/errors"
 
@@ -28,6 +29,7 @@ app.use(tagsRouter)
 app.use(metaRouter)
 app.use(searchRouter)
 app.use(podiumRouter)
+app.use(prestigeRouter)
 
 app.get("/", (req, res) => {
   res.send("I'm alive!")

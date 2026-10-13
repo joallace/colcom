@@ -115,6 +115,8 @@ describe("shared schemas", () => {
     expect(check("contentParams", { id: "12abc" }).valid).toBe(false)
     expect(check("notifications", { unread: "true", page: "2" }).data).toEqual({ page: 2, pageSize: DEFAULT_LIMITS.pageSize.default, unread: true })
     expect(check("notifications", {}).data).toMatchObject({ unread: false })
+    expect(check("pages", { page: "2", unread: "true" }).data).toEqual({ page: 2, pageSize: DEFAULT_LIMITS.pageSize.default })
+    expect(check("pages", { page: "0" }).valid).toBe(false)
     // Request bodies are JSON: their numbers aren't parsed from strings
     expect(check("interaction", { content_id: "12", type: "up" }).valid).toBe(false)
   })

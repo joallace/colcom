@@ -45,7 +45,8 @@ export interface RateLimit {
 
 const UNITS: Record<string, number> = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 }
 
-// "<max>/<window>", e.g. "10/15m": at most 10 requests every 15 minutes. "0" or "off" disables it.
+// "<max>/<window>", e.g. "10/15m": at most 10 (requests, or prestige) every 15 minutes. "0" or
+// "off" disables it.
 export const parseRateLimit = (name: string, value: string | undefined, fallback: string): RateLimit | null => {
   const setting = value?.trim() || fallback
   if (setting === "0" || setting === "off")
@@ -53,7 +54,7 @@ export const parseRateLimit = (name: string, value: string | undefined, fallback
 
   const match = setting.match(/^(\d+)\/(\d+)([smhd])$/)
   if (!match || Number(match[1]) < 1 || Number(match[2]) < 1) {
-    logger.fatal(`[config.ts] ${name} must look like "10/15m" (requests per window, in s, m, h or d), or be "off". Got "${setting}".`)
+    logger.fatal(`[config.ts] ${name} must look like "10/15m" (how many per window, in s, m, h or d), or be "off". Got "${setting}".`)
     process.exit(1)
   }
 
@@ -98,5 +99,13 @@ export default Object.freeze({
     activationTopics: parseCount("TAG_ACTIVATION_TOPICS", process.env.TAG_ACTIVATION_TOPICS, 3, 1),
     // …and expires if it isn't active after this many days
     provisionalDays: parseCount("TAG_PROVISIONAL_DAYS", process.env.TAG_PROVISIONAL_DAYS, 30, 1)
+  }),
+  // How much prestige can be earned, so accounts can't farm it from each other. The database
+  // applies them (prestige_limits), so they're written there at every start.
+  prestige: Object.freeze({
+    // Points a user can earn per window
+    user: parseRateLimit("PRESTIGE_LIMIT", process.env.PRESTIGE_LIMIT, "200/1d"),
+    // Awards a user can earn from the same person per window
+    pair: parseRateLimit("PRESTIGE_PAIR_LIMIT", process.env.PRESTIGE_PAIR_LIMIT, "5/30d")
   })
 })

@@ -41,6 +41,8 @@ services:
       TAG_CREATE_PER_DAY: ${TAG_CREATE_PER_DAY:-}
       TAG_ACTIVATION_TOPICS: ${TAG_ACTIVATION_TOPICS:-}
       TAG_PROVISIONAL_DAYS: ${TAG_PROVISIONAL_DAYS:-}
+      PRESTIGE_LIMIT: ${PRESTIGE_LIMIT:-}
+      PRESTIGE_PAIR_LIMIT: ${PRESTIGE_PAIR_LIMIT:-}
     depends_on:
       - db
     network_mode: host

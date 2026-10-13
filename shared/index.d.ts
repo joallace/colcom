@@ -83,6 +83,7 @@ export interface SchemaData {
   tagList: { q: string, page: number, pageSize: number }
   search: { q?: string, type?: "topic" | "post", tags?: string, page: number, pageSize: number }
   podium: { type: "topic" | "post", period: PodiumPeriod }
+  pages: { page: number, pageSize: number }
   contentParams: { id: number }
   versionParams: { id: number, hash: string }
   tagParams: { slugs: string }
@@ -150,3 +151,8 @@ export function critiqueActions(status: string, roles?: { isAuthor?: boolean, is
 export type PodiumPeriod = "week" | "month" | "all"
 export const PODIUM_SIZE: number
 export const PODIUM_PERIODS: Readonly<Record<PodiumPeriod, number | null>>
+// What earns prestige (a rule of prestige_rules each), and what can hold an award back
+export type PrestigeReason = "critique_fixed" | "fix_accepted" | "rebuttal_accepted" | "suggestion_merged" | "suggestion_adopted"
+export type PrestigeLimit = "user" | "pair"
+export const PRESTIGE_REASONS: PrestigeReason[]
+export const PRESTIGE_LIMITS: PrestigeLimit[]

@@ -30,6 +30,23 @@
             line-height: var(--leading-tight);
         }
     }
+
+    // The total, leading to its history
+    .profilePrestige {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+        justify-self: start;
+        color: var(--text-secondary);
+
+        svg {
+            color: var(--primary-text);
+        }
+
+        @media screen and (max-width: variables.$screen-sm) {
+            justify-self: center;
+        }
+    }
 }
 
 hr.separator {

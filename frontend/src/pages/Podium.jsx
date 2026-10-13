@@ -59,14 +59,14 @@ function Ranking({ resource, entries, empty, ...standings }) {
   return <Standings entries={entries} {...standings} />
 }
 
-// /podium?type=post&period=month: the users with the most prestige beside (on smaller screens,
-// above) the topics or posts found most relevant over the period
+// /podium?type=post&period=month: the users who earned the most prestige beside (on smaller screens,
+// above) the topics or posts found most relevant, both over the period
 export default function Podium() {
   const [params] = useSearchParams()
   const { type, period } = podiumParams(params)
   const shownType = PODIUM_TYPES.find(option => option.value === type)
 
-  const users = useApiResource("/podium/users")
+  const users = useApiResource(`/podium/users?period=${period}`)
   const contents = useApiResource(`/podium/contents?type=${type}&period=${period}`)
 
   React.useEffect(() => {
@@ -77,18 +77,27 @@ export default function Podium() {
     <div className="content wide">
       <header className="podiumHeader">
         <h1>pódio</h1>
-        <p>Quem mais acumulou prestígio e o que a comunidade achou mais relevante.</p>
+        <p>Quem mais conquistou prestígio e o que a comunidade achou mais relevante.</p>
+        <FilterPills options={PODIUM_PERIOD_OPTIONS} value={period} pathFor={value => podiumPath({ type, period: value })} label="período" />
       </header>
       <div className="podiumColumns">
         <section className="podiumColumn" aria-labelledby="podium-users">
           <header>
             <h2 id="podium-users">prestígio</h2>
-            <p>Os usuários com mais prestígio. Empates dividem a posição.</p>
+            <p>
+              Prestígio conquistado {periodPhrase(period)}, com contribuições que outra pessoa confirmou, como uma crítica
+              que levou a uma correção. <Link to="/prestige">Como funciona</Link>. Empates dividem a posição.
+            </p>
           </header>
           <Ranking
             resource={users}
             entries={(users.data?.users ?? []).map(user => ({ ...user, key: user.pid }))}
-            empty="ninguém conquistou prestígio ainda."
+            empty={
+              <span>
+                ninguém conquistou prestígio {periodPhrase(period)}.
+                {period !== "all" && <> <Link to={podiumPath({ type, period: "all" })}>ver desde o início</Link></>}
+              </span>
+            }
             label="usuários por prestígio"
             renderEntry={renderUser}
             renderScore={renderPrestige}
@@ -100,7 +109,6 @@ export default function Podium() {
               <h2 id="podium-contents">relevância</h2>
               <FilterPills options={PODIUM_TYPES} value={type} pathFor={value => podiumPath({ type: value, period })} />
             </div>
-            <FilterPills options={PODIUM_PERIOD_OPTIONS} value={period} pathFor={value => podiumPath({ type, period: value })} label="período" />
             <p>
               Votos de relevância a favor menos os contra, recebidos {periodPhrase(period)}; o voto do próprio autor não
               conta. Empates dividem a posição.

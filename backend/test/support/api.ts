@@ -77,6 +77,52 @@ export const interact = (user: TestUser, content_id: number, type: string) =>
 export const voteTag = (user: TestUser, topicId: number, tag: string, value: 1 | -1 | 0) =>
   api().post(`/topics/${topicId}/tags`).set(user.auth).send({ tag, value })
 
+// An action on a critique's lifecycle: address, rebut, accept, dispute, withdraw
+export const act = (user: TestUser, critiqueId: number, body: object) =>
+  api().post(`/contents/${critiqueId}/events`).set(user.auth).send(body)
+
+// A post by `author` criticised by `critic` on its first version, then edited by the author: `fix`
+// is the version that can address the critique
+export async function criticised(author: TestUser, critic: TestUser) {
+  const topic = await createTopic(author)
+  const post = await createPost(author, topic.id)
+  const made = await critique(critic, post.id, critiqueConfig(await latestCommit(post.id)))
+  expect(made.status, JSON.stringify(made.body)).toBe(201)
+
+  expect((await edit(author, post.id, "<p>First paragraph, fixed.</p><p>Second paragraph.</p>")).status).toBe(200)
+  return { topic, post, critiqueId: made.body.id as number, fix: await latestCommit(post.id) }
+}
+
+// A critique by `critic` of a post by `author`, resolved: the author addresses it with a fix (or
+// rebuts it) and the critic accepts the answer
+export async function resolveCritique(author: TestUser, critic: TestUser, answer: "address" | "rebut" = "address") {
+  const made = await criticised(author, critic)
+  const answered = await act(author, made.critiqueId, answer === "address" ? { action: "address", commit: made.fix } : { action: "rebut", note: "Não procede." })
+  expect(answered.status, JSON.stringify(answered.body)).toBe(201)
+
+  const accepted = await act(critic, made.critiqueId, { action: "accept" })
+  expect(accepted.status, JSON.stringify(accepted.body)).toBe(201)
+  return made
+}
+
+// A suggestion by `suggester` to a post by `author` (a new one unless given), merged by the author
+export async function mergeSuggestion(author: TestUser, suggester: TestUser, postId?: number) {
+  const post = postId ?? (await createPost(author, (await createTopic(author)).id)).id
+  const suggested = await edit(suggester, post, `<p>${unique("Suggested")}</p><p>Second paragraph.</p>`)
+  expect(suggested.status, JSON.stringify(suggested.body)).toBe(200)
+
+  const merged = await api().post(`/contents/${post}/${suggested.body.config.commit}/merge`).set(author.auth)
+  expect(merged.status, JSON.stringify(merged.body)).toBe(204)
+  return { postId: post, suggestionId: suggested.body.id as number }
+}
+
+// A user's prestige and its awards, as their profile gets them
+export async function prestigeOf(user: TestUser, query: Record<string, number> = {}) {
+  const res = await api().get(`/users/${user.name}/prestige`).query(query)
+  expect(res.status, JSON.stringify(res.body)).toBe(200)
+  return res.body as { prestige: number, count: number, events: any[] }
+}
+
 // A topic's tags as the topic page gets them, with the user's votes when given
 export async function topicTags(topicId: number, user?: TestUser): Promise<any[]> {
   const req = api().get(`/topics/${topicId}`)
