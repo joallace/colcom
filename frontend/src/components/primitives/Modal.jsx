@@ -32,7 +32,7 @@ export default function Modal({ isOpen = false, setIsOpen = () => { }, children,
 
 // Opened as a modal when mounted and closed before it's removed, which hands focus back. Escape
 // only asks the parent to close it (by unmounting it), so the parent's state stays the truth.
-function Dialog({ onClose, children, ...props }) {
+export function Dialog({ onClose, children, ...props }) {
   const ref = React.useRef()
 
   React.useLayoutEffect(() => {

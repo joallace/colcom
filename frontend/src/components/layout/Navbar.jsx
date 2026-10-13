@@ -16,10 +16,12 @@ import TopicModal from "@/components/content/TopicModal"
 import DropdownMenu from "@/components/primitives/DropdownMenu"
 import NotificationBell from "@/components/layout/NotificationBell"
 import SearchBox from "@/components/layout/SearchBox"
+import Sidebar from "@/components/layout/Sidebar"
 import Spinner from "@/components/primitives/Spinner"
 import useBreakpoint from "@/hooks/useBreakpoint"
 import useUser from "@/context/UserContext"
 import { loginPath, loginState } from "@/assets/returnTo"
+import { NAV_LINKS } from "@/assets/navigation"
 
 export default function Navbar() {
   const [modalOpen, setModalOpen] = React.useState(false)
@@ -30,35 +32,27 @@ export default function Navbar() {
   const isLargeScreen = useBreakpoint("lg")
 
   const toggleModal = () => setModalOpen(!modalOpen)
+  // The rest are only in the sidebar
+  const inlineLinks = NAV_LINKS.filter(({ inline }) => ({ md: isDesktop, lg: isLargeScreen })[inline])
 
   return (
     <>
-      <nav>
-        <div>
+      <nav className="navbar">
+        <div className="leftSide">
+          {!isLargeScreen && <Sidebar />}
           <Link to="/promoted" className="logo">
-            <BrandLogo isDesktop={isDesktop} />
+            <BrandLogo />
           </Link>
-          <ul className="unselectable paths">
-            <li key="promoted">
-              <NavLink to="/promoted">promovidos</NavLink>
-            </li>
-            •
-            <li key="all">
-              <NavLink to="/recent">recentes</NavLink>
-            </li>
-            {isLargeScreen &&
-              <>
-                •
-                <li key="podium">
-                  <NavLink to="/podium">pódio</NavLink>
-                </li>
-                •
-                <li key="meta">
-                  <NavLink to="/meta">meta</NavLink>
-                </li>
-              </>
-            }
-          </ul>
+          {inlineLinks.length > 0 &&
+            <ul className="unselectable paths">
+              {inlineLinks.map(({ to, label }, i) =>
+                <React.Fragment key={to}>
+                  {i > 0 && "•"}
+                  <li><NavLink to={to}>{label}</NavLink></li>
+                </React.Fragment>
+              )}
+            </ul>
+          }
         </div>
         <div className="rightSide">
           {/* The search page has its own field */}

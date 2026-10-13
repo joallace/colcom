@@ -32,6 +32,13 @@
     }
 }
 
+// The sidebar, coming in from the screen's edge
+@keyframes drawer-in {
+    from {
+        transform: translateX(-100%);
+    }
+}
+
 // Bars filling up to their value (set `transform-origin` to where they start)
 @keyframes grow-x {
     from {

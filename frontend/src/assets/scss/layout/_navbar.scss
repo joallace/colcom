@@ -1,7 +1,7 @@
 @use "../abstracts/mixins";
 @use "../abstracts/variables";
 
-nav {
+nav.navbar {
     position: sticky;
     top: 0;
     z-index: var(--z-sticky);
@@ -24,6 +24,41 @@ nav {
     div {
         align-items: center;
         display: flex;
+    }
+
+    // The links give way first: the buttons and the avatar keep their size
+    .leftSide {
+        min-width: 0;
+    }
+
+    // A bare icon, not one of the outlined buttons
+    .sidebarToggle {
+        flex-shrink: 0;
+        min-height: 0;
+        margin-right: var(--space-1);
+        padding: var(--space-2);
+        border: 0;
+        border-radius: var(--radius-md);
+        color: var(--text);
+
+        @media screen and (max-width: variables.$screen-md) {
+            padding: var(--space-1);
+        }
+
+        &:hover,
+        &:active {
+            background-color: var(--hover);
+            color: var(--text);
+            transform: none;
+        }
+
+        &[aria-expanded="true"] {
+            background-color: var(--pressed);
+        }
+
+        .icon {
+            font-size: 1.5rem;
+        }
     }
 
     .paths {
@@ -136,9 +171,14 @@ nav {
     }
 
     .rightSide {
+        flex-shrink: 0;
         gap: var(--space-3);
 
-        // Three buttons and the avatar have to fit next to the links on a phone
+        >* {
+            flex-shrink: 0;
+        }
+
+        // The menu, the logo, three buttons and the avatar have to fit on a phone
         @media screen and (max-width: variables.$screen-md) {
             gap: var(--space-1);
         }

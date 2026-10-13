@@ -1,0 +1,117 @@
+@use "../abstracts/mixins";
+
+// The navigation drawer of narrow screens (components/layout/Sidebar): a modal `<dialog>` along the
+// left edge. Its panel fills it, so a click on the dialog itself is a click on the backdrop.
+dialog.sidebar {
+    box-sizing: border-box;
+    width: min(18rem, 100% - 3rem);
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: visible;
+    background: none;
+    color: var(--text);
+
+    &::backdrop {
+        background-color: rgb(0 0 0 / 0.55);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        animation: fade-in var(--duration-base) var(--ease-out);
+    }
+
+    .sidebarPanel {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        box-sizing: border-box;
+        height: 100%;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: var(--space-3);
+        background-color: var(--surface-raised);
+        border-right: 1px solid var(--border);
+        box-shadow: var(--shadow-lg);
+        animation: drawer-in var(--duration-slow) var(--ease-out);
+    }
+
+    // The close button is first in the document but drawn on the right
+    .sidebarHeader {
+        display: flex;
+        flex-direction: row-reverse;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-2);
+        padding: var(--space-1) var(--space-1) var(--space-3);
+        border-bottom: 1px solid var(--border);
+
+        .logo {
+            padding: var(--space-1);
+
+            // The navbar's logo wraps on phones; here there's room for it whole
+            .colcom {
+                flex-wrap: nowrap;
+            }
+        }
+
+        // A bare icon, not one of the outlined buttons
+        .close {
+            flex-shrink: 0;
+            min-height: 0;
+            padding: var(--space-2);
+            border: 0;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xl);
+            color: var(--text-secondary);
+
+            &:hover,
+            &:active {
+                background-color: var(--hover);
+                color: var(--text);
+                transform: none;
+            }
+        }
+    }
+
+    ul {
+        display: grid;
+        gap: 0.125rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        &.secondary {
+            margin-top: auto;
+            padding-top: var(--space-2);
+            border-top: 1px solid var(--border);
+        }
+    }
+
+    li a {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        padding: var(--space-3);
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        color: var(--text-secondary);
+        @include mixins.transition((background-color, color));
+
+        .icon {
+            flex-shrink: 0;
+            font-size: var(--text-lg);
+        }
+
+        &:hover {
+            background-color: var(--hover);
+            color: var(--text);
+        }
+
+        &.active {
+            background-color: var(--primary-tint);
+            color: var(--primary-text);
+        }
+    }
+}

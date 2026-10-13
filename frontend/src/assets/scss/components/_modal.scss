@@ -2,7 +2,7 @@
 @use "../abstracts/variables";
 
 // The page behind an open dialog doesn't scroll
-:root:has(dialog.modal[open]) {
+:root:has(dialog.modal[open], dialog.sidebar[open]) {
     overflow: hidden;
 }
 
