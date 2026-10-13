@@ -40,7 +40,9 @@ export default function useApiResource(path, { deps } = {}) {
     return () => controller.abort()
   }, [request])
 
-  const current = result.request === request
+  // The render that calls setRequest above still runs to its end with the previous request, so the
+  // deps are compared too: otherwise it would get the previous answer (of another shape, maybe)
+  const current = result.request === request && sameDeps(request.deps, wanted)
   // Changes the loaded data in place (e.g. after an action the page made), keeping it current
   const setData = React.useCallback(update => setResult(prev => (
     prev.request === request ? { ...prev, data: typeof update === "function" ? update(prev.data) : update } : prev

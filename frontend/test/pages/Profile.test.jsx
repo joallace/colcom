@@ -195,6 +195,16 @@ describe("Profile", () => {
     expect(await screen.findByText("você ainda não conquistou prestígio.")).toBeInTheDocument()
   })
 
+  it("goes from the prestige back to the contents", async () => {
+    mockApi()
+    renderPage("/users/bob%20silva?type=prestige", null)
+    await screen.findByRole("list", { name: "histórico de prestígio" })
+
+    fireEvent.click(screen.getByRole("link", { name: "tudo" }))
+
+    expect(await screen.findByText("Post by bob silva")).toBeInTheDocument()
+  })
+
   it("says so for an unknown name", async () => {
     mockApi()
     renderPage("/users/nobody", null)

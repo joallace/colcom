@@ -36,6 +36,22 @@ describe("useApiResource", () => {
     expect(fetch.mock.calls[0][1].headers).toEqual({ Authorization: "Bearer token-1" })
   })
 
+  it("never gives the previous answer, not even on the render its path changes", async () => {
+    const { answer } = deferredFetch()
+    // Every render's result, as the component sees it while rendering
+    const seen = []
+    const { rerender } = renderHook(({ path }) => {
+      const resource = useApiResource(path)
+      seen.push([path, resource.data])
+      return resource
+    }, { initialProps: { path: "/a" } })
+    await answer("/a", { from: "a" })
+
+    rerender({ path: "/b" })
+
+    expect(seen.filter(([path, data]) => path === "/b" && data !== undefined)).toEqual([])
+  })
+
   it("gives the refusal as an ApiError", async () => {
     const { answer } = deferredFetch()
     const { result } = renderHook(() => useApiResource("/topics/9"))
