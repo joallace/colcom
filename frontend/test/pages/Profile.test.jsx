@@ -126,7 +126,7 @@ describe("Profile", () => {
     expect(await screen.findByRole("link", { name: "críticas" })).toHaveAttribute("aria-current", "page")
     expect(screen.queryByText("Post by bob silva")).not.toBeInTheDocument()
     expect(container.querySelector(".profileCard")).toBeInTheDocument()
-    expect(container.querySelector(".tree > .spinner")).toBeInTheDocument()
+    expect(container.querySelector(".tree .centeredSpinner .spinner")).toBeInTheDocument()
   })
 
   it("shows everything for an unknown type", async () => {
