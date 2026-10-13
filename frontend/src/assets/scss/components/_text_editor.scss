@@ -3,9 +3,10 @@
 
 @use "sass:map";
 @use "sass:string";
+@use 'sass:meta';
 
 @function get($map, $key, $default) {
-    @return if(map.has-key($map, $key), map.get($map, $key), $default);
+    @return if(sass(map.has-key($map, $key)): map.get($map, $key); else: $default);
 }
 
 // A theme color (a custom property) adjusted by the browser, so it follows the theme: its HSL hue

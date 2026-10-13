@@ -115,6 +115,24 @@ export default function TopicModal({ isOpen, setIsOpen }) {
           onChange={e => { setTitle(e.target.value); clearError("title") }}
           errorMessage={errors.title && `${errors.title}!`}
         />
+        <div className="topicTags">
+          {tags.length > 0 &&
+            <ul aria-label="tags escolhidas">
+              {tags.map(tag => (
+                <li key={tagSlug(tag)} className="tagPill">
+                  {tag}
+                  <button type="button" aria-label={`remover ${tag}`} onClick={() => { setTags(tags.filter(other => other !== tag)); clearError("tags") }}>×</button>
+                </li>
+              ))}
+            </ul>
+          }
+          {tags.length < limits.tags.seed ?
+            <TagInput label="tags (opcional)" exclude={tags.map(tagSlug)} onPick={tag => { setTags([...tags, tag]); clearError("tags") }} />
+            :
+            <span className="tagRule">máximo de {limits.tags.seed} tags</span>
+          }
+          {errors.tags && <span className="error">{errors.tags}!</span>}
+        </div>
         <Input
           id="allowMultipleAnswers"
           label="permitir múltiplas respostas por usuário"
@@ -134,24 +152,6 @@ export default function TopicModal({ isOpen, setIsOpen }) {
               setAnswers(["", ""])
           }}
         />
-        <div className="topicTags">
-          {tags.length > 0 &&
-            <ul aria-label="tags escolhidas">
-              {tags.map(tag => (
-                <li key={tagSlug(tag)} className="tagPill">
-                  {tag}
-                  <button type="button" aria-label={`remover ${tag}`} onClick={() => { setTags(tags.filter(other => other !== tag)); clearError("tags") }}>×</button>
-                </li>
-              ))}
-            </ul>
-          }
-          {tags.length < limits.tags.seed ?
-            <TagInput label="tags (opcional)" exclude={tags.map(tagSlug)} onPick={tag => { setTags([...tags, tag]); clearError("tags") }} />
-            :
-            <span className="tagRule">máximo de {limits.tags.seed} tags</span>
-          }
-          {errors.tags && <span className="error">{errors.tags}!</span>}
-        </div>
         {answers.length !== 0 &&
           <div className="answers">
             {
