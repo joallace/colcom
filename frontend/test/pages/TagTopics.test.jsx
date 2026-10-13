@@ -1,6 +1,6 @@
 // A tag page (/t/a+b) against a mocked API: the topics having all the tags, and the tags to widen or
 // narrow the set
-import { render, screen, within } from "@testing-library/react"
+import { render, screen, waitFor, within } from "@testing-library/react"
 import { MemoryRouter, Route, Routes, useLocation } from "react-router"
 import { describe, expect, it, vi } from "vitest"
 
@@ -67,7 +67,8 @@ describe("tag pages", () => {
     expect(await screen.findByText("2 tópicos")).toBeInTheDocument()
     const narrow = within(screen.getByRole("group", { name: "refinar com outra tag" })).getByRole("link")
     expect(narrow).toHaveAttribute("href", "/t/politica+eua")
-    expect(document.title).toBe("Política · colcom")
+    // Set by an effect, which may run just after the tags appear
+    await waitFor(() => expect(document.title).toBe("Política · colcom"))
   })
 
   it("combine tags, each one removable", async () => {

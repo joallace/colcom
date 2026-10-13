@@ -1,5 +1,5 @@
 // A topic's page against a mocked API
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 import { MemoryRouter, Route, Routes } from "react-router"
 import { describe, expect, it, vi } from "vitest"
 
@@ -40,7 +40,8 @@ describe("the topic page", () => {
     renderPage(1)
 
     expect(await screen.findByText("Context.")).toBeInTheDocument()
-    expect(document.title).toBe("Should taxes fall? · colcom")
+    // Set by an effect, which may run just after the text appears
+    await waitFor(() => expect(document.title).toBe("Should taxes fall? · colcom"))
   })
 
   it("says so for a topic that doesn't exist", async () => {
@@ -49,6 +50,6 @@ describe("the topic page", () => {
 
     expect(await screen.findByText(/tópico não encontrado\./)).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "ver os tópicos" })).toHaveAttribute("href", "/")
-    expect(document.title).toBe("tópico não encontrado · colcom")
+    await waitFor(() => expect(document.title).toBe("tópico não encontrado · colcom"))
   })
 })
