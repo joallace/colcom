@@ -46,7 +46,9 @@ describe("who is told", () => {
       content: { id: post.id, title: post.title, type: "post" },
       topic_id: topic.id,
       subject: { id: made.body.id, title: made.body.title, type: "critique", commit },
-      suggestion: null
+      suggestion: null,
+      // Only what earned prestige tells of it
+      prestige: null
     })
     expect(notifications[0].actor.avatar).toMatch(/^[A-Za-z0-9+/=]+$/)
   })

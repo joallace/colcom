@@ -52,6 +52,64 @@ describe("describeNotification", () => {
     expect(describeNotification(notification)).toEqual({ action, target: "Meu post", path: "/topics/2/posts/5?critique=9", detail: "Crítica" })
   })
 
+  it("says how much prestige an accepted answer or suggestion earned", () => {
+    const critique = { id: 9, title: "Crítica", type: "critique", commit: "abc123" }
+    const accepted = { ...base, type: "critique_accepted", subject: critique, prestige: { reason: "fix_accepted", amount: 5, rule_amount: 5, limited: null } }
+
+    expect(describeNotification(accepted)).toEqual({
+      action: "aceitou sua resposta a uma crítica em",
+      target: "Meu post",
+      path: "/topics/2/posts/5?critique=9",
+      detail: "Crítica",
+      award: "+5 de prestígio"
+    })
+
+    const merged = { ...base, type: "suggestion_accepted", suggestion: { message: "Corrige", commit: "def456" }, prestige: { reason: "suggestion_merged", amount: 5, rule_amount: 5, limited: null } }
+    expect(describeNotification(merged).award).toBe("+5 de prestígio")
+    // Nothing earned, nothing said
+    expect(describeNotification({ ...accepted, prestige: null })).not.toHaveProperty("award")
+  })
+
+  it("tells an award of the recipient's own action, from whoever confirmed it", () => {
+    const fixed = {
+      ...base,
+      type: "prestige",
+      subject: { id: 9, title: "Crítica", type: "critique", commit: "abc123" },
+      prestige: { reason: "critique_fixed", amount: 10, rule_amount: 10, limited: null }
+    }
+    expect(describeNotification(fixed)).toEqual({
+      action: "resolveu sua crítica com uma correção em",
+      target: "Meu post",
+      path: "/topics/2/posts/5?critique=9",
+      detail: "Crítica",
+      award: "+10 de prestígio"
+    })
+
+    const adopted = {
+      ...base,
+      type: "prestige",
+      suggestion: { message: "Acrescenta um parágrafo", commit: "def456" },
+      prestige: { reason: "suggestion_adopted", amount: 1, rule_amount: 1, limited: null }
+    }
+    expect(describeNotification(adopted)).toEqual({
+      action: "sugeriu a alteração que você incorporou a",
+      target: "Meu post",
+      path: "/topics/2/posts/5",
+      detail: "Acrescenta um parágrafo",
+      award: "+1 de prestígio"
+    })
+  })
+
+  it("says what held an award back", () => {
+    const held = { ...base, type: "prestige", prestige: { reason: "suggestion_adopted", amount: 0, rule_amount: 1, limited: "pair" } }
+    expect(describeNotification(held).award).toBe("+0 de prestígio (0 de 1 creditados: limite de prêmios da mesma pessoa)")
+  })
+
+  it("still tells an award whose reason it doesn't know", () => {
+    const unknown = { ...base, type: "prestige", prestige: { reason: "jury_duty", amount: 2, rule_amount: 2, limited: null } }
+    expect(describeNotification(unknown)).toMatchObject({ action: "confirmou sua contribuição em", path: "/topics/2/posts/5", award: "+2 de prestígio" })
+  })
+
   it("still links a type it doesn't know (one added to the API later)", () => {
     expect(describeNotification({ ...base, type: "critique_upheld" })).toMatchObject({ target: "Meu post", path: "/topics/2/posts/5" })
   })

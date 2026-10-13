@@ -3,7 +3,7 @@ import { RequestHandler } from "express"
 import git from "@/gitDatabase"
 import Content, { ContentInsertRequest, ContentType, IContent, ListedContent } from "@/models/content"
 import Interactions from "@/models/interactions"
-import { notify } from "@/models/notifications"
+import { notify, notifyAwards } from "@/models/notifications"
 import { ValidationError, NotFoundError, ForbiddenError } from "@/errors"
 import { validate } from "@/validation"
 import { applyTopicTags, prepareTopicTags, resolveFilter, splitSlugs } from "@/controllers/tags"
@@ -384,6 +384,8 @@ export const mergePost: RequestHandler = async (req, res) => {
     await resolveByFix(suggestion.config.critique, suggestion.id, merged, author_pid)
   await Interactions.setSuggestionAccepted(suggestion.id, true, author_pid)
   await notify({ type: "suggestion_accepted", actor_pid: author_pid, content_id, interaction_id: suggestion.id })
+  // What the merge earned that the notification above doesn't tell: the author's own, for taking it
+  await notifyAwards({ suggestion_id: suggestion.id })
 
   res.status(204).end()
 }

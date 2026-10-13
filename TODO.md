@@ -75,7 +75,7 @@ Since the code is open, anti-abuse measures must not depend on bots not knowing 
     - **Left:**
         - Phase 3's verdicts: an upheld critique gives the critic +10 and the author −5; one that doesn't hold costs the critic 5. A resolution the public reopens should take back what it earned, with a negative award, since the ledger is append-only.
         - Prestige for jury duty (Open questions), and reporters losing it (community moderation).
-        - Telling users what they earned: a notification, or the amount on the critique thread. The navbar's total only updates on the next load.
+        - The amount on the critique thread, and the navbar's total, which only updates on the next load. Notifications tell every award: on the answer that earned it, or on their own for what the earner's own action earned (accepting a fix, merging a suggestion).
         - Whether prestige should unlock anything (jury eligibility, tag creation before `TAG_MIN_ACCOUNT_DAYS`).
         - Bridging-aware amounts once phase 4 exists.
 - [ ] **[5] Design phase 5: synthesis posts**: creating them through `commit-tree`, the `content_sources` table, the three-pane editor, quoting with provenance, inherited critiques and fairness marks. A public "misrepresents my view" mark with an optional reason, as answered in the design doc. Syntheses get their own poll column (see Decisions).

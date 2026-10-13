@@ -52,10 +52,15 @@ The **podium** (`/podium`; `GET /podium/users` and `GET /podium/contents`) shows
 
 - **Rules and ledger:** each rule is a row of `prestige_rules` that the operator may change (`PRESTIGE_REASONS` in `shared/src/prestige.js` names them). Every award is a row of the append-only `prestige_events`: the rule, the amount credited and the rule's, who confirmed it and the event that earned it. Triggers on `critique_events` and on a suggestion's acceptance write them in the event's own transaction, so each point traces back to the log. `users.prestige` is their sum, and a trigger refuses any other change to it.
 - **Limits:** they keep accounts from farming prestige from each other: `PRESTIGE_LIMIT` caps what a user earns per window (default 200 a day), and `PRESTIGE_PAIR_LIMIT` how many awards they get from the same person (default 5 every 30 days). What a limit holds back is logged as +0, or as the reduced amount.
-- **Where it shows:** each profile lists every award (its "prestígio" pill, `GET /users/:name/prestige`), `/prestige` explains the instance's rules and limits (`GET /prestige`), and the navbar shows the user's total.
+- **Where it shows:** each profile lists every award (its "prestígio" pill, `GET /users/:name/prestige`), `/prestige` explains the instance's rules and limits (`GET /prestige`), the navbar shows the user's total, and a notification tells each award (below).
 - **What's next:** prestige unlocks nothing yet. Phase 3's verdicts add penalties (an upheld critique: critic +10, author −5; one that doesn't hold: critic −5), and should take back what a resolution earned when the public reopens it.
 
 Notifications (`notifications` table) tell a user, on the site, about a critique, a suggestion or a clone of their post, a new post in their topic, the answer to their suggestion, and each action of the other side on a critique (the author's answer to the critic; the critic's acceptance, dispute or withdrawal to the author). The bell in the navbar shows how many are unread.
+
+They also tell each award, once (`notifications.prestige_event_id`):
+- **On the answer:** when someone else's action earned it, the notification of that action says how much: the critic's acceptance tells the author "+5 de prestígio", and the merge tells whoever suggested it.
+- **On its own:** when the earner's own action earned it (accepting a fix, merging a suggestion), a `prestige` notification tells it, from whoever confirmed it.
+- **Held back:** an award a limit held back is told all the same, saying which limit.
 
 Themes are each user's own: a preset (the default dark one, a light one, high contrast) with any of its twenty base colors replaced (named by role: surfaces, text, primary, accent, danger, highlight and the six chart series), saved on the account (`users.config.theme`, `PATCH /users/self`) or, for visitors, in the browser. The presets' names and the color keys are in `shared/src/themes.js`, so the API can check what it stores; every other color of the interface is derived from those twenty in CSS (see `frontend/AGENTS.md`).
 

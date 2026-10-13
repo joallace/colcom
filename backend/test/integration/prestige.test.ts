@@ -166,7 +166,8 @@ describe("the ledger", () => {
 
     await expect(db.query(`UPDATE prestige_events SET amount = 1000 WHERE user_id = ${userId}`, [critic.pid])).rejects.toThrow(/append-only/)
     await expect(db.query(`DELETE FROM prestige_events WHERE user_id = ${userId}`, [critic.pid])).rejects.toThrow(/append-only/)
-    await expect(db.query("TRUNCATE prestige_events")).rejects.toThrow(/append-only/)
+    // CASCADE, since notifications refer to the awards they tell of
+    await expect(db.query("TRUNCATE prestige_events CASCADE")).rejects.toThrow(/append-only/)
   })
 
   it("keeps the amount each award was given when a rule changes", async () => {
@@ -182,6 +183,106 @@ describe("the ledger", () => {
     finally {
       await db.query("UPDATE prestige_rules SET amount = 10 WHERE reason = 'critique_fixed';")
     }
+  })
+})
+
+describe("telling users what they earned", () => {
+  const inbox = async (user: TestUser) => {
+    const res = await api().get("/notifications").set(user.auth)
+    expect(res.status, JSON.stringify(res.body)).toBe(200)
+    return res.body.notifications
+  }
+
+  // Each notification as [type, the prestige it tells of], newest first
+  const told = async (user: TestUser) =>
+    (await inbox(user)).map((notification: any) => [notification.type, notification.prestige?.amount ?? null])
+
+  it("tells the author on the critic's acceptance, and the critic, who accepted, apart", async () => {
+    const [author, critic] = await people()
+    const { topic, post, critiqueId } = await resolveCritique(author, critic)
+
+    const [accepted] = await inbox(author)
+    expect(accepted).toMatchObject({
+      type: "critique_accepted",
+      actor: { name: critic.name },
+      subject: { id: critiqueId },
+      prestige: { reason: "fix_accepted", amount: 5, rule_amount: 5, limited: null }
+    })
+
+    const [earned] = await inbox(critic)
+    expect(earned).toMatchObject({
+      type: "prestige",
+      read: false,
+      // Whoever confirmed it, as the notification can't come from the critic's own action
+      actor: { name: author.name },
+      content: { id: post.id, title: post.title, type: "post" },
+      topic_id: topic.id,
+      subject: { id: critiqueId, type: "critique" },
+      suggestion: null,
+      prestige: { reason: "critique_fixed", amount: 10, rule_amount: 10, limited: null }
+    })
+    // The fix itself had been told without prestige, which only the acceptance earned
+    expect(await told(critic)).toEqual([["prestige", 10], ["critique_addressed", null]])
+    expect((await api().get("/notifications/unread").set(critic.auth)).body.unread).toBe(2)
+  })
+
+  it("tells only the author of a rebuttal the critic accepted", async () => {
+    const [author, critic] = await people()
+    await resolveCritique(author, critic, "rebut")
+
+    expect(await told(author)).toEqual([["critique_accepted", 5], ["critique", null]])
+    expect((await inbox(author))[0].prestige).toMatchObject({ reason: "rebuttal_accepted" })
+    expect(await told(critic)).toEqual([["critique_rebutted", null]])
+  })
+
+  it("tells the suggester on the merge's notification, and the author who merged apart", async () => {
+    const [author, suggester] = await people()
+    const { postId, suggestionId } = await mergeSuggestion(author, suggester)
+
+    const [accepted] = await inbox(suggester)
+    expect(accepted).toMatchObject({ type: "suggestion_accepted", prestige: { reason: "suggestion_merged", amount: 5 } })
+
+    const [earned] = await inbox(author)
+    expect(earned).toMatchObject({
+      type: "prestige",
+      actor: { name: suggester.name },
+      content: { id: postId, type: "post" },
+      subject: null,
+      suggestion: { commit: expect.any(String) },
+      prestige: { reason: "suggestion_adopted", amount: 1 }
+    })
+    expect(await told(author)).toEqual([["prestige", 1], ["suggestion", null]])
+    expect(suggestionId).toEqual(expect.any(Number))
+  })
+
+  it("tells a critic whose fix was merged what their critique earned, on the merge's notification", async () => {
+    const [author, critic] = await people()
+    const { post, critiqueId } = await criticised(author, critic)
+    const suggested = await api().patch(`/contents/${post.id}`).set(critic.auth)
+      .send({ body: `<p>${unique("Fixed")}</p>`, message: "Corrige o trecho", critique: critiqueId })
+    expect((await api().post(`/contents/${post.id}/${suggested.body.config.commit}/merge`).set(author.auth)).status).toBe(204)
+
+    expect(await told(critic)).toEqual([["suggestion_accepted", 10]])
+    expect((await inbox(critic))[0].prestige).toMatchObject({ reason: "critique_fixed" })
+    expect(await told(author)).toEqual([["prestige", 1], ["suggestion", null], ["critique", null]])
+  })
+
+  it("tells every award once", async () => {
+    const [author, critic, suggester] = await people(3)
+    await resolveCritique(author, critic)
+    await resolveCritique(author, critic, "rebut")
+    await mergeSuggestion(author, suggester)
+
+    const { rows } = await db.query(`
+      SELECT award.id, COUNT(told.id)::INT AS told
+      FROM prestige_events award
+      LEFT JOIN notifications told ON told.prestige_event_id = award.id
+      WHERE award.user_id IN (SELECT id FROM users WHERE pid = ANY($1))
+      GROUP BY award.id
+    `, [[author.pid, critic.pid, suggester.pid]])
+
+    expect(rows).toHaveLength(5)
+    expect(rows.every((row: { told: number }) => row.told === 1)).toBe(true)
   })
 })
 

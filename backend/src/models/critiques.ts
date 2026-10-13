@@ -64,9 +64,9 @@ export const critiqueEventsSql = (critiqueId: string) => `(
     e.critique_id = ${critiqueId}
 )`
 
-// Records an event, which moves the critique to `to` (the critique_events_apply trigger). A 409 when
-// the critique is no longer in the state the actor saw.
-async function record({ critique_id, actor_pid, action, from, to, note, commit, suggestion_id }: EventRequest): Promise<void> {
+// Records an event, which moves the critique to `to` (the critique_events_apply trigger), and returns
+// its id. A 409 when the critique is no longer in the state the actor saw.
+async function record({ critique_id, actor_pid, action, from, to, note, commit, suggestion_id }: EventRequest): Promise<number> {
   const query = {
     text: `
       INSERT INTO
@@ -77,11 +77,13 @@ async function record({ critique_id, actor_pid, action, from, to, note, commit, 
         users
       WHERE
         users.pid = $2
+      RETURNING
+        id::INT
       ;`,
     values: [critique_id, actor_pid, action, from, to, note ?? null, commit ?? null, suggestion_id ?? null]
   }
 
-  await db.query(query).catch(err => {
+  const result = await db.query(query).catch(err => {
     if (err?.code === "CC409")
       throw new ConflictError({
         message: "A crítica mudou de estado enquanto você respondia.",
@@ -90,6 +92,7 @@ async function record({ critique_id, actor_pid, action, from, to, note, commit, 
       })
     throw err
   })
+  return result.rows[0].id
 }
 
 // A critique's state and thread, as the post page shows them

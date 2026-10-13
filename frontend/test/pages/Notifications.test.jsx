@@ -90,6 +90,18 @@ describe("the notifications page", () => {
     expect(fetch).toHaveBeenCalledWith(`${API}/notifications?page=1&pageSize=20`, expect.objectContaining({ headers: { Authorization: "Bearer token-1" } }))
   })
 
+  it("says the prestige each one earned, alone or on the answer that earned it", async () => {
+    const fixed = { ...critique, id: 3, type: "prestige", prestige: { reason: "critique_fixed", amount: 10, rule_amount: 10, limited: null } }
+    const merged = { ...accepted, prestige: { reason: "suggestion_merged", amount: 5, rule_amount: 5, limited: null } }
+    mockApi({ notifications: [fixed, merged] })
+    renderPage()
+
+    const fixedItem = (await screen.findByText("+10 de prestígio")).closest("li")
+    expect(fixedItem).toHaveTextContent("bob resolveu sua crítica com uma correção em Meu post")
+    expect(within(fixedItem).getByRole("link", { name: "Meu post" })).toHaveAttribute("href", "/topics/1/posts/5?critique=9")
+    expect(screen.getByText("+5 de prestígio").closest("li")).toHaveTextContent("bob aceitou sua sugestão para Meu post")
+  })
+
   it("marks one as read when it's opened, and goes where it leads", async () => {
     const fetch = mockApi()
     renderPage()

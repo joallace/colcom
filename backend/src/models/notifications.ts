@@ -1,3 +1,5 @@
+import type { PrestigeLimit, PrestigeReason } from "@colcom/shared"
+
 import db from "@/pgDatabase"
 import logger from "@/logger"
 import { AVATAR_BASE64 } from "@/models/content"
@@ -17,6 +19,12 @@ import { limitOffset } from "@/pagination"
 export type NotificationType =
   | "critique" | "suggestion" | "suggestion_accepted" | "suggestion_rejected" | "post" | "clone"
   | "critique_addressed" | "critique_rebutted" | "critique_accepted" | "critique_disputed" | "critique_withdrawn"
+
+// Also listed, but made by notifyAwards rather than notify:
+// - prestige: an award no other notification told of, like the ones for accepting a fix or merging
+//   a suggestion, from whoever confirmed it (content: the post, subject: the critique when it's about
+//   one, interaction: the suggestion when it's about one)
+type ListedType = NotificationType | "prestige"
 
 export interface NotifyRequest {
   type: NotificationType,
@@ -44,13 +52,29 @@ const recipientOf: Record<NotificationType, string> = {
   critique_withdrawn: "SELECT author_id FROM contents WHERE id = $3"
 }
 
+// The prestige an answer tells its recipient they earned, when the contribution answered earned some:
+// the author's, for an answer to a critique the critic accepted; the suggester's, for a merged
+// suggestion. Each query selects the `award` from prestige_events; `recipient` is the one told.
+const awardOf: Partial<Record<NotificationType, string>> = {
+  critique_accepted: "SELECT award.id FROM prestige_events award WHERE award.user_id = recipient.author_id AND award.content_id = $4 AND award.reason IN ('fix_accepted', 'rebuttal_accepted')",
+  suggestion_accepted: "SELECT award.id FROM prestige_events award WHERE award.user_id = recipient.author_id AND award.suggestion_id = $5"
+}
+
+// An award is told once, so one a notification already tells of is left out
+const awardSql = (type: NotificationType) => awardOf[type] ? `(
+  ${awardOf[type]}
+  AND NOT EXISTS (SELECT 1 FROM notifications told WHERE told.prestige_event_id = award.id)
+  ORDER BY award.id DESC
+  LIMIT 1
+)` : "NULL"
+
 async function create({ type, actor_pid, content_id, subject_id, interaction_id }: NotifyRequest): Promise<void> {
   const query = {
     text: `
       INSERT INTO
-        notifications(user_id, actor_id, type, content_id, subject_id, interaction_id)
+        notifications(user_id, actor_id, type, content_id, subject_id, interaction_id, prestige_event_id)
       SELECT
-        recipient.author_id, actor.id, $2, $3, $4::INT, $5::INT
+        recipient.author_id, actor.id, $2, $3, $4::INT, $5::INT, ${awardSql(type)}
       FROM
         users actor,
         (${recipientOf[type]}) recipient
@@ -77,9 +101,63 @@ export async function notify(request: NotifyRequest): Promise<void> {
   }
 }
 
+interface AwardsRequest {
+  // The critique event, or the suggestion, whose awards are told
+  critique_event_id?: number,
+  suggestion_id?: number
+}
+
+// Tells everyone what an event awarded them that no notification of it told: the prestige earned by
+// their own action (accepting a fix, merging a suggestion), as told by whoever confirmed it. Called
+// after the event's other notifications, so the awards those tell of aren't told twice. Awards are
+// written by the database (init.sql), so they exist once the event does.
+async function createAwards({ critique_event_id, suggestion_id }: AwardsRequest): Promise<void> {
+  const query = {
+    text: `
+      INSERT INTO
+        notifications(user_id, actor_id, type, content_id, subject_id, interaction_id, prestige_event_id)
+      SELECT
+        award.user_id,
+        award.counterpart_id,
+        'prestige',
+        -- The post, and the critique when it's about one
+        CASE WHEN target.type = 'critique' THEN target.parent_id ELSE target.id END,
+        CASE WHEN target.type = 'critique' THEN target.id END,
+        award.suggestion_id,
+        award.id
+      FROM
+        prestige_events award
+      INNER JOIN
+        contents target ON target.id = award.content_id
+      WHERE
+        (award.critique_event_id = $1 OR award.suggestion_id = $2)
+      AND
+        award.counterpart_id IS NOT NULL
+      AND
+        NOT EXISTS (SELECT 1 FROM notifications told WHERE told.prestige_event_id = award.id)
+      ORDER BY
+        award.id
+      ON CONFLICT DO NOTHING
+      ;`,
+    values: [critique_event_id ?? null, suggestion_id ?? null]
+  }
+
+  await db.query(query)
+}
+
+// Like notify, a failure is logged and doesn't fail the action
+export async function notifyAwards(request: AwardsRequest): Promise<void> {
+  try {
+    await createAwards(request)
+  }
+  catch (err) {
+    logger.error({ err, awards: request }, "[notifications.ts] Failed to notify awards")
+  }
+}
+
 export interface Notification {
   id: number,
-  type: NotificationType,
+  type: ListedType,
   read: boolean,
   created_at: Date,
   actor: { name: string, avatar: string },
@@ -87,7 +165,10 @@ export interface Notification {
   content: { id: number, title: string, type: string },
   topic_id: number,
   subject: { id: number, title: string, type: string, commit: string | null } | null,
-  suggestion: { message: string, commit: string } | null
+  suggestion: { message: string, commit: string } | null,
+  // The prestige it tells the recipient they earned: what was credited of the rule's amount, and
+  // what held it back
+  prestige: { reason: PrestigeReason, amount: number, rule_amount: number, limited: PrestigeLimit | null } | null
 }
 
 interface FindOptions {
@@ -113,6 +194,9 @@ async function findByUser(user_pid: string, { page, pageSize, unread = false }: 
         CASE WHEN i.id IS NULL THEN NULL ELSE
           json_build_object('message', i.config->>'message', 'commit', i.config->>'commit')
         END AS suggestion,
+        CASE WHEN award.id IS NULL THEN NULL ELSE
+          json_build_object('reason', award.reason, 'amount', award.amount, 'rule_amount', award.rule_amount, 'limited', award.limited)
+        END AS prestige,
         COUNT(*) OVER ()::INT AS total_count
       FROM
         notifications n
@@ -124,6 +208,8 @@ async function findByUser(user_pid: string, { page, pageSize, unread = false }: 
         contents s ON s.id = n.subject_id
       LEFT JOIN
         interactions i ON i.id = n.interaction_id
+      LEFT JOIN
+        prestige_events award ON award.id = n.prestige_event_id
       WHERE
         n.user_id = (SELECT id FROM users WHERE pid = $1)
       ${unread ? "AND n.read_at IS NULL" : ""}

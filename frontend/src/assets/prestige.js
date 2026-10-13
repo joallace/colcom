@@ -60,6 +60,15 @@ const HELD_BACK = {
   pair: "limite de prêmios da mesma pessoa"
 }
 
+// What a limit held back of an award: "0 de 10 creditados: limite de prêmios da mesma pessoa"
+const heldText = ({ amount, rule_amount, limited }) => `${amount} de ${rule_amount} creditados: ${HELD_BACK[limited]}`
+
+// An award as a notification tells it: "+10 de prestígio", saying what held it back, if anything
+export function awardText(award) {
+  const credited = `${amountText(award.amount)} de prestígio`
+  return award.limited ? `${credited} (${heldText(award)})` : credited
+}
+
 // One award of a profile's history: its name, what it's about (a critique, or the post a suggestion
 // went into) and where that is, who confirmed it, and what held it back if anything
 export function describePrestige(event) {
@@ -73,6 +82,6 @@ export function describePrestige(event) {
     // A critique's post, and a suggestion's message
     context: event.critique ? event.post?.title : event.suggestion?.message,
     by: event.counterpart && rule ? rule.by : null,
-    held: event.limited ? `${event.amount} de ${event.rule_amount} creditados: ${HELD_BACK[event.limited]}` : null
+    held: event.limited ? heldText(event) : null
   }
 }

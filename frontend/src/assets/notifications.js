@@ -1,4 +1,5 @@
 import api, { ApiError } from "@/assets/api"
+import { awardText } from "@/assets/prestige"
 
 
 const CRITIQUE_ANSWERS = {
@@ -9,9 +10,26 @@ const CRITIQUE_ANSWERS = {
   critique_withdrawn: "retirou uma crítica a"
 }
 
-// What a notification says (after the actor's name) and where it leads. `target` is the title of
-// what it's about, shown as the link.
-export function describeNotification({ type, content, topic_id, subject, suggestion }) {
+// An award told on its own, from whoever confirmed it (the API's 'prestige' notifications), by the
+// reason it was given. The usual ones are earned by the recipient's own action: accepting a fix
+// (critique_fixed) or merging a suggestion (suggestion_adopted).
+const AWARDS = {
+  // Unlike critique_addressed (the fix, before the critic accepted it), the critique's resolution
+  critique_fixed: "resolveu sua crítica com uma correção em",
+  fix_accepted: "aceitou sua correção de uma crítica em",
+  rebuttal_accepted: "aceitou sua refutação de uma crítica em",
+  suggestion_merged: "incorporou sua sugestão a",
+  suggestion_adopted: "sugeriu a alteração que você incorporou a"
+}
+
+// What a notification says (after the actor's name), where it leads and, when it earned the
+// recipient prestige, how much (`award`). `target` is the title of what it's about, shown as the link.
+export function describeNotification(notification) {
+  const described = describeAction(notification)
+  return notification.prestige ? { ...described, award: awardText(notification.prestige) } : described
+}
+
+function describeAction({ type, content, topic_id, subject, suggestion, prestige }) {
   const postPath = `/topics/${topic_id}/posts/${content.id}`
 
   switch (type) {
@@ -42,6 +60,14 @@ export function describeNotification({ type, content, topic_id, subject, suggest
         target: content.title,
         path: `${postPath}?${new URLSearchParams({ critique: subject.id })}`,
         detail: subject.title
+      }
+    // About a critique when it has one, else about the post (a suggestion)
+    case "prestige":
+      return {
+        action: AWARDS[prestige?.reason] ?? "confirmou sua contribuição em",
+        target: content.title,
+        path: subject ? `${postPath}?${new URLSearchParams({ critique: subject.id })}` : postPath,
+        detail: subject ? subject.title : suggestion?.message
       }
     default:
       return { action: "interagiu com", target: content.title, path: content.type === "topic" ? `/topics/${content.id}` : postPath }

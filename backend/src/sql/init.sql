@@ -525,6 +525,12 @@ CREATE OR REPLACE TRIGGER prestige_events_no_truncate
     BEFORE TRUNCATE ON prestige_events
     FOR EACH STATEMENT EXECUTE FUNCTION reject_log_change();
 
+-- The award a notification tells its recipient of: the prestige that an answer or suggestion of
+-- theirs earned when someone accepted it, or the one a 'prestige' notification is about. Each award
+-- is told once (notify and notifyAwards in models/notifications.ts).
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS prestige_event_id BIGINT REFERENCES prestige_events(id);
+CREATE UNIQUE INDEX IF NOT EXISTS notifications_prestige_event_idx ON notifications (prestige_event_id) WHERE prestige_event_id IS NOT NULL;
+
 -- users.prestige is the sum of the user's awards, recomputed on each one
 CREATE OR REPLACE FUNCTION prestige_of(earner INT) RETURNS INT LANGUAGE sql STABLE AS $$
     SELECT COALESCE(SUM(amount), 0)::INT FROM prestige_events WHERE user_id = earner;

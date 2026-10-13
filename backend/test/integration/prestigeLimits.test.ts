@@ -63,6 +63,24 @@ describe("the pair limit", () => {
   })
 })
 
+describe("an award held back", () => {
+  it("is still told, with what held it back", async () => {
+    await setLimit("user", null)
+    await setLimit("pair", 1, 30 * DAY)
+    const [author, critic] = await people(2)
+
+    await resolveCritique(author, critic)
+    await resolveCritique(author, critic)
+
+    const { notifications } = (await api().get("/notifications").set(critic.auth)).body
+    const awards = notifications.filter((notification: { type: string }) => notification.type === "prestige")
+    expect(awards.map((notification: { prestige: object }) => notification.prestige)).toEqual([
+      { reason: "critique_fixed", amount: 0, rule_amount: 10, limited: "pair" },
+      { reason: "critique_fixed", amount: 10, rule_amount: 10, limited: null }
+    ])
+  })
+})
+
 describe("the user limit", () => {
   it("credits only what's left of it in its window, and says so", async () => {
     await setLimit("pair", null)

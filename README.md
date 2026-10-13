@@ -52,7 +52,7 @@ The [meta space](#meta) puts colcom's own mission up for debate. The proposal it
 
 **Tags.** Topics carry tags that the community curates. The author's first tags count as their endorsements, and anyone can endorse, contest or propose a tag. A tag shows while it has at least as many endorsements as contests. New tags are provisional until several authors use them, and creating them is limited so they can't be spammed. `/t/a+b` lists the topics that have all of the given tags.
 
-**Notifications.** The bell in the navbar tells you about critiques, suggestions and clones of your posts, new posts in your topics, and answers to your suggestions.
+**Notifications.** The bell in the navbar tells you about critiques, suggestions and clones of your posts, new posts in your topics, answers to your suggestions, and how much prestige each contribution earned you.
 
 **Prestige.** Inspired by Genius' IQ, prestige rewards contributions someone else confirmed: a critique that led to a fix, an answer the critic accepted, a suggestion merged into a post. Writing a lot earns nothing, and neither do votes, which would only measure one side's approval. Every award is logged, append-only, with its rule and who confirmed it, so each profile shows where each point came from. Limits per day and per pair of people keep accounts from farming it from each other, and `/prestige` explains the instance's rules.
 

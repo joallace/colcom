@@ -4,7 +4,7 @@ import { CRITIQUE_ACTIONS, CritiqueAction, CritiqueState, isClosedCritique } fro
 import git from "@/gitDatabase"
 import Critiques from "@/models/critiques"
 import Content, { IContent, ListedContent } from "@/models/content"
-import { notify, NotificationType } from "@/models/notifications"
+import { notify, notifyAwards, NotificationType } from "@/models/notifications"
 import { ConflictError, ForbiddenError, ValidationError } from "@/errors"
 import { validate } from "@/validation"
 import { findContentOrThrow } from "@/controllers/content"
@@ -73,8 +73,10 @@ export const actOnCritique: RequestHandler = async (req, res) => {
   if (action === "address")
     await validateFixCommit(post, critique, commit!)
 
-  await Critiques.record({ critique_id: id, actor_pid: user_pid, action, from: status, to: rule.to, note, commit: action === "address" ? commit : undefined })
+  const eventId = await Critiques.record({ critique_id: id, actor_pid: user_pid, action, from: status, to: rule.to, note, commit: action === "address" ? commit : undefined })
   await notify({ type: NOTIFICATIONS[action], actor_pid: user_pid, content_id: post.id, subject_id: id })
+  // What the event earned that the notification above doesn't tell: the critic's own, for accepting a fix
+  await notifyAwards({ critique_event_id: eventId })
 
   res.status(201).json(await Critiques.findThread(id))
 }

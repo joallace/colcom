@@ -1,4 +1,5 @@
 import { Link } from "react-router"
+import { PiMedalFill } from "react-icons/pi"
 
 import { describeNotification } from "@/assets/notifications"
 import { relativeTime, userPath } from "@/assets/util"
@@ -7,7 +8,7 @@ import { relativeTime, userPath } from "@/assets/util"
 // One notification, in a `.notificationList`. `onOpen` is called when its link is followed.
 export default function NotificationItem({ notification, onOpen }) {
   const { actor, read, created_at } = notification
-  const { action, target, path, detail } = describeNotification(notification)
+  const { action, target, path, detail, award } = describeNotification(notification)
 
   return (
     <li className={read ? undefined : "unread"}>
@@ -18,6 +19,7 @@ export default function NotificationItem({ notification, onOpen }) {
           {!read && <span className="visuallyHidden"> (não lida)</span>}
         </p>
         {detail && <p className="detail">{detail}</p>}
+        {award && <p className={`award${notification.prestige.amount < 0 ? " negative" : ""}`}><PiMedalFill aria-hidden="true" />{award}</p>}
         <time dateTime={created_at}>{relativeTime(created_at)}</time>
       </div>
     </li>

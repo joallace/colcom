@@ -65,6 +65,21 @@
             overflow-wrap: anywhere;
         }
 
+        // The prestige it earned the recipient, in the color prestige has everywhere
+        .award {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            margin-top: var(--space-1);
+            color: var(--primary-text);
+            font-size: var(--text-sm);
+            font-weight: 700;
+
+            &.negative {
+                color: var(--danger-text);
+            }
+        }
+
         time {
             display: block;
             margin-top: var(--space-1);
