@@ -128,9 +128,10 @@ export default function PostPage() {
 
   const updateCommitQuery = () => {
     if (currentCommit === postData?.history.length - 1) {
-      if (searchParams.has("commit"))
+      if (searchParams.has("commit") || searchParams.has("critique"))
         setSearchParams(query => {
           query.delete("commit")
+          query.delete("critique")
           return query
         })
       return
@@ -139,6 +140,8 @@ export default function PostPage() {
     const commit = postData.history[currentCommit].commit
     setSearchParams(query => {
       query.set("commit", commit)
+      // The linked critique was opened on the version it came with
+      query.delete("critique")
       return query
     })
   }
@@ -245,15 +248,19 @@ export default function PostPage() {
     isNewCritique ? getPostFrame()?.querySelector("mark.temporary, .chart[data-highlight=\"temporary\"]") : findCritiqueAnchor(showCritique),
   [getPostFrame, findCritiqueAnchor, isNewCritique, showCritique])
 
-  // A link can ask for a critique to be open (?critique=<id>), e.g. from a profile or the bookmarks.
-  // It opens once its version is shown and its highlight exists (the editor adds highlights just
-  // after mounting), first, followed by the critiques overlapping it, which share that highlight.
+  // A link can ask for a critique to be open (?critique=<id>), e.g. from a profile, the bookmarks or
+  // a critique's "ver a versão criticada". It opens once its version is shown and its highlight exists
+  // (the editor adds highlights just after mounting), first, followed by the critiques overlapping it,
+  // which share that highlight. Each address opens it once, so closing it doesn't reopen it.
   const openedFromUrl = React.useRef(null)
+  const showsAskedVersion = !isLoading && bodyCommit !== undefined && bodyCommit === commitFromUrl()
   React.useEffect(() => {
     const critiqueId = Number(searchParams.get("critique"))
     const index = critiques.findIndex(critique => critique.id === critiqueId)
+    const address = searchParams.toString()
 
-    if (!critiqueId || isLoading || index === -1 || openedFromUrl.current === critiqueId)
+    // Following a link from another version, the critiques are still the previous version's until it loads
+    if (!critiqueId || !showsAskedVersion || index === -1 || openedFromUrl.current === address)
       return
 
     const group = groupedCritiques.find(({ index: indexes }) => indexes.includes(index))
@@ -267,14 +274,14 @@ export default function PostPage() {
         return
       }
 
-      openedFromUrl.current = critiqueId
+      openedFromUrl.current = address
       setShowCritique(value)
       anchor?.scrollIntoView({ block: "center" })
     }
 
     open()
     return () => cancelAnimationFrame(frame)
-  }, [searchParams, critiques, groupedCritiques, isLoading, findCritiqueAnchor])
+  }, [searchParams, critiques, groupedCritiques, showsAskedVersion, findCritiqueAnchor])
 
   return (
     <div className="content wide">

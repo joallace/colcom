@@ -68,6 +68,8 @@ export default function Critique({
   // Where the critique lands on the version being read; none when its passage was removed
   const range = anchor && anchor.match !== "removed" ? [anchor.from, anchor.to] : undefined
   const isFromEarlierVersion = readOnly && config?.commit && config.commit !== commit
+  // The version it criticised, with the critique open on it
+  const criticisedVersion = `?commit=${config?.commit}&critique=${id}`
 
   const originMessage = {
     exact: "Crítica feita em uma versão anterior do post.",
@@ -185,7 +187,7 @@ export default function Critique({
         </span>
         :
         readOnly ?
-          <Link to={`?commit=${config.commit}`}>{title}</Link>
+          <Link to={criticisedVersion}>{title}</Link>
           :
           title
       }
@@ -206,7 +208,7 @@ export default function Critique({
         <div className="critiqueOrigin">
           <span>{originMessage[anchor?.match ?? "removed"]}</span>
           {anchor?.match !== "exact" && config.quote && <blockquote>{readableText(config.quote.exact)}</blockquote>}
-          <Link to={`?commit=${config.commit}`} onClick={() => setShowCritique && setShowCritique(false)}>
+          <Link to={criticisedVersion} onClick={() => setShowCritique && setShowCritique(false)}>
             ver a versão criticada
           </Link>
         </div>

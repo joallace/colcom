@@ -179,19 +179,46 @@ describe("PostPage", () => {
     await waitFor(() => expect(marks(container).map(mark => mark.textContent)).toEqual(["fall for everyone", "will be cut from the text"]))
   })
 
-  it("opens the criticised version from a critique made on it", async () => {
+  it("opens the criticised version from a critique made on it, with the critique open", async () => {
     // Critique 10 alone, so its highlight opens it rather than a group
     mockApi({ ...VERSIONS, [V2]: { ...VERSIONS[V2], critiques: VERSIONS[V2].critiques.slice(0, 1) } })
+    const scrollIntoView = vi.fn()
+    Element.prototype.scrollIntoView = scrollIntoView
     const { container } = renderPage()
 
     await waitFor(() => expect(marks(container).length).toBeGreaterThan(0))
     fireEvent.click(marks(container)[0])
     fireEvent.click(await screen.findByText("ver a versão criticada"))
 
-    // The passage marked while the critique was open belonged to the other version: nothing is left marked
     await waitFor(() => expect(container.querySelector(".ProseMirror")).toHaveTextContent("This sentence will be cut from the text."))
-    await waitFor(() => expect(marks(container).map(mark => mark.textContent)).toEqual(["fall for everyone", "will be cut from the text"]))
-    expect(container.querySelector(".ProseMirror mark.temporary")).toBeNull()
+    await waitFor(() => expect(openTitles()).toEqual(["Critique 10"]))
+    // Opened on the criticised version, where the link is no longer offered, with its own passage marked
+    expect(screen.queryByText("ver a versão criticada")).toBeNull()
+    await waitFor(() => expect(markedPassage(container)).toBe("fall for everyone"))
+    expect(scrollIntoView.mock.contexts[0]).toHaveTextContent("fall for everyone")
+    delete Element.prototype.scrollIntoView
+  })
+
+  it("leaves a linked critique closed after moving to another version", async () => {
+    mockApi()
+    Element.prototype.scrollIntoView = vi.fn()
+    const { container } = renderPage(`/topics/1/posts/2?commit=${V1}&critique=10`)
+
+    await waitFor(() => expect(openTitles()).toEqual(["Critique 10"]))
+    // The slider waits for the open critique to be closed
+    fireEvent.click(document.querySelector(".frame.critique .dropdownMenu > .clickable"))
+    fireEvent.click(await screen.findByText("fechar crítica"))
+    await waitFor(() => expect(openTitles()).toEqual([]))
+    const slider = container.querySelector("input#commit")
+    fireEvent.mouseDown(slider)
+    fireEvent.change(slider, { target: { value: 1 } })
+    fireEvent.mouseUp(slider)
+
+    await waitFor(() => expect(container.querySelector(".ProseMirror")).not.toHaveTextContent("This sentence will be cut"))
+    await waitFor(() => expect(marks(container).length).toBe(3))
+    // Given the time it took to open on the first version, it stays closed
+    await expect(waitFor(() => expect(openTitles()).not.toEqual([]), { timeout: 500 })).rejects.toThrow()
+    delete Element.prototype.scrollIntoView
   })
 
   it("falls back to the latest version for an unknown commit in the URL", async () => {
